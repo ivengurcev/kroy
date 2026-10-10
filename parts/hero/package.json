@@ -1,0 +1,9 @@
+{
+    "private": true,
+    "name": "@kroy/part-hero",
+    "main": "Hero.jsx",
+    "fields": {
+        "title": {"type": "input", "validators": {"maxLength": 30}},
+        "description": {"type": "textarea"}
+    }
+}

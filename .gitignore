@@ -1,0 +1,29 @@
+# Yarn PnP
+.pnp.*
+.yarn/*
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/sdks/
+!.yarn/versions/
+
+# VS Codium
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Build
+dist/
+build/
+.cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# OS
+.DS_Store

@@ -1,0 +1,9 @@
+{
+  "packageManager": "yarn@4.18.1",
+  "resolutions": {
+    "@yarnpkg/core": "4.9.1"
+  },
+  "devDependencies": {
+    "@yarnpkg/sdks": "^3.3.1"
+  }
+}
