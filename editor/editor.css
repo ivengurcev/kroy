@@ -1,0 +1,112 @@
+
+body {
+    margin: 0;
+    font: 16px system-ui, sans-serif;
+}
+
+.editor {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.panel {
+    padding: 24px;
+    background: #f3f3f3;
+}
+
+.part-editor {
+    padding: 16px 0;
+    border-bottom: 1px solid #ccc;
+}
+
+.part-field {
+    display: block;
+    margin: 16px 0;
+}
+
+.part-field input,
+.part-field textarea,
+.part-field select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin-top: 6px;
+}
+
+.checkbox-field {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.list-field {
+    margin: 16px 0;
+    padding: 12px;
+    border: 1px solid #ccc;
+}
+
+.list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.list-actions {
+    display: flex;
+    gap: 6px;
+    margin: 12px 0;
+}
+
+button {
+    cursor: pointer;
+    padding: 6px 10px;
+}
+
+button:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+
+.result {
+    padding: 32px;
+    min-width: 0;
+}
+
+pre {
+    padding: 16px;
+    background: #f3f3f3;
+    overflow: auto;
+}
+
+
+.part-picker {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.part-picker select {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+}
+
+.editable-part {
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #ccc;
+    background: white;
+}
+
+.part-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.editable-part .part-editor {
+    border-bottom: none;
+    padding: 0;
+}
