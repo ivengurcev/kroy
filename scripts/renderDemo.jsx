@@ -2,17 +2,18 @@
 import { writeFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import Page from '../layout/Page.jsx';
+import { parts } from '../generated/parts.mjs';
 
 const content = [
     {
-        part: '@kroy/part-hero',
+        part: '@kroy/hero',
         props: {
             title: 'Ветеринарный врач',
             description: 'Забота о ваших питомцах',
         },
     },
     {
-        part: '@kroy/part-contacts',
+        part: '@kroy/contacts',
         props: {
             phone: '+7 999 123-45-67',
             socials: [
@@ -23,7 +24,7 @@ const content = [
     },
 ];
 
-const html = renderToStaticMarkup(<Page content={content} />);
+const html = renderToStaticMarkup(<Page content={content} parts={parts} />);
 
 writeFileSync(
     'generated/demo.html',

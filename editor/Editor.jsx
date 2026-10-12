@@ -2,6 +2,7 @@
 import { useState } from 'react';
 
 import Page from '../layout/Page.jsx';
+import { parts } from '../generated/parts.mjs';
 import metadata from '../generated/parts.json';
 
 import PartsPanel from './PartsPanel.jsx';
@@ -105,7 +106,7 @@ export default function Editor() {
             <div className="result">
                 <h2>Результат</h2>
 
-                <Page content={content} />
+                <Page content={content} parts={parts} />
 
                 <h2>Данные страницы</h2>
                 <pre>{JSON.stringify(

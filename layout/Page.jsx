@@ -1,7 +1,5 @@
 
-import { parts } from '../generated/parts.mjs';
-
-export default function Page({ content }) {
+export default function Page({ content, parts }) {
     return content.map(({ id, part, props }, index) => {
         const Component = parts[part];
 

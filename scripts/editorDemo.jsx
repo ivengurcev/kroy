@@ -3,18 +3,19 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import Page from '../layout/Page.jsx';
+import { parts } from '../generated/parts.mjs';
 import metadata from '../generated/parts.json';
 
 const initialContent = [
     {
-        part: '@kroy/part-hero',
+        part: '@kroy/hero',
         props: {
             title: 'Ветеринарный врач',
             description: 'Забота о ваших питомцах',
         },
     },
     {
-        part: '@kroy/part-contacts',
+        part: '@kroy/contacts',
         props: {
             phone: '+7 999 123-45-67',
             socials: [],
@@ -99,7 +100,7 @@ function App() {
             <div className="result">
                 <h2>Результат</h2>
 
-                <Page content={content} />
+                <Page content={content} parts={parts} />
 
                 <h2>Данные страницы</h2>
                 <pre>{JSON.stringify(content, null, 2)}</pre>
