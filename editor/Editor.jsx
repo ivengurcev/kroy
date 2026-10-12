@@ -4,31 +4,10 @@ import { useState } from 'react';
 import Page from '../layout/Page.jsx';
 import { parts } from '../generated/parts.mjs';
 import metadata from '../generated/parts.json';
+import initialContent from '../demo/page.json';
 
 import PartsPanel from './PartsPanel.jsx';
 import { createPart } from './partModel.js';
-
-const initialContent = [
-    {
-        part: '@kroy/hero',
-        props: {
-            title: 'Ветеринарный врач',
-            description: 'Забота о ваших питомцах',
-        },
-    },
-    {
-        part: '@kroy/contacts',
-        props: {
-            phone: '+7 999 123-45-67',
-            socials: [
-                {
-                    name: 'Telegram',
-                    link: 'https://t.me/example',
-                },
-            ],
-        },
-    },
-];
 
 export default function Editor() {
     const [content, setContent] = useState(() =>

@@ -3,31 +3,12 @@ import { writeFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import Page from '../layout/Page.jsx';
 import { parts } from '../generated/parts.mjs';
-
-const content = [
-    {
-        part: '@kroy/hero',
-        props: {
-            title: 'Ветеринарный врач',
-            description: 'Забота о ваших питомцах',
-        },
-    },
-    {
-        part: '@kroy/contacts',
-        props: {
-            phone: '+7 999 123-45-67',
-            socials: [
-                { name: 'Telegram', link: 'https://t.me/example' },
-                { name: 'VK', link: 'https://vk.com/example' },
-            ],
-        },
-    },
-];
+import content from '../demo/page.json';
 
 const html = renderToStaticMarkup(<Page content={content} parts={parts} />);
 
 writeFileSync(
-    'generated/demo.html',
+    'generated/index.html',
     `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -40,4 +21,4 @@ writeFileSync(
 </html>`
 );
 
-console.log('Страница создана: generated/demo.html');
+console.log('Страница создана: generated/index.html');

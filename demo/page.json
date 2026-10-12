@@ -1,0 +1,21 @@
+[
+  {
+    "part": "@kroy/hero",
+    "props": {
+      "title": "Ветеринарный врач Test",
+      "description": "Забота о ваших питомцах"
+    }
+  },
+  {
+    "part": "@kroy/contacts",
+    "props": {
+      "phone": "+7 999 123-45-67",
+      "socials": [
+        {
+          "name": "Telegram",
+          "link": "https://t.me/example"
+        }
+      ]
+    }
+  }
+]
