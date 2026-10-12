@@ -108,7 +108,11 @@ export default function Editor() {
                 <Page content={content} />
 
                 <h2>Данные страницы</h2>
-                <pre>{JSON.stringify(content, null, 2)}</pre>
+                <pre>{JSON.stringify(
+                    content.map(({ part, props }) => ({ part, props })),
+                    null,
+                    2
+                )}</pre>
             </div>
         </main>
     );
