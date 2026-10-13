@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import './editor.css';
 
 import Page from '../layout/Page.jsx';
 import { parts } from '../generated/parts.mjs';

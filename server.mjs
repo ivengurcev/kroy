@@ -6,8 +6,8 @@ await createApp({
     routes: [
         {
             path: '/',
-            title: 'Тестовая страница',
-            component: './Pages/Test.jsx',
+            title: 'Редактор Kroy',
+            component: './editor/Editor.jsx',
         },
     ],
 });

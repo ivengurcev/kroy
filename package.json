@@ -14,7 +14,7 @@
     "site:parts": "node scripts/generateSiteParts.mjs",
     "demo": "yarn parts:generate && yarn esbuild ./scripts/renderDemo.jsx --bundle --packages=external --platform=node --format=cjs --jsx=automatic --outfile=generated/demo.cjs && yarn node generated/demo.cjs",
     "editor:demo": "yarn site:parts && yarn esbuild ./editor/main.jsx --bundle --platform=browser --format=iife --jsx=automatic --outfile=generated/editor.js",
-    "vyaz:build": "yarn node server.mjs --build-public --build-ssr",
+    "vyaz:build": "yarn parts:generate && yarn node server.mjs --build-public --build-ssr",
     "vyaz:serve": "yarn node server.mjs --serve"
   },
   "dependencies": {
