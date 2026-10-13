@@ -6,7 +6,6 @@
 
 | Файл | Ответственность |
 |---|---|
-| `editor/main.jsx` | Точка входа React |
 | `editor/Editor.jsx` | Состояние страницы и операции над экземплярами |
 | `editor/PartsPanel.jsx` | Выбор, добавление, удаление и перестановка запчастей |
 | `editor/PartEditor.jsx` | Поля конкретного экземпляра |
@@ -52,11 +51,11 @@ const pageContent = content.map(({ part, props }) => ({ part, props }));
 
 ~~~bash
 yarn install
-yarn editor:demo
-python3 -m http.server 8000
+yarn vyaz:build
+yarn vyaz:serve
 ~~~
 
-Открыть `http://localhost:8000/editor.html`. Команда `editor:demo` сначала выполняет генерацию метаданных, затем собирает редактор через esbuild.
+Открыть `http://localhost:3000/`. Команда `vyaz:build` сначала генерирует реестр и метаданные запчастей, затем собирает SSR- и клиентскую части через Vyaz.
 
 ## Реестр запчастей
 

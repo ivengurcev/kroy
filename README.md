@@ -28,10 +28,11 @@ export default function Contacts({ phone }) {
 
 ```bash
 yarn install
-yarn editor:demo
+yarn vyaz:build
+yarn vyaz:serve
 ```
 
-После сборки откройте `editor.html` через локальный HTTP-сервер.
+После запуска редактор доступен по адресу `http://localhost:3000/`.
 
 Отдельно обновить сгенерированный каталог запчастей:
 
