@@ -3,8 +3,8 @@ import { useState } from 'react';
 import './editor.css';
 
 import Page from '../layout/Page.jsx';
-import { parts } from '../generated/parts.mjs';
-import metadata from '../generated/parts.json';
+import { parts } from '../dist/kroy/parts.mjs';
+import metadata from '../dist/kroy/parts.json';
 import initialContent from '../demo/page.json';
 
 import PartsPanel from './PartsPanel.jsx';

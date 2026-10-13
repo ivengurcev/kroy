@@ -1,14 +1,15 @@
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import Page from '../layout/Page.jsx';
-import { parts } from '../generated/site-parts.mjs';
+import { parts } from '../dist/kroy/site-parts.mjs';
 import content from '../demo/page.json';
 
 const html = renderToStaticMarkup(<Page content={content} parts={parts} />);
 
+mkdirSync('dist/sites/demo', { recursive: true });
 writeFileSync(
-    'generated/index.html',
+    'dist/sites/demo/index.html',
     `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -21,4 +22,4 @@ writeFileSync(
 </html>`
 );
 
-console.log('Страница создана: generated/index.html');
+console.log('Страница создана: dist/sites/demo/index.html');

@@ -16,7 +16,6 @@
 dist/
 build/
 .cache/
-generated/
 
 # Environment
 .env

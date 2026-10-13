@@ -5,7 +5,7 @@ import { discoverParts } from './discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PAGE_PATH = join(ROOT, 'demo', 'page.json');
-const OUTPUT_DIR = join(ROOT, 'generated');
+const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 const OUTPUT_PATH = join(OUTPUT_DIR, 'site-parts.mjs');
 
 const content = JSON.parse(await readFile(PAGE_PATH, 'utf8'));

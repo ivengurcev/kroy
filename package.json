@@ -12,7 +12,7 @@
   "scripts": {
     "parts:generate": "node scripts/discoverParts.mjs",
     "site:parts": "node scripts/generateSiteParts.mjs",
-    "demo": "yarn parts:generate && yarn esbuild ./scripts/renderDemo.jsx --bundle --packages=external --platform=node --format=cjs --jsx=automatic --outfile=generated/demo.cjs && yarn node generated/demo.cjs",
+    "demo": "yarn site:parts && yarn esbuild ./scripts/renderDemo.jsx --bundle --packages=external --platform=node --format=cjs --jsx=automatic --outfile=dist/kroy/demo.cjs && yarn node dist/kroy/demo.cjs",
     "vyaz:build": "yarn parts:generate && yarn node server.mjs --build-public --build-ssr",
     "vyaz:serve": "yarn node server.mjs --serve"
   },

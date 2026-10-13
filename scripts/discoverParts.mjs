@@ -6,7 +6,7 @@ import { parsePartDoc } from './parsePartDoc.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PARTS_DIR = join(ROOT, 'parts');
-const OUTPUT_DIR = join(ROOT, 'generated');
+const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 
 const asPosix = (path) => path.split(sep).join('/');
 const partName = (path) => `@kroy/${asPosix(relative(PARTS_DIR, path))}`;
