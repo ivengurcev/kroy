@@ -9,7 +9,15 @@ const PARTS_DIR = join(ROOT, 'parts');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 
 const asPosix = (path) => path.split(sep).join('/');
-const partName = (path) => `@kroy/${asPosix(relative(PARTS_DIR, path))}`;
+const toKebabCase = (value) => value
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase();
+const partName = (path) => `@kroy/${asPosix(relative(PARTS_DIR, path))
+    .split('/')
+    .map(toKebabCase)
+    .join('/')}`;
+const PART_NAME_PATTERN = /^@kroy\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
 
 async function readManifest(directory) {
     const path = join(directory, 'package.json');
@@ -38,8 +46,10 @@ export async function discoverParts() {
     const names = new Map();
 
     async function register(name, componentPath) {
-        if (!name || typeof name !== 'string' || !name.trim()) {
-            throw new Error(`Некорректное имя запчасти: ${componentPath}`);
+        if (typeof name !== 'string' || !PART_NAME_PATTERN.test(name)) {
+            throw new Error(
+                `Некорректное имя запчасти ${JSON.stringify(name)}: ожидается @kroy/<kebab-case>`
+            );
         }
         if (names.has(name)) {
             throw new Error(`Дублируется имя ${name}: ${names.get(name)} и ${componentPath}`);
