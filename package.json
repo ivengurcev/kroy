@@ -1,5 +1,6 @@
 {
   "packageManager": "yarn@4.18.1",
+  "type": "module",
   "resolutions": {
     "@yarnpkg/core": "4.9.1"
   },
@@ -12,10 +13,13 @@
     "parts:generate": "node scripts/discoverParts.mjs",
     "site:parts": "node scripts/generateSiteParts.mjs",
     "demo": "yarn parts:generate && yarn esbuild ./scripts/renderDemo.jsx --bundle --packages=external --platform=node --format=cjs --jsx=automatic --outfile=generated/demo.cjs && yarn node generated/demo.cjs",
-    "editor:demo": "yarn site:parts && yarn esbuild ./editor/main.jsx --bundle --platform=browser --format=iife --jsx=automatic --outfile=generated/editor.js"
+    "editor:demo": "yarn site:parts && yarn esbuild ./editor/main.jsx --bundle --platform=browser --format=iife --jsx=automatic --outfile=generated/editor.js",
+    "vyaz:build": "yarn node server.mjs --build-public --build-ssr",
+    "vyaz:serve": "yarn node server.mjs --serve"
   },
   "dependencies": {
     "@vyaz/core": "portal:../vyaz",
+    "prop-types": "^15.8.1",
     "react": "^19",
     "react-dom": "^19"
   }
