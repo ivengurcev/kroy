@@ -20,6 +20,7 @@ API, PostgreSQL, пользователи, домены и автоматиче�
 | `layout/` | Общие компоненты рендеринга страницы |
 | `parts/` | React-запчасти сайта |
 | `demo/` | Тестовый JSON страницы |
+| `db/migrations/` | Миграции PostgreSQL для dbmate |
 | `scripts/` | Обнаружение запчастей и статическая генерация |
 | `server.mjs` | Конфигурация приложения Vyaz |
 
@@ -68,6 +69,25 @@ yarn demo
 ```
 
 Результат: `dist/sites/demo/index.html`.
+
+## Локальная база данных
+
+Создайте локальный файл окружения и запустите PostgreSQL:
+
+```bash
+cp .env.example .env
+docker compose up -d db
+```
+
+Управление миграциями:
+
+```bash
+docker compose run --rm migrate up
+docker compose run --rm migrate status
+docker compose run --rm migrate rollback
+```
+
+PostgreSQL доступен только локально на `127.0.0.1:5433`. Сервис `migrate` запускается только явной командой; dbmate не создаёт `db/schema.sql`.
 
 ## Документация
 
