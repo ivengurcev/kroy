@@ -1,5 +1,6 @@
 import createApp from '@vyaz/core/createApp.mjs';
 import getPage from './api/getPage.mjs';
+import putPage from './api/putPage.mjs';
 
 await createApp({
     PORT: 3000,
@@ -16,6 +17,11 @@ await createApp({
             '/sites/:siteId/pages/:pageId',
             { method: 'GET' },
             getPage,
+        ],
+        [
+            '/sites/:siteId/pages/:pageId',
+            { method: 'PUT' },
+            putPage,
         ],
     ],
 });
