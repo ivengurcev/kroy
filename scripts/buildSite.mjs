@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { pool } from '../db/client.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
+import generateSiteRouting from './generateSiteRouting.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_PATH = join(ROOT, 'dist', 'kroy', 'site-renderer.mjs');
@@ -31,6 +32,24 @@ try {
          ORDER BY path`,
         [site.id]
     );
+    const redirectsResult = await pool.query(
+        `SELECT r.from_path, p.path, p.deleted_at
+         FROM redirects r
+         JOIN pages p
+           ON p.id = r.page_id
+          AND p.site_id = r.site_id
+         WHERE r.site_id = $1
+         ORDER BY r.from_path`,
+        [site.id]
+    );
+    const deletedPagesResult = await pool.query(
+        `SELECT path
+         FROM pages
+         WHERE site_id = $1
+           AND deleted_at IS NOT NULL
+         ORDER BY path`,
+        [site.id]
+    );
 
     await generateSiteParts(pagesResult.rows, site.slug);
     await build({
@@ -48,6 +67,11 @@ try {
     );
 
     await renderSite(site, pagesResult.rows);
+    await generateSiteRouting(
+        site.slug,
+        redirectsResult.rows,
+        deletedPagesResult.rows
+    );
 } catch (error) {
     console.error(`Не удалось собрать сайт: ${error.message}`);
     process.exitCode = 1;
