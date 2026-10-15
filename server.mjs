@@ -1,4 +1,5 @@
 import createApp from '@vyaz/core/createApp.mjs';
+import getCurrentSite from './api/getCurrentSite.mjs';
 import getPage from './api/getPage.mjs';
 import putPage from './api/putPage.mjs';
 
@@ -13,6 +14,11 @@ await createApp({
         },
     ],
     api: [
+        [
+            '/current-site',
+            { method: 'GET' },
+            getCurrentSite,
+        ],
         [
             '/sites/:siteId/pages/:pageId',
             { method: 'GET' },
