@@ -83,7 +83,7 @@ export default function Contacts({ phone = '', socials = [] }) {
 
 - `dist/kroy/parts.mjs` — полный реестр компонентов для редактора.
 - `dist/kroy/parts.json` — метаданные для автоматических полей редактора.
-- `yarn site:parts` создаёт `dist/kroy/site-parts.mjs` только с запчастями из `demo/page.json`.
+- `yarn site:build <slug>` создаёт `dist/kroy/site-parts.mjs` только с запчастями, используемыми активными страницами выбранного сайта в PostgreSQL.
 - Файлы в `dist/` не правятся вручную и не считаются исходным кодом проекта.
 
 Устаревшие `fields` внутри `package.json` отдельных запчастей, которые ещё встречаются в репозитории, **не участвуют** в формировании метаданных. Источник истины — JSDoc.

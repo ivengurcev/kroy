@@ -12,8 +12,8 @@
   "scripts": {
     "db:seed": "yarn node --env-file=.env db/seed.mjs",
     "parts:generate": "node scripts/discoverParts.mjs",
-    "site:parts": "node scripts/generateSiteParts.mjs",
-    "demo": "yarn site:parts && yarn esbuild ./scripts/renderDemo.jsx --bundle --packages=external --platform=node --format=cjs --jsx=automatic --outfile=dist/kroy/demo.cjs && yarn node dist/kroy/demo.cjs",
+    "site:build": "yarn node --env-file=.env scripts/buildSite.mjs",
+    "demo": "yarn site:build demo",
     "vyaz:build": "yarn parts:generate && yarn node --env-file=.env server.mjs --build-public --build-ssr",
     "vyaz:serve": "yarn node --env-file=.env server.mjs --serve"
   },
