@@ -4,6 +4,7 @@ import getPage from './api/getPage.mjs';
 import patchPage from './api/patchPage.mjs';
 import postPage from './api/postPage.mjs';
 import putPage from './api/putPage.mjs';
+import restorePage from './api/restorePage.mjs';
 
 await createApp({
     PORT: 3000,
@@ -18,6 +19,11 @@ await createApp({
             path: '/admin/pages',
             title: 'Страницы Kroy',
             component: './editor/Pages.jsx',
+        },
+        {
+            path: '/admin/pages/trash',
+            title: 'Корзина Kroy',
+            component: './editor/Trash.jsx',
         },
         {
             path: '/admin/pages/:pageId/edit',
@@ -55,6 +61,11 @@ await createApp({
             '/pages/:pageId',
             { method: 'DELETE' },
             deletePage,
+        ],
+        [
+            '/pages/:pageId/restore',
+            { method: 'POST' },
+            restorePage,
         ],
         [
             '*',

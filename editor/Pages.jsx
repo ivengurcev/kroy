@@ -161,11 +161,15 @@ export default function Pages() {
             <div className="pages-heading">
                 <h1>Страницы</h1>
 
-                {!showForm && (
-                    <button type="button" onClick={() => setShowForm(true)}>
-                        Создать страницу
-                    </button>
-                )}
+                <div className="pages-heading-actions">
+                    <a href="/admin/pages/trash">Корзина</a>
+
+                    {!showForm && (
+                        <button type="button" onClick={() => setShowForm(true)}>
+                            Создать страницу
+                        </button>
+                    )}
+                </div>
             </div>
 
             {showForm && (

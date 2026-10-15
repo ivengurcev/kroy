@@ -5,19 +5,32 @@ import isUuid from "./isUuid.mjs";
 export default async function getPage(c) {
   const pageId = c.req.param("pageId");
   const path = c.req.query("path");
+  const deleted = c.req.query("deleted");
   const hostname = getHostname(c);
 
   if (!hostname) return c.json({ error: "Page not found" }, 404);
 
+  if (pageId === undefined && deleted !== undefined && (deleted !== "1" || path !== undefined)) {
+    return c.json({ error: "Invalid request" }, 400);
+  }
+
   if (pageId === undefined && path === undefined) {
     try {
+      const deletedPages = deleted === "1";
       const { rows } = await pool.query(
-         `SELECT p.id, p.path, p.title
-         FROM domains d
-         LEFT JOIN pages p ON p.site_id = d.site_id
-          AND p.deleted_at IS NULL
-         WHERE d.hostname = $1
-         ORDER BY p.path, p.id`,
+        deletedPages
+          ? `SELECT p.id, p.path, p.title, p.deleted_at
+             FROM domains d
+             LEFT JOIN pages p ON p.site_id = d.site_id
+              AND p.deleted_at IS NOT NULL
+             WHERE d.hostname = $1
+             ORDER BY p.deleted_at DESC, p.id`
+          : `SELECT p.id, p.path, p.title
+             FROM domains d
+             LEFT JOIN pages p ON p.site_id = d.site_id
+              AND p.deleted_at IS NULL
+             WHERE d.hostname = $1
+             ORDER BY p.path, p.id`,
         [hostname],
       );
 
