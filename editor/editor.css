@@ -19,6 +19,40 @@ body {
     padding: 32px;
 }
 
+.pages-heading,
+.create-page-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pages-heading {
+    justify-content: space-between;
+}
+
+.create-page-form {
+    padding: 20px;
+    margin-bottom: 24px;
+    background: #f3f3f3;
+}
+
+.create-page-form label {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.create-page-form input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin-top: 6px;
+}
+
+.create-page-error {
+    margin-bottom: 0;
+}
+
 .pages-list {
     padding: 0;
     list-style: none;

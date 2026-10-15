@@ -1,5 +1,6 @@
 import createApp from '@vyaz/core/createApp.mjs';
 import getPage from './api/getPage.mjs';
+import postPage from './api/postPage.mjs';
 import putPage from './api/putPage.mjs';
 
 await createApp({
@@ -27,6 +28,11 @@ await createApp({
             '/pages',
             { method: 'GET' },
             getPage,
+        ],
+        [
+            '/pages',
+            { method: 'POST' },
+            postPage,
         ],
         [
             '/pages/:pageId',
