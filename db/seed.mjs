@@ -18,6 +18,24 @@ try {
   } = await client.query("SELECT id FROM sites WHERE slug = $1", ["demo"]);
 
   await client.query(
+    `INSERT INTO domains (site_id, hostname)
+     VALUES ($1, $2)
+     ON CONFLICT (hostname) DO NOTHING`,
+    [siteId, "demo.localhost"],
+  );
+
+  const {
+    rows: [{ site_id: domainSiteId }],
+  } = await client.query(
+    "SELECT site_id FROM domains WHERE hostname = $1",
+    ["demo.localhost"],
+  );
+
+  if (domainSiteId !== siteId) {
+    throw new Error("Domain demo.localhost belongs to another site");
+  }
+
+  await client.query(
     `INSERT INTO pages (site_id, path, title, content)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (site_id, path) DO NOTHING`,
