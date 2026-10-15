@@ -10,6 +10,10 @@ body {
     min-height: 100vh;
 }
 
+.editor-status {
+    padding: 32px;
+}
+
 .panel {
     padding: 24px;
     background: #f3f3f3;
@@ -72,6 +76,16 @@ button:disabled {
 .result {
     padding: 32px;
     min-width: 0;
+}
+
+.save-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.save-status {
+    min-height: 1.25em;
 }
 
 pre {

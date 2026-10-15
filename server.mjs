@@ -7,7 +7,7 @@ await createApp({
     PAGE_TITLE: 'Kroy',
     routes: [
         {
-            path: '/',
+            path: '/admin',
             title: 'Редактор Kroy',
             component: './editor/Editor.jsx',
         },
