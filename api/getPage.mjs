@@ -5,6 +5,32 @@ import isUuid from "./isUuid.mjs";
 export default async function getPage(c) {
   const pageId = c.req.param("pageId");
   const path = c.req.query("path");
+  const hostname = getHostname(c);
+
+  if (!hostname) return c.json({ error: "Page not found" }, 404);
+
+  if (pageId === undefined && path === undefined) {
+    try {
+      const { rows } = await pool.query(
+        `SELECT p.id, p.path, p.title
+         FROM domains d
+         LEFT JOIN pages p ON p.site_id = d.site_id
+         WHERE d.hostname = $1
+         ORDER BY p.path, p.id`,
+        [hostname],
+      );
+
+      if (rows.length === 0) {
+        return c.json({ error: "Site not found" }, 404);
+      }
+
+      return rows.filter(({ id }) => id !== null);
+    } catch (error) {
+      console.error("Failed to list pages", error);
+      return c.json({ error: "Internal server error" }, 500);
+    }
+  }
+
   let condition;
   let value;
 
@@ -28,10 +54,6 @@ export default async function getPage(c) {
     condition = "p.path = $1";
     value = path;
   }
-
-  const hostname = getHostname(c);
-
-  if (!hostname) return c.json({ error: "Page not found" }, 404);
 
   try {
     const { rows } = await pool.query(

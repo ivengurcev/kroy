@@ -17,10 +17,16 @@ export default function Editor() {
 
     useEffect(() => {
         const controller = new AbortController();
+        const match = window.location.pathname.match(
+            /^\/admin\/pages\/([^/]+)\/edit$/
+        );
+        const pageUrl = match
+            ? `/api/pages/${encodeURIComponent(match[1])}`
+            : '/api/pages?path=/';
 
         async function loadPage() {
             try {
-                const response = await fetch('/api/pages?path=/', {
+                const response = await fetch(pageUrl, {
                     signal: controller.signal,
                 });
 

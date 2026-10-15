@@ -11,6 +11,16 @@ await createApp({
             title: 'Редактор Kroy',
             component: './editor/Editor.jsx',
         },
+        {
+            path: '/admin/pages',
+            title: 'Страницы Kroy',
+            component: './editor/Pages.jsx',
+        },
+        {
+            path: '/admin/pages/:pageId/edit',
+            title: 'Редактор Kroy',
+            component: './editor/Editor.jsx',
+        },
     ],
     api: [
         [
