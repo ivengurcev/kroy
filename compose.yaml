@@ -28,5 +28,15 @@ services:
       db:
         condition: service_healthy
 
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["preview"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./dist/sites/demo:/srv:ro
+      - ./dist/kroy/caddy/demo.Caddyfile:/etc/caddy/Caddyfile:ro
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+
 volumes:
   postgres-data:

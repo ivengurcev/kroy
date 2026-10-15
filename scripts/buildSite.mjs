@@ -2,6 +2,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { pool } from '../db/client.mjs';
+import generateCaddyConfig from './generateCaddyConfig.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 
@@ -72,6 +73,7 @@ try {
         redirectsResult.rows,
         deletedPagesResult.rows
     );
+    await generateCaddyConfig(site.slug);
 } catch (error) {
     console.error(`Не удалось собрать сайт: ${error.message}`);
     process.exitCode = 1;

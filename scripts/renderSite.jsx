@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -63,7 +63,11 @@ export default async function renderSite(site, pages) {
         };
     });
 
-    await rm(siteDirectory, { recursive: true, force: true });
+    await mkdir(siteDirectory, { recursive: true });
+
+    for (const entry of await readdir(siteDirectory)) {
+        await rm(join(siteDirectory, entry), { recursive: true, force: true });
+    }
 
     for (const outputFile of outputFiles) {
         await mkdir(dirname(outputFile.path), { recursive: true });
