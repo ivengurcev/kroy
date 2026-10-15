@@ -12,9 +12,10 @@ export default async function getPage(c) {
   if (pageId === undefined && path === undefined) {
     try {
       const { rows } = await pool.query(
-        `SELECT p.id, p.path, p.title
+         `SELECT p.id, p.path, p.title
          FROM domains d
          LEFT JOIN pages p ON p.site_id = d.site_id
+          AND p.deleted_at IS NULL
          WHERE d.hostname = $1
          ORDER BY p.path, p.id`,
         [hostname],
@@ -61,6 +62,7 @@ export default async function getPage(c) {
        FROM pages p
        JOIN domains d ON d.site_id = p.site_id
        WHERE ${condition}
+         AND p.deleted_at IS NULL
          AND d.hostname = $2`,
       [value, hostname],
     );

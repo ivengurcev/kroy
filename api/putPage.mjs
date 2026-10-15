@@ -58,6 +58,7 @@ export default async function putPage(c) {
        FROM domains d
        WHERE p.id = $2
          AND p.site_id = d.site_id
+         AND p.deleted_at IS NULL
          AND d.hostname = $3
        RETURNING p.id, p.site_id, p.path, p.title, p.content`,
       [JSON.stringify(body.content), pageId, hostname],

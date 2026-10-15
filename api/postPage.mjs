@@ -1,34 +1,10 @@
 import { pool } from "../db/client.mjs";
 import getHostname from "./getHostname.mjs";
-
-function isPlainObject(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
-
-function isValidPath(path) {
-  if (
-    typeof path !== "string"
-    || !path.startsWith("/")
-    || /\s/.test(path)
-    || path.includes("?")
-    || path.includes("#")
-  ) {
-    return false;
-  }
-
-  if (path === "/") return true;
-
-  const segments = path.slice(1).split("/");
-
-  return segments.every((segment) => segment && segment !== "." && segment !== "..")
-    && segments[0] !== "admin"
-    && segments[0] !== "api";
-}
+import {
+  isPlainObject,
+  isValidPagePath,
+  normalizePageTitle,
+} from "./pageFields.mjs";
 
 export default async function postPage(c) {
   let body;
@@ -40,14 +16,14 @@ export default async function postPage(c) {
   }
 
   const keys = isPlainObject(body) ? Object.keys(body) : [];
-  const title = typeof body?.title === "string" ? body.title.trim() : "";
+  const title = normalizePageTitle(body?.title);
 
   if (
     keys.length !== 2
     || !keys.includes("title")
     || !keys.includes("path")
     || !title
-    || !isValidPath(body.path)
+    || !isValidPagePath(body.path)
   ) {
     return c.json({ error: "Invalid page" }, 400);
   }

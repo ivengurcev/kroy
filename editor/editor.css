@@ -30,18 +30,21 @@ body {
     justify-content: space-between;
 }
 
-.create-page-form {
+.create-page-form,
+.edit-page-form {
     padding: 20px;
     margin-bottom: 24px;
     background: #f3f3f3;
 }
 
-.create-page-form label {
+.create-page-form label,
+.edit-page-form label {
     display: block;
     margin-bottom: 16px;
 }
 
-.create-page-form input {
+.create-page-form input,
+.edit-page-form input {
     display: block;
     width: 100%;
     box-sizing: border-box;
@@ -58,14 +61,34 @@ body {
     list-style: none;
 }
 
+.pages-list-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #ccc;
+}
+
 .pages-list a {
     display: flex;
+    flex: 1;
     justify-content: space-between;
     gap: 24px;
     padding: 16px 0;
-    border-bottom: 1px solid #ccc;
     color: inherit;
     text-decoration: none;
+}
+
+.page-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.delete-page-error {
+    margin: 8px 0;
+}
+
+.edit-page-form {
+    margin-bottom: 0;
 }
 
 .panel {
