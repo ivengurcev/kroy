@@ -32,27 +32,60 @@ export default async function postPage(c) {
 
   if (!hostname) return c.json({ error: "Site not found" }, 404);
 
+  let client;
+
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO pages (site_id, title, path, content)
-       SELECT d.site_id, $1, $2, '[]'::jsonb
-       FROM domains d
-       WHERE d.hostname = $3
-       RETURNING id, site_id, path, title, content`,
-      [title, body.path, hostname],
+    client = await pool.connect();
+    await client.query("BEGIN");
+
+    const { rows: sites } = await client.query(
+      `SELECT s.id
+       FROM sites s
+       JOIN domains d ON d.site_id = s.id
+       WHERE d.hostname = $1
+       FOR UPDATE OF s`,
+      [hostname],
     );
 
-    if (rows.length === 0) {
+    if (sites.length === 0) {
+      await client.query("ROLLBACK");
       return c.json({ error: "Site not found" }, 404);
     }
 
+    const siteId = sites[0].id;
+    const { rowCount: redirectCount } = await client.query(
+      `SELECT 1
+       FROM redirects
+       WHERE site_id = $1
+         AND from_path = $2`,
+      [siteId, body.path],
+    );
+
+    if (redirectCount > 0) {
+      await client.query("ROLLBACK");
+      return c.json({ error: "Page already exists" }, 409);
+    }
+
+    const { rows } = await client.query(
+      `INSERT INTO pages (site_id, title, path, content)
+       VALUES ($1, $2, $3, '[]'::jsonb)
+       RETURNING id, site_id, path, title, content`,
+      [siteId, title, body.path],
+    );
+
+    await client.query("COMMIT");
+
     return c.json(rows[0], 201);
   } catch (error) {
+    await client?.query("ROLLBACK").catch(() => {});
+
     if (error.code === "23505") {
       return c.json({ error: "Page already exists" }, 409);
     }
 
     console.error("Failed to create page", error);
     return c.json({ error: "Internal server error" }, 500);
+  } finally {
+    client?.release();
   }
 }
