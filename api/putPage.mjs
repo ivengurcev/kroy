@@ -1,7 +1,7 @@
 import partCatalog from "../dist/kroy/parts.json" with { type: "json" };
 import { pool } from "../db/client.mjs";
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import getHostname from "./getHostname.mjs";
+import isUuid from "./isUuid.mjs";
 
 function isPlainObject(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -29,10 +29,9 @@ function isValidContent(content) {
 }
 
 export default async function putPage(c) {
-  const siteId = c.req.param("siteId");
   const pageId = c.req.param("pageId");
 
-  if (!UUID_PATTERN.test(siteId) || !UUID_PATTERN.test(pageId)) {
+  if (!isUuid(pageId)) {
     return c.json({ error: "Invalid UUID" }, 400);
   }
 
@@ -48,13 +47,20 @@ export default async function putPage(c) {
     return c.json({ error: "Invalid content" }, 400);
   }
 
+  const hostname = getHostname(c);
+
+  if (!hostname) return c.json({ error: "Page not found" }, 404);
+
   try {
     const { rows } = await pool.query(
-      `UPDATE pages
+      `UPDATE pages p
        SET content = $1
-       WHERE id = $2 AND site_id = $3
-       RETURNING id, site_id, path, title, content`,
-      [JSON.stringify(body.content), pageId, siteId],
+       FROM domains d
+       WHERE p.id = $2
+         AND p.site_id = d.site_id
+         AND d.hostname = $3
+       RETURNING p.id, p.site_id, p.path, p.title, p.content`,
+      [JSON.stringify(body.content), pageId, hostname],
     );
 
     if (rows.length === 0) {
