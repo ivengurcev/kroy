@@ -1,11 +1,21 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isValidPagePath } from '../api/pageFields.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy', 'routing');
 
 export default async function generateSiteRouting(siteSlug, redirects, deletedPages) {
+    const paths = [
+        ...redirects.flatMap(({ from_path: from, path }) => [from, path]),
+        ...deletedPages.map(({ path }) => path),
+    ];
+
+    if (paths.some((path) => !isValidPagePath(path))) {
+        throw new Error(`Некорректный публичный путь сайта ${siteSlug}`);
+    }
+
     const activeRedirects = redirects
         .filter(({ deleted_at: deletedAt }) => deletedAt === null)
         .map(({ from_path: from, path: to }) => ({ from, to, status: 301 }))

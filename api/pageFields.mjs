@@ -14,21 +14,16 @@ export function normalizePageTitle(value) {
 }
 
 export function isValidPagePath(path) {
-  if (
-    typeof path !== "string"
-    || !path.startsWith("/")
-    || /\s/.test(path)
-    || path.includes("?")
-    || path.includes("#")
-  ) {
-    return false;
-  }
+  if (typeof path !== "string") return false;
 
   if (path === "/") return true;
 
+  if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(path)) {
+    return false;
+  }
+
   const segments = path.slice(1).split("/");
 
-  return segments.every((segment) => segment && segment !== "." && segment !== "..")
-    && segments[0] !== "admin"
+  return segments[0] !== "admin"
     && segments[0] !== "api";
 }

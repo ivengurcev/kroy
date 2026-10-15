@@ -35,8 +35,8 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - ./dist/sites/demo:/srv:ro
-      - ./dist/kroy/caddy/demo.Caddyfile:/etc/caddy/Caddyfile:ro
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+      - ./dist/kroy/caddy:/etc/caddy:ro
+    command: ["caddy", "run", "--config", "/etc/caddy/demo.Caddyfile", "--adapter", "caddyfile"]
 
 volumes:
   postgres-data:

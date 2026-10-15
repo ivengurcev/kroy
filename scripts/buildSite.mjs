@@ -1,6 +1,7 @@
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
+import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
 import generateCaddyConfig from './generateCaddyConfig.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
@@ -51,6 +52,17 @@ try {
          ORDER BY path`,
         [site.id]
     );
+    const publicPaths = [
+        ...pagesResult.rows.map(({ path }) => path),
+        ...redirectsResult.rows.flatMap(
+            ({ from_path: from, path }) => [from, path]
+        ),
+        ...deletedPagesResult.rows.map(({ path }) => path),
+    ];
+
+    if (publicPaths.some((path) => !isValidPagePath(path))) {
+        throw new Error(`Сайт ${site.slug} содержит некорректный публичный путь`);
+    }
 
     await generateSiteParts(pagesResult.rows, site.slug);
     await build({

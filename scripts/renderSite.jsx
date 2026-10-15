@@ -2,6 +2,7 @@ import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { isValidPagePath } from '../api/pageFields.mjs';
 import Page from '../layout/Page.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
 
@@ -10,19 +11,11 @@ const SITES_DIR = join(ROOT, 'dist', 'sites');
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function getOutputPath(siteDirectory, pagePath) {
-    if (
-        typeof pagePath !== 'string'
-        || !pagePath.startsWith('/')
-        || /[\s?#]/.test(pagePath)
-    ) {
+    if (!isValidPagePath(pagePath)) {
         throw new Error(`Некорректный путь страницы: ${pagePath}`);
     }
 
     const segments = pagePath === '/' ? [] : pagePath.slice(1).split('/');
-
-    if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
-        throw new Error(`Некорректный путь страницы: ${pagePath}`);
-    }
 
     const outputPath = resolve(siteDirectory, ...segments, 'index.html');
 
