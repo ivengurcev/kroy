@@ -26,6 +26,19 @@ try {
         throw new Error(`Сайт не найден: ${siteSlug}`);
     }
 
+    const domainsResult = await pool.query(
+        `SELECT hostname
+         FROM domains
+         WHERE site_id = $1
+           AND hostname LIKE '%.localhost'
+         ORDER BY hostname`,
+        [site.id]
+    );
+
+    if (domainsResult.rows.length === 0) {
+        throw new Error(`У сайта ${site.slug} нет локального домена`);
+    }
+
     const pagesResult = await pool.query(
         `SELECT id, site_id, path, title, content
          FROM pages
@@ -85,7 +98,10 @@ try {
         redirectsResult.rows,
         deletedPagesResult.rows
     );
-    await generateCaddyConfig(site.slug);
+    await generateCaddyConfig(
+        site.slug,
+        domainsResult.rows.map(({ hostname }) => hostname)
+    );
 } catch (error) {
     console.error(`Не удалось собрать сайт: ${error.message}`);
     process.exitCode = 1;

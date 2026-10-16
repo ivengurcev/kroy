@@ -1,6 +1,16 @@
 import pageContent from "../demo/page.json" with { type: "json" };
 import { pool } from "./client.mjs";
 
+const testPageContent = [
+  {
+    part: "@kroy/hero",
+    props: {
+      title: "Тестовый сайт",
+      description: "Отдельный сайт для проверки локальной мультисайтовости",
+    },
+  },
+];
+
 const client = await pool.connect();
 
 try {
@@ -42,8 +52,44 @@ try {
     [siteId, "/", "Главная", JSON.stringify(pageContent)],
   );
 
+  await client.query(
+    `INSERT INTO sites (slug, name)
+     VALUES ($1, $2)
+     ON CONFLICT (slug) DO NOTHING`,
+    ["test", "Тестовый сайт"],
+  );
+
+  const {
+    rows: [{ id: testSiteId }],
+  } = await client.query("SELECT id FROM sites WHERE slug = $1", ["test"]);
+
+  await client.query(
+    `INSERT INTO domains (site_id, hostname)
+     VALUES ($1, $2)
+     ON CONFLICT (hostname) DO NOTHING`,
+    [testSiteId, "test.localhost"],
+  );
+
+  const {
+    rows: [{ site_id: testDomainSiteId }],
+  } = await client.query(
+    "SELECT site_id FROM domains WHERE hostname = $1",
+    ["test.localhost"],
+  );
+
+  if (testDomainSiteId !== testSiteId) {
+    throw new Error("Domain test.localhost belongs to another site");
+  }
+
+  await client.query(
+    `INSERT INTO pages (site_id, path, title, content)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (site_id, path) DO NOTHING`,
+    [testSiteId, "/", "Тестовая главная", JSON.stringify(testPageContent)],
+  );
+
   await client.query("COMMIT");
-  console.log("Demo data is ready.");
+  console.log("Demo and test data are ready.");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;
