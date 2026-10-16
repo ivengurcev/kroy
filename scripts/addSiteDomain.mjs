@@ -1,6 +1,6 @@
 import { pool } from "../db/client.mjs";
+import isValidHostname from "./isValidHostname.mjs";
 
-const LOCAL_HOSTNAME_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+localhost$/;
 const [slug, hostname] = process.argv.slice(2);
 
 try {
@@ -8,8 +8,8 @@ try {
     throw new Error("Использование: yarn site:domain:add <slug> <hostname>");
   }
 
-  if (!LOCAL_HOSTNAME_PATTERN.test(hostname)) {
-    throw new Error("Домен должен быть локальным поддоменом *.localhost");
+  if (!isValidHostname(hostname)) {
+    throw new Error("Некорректное доменное имя");
   }
 
   const {

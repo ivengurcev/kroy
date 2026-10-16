@@ -30,13 +30,12 @@ try {
         `SELECT hostname
          FROM domains
          WHERE site_id = $1
-           AND hostname LIKE '%.localhost'
          ORDER BY hostname`,
         [site.id]
     );
 
     if (domainsResult.rows.length === 0) {
-        throw new Error(`У сайта ${site.slug} нет локального домена`);
+        throw new Error(`У сайта ${site.slug} нет доменов`);
     }
 
     const pagesResult = await pool.query(

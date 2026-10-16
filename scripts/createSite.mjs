@@ -1,7 +1,7 @@
 import { pool } from "../db/client.mjs";
+import isValidHostname from "./isValidHostname.mjs";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const LOCAL_HOSTNAME_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+localhost$/;
 const [slug, hostname, providedName] = process.argv.slice(2);
 const name = (providedName ?? slug)?.trim();
 let client;
@@ -15,8 +15,8 @@ try {
     throw new Error("Slug должен быть в формате kebab-case");
   }
 
-  if (!LOCAL_HOSTNAME_PATTERN.test(hostname)) {
-    throw new Error("Домен должен быть локальным поддоменом *.localhost");
+  if (!isValidHostname(hostname)) {
+    throw new Error("Некорректное доменное имя");
   }
 
   if (!name) {
