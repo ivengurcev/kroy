@@ -41,6 +41,18 @@ function getOutputPath(siteDirectory, pagePath) {
     return outputPath;
 }
 
+function getDataOutputPath(siteDirectory, pagePath) {
+    const dataDirectory = resolve(siteDirectory, '_kroy', 'pages');
+    const segments = pagePath === '/' ? [] : pagePath.slice(1).split('/');
+    const outputPath = resolve(dataDirectory, ...segments, 'index.json');
+
+    if (!outputPath.startsWith(`${dataDirectory}${sep}`)) {
+        throw new Error(`Путь данных выходит за каталог сайта: ${pagePath}`);
+    }
+
+    return outputPath;
+}
+
 export default async function renderSite(site, pages) {
     if (!SLUG_PATTERN.test(site.slug)) {
         throw new Error(`Некорректный slug сайта: ${site.slug}`);
@@ -53,6 +65,11 @@ export default async function renderSite(site, pages) {
     }
 
     const outputFiles = pages.map((page) => {
+        const publicPage = {
+            path: page.path,
+            title: page.title,
+            content: page.content,
+        };
         const markup = renderToString(
             <html lang="ru">
                 <head>
@@ -61,12 +78,12 @@ export default async function renderSite(site, pages) {
                 </head>
                 <body>
                     <div id="root">
-                        <SiteApp page={page} parts={parts} />
+                        <SiteApp page={publicPage} parts={parts} />
                     </div>
                     <script
                         id="kroy-page-data"
                         type="application/json"
-                        dangerouslySetInnerHTML={{ __html: serializePage(page) }}
+                        dangerouslySetInnerHTML={{ __html: serializePage(publicPage) }}
                     />
                     <script type="module" src="/assets/app.js" />
                 </body>
@@ -76,6 +93,8 @@ export default async function renderSite(site, pages) {
         return {
             path: getOutputPath(siteDirectory, page.path),
             html: `<!DOCTYPE html>${markup}`,
+            dataPath: getDataOutputPath(siteDirectory, page.path),
+            data: JSON.stringify(publicPage),
         };
     });
 
@@ -88,6 +107,8 @@ export default async function renderSite(site, pages) {
     for (const outputFile of outputFiles) {
         await mkdir(dirname(outputFile.path), { recursive: true });
         await writeFile(outputFile.path, outputFile.html);
+        await mkdir(dirname(outputFile.dataPath), { recursive: true });
+        await writeFile(outputFile.dataPath, outputFile.data);
         console.log(`Страница создана: ${outputFile.path}`);
     }
 }
