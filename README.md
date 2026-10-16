@@ -91,6 +91,20 @@ yarn site:list
 yarn site:info demo
 ```
 
+Добавить или удалить дополнительный локальный домен сайта:
+
+```bash
+yarn site:domain:add demo second-demo.localhost
+yarn site:build demo
+yarn preview:reload
+
+yarn site:domain:remove demo second-demo.localhost
+yarn site:build demo
+yarn preview:reload
+```
+
+Последний домен сайта удалить нельзя. После изменения доменов нужно пересобрать сайт и перезагрузить Caddy, чтобы обновить preview-конфигурацию.
+
 Локальный просмотр готового сайта через Caddy:
 
 ```bash
