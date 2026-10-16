@@ -12,6 +12,9 @@
 !.vscode/settings.json
 !.vscode/extensions.json
 
+#nbproject
+nbproject
+
 # Build
 dist/
 build/
@@ -27,3 +30,4 @@ build/
 
 # OS
 .DS_Store
+/nbproject/private/

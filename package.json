@@ -13,6 +13,8 @@
     "db:seed": "yarn node --env-file=.env db/seed.mjs",
     "parts:generate": "node scripts/discoverParts.mjs",
     "site:create": "yarn node --env-file=.env scripts/createSite.mjs",
+    "site:list": "yarn node --env-file=.env scripts/listSites.mjs",
+    "site:info": "yarn node --env-file=.env scripts/getSiteInfo.mjs",
     "site:build": "yarn node --env-file=.env scripts/buildSite.mjs",
     "demo": "yarn site:build demo",
     "preview": "docker compose --profile preview up -d caddy",

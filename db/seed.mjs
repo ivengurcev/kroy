@@ -7,8 +7,8 @@ const testPageContent = [
     props: {
       title: "Тестовый сайт",
       description: "Отдельный сайт для проверки локальной мультисайтовости",
-    },
-  },
+    }
+  }
 ];
 
 const client = await pool.connect();
@@ -24,7 +24,7 @@ try {
   );
 
   const {
-    rows: [{ id: siteId }],
+    rows: [{ id: siteId }]
   } = await client.query("SELECT id FROM sites WHERE slug = $1", ["demo"]);
 
   await client.query(
@@ -35,7 +35,7 @@ try {
   );
 
   const {
-    rows: [{ site_id: domainSiteId }],
+    rows: [{ site_id: domainSiteId }]
   } = await client.query(
     "SELECT site_id FROM domains WHERE hostname = $1",
     ["demo.localhost"],
