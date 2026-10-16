@@ -9,6 +9,7 @@ import generateSiteRouting from './generateSiteRouting.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_PATH = join(ROOT, 'dist', 'kroy', 'site-renderer.mjs');
+const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
 const siteSlug = process.argv[2];
 let client;
 
@@ -127,6 +128,15 @@ try {
     );
 
     await renderSite(site, pages);
+    await build({
+        entryPoints: [CLIENT_ENTRY_PATH],
+        outfile: join(ROOT, 'dist', 'sites', site.slug, 'assets', 'app.js'),
+        bundle: true,
+        platform: 'browser',
+        format: 'esm',
+        jsx: 'automatic',
+        define: { 'process.env.NODE_ENV': '"production"' },
+    });
     await generateSiteRouting(
         site.slug,
         redirects,
