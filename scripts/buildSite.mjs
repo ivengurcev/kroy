@@ -1,4 +1,5 @@
 import { dirname, join, resolve } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
@@ -10,6 +11,7 @@ import generateSiteRouting from './generateSiteRouting.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_PATH = join(ROOT, 'dist', 'kroy', 'site-renderer.mjs');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
+const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
 const siteSlug = process.argv[2];
 let client;
 
@@ -113,6 +115,13 @@ try {
     }
 
     await generateSiteParts(pages, site.slug);
+    const pageRegistry = Object.fromEntries(
+        pages.map(({ path, title, content }) => [path, { path, title, content }])
+    );
+    await writeFile(
+        SITE_PAGES_PATH,
+        `export const pages = ${JSON.stringify(pageRegistry)};\n`
+    );
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],
         outfile: RENDERER_PATH,

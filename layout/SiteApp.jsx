@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Page from './Page.jsx';
 
 const RESERVED_PATHS = [
@@ -17,57 +17,23 @@ function isReservedPath(pathname) {
     );
 }
 
-function getPageDataUrl(pathname) {
-    return pathname === '/'
-        ? '/_kroy/pages/index.json'
-        : `/_kroy/pages${pathname}/index.json`;
-}
-
-export default function SiteApp({ page: initialPage, parts }) {
-    const [page, setPage] = useState(initialPage);
-    const request = useRef();
+export default function SiteApp({ pages, path, parts }) {
+    const [page, setPage] = useState(() => pages[path]);
 
     useEffect(() => {
-        async function navigate(url, push) {
-            request.current?.abort();
-            const controller = new AbortController();
-            request.current = controller;
+        function navigate(url, push) {
+            const nextPage = pages[url.pathname];
 
-            try {
-                const response = await fetch(getPageDataUrl(url.pathname), {
-                    signal: controller.signal,
-                });
+            if (!nextPage) {
+                window.location.assign(url.href);
+                return;
+            }
 
-                if (!response.ok) {
-                    throw new Error(`Страница не найдена: ${url.pathname}`);
-                }
+            setPage(nextPage);
+            document.title = nextPage.title;
 
-                const nextPage = await response.json();
-
-                if (
-                    nextPage?.path !== url.pathname
-                    || typeof nextPage.title !== 'string'
-                    || !Array.isArray(nextPage.content)
-                ) {
-                    throw new Error(`Некорректные данные страницы: ${url.pathname}`);
-                }
-
-                if (request.current !== controller) return;
-
-                setPage(nextPage);
-                document.title = nextPage.title;
-
-                if (push) {
-                    history.pushState(null, '', url);
-                }
-            } catch (error) {
-                if (error.name === 'AbortError') return;
-
-                if (push) {
-                    window.location.assign(url.href);
-                } else {
-                    window.location.reload();
-                }
+            if (push) {
+                history.pushState(null, '', url);
             }
         }
 
@@ -105,22 +71,21 @@ export default function SiteApp({ page: initialPage, parts }) {
             }
 
             event.preventDefault();
-            void navigate(url, true);
+            navigate(url, true);
         }
 
         function handlePopState() {
-            void navigate(new URL(window.location.href), false);
+            navigate(new URL(window.location.href), false);
         }
 
         document.addEventListener('click', handleClick);
         window.addEventListener('popstate', handlePopState);
 
         return () => {
-            request.current?.abort();
             document.removeEventListener('click', handleClick);
             window.removeEventListener('popstate', handlePopState);
         };
-    }, []);
+    }, [pages]);
 
-    return <Page content={page.content} parts={parts} />;
+    return <Page key={page.path} content={page.content} parts={parts} />;
 }

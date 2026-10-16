@@ -1,14 +1,15 @@
 import { hydrateRoot } from 'react-dom/client';
 import SiteApp from '../layout/SiteApp.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
+import { pages } from '../dist/kroy/site-pages.mjs';
 
 const root = document.getElementById('root');
-const data = document.getElementById('kroy-page-data');
 
-if (!root || !data) {
-    throw new Error('Не найдены данные для гидратации публичной страницы');
+if (!root) {
+    throw new Error('Не найден корневой элемент публичной страницы');
 }
 
-const page = JSON.parse(data.textContent);
-
-hydrateRoot(root, <SiteApp page={page} parts={parts} />);
+hydrateRoot(
+    root,
+    <SiteApp pages={pages} path={location.pathname} parts={parts} />
+);
