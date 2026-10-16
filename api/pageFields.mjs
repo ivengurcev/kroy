@@ -24,6 +24,5 @@ export function isValidPagePath(path) {
 
   const segments = path.slice(1).split("/");
 
-  return segments[0] !== "admin"
-    && segments[0] !== "api";
+  return !["admin", "api", "public", "static", "uploads"].includes(segments[0]);
 }

@@ -46,6 +46,10 @@ export default async function generateCaddyConfig(siteSlug) {
     const config = [
         `http://${siteSlug}.localhost:8080 {`,
         '\troute {',
+        '\t\t@vyaz path /admin /admin/* /api /api/* /public /public/* /static /static/* /uploads /uploads/*',
+        '\t\treverse_proxy @vyaz host.docker.internal:3000 {',
+        '\t\t\theader_up Host {hostport}',
+        '\t\t}',
         ...rules,
         '\t\troot * /srv',
         '\t\ttry_files {path}/index.html {path}',
