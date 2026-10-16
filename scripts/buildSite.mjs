@@ -130,6 +130,7 @@ try {
     await renderSite(site, pages);
     await build({
         entryPoints: [CLIENT_ENTRY_PATH],
+        minify: true,
         outfile: join(ROOT, 'dist', 'sites', site.slug, 'assets', 'app.js'),
         bundle: true,
         platform: 'browser',
