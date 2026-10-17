@@ -12,6 +12,19 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_PATH = join(ROOT, 'dist', 'kroy', 'site-renderer.mjs');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
 const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
+const ASSET_LOADERS = {
+    '.png': 'file',
+    '.jpg': 'file',
+    '.jpeg': 'file',
+    '.webp': 'file',
+    '.svg': 'file',
+    '.gif': 'file',
+    '.avif': 'file',
+    '.woff': 'file',
+    '.woff2': 'file',
+    '.ttf': 'file',
+    '.otf': 'file',
+};
 const siteSlug = process.argv[2];
 let client;
 
@@ -134,7 +147,10 @@ try {
         loader: {
             '.css': 'empty',
             '.module.css': 'local-css',
+            ...ASSET_LOADERS,
         },
+        assetNames: 'assets/[name]-[hash]',
+        publicPath: '/',
     });
 
     const { default: renderSite } = await import(
@@ -150,7 +166,12 @@ try {
         platform: 'browser',
         format: 'esm',
         jsx: 'automatic',
-        loader: { '.module.css': 'local-css' },
+        loader: {
+            '.module.css': 'local-css',
+            ...ASSET_LOADERS,
+        },
+        assetNames: '[name]-[hash]',
+        publicPath: '/assets',
         define: { 'process.env.NODE_ENV': '"production"' },
     });
     await generateSiteRouting(
