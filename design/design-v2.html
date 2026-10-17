@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kroy — редактор страницы</title>
+    <link rel="stylesheet" href="design-v2.css">
+</head>
+<body>
+    <div class="editor-app">
+        <header class="fixed-header">
+            <div class="primary-bar card">
+                <a class="logo" href="#" aria-label="Kroy">
+                    <img src="kroy-logo.svg" alt="">
+                    <strong>Kroy</strong>
+                </a>
+
+                <a class="header-tile setup-tile" href="#">
+                    <span class="tile-icon">⚙</span>
+                    <span><b>Настройки сайта</b><small>Дизайн, меню, контакты</small></span>
+                    <i>›</i>
+                </a>
+
+                <a class="header-tile pages-tile" href="#">
+                    <span class="tile-icon">▤</span>
+                    <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
+                    <i>›</i>
+                </a>
+
+                <section class="current-page">
+                    <span class="tile-icon">⌂</span>
+                    <span class="page-name"><small>Текущая страница</small><b>Главная <i>✎</i></b></span>
+                    <span class="page-address">
+                        <small>Адрес страницы</small>
+                        <span><code>/</code><button type="button">✎ <em>Изменить</em></button></span>
+                    </span>
+                </section>
+
+                <a class="outline-action preview-action" href="#">Посмотреть сайт ↗</a>
+                <button class="publish-action" type="button">☁ <span>Опубликовать</span></button>
+            </div>
+
+            <div class="secondary-bar card">
+                <nav class="mode-tabs" aria-label="Режим редактора">
+                    <button class="active" type="button"><b>✎</b><span>Редактирование</span></button>
+                    <button type="button"><b>⚙</b><span>Настройки</span></button>
+                    <button type="button"><b>▥</b><span>SEO</span></button>
+                    <button type="button"><b>•••</b><span>Дополнительно</span></button>
+                </nav>
+
+                <div class="save-area">
+                    <span class="save-state"><i>✓</i><span><b>Сохранено</b><small>Изменения сохранены 2 мин. назад</small></span></span>
+                    <button class="save-action" type="button">▣ <span>Сохранить</span></button>
+                </div>
+            </div>
+        </header>
+
+        <main class="scroll-area">
+            <div class="workspace">
+                <section class="page-canvas" aria-label="Макет страницы">
+                    <article class="mock-section mock-hero">
+                        <span class="section-badge">Герой</span>
+                        <div class="section-actions">
+                            <button type="button">⠿</button>
+                            <button type="button">✎ <span>Изменить блок</span></button>
+                            <button type="button">•••</button>
+                        </div>
+                        <div class="mock-copy">
+                            <span class="mock-pill"></span>
+                            <span class="mock-line title"></span>
+                            <span class="mock-line title title-short"></span>
+                            <span class="mock-line lead"></span>
+                            <span class="mock-line lead lead-short"></span>
+                            <div class="mock-buttons"><i></i><i></i></div>
+                        </div>
+                        <div class="mock-image"><span>◇</span></div>
+                        <div class="mock-features">
+                            <span><i></i><b></b></span>
+                            <span><i></i><b></b></span>
+                            <span><i></i><b></b></span>
+                        </div>
+                    </article>
+
+                    <article class="mock-section mock-content">
+                        <div class="mock-copy compact-copy">
+                            <span class="mock-line lead"></span>
+                            <span class="mock-line lead long"></span>
+                            <span class="mock-line lead lead-short"></span>
+                            <div class="mock-cards"><i></i><i></i><i></i></div>
+                        </div>
+                        <div class="mock-image small-image"><span>◇</span></div>
+                    </article>
+
+                    <article class="mock-section mock-row">
+                        <i></i><i></i><i></i><i></i>
+                    </article>
+                </section>
+
+                <aside class="inspector card">
+                    <div class="inspector-title">
+                        <span><h1>Редактирование блока</h1><p>Герой — Главный экран</p></span>
+                        <button type="button" aria-label="Закрыть">×</button>
+                    </div>
+
+                    <nav class="inspector-tabs">
+                        <button class="active" type="button">Контент</button>
+                        <button type="button">Оформление</button>
+                        <button type="button">Дополнительно</button>
+                    </nav>
+
+                    <form class="block-form">
+                        <label>
+                            <span>Заголовок</span>
+                            <textarea rows="2">Семейный ветеринарный врач</textarea>
+                        </label>
+
+                        <label>
+                            <span>Описание</span>
+                            <textarea rows="2">Спокойная, бережная помощь
+для кошек и собак</textarea>
+                        </label>
+
+                        <label>
+                            <span>Кнопка (основная)</span>
+                            <span class="linked-input"><input value="Записаться на прием"><i>↗</i></span>
+                        </label>
+
+                        <label>
+                            <span>Ссылка</span>
+                            <select><option>/contacts</option></select>
+                        </label>
+
+                        <label>
+                            <span>Кнопка (вторичная)</span>
+                            <span class="linked-input"><input value="Подробнее о клинике"><i>↗</i></span>
+                        </label>
+
+                        <label>
+                            <span>Ссылка</span>
+                            <select><option>/about</option></select>
+                        </label>
+
+                        <fieldset class="image-control">
+                            <legend>Изображение</legend>
+                            <div class="image-thumb"><span>◇</span></div>
+                            <button type="button">☁ <span>Заменить</span></button>
+                            <button type="button">♙ <span>Удалить</span></button>
+                        </fieldset>
+                    </form>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="fixed-footer card">
+            <nav class="devices" aria-label="Размер предпросмотра">
+                <button class="active" type="button">▣ <span>Компьютер</span></button>
+                <button type="button">▯ <span>Планшет</span></button>
+                <button type="button">▯ <span>Мобильный</span></button>
+            </nav>
+            <span class="footer-state">● <span>Все изменения сохранены</span></span>
+            <span class="history-actions"><button type="button">↶</button><button type="button" disabled>↷</button></span>
+        </footer>
+    </div>
+</body>
+</html>
