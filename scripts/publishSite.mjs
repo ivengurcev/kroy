@@ -23,6 +23,7 @@ const RELEASE_MARKER = '__KROY_RELEASE__';
 const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css']);
 const execFileAsync = promisify(execFile);
 const siteSlug = process.argv[2];
+const ALREADY_PUBLISHED = 'ALREADY_PUBLISHED';
 
 async function readOptional(path) {
     try {
@@ -88,6 +89,7 @@ async function reloadCaddy() {
 let client;
 let temporaryDirectory;
 let releaseDirectory;
+let publishedMarkerPath;
 let published = false;
 
 try {
@@ -97,7 +99,14 @@ try {
 
     const stagingDirectory = join(STAGING_DIR, siteSlug);
     const routingPath = join(stagingDirectory, 'routing.json');
+    publishedMarkerPath = join(stagingDirectory, '.published');
     await readFile(routingPath);
+
+    if (await readOptional(publishedMarkerPath)) {
+        const error = new Error(`Подготовленная версия ${siteSlug} уже опубликована`);
+        error.code = ALREADY_PUBLISHED;
+        throw error;
+    }
 
     client = await pool.connect();
     const siteResult = await client.query(
@@ -147,6 +156,7 @@ try {
             siteRoot: `${siteSlug}/${releaseId}`,
         });
         await reloadCaddy();
+        await writeFile(publishedMarkerPath, `${releaseId}\n`);
     } catch (error) {
         await restoreFile(configPath, previousConfig);
         await restoreFile(fragmentPath, previousFragment);
@@ -179,14 +189,21 @@ try {
 
     console.log(`Опубликован релиз ${releaseId}: ${releaseDirectory}`);
 } catch (error) {
-    if (!published && releaseDirectory) {
-        await rm(releaseDirectory, { recursive: true, force: true });
+    if (error.code === ALREADY_PUBLISHED) {
+        console.log(error.message);
+    } else {
+        if (!published && releaseDirectory) {
+            await rm(releaseDirectory, { recursive: true, force: true });
+        }
+        if (!published && publishedMarkerPath) {
+            await rm(publishedMarkerPath, { force: true });
+        }
+        if (temporaryDirectory) {
+            await rm(temporaryDirectory, { recursive: true, force: true });
+        }
+        console.error(`Не удалось опубликовать сайт: ${error.message}`);
+        process.exitCode = 1;
     }
-    if (temporaryDirectory) {
-        await rm(temporaryDirectory, { recursive: true, force: true });
-    }
-    console.error(`Не удалось опубликовать сайт: ${error.message}`);
-    process.exitCode = 1;
 } finally {
     client?.release();
     await pool.end();
