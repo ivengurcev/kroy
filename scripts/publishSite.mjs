@@ -154,6 +154,7 @@ try {
         await generateCaddyConfig(siteSlug, site.domains, {
             routingPath: join(releaseDirectory, 'routing.json'),
             siteRoot: `${siteSlug}/${releaseId}`,
+            releaseId,
         });
         await reloadCaddy();
         await writeFile(publishedMarkerPath, `${releaseId}\n`);

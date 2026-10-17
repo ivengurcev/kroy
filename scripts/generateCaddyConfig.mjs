@@ -22,8 +22,12 @@ export default async function generateCaddyConfig(
     {
         routingPath = join(ROUTING_DIR, `${siteSlug}.json`),
         siteRoot = siteSlug,
+        releaseId,
     } = {}
 ) {
+    if (releaseId !== undefined && !/^\d{17}$/.test(releaseId)) {
+        throw new Error(`Некорректный ID релиза: ${releaseId}`);
+    }
     const routing = JSON.parse(
         await readFile(routingPath, 'utf8')
     );
@@ -62,6 +66,7 @@ export default async function generateCaddyConfig(
 
     const fragment = [
         FRAGMENT_HEADER,
+        ...(releaseId ? [`# Kroy release: ${releaseId}`] : []),
         `${domains.map((hostname) => `http://${hostname}:8080`).join(', ')} {`,
         '\troute {',
         '\t\t@vyaz path /admin /admin/* /api /api/* /public /public/* /static /static/* /uploads /uploads/*',
