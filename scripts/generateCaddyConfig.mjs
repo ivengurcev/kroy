@@ -16,9 +16,16 @@ function quote(value) {
     return `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 }
 
-export default async function generateCaddyConfig(siteSlug, domains) {
+export default async function generateCaddyConfig(
+    siteSlug,
+    domains,
+    {
+        routingPath = join(ROUTING_DIR, `${siteSlug}.json`),
+        siteRoot = siteSlug,
+    } = {}
+) {
     const routing = JSON.parse(
-        await readFile(join(ROUTING_DIR, `${siteSlug}.json`), 'utf8')
+        await readFile(routingPath, 'utf8')
     );
     const redirectsAreValid = Array.isArray(routing.redirects)
         && routing.redirects.every((redirect) => (
@@ -61,8 +68,14 @@ export default async function generateCaddyConfig(siteSlug, domains) {
         '\t\treverse_proxy @vyaz host.docker.internal:3000 {',
         '\t\t\theader_up Host {hostport}',
         '\t\t}',
+        '\t\t@releaseAssets path /_kroy/releases/*',
+        '\t\thandle @releaseAssets {',
+        '\t\t\turi strip_prefix /_kroy/releases',
+        `\t\t\troot * ${quote(`/srv/${siteSlug}`)}`,
+        '\t\t\tfile_server',
+        '\t\t}',
         ...rules,
-        `\t\troot * /srv/${siteSlug}`,
+        `\t\troot * ${quote(`/srv/${siteRoot}`)}`,
         '\t\ttry_files {path}/index.html {path}',
         '\t\tfile_server',
         '\t}',

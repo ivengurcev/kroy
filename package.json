@@ -18,6 +18,7 @@
     "site:list": "yarn node --env-file=.env scripts/listSites.mjs",
     "site:info": "yarn node --env-file=.env scripts/getSiteInfo.mjs",
     "site:build": "yarn node --env-file=.env scripts/buildSite.mjs",
+    "site:publish": "yarn node --env-file=.env scripts/publishSite.mjs",
     "demo": "yarn site:build demo",
     "preview": "docker compose --profile preview up -d caddy",
     "preview:validate": "docker compose --profile preview run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile",

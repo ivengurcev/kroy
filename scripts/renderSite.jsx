@@ -24,7 +24,7 @@ function getOutputPath(siteDirectory, pagePath) {
     return outputPath;
 }
 
-export default async function renderSite(site, pages, outputDirectory) {
+export default async function renderSite(site, pages, outputDirectory, assetBase) {
     if (!SLUG_PATTERN.test(site.slug)) {
         throw new Error(`Некорректный slug сайта: ${site.slug}`);
     }
@@ -41,7 +41,7 @@ export default async function renderSite(site, pages, outputDirectory) {
                 <head>
                     <meta charSet="UTF-8" />
                     <title>{page.title}</title>
-                    <link rel="stylesheet" href="/assets/app.css" />
+                    <link rel="stylesheet" href={`${assetBase}/app.css`} />
                 </head>
                 <body>
                     <div id="root">
@@ -51,7 +51,7 @@ export default async function renderSite(site, pages, outputDirectory) {
                             parts={parts}
                         />
                     </div>
-                    <script type="module" src="/assets/app.js" />
+                    <script type="module" src={`${assetBase}/app.js`} />
                 </body>
             </html>
         );

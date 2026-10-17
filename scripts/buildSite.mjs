@@ -11,6 +11,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
 const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
+const ASSET_BASE = '/_kroy/releases/__KROY_RELEASE__/assets';
 const SITE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ASSET_LOADERS = {
     '.png': 'file',
@@ -158,15 +159,15 @@ try {
             '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
-        assetNames: 'assets/[name]-[hash]',
-        publicPath: '/',
+        assetNames: '[name]-[hash]',
+        publicPath: ASSET_BASE,
     });
 
     const { default: renderSite } = await import(
         `${pathToFileURL(rendererPath).href}?${Date.now()}`
     );
 
-    await renderSite(site, pages, temporaryDirectory);
+    await renderSite(site, pages, temporaryDirectory, ASSET_BASE);
     await build({
         entryPoints: [CLIENT_ENTRY_PATH],
         minify: true,
@@ -180,7 +181,7 @@ try {
             ...ASSET_LOADERS,
         },
         assetNames: '[name]-[hash]',
-        publicPath: '/assets',
+        publicPath: ASSET_BASE,
         define: { 'process.env.NODE_ENV': '"production"' },
     });
     await generateSiteRouting(
