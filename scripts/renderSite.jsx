@@ -1,14 +1,12 @@
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { renderToString } from 'react-dom/server';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import SiteApp from '../layout/SiteApp.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
 import { pages as pageRegistry } from '../dist/kroy/site-pages.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const SITES_DIR = join(ROOT, 'dist', 'sites');
+const DIST_DIR = resolve('dist');
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 function getOutputPath(siteDirectory, pagePath) {
     if (!isValidPagePath(pagePath)) {
@@ -26,15 +24,15 @@ function getOutputPath(siteDirectory, pagePath) {
     return outputPath;
 }
 
-export default async function renderSite(site, pages) {
+export default async function renderSite(site, pages, outputDirectory) {
     if (!SLUG_PATTERN.test(site.slug)) {
         throw new Error(`Некорректный slug сайта: ${site.slug}`);
     }
 
-    const siteDirectory = resolve(SITES_DIR, site.slug);
+    const siteDirectory = resolve(outputDirectory);
 
-    if (!siteDirectory.startsWith(`${SITES_DIR}${sep}`)) {
-        throw new Error(`Каталог сайта выходит за dist/sites: ${site.slug}`);
+    if (!siteDirectory.startsWith(`${DIST_DIR}${sep}`)) {
+        throw new Error(`Каталог сайта выходит за dist: ${site.slug}`);
     }
 
     const outputFiles = pages.map((page) => {

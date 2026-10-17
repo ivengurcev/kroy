@@ -6,7 +6,12 @@ import { isValidPagePath } from '../api/pageFields.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy', 'routing');
 
-export default async function generateSiteRouting(siteSlug, redirects, deletedPages) {
+export default async function generateSiteRouting(
+    siteSlug,
+    redirects,
+    deletedPages,
+    outputPath = join(OUTPUT_DIR, `${siteSlug}.json`)
+) {
     const paths = [
         ...redirects.flatMap(({ from_path: from, path }) => [from, path]),
         ...deletedPages.map(({ path }) => path),
@@ -26,9 +31,7 @@ export default async function generateSiteRouting(siteSlug, redirects, deletedPa
             .map(({ from_path: from }) => from),
         ...deletedPages.map(({ path }) => path),
     ])].sort();
-    const outputPath = join(OUTPUT_DIR, `${siteSlug}.json`);
-
-    await mkdir(OUTPUT_DIR, { recursive: true });
+    await mkdir(dirname(outputPath), { recursive: true });
     await writeFile(
         outputPath,
         `${JSON.stringify({ redirects: activeRedirects, gone }, null, 2)}\n`

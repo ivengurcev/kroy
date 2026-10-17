@@ -1,17 +1,17 @@
 import { dirname, join, resolve } from 'node:path';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
-import generateCaddyConfig from './generateCaddyConfig.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const RENDERER_PATH = join(ROOT, 'dist', 'kroy', 'site-renderer.mjs');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
 const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
+const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
+const SITE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ASSET_LOADERS = {
     '.png': 'file',
     '.jpg': 'file',
@@ -27,6 +27,7 @@ const ASSET_LOADERS = {
 };
 const siteSlug = process.argv[2];
 let client;
+let temporaryDirectory;
 
 try {
     if (!siteSlug) {
@@ -34,7 +35,6 @@ try {
     }
 
     let site;
-    let domains;
     let pages;
     let redirects;
     let deletedPages;
@@ -97,7 +97,6 @@ try {
             [site.id]
         );
 
-        domains = domainsResult.rows;
         pages = pagesResult.rows;
         redirects = redirectsResult.rows;
         deletedPages = deletedPagesResult.rows;
@@ -126,7 +125,17 @@ try {
     if (publicPaths.some((path) => !isValidPagePath(path))) {
         throw new Error(`Сайт ${site.slug} содержит некорректный публичный путь`);
     }
+    if (!SITE_SLUG_PATTERN.test(site.slug)) {
+        throw new Error(`Некорректный slug сайта: ${site.slug}`);
+    }
 
+    const preparedDirectory = join(STAGING_DIR, site.slug);
+    temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
+    const previousDirectory = join(STAGING_DIR, `${site.slug}.previous`);
+    const rendererPath = join(temporaryDirectory, '.site-renderer.mjs');
+
+    await rm(temporaryDirectory, { recursive: true, force: true });
+    await mkdir(temporaryDirectory, { recursive: true });
     await generateSiteParts(pages, site.slug);
     const pageRegistry = Object.fromEntries(
         pages.map(({ path, title, content }) => [path, { path, title, content }])
@@ -137,7 +146,7 @@ try {
     );
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],
-        outfile: RENDERER_PATH,
+        outfile: rendererPath,
         bundle: true,
         minify: true,
         packages: 'external',
@@ -154,14 +163,14 @@ try {
     });
 
     const { default: renderSite } = await import(
-        `${pathToFileURL(RENDERER_PATH).href}?${Date.now()}`
+        `${pathToFileURL(rendererPath).href}?${Date.now()}`
     );
 
-    await renderSite(site, pages);
+    await renderSite(site, pages, temporaryDirectory);
     await build({
         entryPoints: [CLIENT_ENTRY_PATH],
         minify: true,
-        outfile: join(ROOT, 'dist', 'sites', site.slug, 'assets', 'app.js'),
+        outfile: join(temporaryDirectory, 'assets', 'app.js'),
         bundle: true,
         platform: 'browser',
         format: 'esm',
@@ -177,13 +186,36 @@ try {
     await generateSiteRouting(
         site.slug,
         redirects,
-        deletedPages
+        deletedPages,
+        join(temporaryDirectory, 'routing.json')
     );
-    await generateCaddyConfig(
-        site.slug,
-        domains.map(({ hostname }) => hostname)
-    );
+
+    await rm(previousDirectory, { recursive: true, force: true });
+    let previousMoved = false;
+
+    try {
+        await rename(preparedDirectory, previousDirectory);
+        previousMoved = true;
+    } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+    }
+
+    try {
+        await rename(temporaryDirectory, preparedDirectory);
+        temporaryDirectory = undefined;
+    } catch (error) {
+        if (previousMoved) {
+            await rename(previousDirectory, preparedDirectory);
+        }
+        throw error;
+    }
+
+    await rm(previousDirectory, { recursive: true, force: true });
+    console.log(`Подготовлена версия сайта: ${preparedDirectory}`);
 } catch (error) {
+    if (temporaryDirectory) {
+        await rm(temporaryDirectory, { recursive: true, force: true });
+    }
     console.error(`Не удалось собрать сайт: ${error.message}`);
     process.exitCode = 1;
 } finally {
