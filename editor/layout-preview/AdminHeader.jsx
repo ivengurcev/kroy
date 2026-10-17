@@ -1,4 +1,5 @@
 import styles from './AdminShell.module.css';
+import KroyLogo from '../../design/kroy-logo.svg';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 
@@ -6,18 +7,18 @@ export default function AdminHeader() {
     return (
         <Card className={styles.primaryBar}>
             <div className={styles.logo} aria-label="Kroy">
-                <span className={styles.logoMark} aria-hidden="true"><i /><i /><i /><i /></span>
+                <KroyLogo className={styles.logoMark} aria-hidden="true" />
                 <strong>Kroy</strong>
             </div>
 
             <Button className={styles.headerTile} disabled>
-                <span className={styles.tileIcon}>⚙</span>
+                <span className={styles.tileIcon}>⚙︎</span>
                 <span><b>Настройки сайта</b><small>Дизайн, меню, контакты</small></span>
                 <i>›</i>
             </Button>
 
             <Button className={styles.headerTile} disabled>
-                <span className={styles.tileIcon}>▤</span>
+                <span className={styles.tileIcon}>≡</span>
                 <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
                 <i>›</i>
             </Button>
@@ -32,7 +33,7 @@ export default function AdminHeader() {
             </section>
 
             <Button className={styles.previewAction} disabled>Посмотреть сайт ↗</Button>
-            <Button className={styles.publishAction} variant="success" disabled>☁ <span>Опубликовать</span></Button>
+            <Button className={styles.publishAction} variant="success" disabled><b className={styles.actionIcon}>↥</b> <span>Опубликовать</span></Button>
         </Card>
     );
 }

@@ -1,0 +1,93 @@
+.control {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-canvas);
+}
+
+.control::before {
+    position: absolute;
+    top: var(--space-1);
+    bottom: var(--space-1);
+    left: var(--space-1);
+    width: calc((100% - var(--space-2)) / 3);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: 0 2px 8px rgb(43 73 124 / 12%);
+    content: '';
+    transition: transform 180ms ease;
+}
+
+.control[data-active='1']::before { transform: translateX(100%); }
+.control[data-active='2']::before { transform: translateX(200%); }
+
+.control button {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height-sm);
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font: inherit;
+    background: transparent;
+}
+
+.control button:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.control .active {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
+.icon {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 16px;
+    border: 2px solid currentcolor;
+    border-radius: 2px;
+}
+
+.desktop::after {
+    position: absolute;
+    right: 4px;
+    bottom: -5px;
+    left: 4px;
+    height: 2px;
+    background: currentcolor;
+    content: '';
+}
+
+.tablet {
+    width: 14px;
+    height: 18px;
+    border-radius: 3px;
+}
+
+.phone {
+    width: 10px;
+    height: 18px;
+    border-radius: 3px;
+}
+
+@media (max-width: 760px) {
+    .control button {
+        min-width: 46px;
+        padding-inline: var(--space-3);
+    }
+
+    .control button > span:last-child {
+        display: none;
+    }
+}
