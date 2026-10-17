@@ -1,0 +1,30 @@
+.status,
+.status > span {
+    display: flex;
+    align-items: center;
+}
+
+.status {
+    gap: var(--space-3);
+    color: var(--color-success-text);
+}
+
+.status > i {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--color-success-soft);
+    font-style: normal;
+    font-weight: var(--font-weight-bold);
+}
+
+.status > span {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.status small {
+    color: var(--color-text-muted);
+}

@@ -30,6 +30,11 @@ await createApp({
             title: 'Редактор Kroy',
             component: './editor/Editor.jsx',
         },
+        {
+            path: '/admin/layout-preview',
+            title: 'Макет редактора Kroy',
+            component: './editor/layout-preview/LayoutPreview.jsx',
+        },
     ],
     api: [
         [

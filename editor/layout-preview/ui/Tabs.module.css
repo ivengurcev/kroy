@@ -1,0 +1,22 @@
+.tabs {
+    display: flex;
+}
+
+.tabs button {
+    border: 0;
+    border-bottom: 3px solid transparent;
+    color: inherit;
+    font: inherit;
+    background: transparent;
+}
+
+.tabs button:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.tabs .active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
