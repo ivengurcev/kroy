@@ -17,12 +17,18 @@ function isReservedPath(pathname) {
     );
 }
 
+export function normalizePathname(pathname) {
+    return pathname.length > 1 && pathname.endsWith('/')
+        ? pathname.slice(0, -1)
+        : pathname;
+}
+
 export default function SiteApp({ pages, path, parts }) {
     const [page, setPage] = useState(() => pages[path]);
 
     useEffect(() => {
         function navigate(url, push) {
-            const nextPage = pages[url.pathname];
+            const nextPage = pages[normalizePathname(url.pathname)];
 
             if (!nextPage) {
                 window.location.assign(url.href);

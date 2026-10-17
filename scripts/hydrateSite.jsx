@@ -1,5 +1,5 @@
 import { hydrateRoot } from 'react-dom/client';
-import SiteApp from '../layout/SiteApp.jsx';
+import SiteApp, { normalizePathname } from '../layout/SiteApp.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
 import { pages } from '../dist/kroy/site-pages.mjs';
 
@@ -11,5 +11,9 @@ if (!root) {
 
 hydrateRoot(
     root,
-    <SiteApp pages={pages} path={location.pathname} parts={parts} />
+    <SiteApp
+        pages={pages}
+        path={normalizePathname(location.pathname)}
+        parts={parts}
+    />
 );
