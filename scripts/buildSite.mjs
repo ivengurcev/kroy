@@ -126,11 +126,15 @@ try {
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],
         outfile: RENDERER_PATH,
         bundle: true,
+        minify: true,
         packages: 'external',
         platform: 'node',
         format: 'esm',
         jsx: 'automatic',
-        loader: { '.css': 'empty' },
+        loader: {
+            '.css': 'empty',
+            '.module.css': 'local-css',
+        },
     });
 
     const { default: renderSite } = await import(
@@ -146,6 +150,7 @@ try {
         platform: 'browser',
         format: 'esm',
         jsx: 'automatic',
+        loader: { '.module.css': 'local-css' },
         define: { 'process.env.NODE_ENV': '"production"' },
     });
     await generateSiteRouting(
