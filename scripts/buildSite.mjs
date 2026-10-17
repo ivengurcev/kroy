@@ -130,6 +130,7 @@ try {
         platform: 'node',
         format: 'esm',
         jsx: 'automatic',
+        loader: { '.css': 'empty' },
     });
 
     const { default: renderSite } = await import(

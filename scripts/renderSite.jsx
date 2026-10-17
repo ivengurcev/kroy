@@ -43,6 +43,7 @@ export default async function renderSite(site, pages) {
                 <head>
                     <meta charSet="UTF-8" />
                     <title>{page.title}</title>
+                    <link rel="stylesheet" href="/assets/app.css" />
                 </head>
                 <body>
                     <div id="root">
