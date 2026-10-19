@@ -4,15 +4,46 @@ import EditorToolbar from './EditorToolbar.jsx';
 import EditorWorkspace from './EditorWorkspace.jsx';
 import styles from './AdminShell.module.css';
 
-export default function AdminShell() {
+export default function AdminShell({
+    page,
+    content,
+    metadata,
+    parts,
+    selectedPartId,
+    loadStatus,
+    saveStatus,
+    isDirty,
+    onSelectPart,
+    onAddPart,
+    onRemovePart,
+    onMovePart,
+    onPropChange,
+    onSave,
+}) {
     return (
         <div className={styles.adminShell}>
             <header className={styles.header}>
-                <AdminHeader />
-                <EditorToolbar />
+                <AdminHeader page={page} />
+                <EditorToolbar
+                    loadStatus={loadStatus}
+                    saveStatus={saveStatus}
+                    isDirty={isDirty}
+                    onSave={onSave}
+                />
             </header>
             <main className={styles.scrollArea}>
-                <EditorWorkspace />
+                <EditorWorkspace
+                    content={content}
+                    metadata={metadata}
+                    parts={parts}
+                    selectedPartId={selectedPartId}
+                    loadStatus={loadStatus}
+                    onSelectPart={onSelectPart}
+                    onAddPart={onAddPart}
+                    onRemovePart={onRemovePart}
+                    onMovePart={onMovePart}
+                    onPropChange={onPropChange}
+                />
             </main>
             <EditorFooter />
         </div>

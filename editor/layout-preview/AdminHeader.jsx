@@ -3,7 +3,7 @@ import KroyLogo from '../../design/kroy-logo.svg';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 
-export default function AdminHeader() {
+export default function AdminHeader({ page }) {
     return (
         <Card className={styles.primaryBar}>
             <div className={styles.logo} aria-label="Kroy">
@@ -17,18 +17,18 @@ export default function AdminHeader() {
                 <i>›</i>
             </Button>
 
-            <Button className={styles.headerTile} disabled>
+            <a className={styles.headerTile} href="/admin/pages">
                 <span className={styles.tileIcon}>≡</span>
                 <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
                 <i>›</i>
-            </Button>
+            </a>
 
             <section className={styles.currentPage}>
                 <span className={styles.tileIcon}>⌂</span>
-                <span className={styles.pageName}><small>Текущая страница</small><b>Главная <i>✎</i></b></span>
+                <span className={styles.pageName}><small>Текущая страница</small><b>{page.title || '—'} <i>✎</i></b></span>
                 <span className={styles.pageAddress}>
                     <small>Адрес страницы</small>
-                    <span><code>/</code><Button variant="compact" disabled>✎ <em>Изменить</em></Button></span>
+                    <span><code>{page.path || '—'}</code><Button variant="compact" disabled>✎ <em>Изменить</em></Button></span>
                 </span>
             </section>
 

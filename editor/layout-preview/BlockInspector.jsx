@@ -1,7 +1,8 @@
+import { useState } from 'react';
+import PartEditor from '../PartEditor.jsx';
 import styles from './AdminShell.module.css';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
-import FormField from './ui/FormField.jsx';
 import Tabs from './ui/Tabs.jsx';
 
 const inspectorTabs = [
@@ -10,42 +11,75 @@ const inspectorTabs = [
     { label: 'Дополнительно' },
 ];
 
-export default function BlockInspector() {
+export default function BlockInspector({
+    content,
+    metadata,
+    selectedPart,
+    onAddPart,
+    onRemovePart,
+    onMovePart,
+    onPropChange,
+}) {
+    const availableParts = Object.keys(metadata);
+    const [partToAdd, setPartToAdd] = useState(availableParts[0] ?? '');
+    const selectedIndex = selectedPart
+        ? content.findIndex(({ id }) => id === selectedPart.id)
+        : -1;
+
     return (
         <Card as="aside" className={styles.inspector}>
             <div className={styles.inspectorTitle}>
-                <span><h1>Редактирование блока</h1><p>Герой — Главный экран</p></span>
-                <Button variant="compact" aria-label="Закрыть" disabled>×</Button>
+                <span>
+                    <h1>Редактирование блока</h1>
+                    <p>{selectedPart?.part ?? 'Блок не выбран'}</p>
+                </span>
+            </div>
+
+            <div className={styles.partPicker}>
+                <select value={partToAdd} onChange={(event) => setPartToAdd(event.target.value)}>
+                    {availableParts.map((name) => <option value={name} key={name}>{name}</option>)}
+                </select>
+                <Button variant="primary" disabled={!partToAdd} onClick={() => onAddPart(partToAdd)}>
+                    Добавить
+                </Button>
             </div>
 
             <Tabs className={styles.inspectorTabs} items={inspectorTabs} />
 
-            <form className={styles.blockForm}>
-                <FormField label="Заголовок">
-                    <textarea rows="2" defaultValue="Семейный ветеринарный врач" readOnly />
-                </FormField>
-                <FormField label="Описание">
-                    <textarea rows="2" defaultValue={'Спокойная, бережная помощь\nдля кошек и собак'} readOnly />
-                </FormField>
-                <FormField label="Кнопка (основная)">
-                    <span className={styles.linkedInput}><input defaultValue="Записаться на прием" readOnly /><i>↗</i></span>
-                </FormField>
-                <FormField label="Ссылка">
-                    <select defaultValue="/contacts" disabled><option>/contacts</option></select>
-                </FormField>
-                <FormField label="Кнопка (вторичная)">
-                    <span className={styles.linkedInput}><input defaultValue="Подробнее о клинике" readOnly /><i>↗</i></span>
-                </FormField>
-                <FormField label="Ссылка">
-                    <select defaultValue="/about" disabled><option>/about</option></select>
-                </FormField>
-                <fieldset className={styles.imageControl}>
-                    <legend>Изображение</legend>
-                    <div className={styles.imageThumb}><span>◇</span></div>
-                    <Button disabled>☁ <span>Заменить</span></Button>
-                    <Button disabled>♙ <span>Удалить</span></Button>
-                </fieldset>
-            </form>
+            {selectedPart ? (
+                <>
+                    <div className={styles.partActions}>
+                        <Button
+                            variant="compact"
+                            disabled={selectedIndex === 0}
+                            onClick={() => onMovePart(selectedPart.id, -1)}
+                            aria-label="Переместить вверх"
+                        >
+                            ↑
+                        </Button>
+                        <Button
+                            variant="compact"
+                            disabled={selectedIndex === content.length - 1}
+                            onClick={() => onMovePart(selectedPart.id, 1)}
+                            aria-label="Переместить вниз"
+                        >
+                            ↓
+                        </Button>
+                        <Button onClick={() => onRemovePart(selectedPart.id)}>Удалить</Button>
+                    </div>
+
+                    <PartEditor
+                        part={selectedPart.part}
+                        props={selectedPart.props}
+                        fields={metadata[selectedPart.part]?.fields ?? {}}
+                        onPropChange={(name, value) => onPropChange(selectedPart.id, name, value)}
+                    />
+                </>
+            ) : (
+                <p className={styles.emptyInspector}>
+                    Выберите блок в предпросмотре или добавьте новую запчасть.
+                </p>
+            )}
         </Card>
     );
 }

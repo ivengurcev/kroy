@@ -1,5 +1,6 @@
 
 import { defaultProps } from './partModel.js';
+import styles from './ListField.module.css';
 
 export default function ListField({
     label,
@@ -44,11 +45,11 @@ export default function ListField({
     }
 
     return (
-        <fieldset className="list-field">
+        <fieldset className={styles.listField}>
             <legend>{label}</legend>
 
             {items.map((item, index) => (
-                <div className="list-item" key={index}>
+                <div className={styles.listItem} key={index}>
                     <strong>Элемент {index + 1}</strong>
 
                     {Object.entries(fields).map(([name, schema]) => (
@@ -63,7 +64,7 @@ export default function ListField({
                         />
                     ))}
 
-                    <div className="list-actions">
+                    <div className={styles.listActions}>
                         <button
                             type="button"
                             disabled={index === 0}

@@ -11,7 +11,24 @@ const modes = [
     { icon: '•••', label: 'Дополнительно' },
 ];
 
-export default function EditorToolbar() {
+export default function EditorToolbar({
+    loadStatus,
+    saveStatus,
+    isDirty,
+    onSave,
+}) {
+    const status = loadStatus === 'loading'
+        ? { title: 'Загрузка…', tone: 'progress' }
+        : loadStatus === 'error'
+            ? { title: 'Страница не загружена', tone: 'error' }
+            : saveStatus === 'saving'
+                ? { title: 'Сохранение…', tone: 'progress' }
+                : saveStatus === 'error'
+                    ? { title: 'Не удалось сохранить', tone: 'error' }
+                    : isDirty
+                        ? { title: 'Есть несохранённые изменения', tone: 'warning' }
+                        : { title: 'Сохранено', tone: 'success' };
+
     return (
         <Card className={styles.secondaryBar}>
             <Tabs className={styles.modeTabs} items={modes} ariaLabel="Режим редактора" />
@@ -20,8 +37,15 @@ export default function EditorToolbar() {
                     <Button variant="compact" aria-label="Назад" disabled>↶</Button>
                     <Button variant="compact" aria-label="Вперёд" disabled>↷</Button>
                 </span>
-                <StatusIndicator className={styles.saveState} title="Сохранено" details="Изменения сохранены 2 мин. назад" />
-                <Button className={styles.saveAction} variant="primary" disabled><b className={styles.actionIcon}>✓</b> <span>Сохранить</span></Button>
+                <StatusIndicator className={styles.saveState} title={status.title} tone={status.tone} />
+                <Button
+                    className={styles.saveAction}
+                    variant="primary"
+                    disabled={loadStatus !== 'success' || !isDirty || saveStatus === 'saving'}
+                    onClick={onSave}
+                >
+                    <b className={styles.actionIcon}>✓</b> <span>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</span>
+                </Button>
             </div>
         </Card>
     );

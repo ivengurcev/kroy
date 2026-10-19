@@ -1,45 +1,67 @@
+import Page from '../../layout/Page.jsx';
 import BlockInspector from './BlockInspector.jsx';
 import styles from './AdminShell.module.css';
-import Button from './ui/Button.jsx';
+import Card from './ui/Card.jsx';
 
-export default function EditorWorkspace() {
+export default function EditorWorkspace({
+    content,
+    metadata,
+    parts,
+    selectedPartId,
+    loadStatus,
+    onSelectPart,
+    onAddPart,
+    onRemovePart,
+    onMovePart,
+    onPropChange,
+}) {
+    if (loadStatus !== 'success') {
+        return (
+            <Card className={styles.workspaceStatus} role={loadStatus === 'error' ? 'alert' : undefined}>
+                {loadStatus === 'loading'
+                    ? 'Загрузка страницы…'
+                    : 'Не удалось загрузить страницу.'}
+            </Card>
+        );
+    }
+
+    const selectedPart = content.find(({ id }) => id === selectedPartId) ?? null;
+
+    function selectPart(event, id) {
+        if (event.target.closest?.('a')) {
+            event.preventDefault();
+        }
+
+        onSelectPart(id);
+    }
+
     return (
         <div className={styles.workspace}>
-            <section className={styles.pageCanvas} aria-label="Макет страницы">
-                <article className={`${styles.mockSection} ${styles.mockHero}`}>
-                    <span className={styles.sectionBadge}>Герой</span>
-                    <div className={styles.sectionActions}>
-                        <Button variant="compact" disabled>⠿</Button>
-                        <Button variant="compact" disabled>✎ <span>Изменить блок</span></Button>
-                        <Button variant="compact" disabled>•••</Button>
+            <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
+                {content.map((item) => (
+                    <div
+                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''}`}
+                        onClickCapture={(event) => selectPart(event, item.id)}
+                        key={item.id}
+                    >
+                        <Page content={[item]} parts={parts} />
                     </div>
-                    <div className={styles.mockCopy}>
-                        <span className={styles.mockPill} />
-                        <span className={`${styles.mockLine} ${styles.title}`} />
-                        <span className={`${styles.mockLine} ${styles.title} ${styles.titleShort}`} />
-                        <span className={`${styles.mockLine} ${styles.lead}`} />
-                        <span className={`${styles.mockLine} ${styles.lead} ${styles.leadShort}`} />
-                        <div className={styles.mockButtons}><i /><i /></div>
-                    </div>
-                    <div className={styles.mockImage}><span>◇</span></div>
-                    <div className={styles.mockFeatures}>
-                        <span><i /><b /></span><span><i /><b /></span><span><i /><b /></span>
-                    </div>
-                </article>
+                ))}
 
-                <article className={`${styles.mockSection} ${styles.mockContent}`}>
-                    <div className={`${styles.mockCopy} ${styles.compactCopy}`}>
-                        <span className={`${styles.mockLine} ${styles.lead}`} />
-                        <span className={`${styles.mockLine} ${styles.lead} ${styles.long}`} />
-                        <span className={`${styles.mockLine} ${styles.lead} ${styles.leadShort}`} />
-                        <div className={styles.mockCards}><i /><i /><i /></div>
-                    </div>
-                    <div className={`${styles.mockImage} ${styles.smallImage}`}><span>◇</span></div>
-                </article>
-
-                <article className={`${styles.mockSection} ${styles.mockRow}`}><i /><i /><i /><i /></article>
+                {content.length === 0 && (
+                    <div className={styles.emptyPreview}>Страница пока не содержит запчастей.</div>
+                )}
             </section>
-            <BlockInspector />
+
+            <BlockInspector
+                content={content}
+                metadata={metadata}
+                selectedPart={selectedPart}
+                onAddPart={onAddPart}
+                onRemovePart={onRemovePart}
+                onMovePart={onMovePart}
+                onPropChange={onPropChange}
+            />
         </div>
     );
 }

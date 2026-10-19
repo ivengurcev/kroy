@@ -1,5 +1,6 @@
 
 import ListField from './ListField.jsx';
+import styles from './Field.module.css';
 
 export default function Field({ name, schema, value, onChange }) {
     const label = schema.label ?? name;
@@ -19,7 +20,7 @@ export default function Field({ name, schema, value, onChange }) {
 
     if (schema.type === 'checkbox') {
         return (
-            <label className="checkbox-field">
+            <label className={styles.checkboxField}>
                 <input
                     type="checkbox"
                     checked={Boolean(value)}
@@ -95,7 +96,7 @@ export default function Field({ name, schema, value, onChange }) {
     }
 
     return (
-        <label className="part-field">
+        <label className={styles.field}>
             {label}
             {control}
         </label>

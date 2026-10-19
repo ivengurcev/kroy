@@ -6,7 +6,6 @@
 
 .status {
     gap: var(--space-3);
-    color: var(--color-success-text);
 }
 
 .status > i {
@@ -28,3 +27,12 @@
 .status small {
     color: var(--color-text-muted);
 }
+
+.success { color: var(--color-success-text); }
+.warning { color: var(--color-warning-text); }
+.error { color: var(--color-error-text); }
+.progress { color: var(--color-primary); }
+
+.warning > i { background: var(--color-warning-soft); }
+.error > i { background: var(--color-error-soft); }
+.progress > i { background: var(--color-blue-100); }

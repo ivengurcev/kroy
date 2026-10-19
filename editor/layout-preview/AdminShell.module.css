@@ -8,6 +8,10 @@
     --color-green-600: #079d60;
     --color-green-500: #16b875;
     --color-green-100: #e3f8ee;
+    --color-amber-700: #9a6700;
+    --color-amber-100: #fff4ce;
+    --color-red-700: #b42318;
+    --color-red-100: #fee4e2;
     --color-white: #fff;
     --color-gray-50: #f4f8fc;
     --color-gray-100: #edf2f6;
@@ -27,6 +31,10 @@
     --color-success: #0aa566;
     --color-success-text: #078e57;
     --color-success-soft: var(--color-green-100);
+    --color-warning-text: var(--color-amber-700);
+    --color-warning-soft: var(--color-amber-100);
+    --color-error-text: var(--color-red-700);
+    --color-error-soft: var(--color-red-100);
     --color-on-primary: var(--color-white);
 
     --font-size-sm: 13px;
@@ -115,6 +123,11 @@
     border-radius: 12px;
     text-align: left;
     background: var(--color-surface);
+}
+
+a.headerTile {
+    color: inherit;
+    text-decoration: none;
 }
 
 .tileIcon {
@@ -276,151 +289,32 @@
     display: grid;
     min-width: 0;
     gap: 14px;
+    align-content: start;
 }
 
-.mockSection {
+.previewPart {
     position: relative;
-    overflow: hidden;
-    border: 1px solid #e2e9f2;
-    border-radius: 13px;
-    background: var(--color-gray-100);
-}
-
-.mockHero {
-    display: grid;
-    grid-template-columns: 56% 44%;
-    grid-template-rows: 1fr auto;
-    min-height: 475px;
-    border: 2px solid #176aff;
-}
-
-.sectionBadge {
-    position: absolute;
-    z-index: 2;
-    top: 14px;
-    left: var(--space-4);
-    padding: 5px 13px;
-    border-radius: 20px;
-    color: var(--color-primary);
-    background: #deebff;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-}
-
-.sectionActions {
-    position: absolute;
-    z-index: 2;
-    top: var(--space-3);
-    right: var(--space-3);
-    display: flex;
-    gap: 5px;
-}
-
-.sectionActions button {
-    min-height: 38px;
-    border-color: #d8e2ef;
-    box-shadow: 0 4px 12px rgb(43 72 117 / 9%);
-}
-
-.mockCopy {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 72px 50px 34px;
-}
-
-.mockPill,
-.mockLine {
-    display: block;
-    border-radius: var(--radius-sm);
-    background: #c7d0dc;
-}
-
-.mockPill {
-    width: 180px;
-    height: 30px;
-    margin-bottom: var(--space-5);
-    border-radius: 18px;
-}
-
-.mockLine.title {
-    width: 92%;
-    height: 44px;
-    margin: 5px 0;
-    background: #aeb9c7;
-}
-
-.mockLine.titleShort { width: 72%; }
-.mockLine.lead { width: 72%; height: 18px; margin-top: var(--space-5); }
-.mockLine.leadShort { width: 53%; margin-top: var(--space-2); }
-.mockLine.long { width: 90%; margin-top: 10px; }
-
-.mockButtons {
-    display: flex;
-    gap: var(--space-4);
-    margin-top: 25px;
-}
-
-.mockButtons i {
-    width: 210px;
-    height: 54px;
     border-radius: var(--radius-md);
-    background: #b5c0cc;
 }
 
-.mockButtons i:last-child {
-    width: 175px;
-    background: #d6dde5;
+.previewPart:hover,
+.selectedPart {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
 }
 
-.mockImage {
-    display: grid;
-    place-items: center;
-    color: #bec8d4;
-    background: linear-gradient(145deg, #e0e6ec, #cbd4de);
-    font-size: 90px;
+.emptyPreview,
+.emptyInspector,
+.workspaceStatus {
+    padding: var(--space-8);
+    color: var(--color-text-muted);
+    text-align: center;
 }
 
-.mockFeatures {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-5);
-    padding: 18px 50px;
-    background: rgb(255 255 255 / 35%);
+.workspaceStatus {
+    max-width: 760px;
+    margin: var(--space-8) auto;
 }
-
-.mockFeatures > span { display: flex; gap: var(--space-3); align-items: center; }
-.mockFeatures i { width: 46px; height: 46px; border-radius: var(--radius-round); background: #c9d2dc; }
-.mockFeatures b { width: 120px; height: 17px; border-radius: 5px; background: #c2ccd7; }
-
-.mockContent {
-    display: grid;
-    grid-template-columns: 64% 36%;
-    min-height: 220px;
-}
-
-.compactCopy { padding: 28px 36px; }
-.smallImage { margin: 18px; border-radius: var(--radius-md); font-size: 60px; }
-
-.mockCards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-4);
-    margin-top: 22px;
-}
-
-.mockCards i { height: 52px; border: 1px solid #d3dce7; border-radius: 9px; background: #e7ecf1; }
-
-.mockRow {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-    min-height: 130px;
-    padding: 25px;
-}
-
-.mockRow i { border-radius: var(--radius-md); background: #dce3ea; }
 
 .inspector {
     padding: 18px var(--space-6) var(--space-6);
@@ -434,7 +328,23 @@
 
 .inspectorTitle h1 { margin: 0; font-size: var(--font-size-xl); }
 .inspectorTitle p { margin: 6px 0 0; color: var(--color-text-muted); }
-.inspectorTitle > button { min-width: 28px; min-height: 28px; padding: 0; border: 0; background: transparent; font-size: 26px; }
+
+.partPicker {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.partPicker select {
+    min-width: 0;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font: inherit;
+    background: var(--color-surface);
+}
 
 .inspectorTabs {
     justify-content: space-between;
@@ -445,50 +355,15 @@
 
 .inspectorTabs button { padding: 0 13px; }
 
-.blockForm input,
-.blockForm textarea,
-.blockForm select {
-    width: 100%;
-    padding: 11px 13px;
-    border: 1px solid var(--color-gray-300);
-    border-radius: 9px;
-    outline: none;
-    color: inherit;
-    font: inherit;
-    background: var(--color-surface);
+.partActions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
 }
 
-.blockForm textarea { resize: vertical; }
-.blockForm select:disabled { cursor: default; opacity: 1; -webkit-text-fill-color: var(--color-text); }
-.linkedInput { position: relative; }
-.linkedInput i { position: absolute; top: 11px; right: 13px; font-style: normal; }
-
-.imageControl {
-    display: grid;
-    grid-template-columns: 150px 1fr 1fr;
-    gap: 10px;
-    margin: var(--space-3) 0 0;
-    padding: 0;
-    border: 0;
+.partActions button:last-child {
+    margin-left: auto;
 }
-
-.imageControl legend {
-    grid-column: 1 / -1;
-    margin-bottom: var(--space-2);
-    color: var(--color-text-secondary);
-}
-
-.imageThumb {
-    display: grid;
-    height: 70px;
-    place-items: center;
-    border-radius: 9px;
-    color: #8490aa;
-    background: linear-gradient(135deg, #d0d9e2, #e8edf2);
-    font-size: 32px;
-}
-
-.imageControl button { align-self: center; min-height: 42px; }
 
 .footer {
     position: fixed;
@@ -507,7 +382,6 @@
     .adminShell { --inspector-width: 390px; }
     .primaryBar { grid-template-columns: 125px 220px 220px minmax(330px, 1fr) auto auto; }
     .headerTile { padding-inline: 9px; }
-    .mockCopy { padding-inline: 35px; }
 }
 
 @media (max-width: 1100px) {
@@ -520,8 +394,6 @@
     .modeTabs button { padding-inline: 9px; }
     .saveState small { display: none; }
     .scrollArea { padding-inline: var(--space-5); }
-    .mockHero { grid-template-columns: 1fr; }
-    .mockImage { display: none; }
     .footer { right: var(--space-5); left: var(--space-5); }
 }
 
@@ -545,23 +417,13 @@
     .saveAction { min-width: 46px; padding: 0; }
     .scrollArea { padding: var(--space-1) 10px 10px; }
     .workspace { grid-template-columns: 1fr; }
-    .mockHero { min-height: 400px; }
-    .sectionActions button:nth-child(2) span { display: none; }
-    .mockCopy { padding: 65px var(--space-6) 25px; }
-    .mockFeatures { grid-template-columns: 1fr; padding: var(--space-4) var(--space-6); }
-    .mockContent { grid-template-columns: 1fr; }
-    .smallImage { display: none; }
-    .mockRow { grid-template-columns: repeat(2, 1fr); }
     .inspector { padding: 18px; }
     .inspectorTitle h1 { font-size: 20px; }
-    .imageControl { grid-template-columns: 1fr 1fr; }
-    .imageThumb { grid-column: 1 / -1; }
     .footer { right: 10px; bottom: var(--space-2); left: 10px; height: 54px; padding: 6px var(--space-2); }
 }
 
 @media (max-width: 420px) {
     .publishAction span,
     .inspectorTabs button:nth-child(3) { display: none; }
-    .mockButtons i { width: 50%; }
     .inspectorTabs button { flex: 1; padding-inline: var(--space-1); }
 }

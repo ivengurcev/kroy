@@ -1,19 +1,20 @@
 
-import { useEffect, useState } from 'react';
-import './editor.css';
+import { useEffect, useRef, useState } from 'react';
 
-import Page from '../layout/Page.jsx';
 import { parts } from '../dist/kroy/parts.mjs';
 import metadata from '../dist/kroy/parts.json';
 
-import PartsPanel from './PartsPanel.jsx';
+import AdminShell from './layout-preview/AdminShell.jsx';
 import { createPart } from './partModel.js';
 
 export default function Editor() {
     const [content, setContent] = useState([]);
-    const [pageId, setPageId] = useState(null);
+    const [page, setPage] = useState({ id: null, title: '', path: '' });
+    const [selectedPartId, setSelectedPartId] = useState(null);
     const [loadStatus, setLoadStatus] = useState('loading');
     const [saveStatus, setSaveStatus] = useState('idle');
+    const [isDirty, setIsDirty] = useState(false);
+    const revision = useRef(0);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -36,10 +37,16 @@ export default function Editor() {
 
                 const page = await response.json();
 
-                setContent(page.content.map(({ part, props }) =>
+                const loadedContent = page.content.map(({ part, props }) =>
                     createPart(part, metadata[part]?.fields, props)
-                ));
-                setPageId(page.id);
+                );
+
+                setContent(loadedContent);
+                setPage({ id: page.id, title: page.title, path: page.path });
+                setSelectedPartId(loadedContent[0]?.id ?? null);
+                setIsDirty(false);
+                setSaveStatus('success');
+                revision.current = 0;
                 setLoadStatus('success');
             } catch (error) {
                 if (error.name !== 'AbortError') {
@@ -55,25 +62,38 @@ export default function Editor() {
 
     const pageContent = content.map(({ part, props }) => ({ part, props }));
 
-    async function savePage() {
-        if (!pageId || saveStatus === 'saving') return;
+    function markDirty() {
+        revision.current += 1;
+        setIsDirty(true);
+        setSaveStatus((current) => current === 'saving' ? current : 'idle');
+    }
 
+    async function savePage() {
+        if (!page.id || !isDirty || saveStatus === 'saving') return;
+
+        const savedContent = pageContent;
+        const savedRevision = revision.current;
         setSaveStatus('saving');
 
         try {
-            const response = await fetch(`/api/pages/${pageId}`, {
+            const response = await fetch(`/api/pages/${page.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ content: pageContent }),
+                body: JSON.stringify({ content: savedContent }),
             });
 
             if (!response.ok) {
                 throw new Error(`Не удалось сохранить страницу: ${response.status}`);
             }
 
-            setSaveStatus('success');
+            if (revision.current === savedRevision) {
+                setIsDirty(false);
+                setSaveStatus('success');
+            } else {
+                setSaveStatus('idle');
+            }
         } catch {
             setSaveStatus('error');
         }
@@ -81,48 +101,51 @@ export default function Editor() {
 
     function addPart(part) {
         const fields = metadata[part]?.fields ?? {};
+        const newPart = createPart(part, fields);
 
-        setSaveStatus('idle');
-        setContent((previous) => [
-            ...previous,
-            createPart(part, fields),
-        ]);
+        markDirty();
+        setContent((previous) => [...previous, newPart]);
+        setSelectedPartId(newPart.id);
     }
 
     function removePart(id) {
-        setSaveStatus('idle');
-        setContent((previous) =>
-            previous.filter((item) => item.id !== id)
-        );
+        const index = content.findIndex((item) => item.id === id);
+
+        if (index === -1) return;
+
+        const nextContent = content.filter((item) => item.id !== id);
+
+        markDirty();
+        setContent(nextContent);
+
+        if (selectedPartId === id) {
+            setSelectedPartId(
+                nextContent[index]?.id
+                ?? nextContent[index - 1]?.id
+                ?? null
+            );
+        }
     }
 
     function movePart(id, direction) {
-        setSaveStatus('idle');
-        setContent((previous) => {
-            const index = previous.findIndex((item) => item.id === id);
-            const target = index + direction;
+        const index = content.findIndex((item) => item.id === id);
+        const target = index + direction;
 
-            if (
-                index === -1 ||
-                target < 0 ||
-                target >= previous.length
-            ) {
-                return previous;
-            }
+        if (index === -1 || target < 0 || target >= content.length) return;
 
-            const next = [...previous];
+        const nextContent = [...content];
 
-            [next[index], next[target]] = [
-                next[target],
-                next[index],
-            ];
+        [nextContent[index], nextContent[target]] = [
+            nextContent[target],
+            nextContent[index],
+        ];
 
-            return next;
-        });
+        markDirty();
+        setContent(nextContent);
     }
 
     function updateProp(id, name, value) {
-        setSaveStatus('idle');
+        markDirty();
         setContent((previous) =>
             previous.map((item) =>
                 item.id === id
@@ -138,52 +161,22 @@ export default function Editor() {
         );
     }
 
-    if (loadStatus === 'loading') {
-        return <main className="editor-status">Загрузка страницы…</main>;
-    }
-
-    if (loadStatus === 'error') {
-        return (
-            <main className="editor-status" role="alert">
-                Не удалось загрузить страницу.
-            </main>
-        );
-    }
-
     return (
-        <main className="editor">
-            <PartsPanel
-                content={content}
-                metadata={metadata}
-                onAdd={addPart}
-                onRemove={removePart}
-                onMove={movePart}
-                onPropChange={updateProp}
-            />
-
-            <div className="result">
-                <div className="save-bar">
-                    <button
-                        type="button"
-                        onClick={savePage}
-                        disabled={!pageId || saveStatus === 'saving'}
-                    >
-                        {saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}
-                    </button>
-
-                    <span className="save-status" aria-live="polite">
-                        {saveStatus === 'success' && 'Сохранено'}
-                        {saveStatus === 'error' && 'Не удалось сохранить страницу'}
-                    </span>
-                </div>
-
-                <h2>Результат</h2>
-
-                <Page content={content} parts={parts} />
-
-                <h2>Данные страницы</h2>
-                <pre>{JSON.stringify(pageContent, null, 2)}</pre>
-            </div>
-        </main>
+        <AdminShell
+            page={page}
+            content={content}
+            metadata={metadata}
+            parts={parts}
+            selectedPartId={selectedPartId}
+            loadStatus={loadStatus}
+            saveStatus={saveStatus}
+            isDirty={isDirty}
+            onSelectPart={setSelectedPartId}
+            onAddPart={addPart}
+            onRemovePart={removePart}
+            onMovePart={movePart}
+            onPropChange={updateProp}
+            onSave={savePage}
+        />
     );
 }

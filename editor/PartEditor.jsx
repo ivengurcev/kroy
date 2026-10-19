@@ -1,5 +1,6 @@
 
 import Field from './Field.jsx';
+import styles from './PartEditor.module.css';
 
 export default function PartEditor({
     part,
@@ -8,7 +9,7 @@ export default function PartEditor({
     onPropChange,
 }) {
     return (
-        <section className="part-editor">
+        <section className={styles.editor}>
             <h3>{part}</h3>
 
             {Object.entries(fields).map(([name, schema]) => (
