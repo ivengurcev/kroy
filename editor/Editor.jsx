@@ -99,12 +99,20 @@ export default function Editor() {
         }
     }
 
-    function addPart(part) {
+    function addPart(part, position) {
         const fields = metadata[part]?.fields ?? {};
         const newPart = createPart(part, fields);
 
         markDirty();
-        setContent((previous) => [...previous, newPart]);
+        setContent((previous) => {
+            const insertionIndex = Math.max(0, Math.min(position, previous.length));
+
+            return [
+                ...previous.slice(0, insertionIndex),
+                newPart,
+                ...previous.slice(insertionIndex),
+            ];
+        });
         setSelectedPartId(newPart.id);
     }
 

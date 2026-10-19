@@ -1,8 +1,15 @@
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr) var(--inspector-width); gap: 14px; align-items: start; width: 100%; max-width: 1800px; min-height: 100%; margin: 0 auto; }
-.pageCanvas { display: grid; min-width: 0; gap: 14px; align-content: start; }
+.pageCanvas { display: grid; min-width: 0; align-content: start; }
 .previewPart { position: relative; border-radius: var(--radius-md); }
 .previewPart:hover, .selectedPart { outline: 2px solid var(--color-primary); outline-offset: -2px; }
-.emptyPreview, .workspaceStatus { padding: var(--space-8); color: var(--color-text-muted); text-align: center; }
+.previewPart:hover .partControls,
+.previewPart:focus-within .partControls,
+.selectedPart .partControls { opacity: 1; pointer-events: auto; }
+.insertionPoint { position: relative; z-index: 3; display: grid; height: 28px; place-items: center; }
+.insertionPoint button { min-height: 26px; padding-inline: var(--space-3); border-color: transparent; color: var(--color-text-muted); opacity: 0.72; }
+.insertionPoint button:hover,
+.insertionPoint button:focus-visible { border-color: var(--color-border); color: var(--color-primary); opacity: 1; }
+.workspaceStatus { padding: var(--space-8); color: var(--color-text-muted); text-align: center; }
 .workspaceStatus { max-width: 760px; margin: var(--space-8) auto; }
 
 @media (max-width: 760px) {

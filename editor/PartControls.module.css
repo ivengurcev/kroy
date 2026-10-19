@@ -1,0 +1,22 @@
+.controls {
+    position: absolute;
+    z-index: 4;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    opacity: 0;
+    background: var(--color-surface-translucent);
+    box-shadow: var(--shadow-panel);
+    pointer-events: none;
+    transition: opacity 120ms ease;
+}
+
+.controls button {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+}
