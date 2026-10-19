@@ -10,6 +10,7 @@
     "esbuild": "^0.28.2"
   },
   "scripts": {
+    "db": "docker compose up -d db",
     "db:seed": "yarn node --env-file=.env db/seed.mjs",
     "parts:generate": "node scripts/discoverParts.mjs",
     "site:create": "yarn node --env-file=.env scripts/createSite.mjs",

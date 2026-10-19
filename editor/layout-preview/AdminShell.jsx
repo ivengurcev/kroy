@@ -3,6 +3,7 @@ import EditorFooter from './EditorFooter.jsx';
 import EditorToolbar from './EditorToolbar.jsx';
 import EditorWorkspace from './EditorWorkspace.jsx';
 import styles from './AdminShell.module.css';
+import theme from './AdminTheme.module.css';
 
 export default function AdminShell({
     page,
@@ -21,9 +22,9 @@ export default function AdminShell({
     onSave,
 }) {
     return (
-        <div className={styles.adminShell}>
+        <div className={`${theme.theme} ${styles.adminShell}`}>
             <header className={styles.header}>
-                <AdminHeader page={page} />
+                <AdminHeader page={page} isDirty={isDirty} />
                 <EditorToolbar
                     loadStatus={loadStatus}
                     saveStatus={saveStatus}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import './editor.css';
+import PageList from './PageList.jsx';
+import styles from './Pages.module.css';
+import AdminPageShell from './layout-preview/AdminPageShell.jsx';
 
 export default function Trash() {
     const [pages, setPages] = useState([]);
@@ -12,9 +14,7 @@ export default function Trash() {
 
         async function loadPages() {
             try {
-                const response = await fetch('/api/pages?deleted=1', {
-                    signal: controller.signal,
-                });
+                const response = await fetch('/api/pages?deleted=1', { signal: controller.signal });
 
                 if (!response.ok) {
                     throw new Error(`Не удалось загрузить корзину: ${response.status}`);
@@ -23,9 +23,7 @@ export default function Trash() {
                 setPages(await response.json());
                 setStatus('success');
             } catch (error) {
-                if (error.name !== 'AbortError') {
-                    setStatus('error');
-                }
+                if (error.name !== 'AbortError') setStatus('error');
             }
         }
 
@@ -41,9 +39,7 @@ export default function Trash() {
         setRestoreErrorId(null);
 
         try {
-            const response = await fetch(`/api/pages/${pageId}/restore`, {
-                method: 'POST',
-            });
+            const response = await fetch(`/api/pages/${pageId}/restore`, { method: 'POST' });
 
             if (!response.ok) {
                 throw new Error(`Не удалось восстановить страницу: ${response.status}`);
@@ -57,59 +53,22 @@ export default function Trash() {
         }
     }
 
-    if (status === 'loading') {
-        return <main className="editor-status">Загрузка корзины…</main>;
-    }
-
-    if (status === 'error') {
-        return (
-            <main className="editor-status" role="alert">
-                Не удалось загрузить корзину.
-            </main>
-        );
-    }
-
     return (
-        <main className="pages">
-            <div className="pages-heading">
-                <h1>Корзина</h1>
-                <a href="/admin/pages">Вернуться к страницам</a>
+        <AdminPageShell
+            title="Корзина"
+            actions={<a href="/admin/pages">Вернуться к страницам</a>}
+            status={status}
+            errorMessage="Не удалось загрузить корзину."
+        >
+            <div className={styles.content}>
+                <PageList
+                    pages={pages}
+                    mode="trash"
+                    busyPageId={restoringPageId}
+                    actionErrorId={restoreErrorId}
+                    onRestore={restorePage}
+                />
             </div>
-
-            {pages.length === 0 ? (
-                <p>Корзина пуста.</p>
-            ) : (
-                <ul className="pages-list">
-                    {pages.map((page) => (
-                        <li key={page.id}>
-                            <div className="pages-list-row">
-                                <div className="trash-page-details">
-                                    <strong>{page.title}</strong>
-                                    <span>{page.path}</span>
-                                    <time dateTime={page.deleted_at}>
-                                        {new Date(page.deleted_at).toLocaleString('ru-RU')}
-                                    </time>
-                                </div>
-                                <button
-                                    type="button"
-                                    disabled={restoringPageId !== null}
-                                    onClick={() => restorePage(page.id)}
-                                >
-                                    {restoringPageId === page.id
-                                        ? 'Восстановление…'
-                                        : 'Восстановить'}
-                                </button>
-                            </div>
-
-                            {restoreErrorId === page.id && (
-                                <p className="delete-page-error" role="alert">
-                                    Не удалось восстановить страницу.
-                                </p>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </main>
+        </AdminPageShell>
     );
 }

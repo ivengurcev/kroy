@@ -1,0 +1,126 @@
+.pageList {
+    --page-row-height: 64px;
+    --page-actions-width: 260px;
+    width: 100%;
+}
+
+.errorArea {
+    height: 24px;
+    color: var(--color-error-text);
+    font-size: var(--font-size-sm);
+}
+
+.listHeader,
+.row,
+.rowContents {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1.4fr) var(--page-actions-width);
+    grid-template-areas: "path title actions";
+    gap: var(--space-4);
+    align-items: center;
+}
+
+.listHeader {
+    height: 38px;
+    padding: 0 var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.list {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--color-border);
+    list-style: none;
+}
+
+.row {
+    height: var(--page-row-height);
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.rowContents {
+    display: contents;
+}
+
+.path { grid-area: path; }
+.title { grid-area: title; }
+.actions { grid-area: actions; }
+
+.path,
+.title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+a.title {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+}
+
+input.path,
+input.title {
+    width: 100%;
+    height: var(--control-height-sm);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font: inherit;
+    background: var(--color-surface);
+}
+
+input.path:focus,
+input.title:focus {
+    border-color: var(--color-primary);
+    outline: 3px solid rgb(9 100 249 / 10%);
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+}
+
+.actions button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: var(--space-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.singleAction button {
+    grid-column: 1 / -1;
+}
+
+.emptyState {
+    margin: var(--space-6) 0;
+    color: var(--color-text-muted);
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .pageList {
+        --page-row-height: 162px;
+        --page-actions-width: auto;
+    }
+
+    .listHeader { display: none; }
+
+    .row,
+    .rowContents {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 40px 40px 48px;
+        grid-template-areas: "path" "title" "actions";
+        gap: var(--space-1);
+    }
+
+    .row {
+        padding: var(--space-3);
+    }
+}

@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react';
-import './editor.css';
+import { useEffect, useRef, useState } from 'react';
+import styles from './Pages.module.css';
+import PageList from './PageList.jsx';
+import AdminPageShell from './layout-preview/AdminPageShell.jsx';
+import Button from './layout-preview/ui/Button.jsx';
+import Card from './layout-preview/ui/Card.jsx';
 
 export default function Pages() {
     const [pages, setPages] = useState([]);
@@ -8,19 +12,16 @@ export default function Pages() {
     const [title, setTitle] = useState('');
     const [path, setPath] = useState('');
     const [createStatus, setCreateStatus] = useState('idle');
-    const [editingPage, setEditingPage] = useState(null);
-    const [editStatus, setEditStatus] = useState('idle');
     const [deletingPageId, setDeletingPageId] = useState(null);
     const [deleteErrorId, setDeleteErrorId] = useState(null);
+    const titleInputRef = useRef(null);
 
     useEffect(() => {
         const controller = new AbortController();
 
         async function loadPages() {
             try {
-                const response = await fetch('/api/pages', {
-                    signal: controller.signal,
-                });
+                const response = await fetch('/api/pages', { signal: controller.signal });
 
                 if (!response.ok) {
                     throw new Error(`Не удалось загрузить страницы: ${response.status}`);
@@ -29,9 +30,7 @@ export default function Pages() {
                 setPages(await response.json());
                 setStatus('success');
             } catch (error) {
-                if (error.name !== 'AbortError') {
-                    setStatus('error');
-                }
+                if (error.name !== 'AbortError') setStatus('error');
             }
         }
 
@@ -39,6 +38,10 @@ export default function Pages() {
 
         return () => controller.abort();
     }, []);
+
+    useEffect(() => {
+        if (showForm) titleInputRef.current?.focus();
+    }, [showForm]);
 
     async function createPage(event) {
         event.preventDefault();
@@ -50,9 +53,7 @@ export default function Pages() {
         try {
             const response = await fetch('/api/pages', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, path }),
             });
 
@@ -68,46 +69,31 @@ export default function Pages() {
         }
     }
 
-    async function updatePage(event) {
-        event.preventDefault();
+    async function updatePage(pageId, values) {
+        const page = pages.find(({ id }) => id === pageId);
 
-        if (!editingPage || editStatus === 'submitting') return;
+        if (!page) throw new Error('Page not found');
 
-        setEditStatus('submitting');
+        const body = page.path === '/'
+            ? { title: values.title }
+            : values;
+        const response = await fetch(`/api/pages/${pageId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
 
-        const body = editingPage.originalPath === '/'
-            ? { title: editingPage.title }
-            : { title: editingPage.title, path: editingPage.path };
-
-        try {
-            const response = await fetch(`/api/pages/${editingPage.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Не удалось изменить страницу: ${response.status}`);
-            }
-
-            const updatedPage = await response.json();
-
-            setPages((previous) => previous.map((page) =>
-                page.id === updatedPage.id
-                    ? {
-                        ...page,
-                        title: updatedPage.title,
-                        path: updatedPage.path,
-                    }
-                    : page
-            ));
-            setEditingPage(null);
-            setEditStatus('idle');
-        } catch {
-            setEditStatus('error');
+        if (!response.ok) {
+            throw new Error(`Не удалось изменить страницу: ${response.status}`);
         }
+
+        const updatedPage = await response.json();
+
+        setPages((previous) => previous.map((item) =>
+            item.id === updatedPage.id
+                ? { ...item, title: updatedPage.title, path: updatedPage.path }
+                : item
+        ));
     }
 
     async function deletePage(page) {
@@ -123,20 +109,13 @@ export default function Pages() {
         setDeleteErrorId(null);
 
         try {
-            const response = await fetch(`/api/pages/${page.id}`, {
-                method: 'DELETE',
-            });
+            const response = await fetch(`/api/pages/${page.id}`, { method: 'DELETE' });
 
             if (!response.ok) {
                 throw new Error(`Не удалось удалить страницу: ${response.status}`);
             }
 
             setPages((previous) => previous.filter(({ id }) => id !== page.id));
-
-            if (editingPage?.id === page.id) {
-                setEditingPage(null);
-                setEditStatus('idle');
-            }
         } catch {
             setDeleteErrorId(page.id);
         } finally {
@@ -144,179 +123,58 @@ export default function Pages() {
         }
     }
 
-    if (status === 'loading') {
-        return <main className="editor-status">Загрузка страниц…</main>;
+    function closeCreateForm() {
+        setShowForm(false);
+        setCreateStatus('idle');
     }
 
-    if (status === 'error') {
-        return (
-            <main className="editor-status" role="alert">
-                Не удалось загрузить страницы.
-            </main>
-        );
-    }
+    const actions = (
+        <>
+            <a href="/admin/pages/trash">Корзина</a>
+            <Button variant="primary" disabled={showForm} onClick={() => setShowForm(true)}>
+                Создать страницу
+            </Button>
+        </>
+    );
 
     return (
-        <main className="pages">
-            <div className="pages-heading">
-                <h1>Страницы</h1>
+        <AdminPageShell
+            title="Карта страниц"
+            actions={actions}
+            status={status}
+            errorMessage="Не удалось загрузить страницы."
+        >
+            <div className={styles.content}>
+                {showForm && (
+                    <Card as="form" className={styles.createForm} onSubmit={createPage}>
+                        <label>
+                            <span>Название</span>
+                            <input ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} />
+                        </label>
+                        <label>
+                            <span>Путь</span>
+                            <input value={path} onChange={(event) => setPath(event.target.value)} />
+                        </label>
+                        <div className={styles.formActions}>
+                            <Button type="submit" variant="primary" disabled={createStatus === 'submitting'}>
+                                {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
+                            </Button>
+                            <Button disabled={createStatus === 'submitting'} onClick={closeCreateForm}>Отмена</Button>
+                        </div>
+                        <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
+                            {createStatus === 'error' && 'Не удалось создать страницу.'}
+                        </div>
+                    </Card>
+                )}
 
-                <div className="pages-heading-actions">
-                    <a href="/admin/pages/trash">Корзина</a>
-
-                    {!showForm && (
-                        <button type="button" onClick={() => setShowForm(true)}>
-                            Создать страницу
-                        </button>
-                    )}
-                </div>
+                <PageList
+                    pages={pages}
+                    busyPageId={deletingPageId}
+                    actionErrorId={deleteErrorId}
+                    onUpdate={updatePage}
+                    onDelete={deletePage}
+                />
             </div>
-
-            {showForm && (
-                <form className="create-page-form" onSubmit={createPage}>
-                    <label>
-                        Название
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={(event) => setTitle(event.target.value)}
-                        />
-                    </label>
-
-                    <label>
-                        Путь
-                        <input
-                            type="text"
-                            value={path}
-                            onChange={(event) => setPath(event.target.value)}
-                        />
-                    </label>
-
-                    <div className="create-page-actions">
-                        <button type="submit" disabled={createStatus === 'submitting'}>
-                            {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
-                        </button>
-                        <button
-                            type="button"
-                            disabled={createStatus === 'submitting'}
-                            onClick={() => {
-                                setShowForm(false);
-                                setCreateStatus('idle');
-                            }}
-                        >
-                            Отмена
-                        </button>
-                    </div>
-
-                    {createStatus === 'error' && (
-                        <p className="create-page-error" role="alert">
-                            Не удалось создать страницу.
-                        </p>
-                    )}
-                </form>
-            )}
-
-            {pages.length === 0 ? (
-                <p>У сайта пока нет страниц.</p>
-            ) : (
-                <ul className="pages-list">
-                    {pages.map((page) => (
-                        <li key={page.id}>
-                            <div className="pages-list-row">
-                                <a href={`/admin/pages/${page.id}/edit`}>
-                                    <strong>{page.title}</strong>
-                                    <span>{page.path}</span>
-                                </a>
-                                <div className="page-actions">
-                                    <button
-                                        type="button"
-                                        disabled={deletingPageId === page.id}
-                                        onClick={() => {
-                                            setEditingPage({
-                                                ...page,
-                                                originalPath: page.path,
-                                            });
-                                            setEditStatus('idle');
-                                        }}
-                                    >
-                                        Изменить
-                                    </button>
-
-                                    {page.path !== '/' && (
-                                        <button
-                                            type="button"
-                                            disabled={deletingPageId !== null}
-                                            onClick={() => deletePage(page)}
-                                        >
-                                            {deletingPageId === page.id ? 'Удаление…' : 'Удалить'}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {deleteErrorId === page.id && (
-                                <p className="delete-page-error" role="alert">
-                                    Не удалось удалить страницу.
-                                </p>
-                            )}
-
-                            {editingPage?.id === page.id && (
-                                <form className="edit-page-form" onSubmit={updatePage}>
-                                    <label>
-                                        Название
-                                        <input
-                                            type="text"
-                                            value={editingPage.title}
-                                            onChange={(event) => setEditingPage({
-                                                ...editingPage,
-                                                title: event.target.value,
-                                            })}
-                                        />
-                                    </label>
-
-                                    <label>
-                                        Путь
-                                        <input
-                                            type="text"
-                                            value={editingPage.path}
-                                            disabled={editingPage.originalPath === '/'}
-                                            onChange={(event) => setEditingPage({
-                                                ...editingPage,
-                                                path: event.target.value,
-                                            })}
-                                        />
-                                    </label>
-
-                                    <div className="create-page-actions">
-                                        <button
-                                            type="submit"
-                                            disabled={editStatus === 'submitting'}
-                                        >
-                                            {editStatus === 'submitting' ? 'Сохранение…' : 'Сохранить'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={editStatus === 'submitting'}
-                                            onClick={() => {
-                                                setEditingPage(null);
-                                                setEditStatus('idle');
-                                            }}
-                                        >
-                                            Отмена
-                                        </button>
-                                    </div>
-
-                                    {editStatus === 'error' && (
-                                        <p className="create-page-error" role="alert">
-                                            Не удалось изменить страницу.
-                                        </p>
-                                    )}
-                                </form>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </main>
+        </AdminPageShell>
     );
 }
