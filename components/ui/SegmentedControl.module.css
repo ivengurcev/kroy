@@ -50,37 +50,6 @@
     font-weight: var(--font-weight-bold);
 }
 
-.icon {
-    position: relative;
-    display: inline-block;
-    width: 20px;
-    height: 16px;
-    border: 2px solid currentcolor;
-    border-radius: 2px;
-}
-
-.desktop::after {
-    position: absolute;
-    right: 4px;
-    bottom: -5px;
-    left: 4px;
-    height: 2px;
-    background: currentcolor;
-    content: '';
-}
-
-.tablet {
-    width: 14px;
-    height: 18px;
-    border-radius: 3px;
-}
-
-.phone {
-    width: 10px;
-    height: 18px;
-    border-radius: 3px;
-}
-
 @media (max-width: 760px) {
     .control button {
         min-width: 46px;

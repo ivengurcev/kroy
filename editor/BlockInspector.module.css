@@ -1,0 +1,21 @@
+.inspector { padding: 18px var(--space-6) var(--space-6); }
+.inspectorTitle { display: flex; justify-content: space-between; align-items: flex-start; }
+.inspectorTitle h1 { margin: 0; font-size: var(--font-size-xl); }
+.inspectorTitle p { margin: 6px 0 0; color: var(--color-text-muted); }
+.partPicker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); margin-top: var(--space-4); }
+.partPicker select { min-width: 0; padding: 0 var(--space-3); border: 1px solid var(--color-gray-300); border-radius: var(--radius-md); color: var(--color-text); font: inherit; background: var(--color-surface); }
+.inspectorTabs { justify-content: space-between; height: 52px; margin-top: 10px; border-bottom: 1px solid var(--color-border); }
+.inspectorTabs button { padding: 0 13px; }
+.partActions { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
+.partActions button:last-child { margin-left: auto; }
+.emptyInspector { padding: var(--space-8); color: var(--color-text-muted); text-align: center; }
+
+@media (max-width: 760px) {
+    .inspector { padding: 18px; }
+    .inspectorTitle h1 { font-size: 20px; }
+}
+
+@media (max-width: 420px) {
+    .inspectorTabs button:nth-child(3) { display: none; }
+    .inspectorTabs button { flex: 1; padding-inline: var(--space-1); }
+}

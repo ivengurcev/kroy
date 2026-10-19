@@ -13,22 +13,22 @@ await createApp({
         {
             path: '/admin',
             title: 'Редактор Kroy',
-            component: './editor/Editor.jsx',
+            component: './pages/EditorPage.jsx',
         },
         {
             path: '/admin/pages',
             title: 'Страницы Kroy',
-            component: './editor/Pages.jsx',
+            component: './pages/PagesPage.jsx',
         },
         {
             path: '/admin/pages/trash',
             title: 'Корзина Kroy',
-            component: './editor/Trash.jsx',
+            component: './pages/TrashPage.jsx',
         },
         {
             path: '/admin/pages/:pageId/edit',
             title: 'Редактор Kroy',
-            component: './editor/Editor.jsx',
+            component: './pages/EditorPage.jsx',
         },
     ],
     api: [

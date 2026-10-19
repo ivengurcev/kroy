@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { parts } from '../dist/kroy/parts.mjs';
 import metadata from '../dist/kroy/parts.json';
 
-import AdminShell from './layout-preview/AdminShell.jsx';
+import AdminShell from '../components/admin/AdminShell.jsx';
 import { createPart } from './partModel.js';
 
 export default function Editor() {

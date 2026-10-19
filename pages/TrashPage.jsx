@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import PageList from './PageList.jsx';
-import styles from './Pages.module.css';
-import AdminPageShell from './layout-preview/AdminPageShell.jsx';
+import PageList from '../components/admin/PageList.jsx';
+import styles from './PagesPage.module.css';
+import AdminPageShell from '../components/admin/AdminPageShell.jsx';
+import Icon from '../components/ui/Icon.jsx';
 
-export default function Trash() {
+export default function TrashPage() {
     const [pages, setPages] = useState([]);
     const [status, setStatus] = useState('loading');
     const [restoringPageId, setRestoringPageId] = useState(null);
@@ -56,7 +57,7 @@ export default function Trash() {
     return (
         <AdminPageShell
             title="Корзина"
-            actions={<a href="/admin/pages">Вернуться к страницам</a>}
+            actions={<a href="/admin/pages"><Icon name="back" /> Вернуться к страницам</a>}
             status={status}
             errorMessage="Не удалось загрузить корзину."
         >

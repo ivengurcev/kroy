@@ -1,7 +1,7 @@
 import AdminHeader from './AdminHeader.jsx';
 import styles from './AdminPageShell.module.css';
-import theme from './AdminTheme.module.css';
-import Card from './ui/Card.jsx';
+import theme from '../../styles/AdminTheme.module.css';
+import Card from '../ui/Card.jsx';
 
 export default function AdminPageShell({
     title,

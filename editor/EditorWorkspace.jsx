@@ -1,7 +1,7 @@
-import Page from '../../layout/Page.jsx';
+import Page from '../layout/Page.jsx';
 import BlockInspector from './BlockInspector.jsx';
-import styles from './AdminShell.module.css';
-import Card from './ui/Card.jsx';
+import styles from './EditorWorkspace.module.css';
+import Card from '../components/ui/Card.jsx';
 
 export default function EditorWorkspace({
     content,

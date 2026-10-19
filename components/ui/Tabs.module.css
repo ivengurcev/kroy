@@ -16,12 +16,10 @@
 }
 
 .tabs button b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 22px;
-    font-family: "Segoe UI Symbol", ui-sans-serif, sans-serif;
-    font-size: 21px;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
 }
 
 .tabs .active {

@@ -1,6 +1,6 @@
-import styles from './AdminShell.module.css';
-import Card from './ui/Card.jsx';
-import SegmentedControl from './ui/SegmentedControl.jsx';
+import styles from './EditorFooter.module.css';
+import Card from '../components/ui/Card.jsx';
+import SegmentedControl from '../components/ui/SegmentedControl.jsx';
 
 const devices = [
     { icon: 'desktop', label: 'Компьютер' },

@@ -1,14 +1,15 @@
-import styles from './AdminShell.module.css';
-import Button from './ui/Button.jsx';
-import Card from './ui/Card.jsx';
-import StatusIndicator from './ui/StatusIndicator.jsx';
-import Tabs from './ui/Tabs.jsx';
+import styles from './EditorToolbar.module.css';
+import Button from '../components/ui/Button.jsx';
+import Card from '../components/ui/Card.jsx';
+import Icon from '../components/ui/Icon.jsx';
+import StatusIndicator from '../components/ui/StatusIndicator.jsx';
+import Tabs from '../components/ui/Tabs.jsx';
 
 const modes = [
-    { icon: '✎', label: 'Редактирование' },
-    { icon: '⚙︎', label: 'Настройки' },
-    { icon: 'Aa', label: 'SEO' },
-    { icon: '•••', label: 'Дополнительно' },
+    { icon: <Icon name="edit" size={21} />, label: 'Редактирование' },
+    { icon: <Icon name="settings" size={21} />, label: 'Настройки' },
+    { icon: <Icon name="seo" size={21} />, label: 'SEO' },
+    { icon: <Icon name="more" size={21} />, label: 'Дополнительно' },
 ];
 
 export default function EditorToolbar({
@@ -34,8 +35,8 @@ export default function EditorToolbar({
             <Tabs className={styles.modeTabs} items={modes} ariaLabel="Режим редактора" />
             <div className={styles.saveArea}>
                 <span className={styles.historyActions} aria-label="История действий">
-                    <Button variant="compact" aria-label="Назад" disabled>↶</Button>
-                    <Button variant="compact" aria-label="Вперёд" disabled>↷</Button>
+                    <Button variant="compact" aria-label="Назад" disabled><Icon name="back" /></Button>
+                    <Button variant="compact" aria-label="Вперёд" disabled><Icon name="forward" /></Button>
                 </span>
                 <StatusIndicator className={styles.saveState} title={status.title} tone={status.tone} />
                 <Button
@@ -44,7 +45,7 @@ export default function EditorToolbar({
                     disabled={loadStatus !== 'success' || !isDirty || saveStatus === 'saving'}
                     onClick={onSave}
                 >
-                    <b className={styles.actionIcon}>✓</b> <span>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</span>
+                    <Icon name="save" /> <span>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</span>
                 </Button>
             </div>
         </Card>

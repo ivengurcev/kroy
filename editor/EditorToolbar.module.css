@@ -1,0 +1,23 @@
+.secondaryBar { display: flex; justify-content: space-between; height: 72px; margin-top: 14px; padding: 0 var(--space-4); }
+.modeTabs button { display: flex; gap: 10px; align-items: center; padding: 0 15px; font-size: var(--font-size-lg); }
+.saveArea { display: flex; gap: 25px; align-items: center; }
+.historyActions { display: flex; gap: var(--space-2); }
+.historyActions button { width: 40px; padding: 0; }
+.saveAction { min-width: 166px; }
+
+@media (max-width: 1100px) {
+    .secondaryBar { overflow: hidden; }
+    .modeTabs { gap: 3px; }
+    .modeTabs button { padding-inline: 9px; }
+    .saveState small { display: none; }
+}
+
+@media (max-width: 760px) {
+    .secondaryBar { height: 76px; margin-top: var(--space-2); padding: 0 var(--space-2); }
+    .modeTabs { flex: 1; justify-content: space-around; }
+    .modeTabs button { min-width: 45px; justify-content: center; padding: 0 var(--space-2); }
+    .modeTabs button span, .saveState, .saveAction span { display: none; }
+    .saveArea { gap: var(--space-2); }
+    .historyActions { display: none; }
+    .saveAction { min-width: 46px; padding: 0; }
+}

@@ -1,9 +1,9 @@
 import AdminHeader from './AdminHeader.jsx';
-import EditorFooter from './EditorFooter.jsx';
-import EditorToolbar from './EditorToolbar.jsx';
-import EditorWorkspace from './EditorWorkspace.jsx';
+import EditorFooter from '../../editor/EditorFooter.jsx';
+import EditorToolbar from '../../editor/EditorToolbar.jsx';
+import EditorWorkspace from '../../editor/EditorWorkspace.jsx';
 import styles from './AdminShell.module.css';
-import theme from './AdminTheme.module.css';
+import theme from '../../styles/AdminTheme.module.css';
 
 export default function AdminShell({
     page,

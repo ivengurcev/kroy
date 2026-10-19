@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import styles from './Pages.module.css';
-import PageList from './PageList.jsx';
-import AdminPageShell from './layout-preview/AdminPageShell.jsx';
-import Button from './layout-preview/ui/Button.jsx';
-import Card from './layout-preview/ui/Card.jsx';
+import styles from './PagesPage.module.css';
+import PageList from '../components/admin/PageList.jsx';
+import AdminPageShell from '../components/admin/AdminPageShell.jsx';
+import Button from '../components/ui/Button.jsx';
+import Card from '../components/ui/Card.jsx';
+import Icon from '../components/ui/Icon.jsx';
 
-export default function Pages() {
+export default function PagesPage() {
     const [pages, setPages] = useState([]);
     const [status, setStatus] = useState('loading');
     const [showForm, setShowForm] = useState(false);
@@ -130,9 +131,9 @@ export default function Pages() {
 
     const actions = (
         <>
-            <a href="/admin/pages/trash">Корзина</a>
+            <a href="/admin/pages/trash"><Icon name="trash" /> Корзина</a>
             <Button variant="primary" disabled={showForm} onClick={() => setShowForm(true)}>
-                Создать страницу
+                <Icon name="add" /> Создать страницу
             </Button>
         </>
     );
@@ -157,9 +158,9 @@ export default function Pages() {
                         </label>
                         <div className={styles.formActions}>
                             <Button type="submit" variant="primary" disabled={createStatus === 'submitting'}>
-                                {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
+                                <Icon name="add" /> {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
                             </Button>
-                            <Button disabled={createStatus === 'submitting'} onClick={closeCreateForm}>Отмена</Button>
+                            <Button disabled={createStatus === 'submitting'} onClick={closeCreateForm}><Icon name="close" /> Отмена</Button>
                         </div>
                         <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
                             {createStatus === 'error' && 'Не удалось создать страницу.'}

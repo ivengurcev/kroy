@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import PartEditor from '../PartEditor.jsx';
-import styles from './AdminShell.module.css';
-import Button from './ui/Button.jsx';
-import Card from './ui/Card.jsx';
-import Tabs from './ui/Tabs.jsx';
+import PartEditor from './PartEditor.jsx';
+import styles from './BlockInspector.module.css';
+import Button from '../components/ui/Button.jsx';
+import Card from '../components/ui/Card.jsx';
+import Icon from '../components/ui/Icon.jsx';
+import Tabs from '../components/ui/Tabs.jsx';
 
 const inspectorTabs = [
     { label: 'Контент' },
@@ -40,7 +41,7 @@ export default function BlockInspector({
                     {availableParts.map((name) => <option value={name} key={name}>{name}</option>)}
                 </select>
                 <Button variant="primary" disabled={!partToAdd} onClick={() => onAddPart(partToAdd)}>
-                    Добавить
+                    <Icon name="add" /> Добавить
                 </Button>
             </div>
 
@@ -55,7 +56,7 @@ export default function BlockInspector({
                             onClick={() => onMovePart(selectedPart.id, -1)}
                             aria-label="Переместить вверх"
                         >
-                            ↑
+                            <Icon name="up" />
                         </Button>
                         <Button
                             variant="compact"
@@ -63,9 +64,9 @@ export default function BlockInspector({
                             onClick={() => onMovePart(selectedPart.id, 1)}
                             aria-label="Переместить вниз"
                         >
-                            ↓
+                            <Icon name="down" />
                         </Button>
-                        <Button onClick={() => onRemovePart(selectedPart.id)}>Удалить</Button>
+                        <Button onClick={() => onRemovePart(selectedPart.id)}><Icon name="delete" /> Удалить</Button>
                     </div>
 
                     <PartEditor

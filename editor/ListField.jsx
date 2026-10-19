@@ -1,6 +1,8 @@
 
 import { defaultProps } from './partModel.js';
 import styles from './ListField.module.css';
+import Button from '../components/ui/Button.jsx';
+import Icon from '../components/ui/Icon.jsx';
 
 export default function ListField({
     label,
@@ -65,35 +67,36 @@ export default function ListField({
                     ))}
 
                     <div className={styles.listActions}>
-                        <button
-                            type="button"
+                        <Button
+                            variant="compact"
+                            aria-label="Переместить вверх"
                             disabled={index === 0}
                             onClick={() => moveItem(index, -1)}
                         >
-                            ↑
-                        </button>
+                            <Icon name="up" />
+                        </Button>
 
-                        <button
-                            type="button"
+                        <Button
+                            variant="compact"
+                            aria-label="Переместить вниз"
                             disabled={index === items.length - 1}
                             onClick={() => moveItem(index, 1)}
                         >
-                            ↓
-                        </button>
+                            <Icon name="down" />
+                        </Button>
 
-                        <button
-                            type="button"
+                        <Button
                             onClick={() => removeItem(index)}
                         >
-                            Удалить
-                        </button>
+                            <Icon name="delete" /> Удалить
+                        </Button>
                     </div>
                 </div>
             ))}
 
-            <button type="button" onClick={addItem}>
-                + Добавить
-            </button>
+            <Button onClick={addItem}>
+                <Icon name="add" /> Добавить
+            </Button>
         </fieldset>
     );
 }

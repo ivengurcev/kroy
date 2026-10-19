@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './PageList.module.css';
-import Button from './layout-preview/ui/Button.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 
 function pathDepth(path) {
     return path.split('/').filter(Boolean).length;
@@ -142,9 +143,9 @@ export default function PageList({
                                             />
                                             <div className={styles.actions}>
                                                 <Button type="submit" variant="primary" disabled={!hasEditChanges || editStatus === 'submitting'}>
-                                                    {editStatus === 'submitting' ? 'Сохранение…' : 'Сохранить'}
+                                                    <Icon name="save" /> {editStatus === 'submitting' ? 'Сохранение…' : 'Сохранить'}
                                                 </Button>
-                                                <Button disabled={editStatus === 'submitting'} onClick={cancelEditing}>Отмена</Button>
+                                                <Button disabled={editStatus === 'submitting'} onClick={cancelEditing}><Icon name="close" /> Отмена</Button>
                                             </div>
                                         </form>
                                     ) : (
@@ -166,17 +167,17 @@ export default function PageList({
                                                             disabled={Boolean(editing && editing.id !== page.id && hasEditChanges)}
                                                             onClick={() => startEditing(page)}
                                                         >
-                                                            Изменить
+                                                            <Icon name="edit" /> Изменить
                                                         </Button>
                                                         {page.path === '/' ? <span /> : (
                                                             <Button disabled={busyPageId !== null} onClick={() => onDelete(page)}>
-                                                                {busyPageId === page.id ? 'Удаление…' : 'Удалить'}
+                                                                <Icon name="delete" /> {busyPageId === page.id ? 'Удаление…' : 'Удалить'}
                                                             </Button>
                                                         )}
                                                     </>
                                                 ) : (
                                                     <Button disabled={busyPageId !== null} onClick={() => onRestore(page.id)}>
-                                                        {busyPageId === page.id ? 'Восстановление…' : 'Восстановить'}
+                                                        <Icon name="restore" /> {busyPageId === page.id ? 'Восстановление…' : 'Восстановить'}
                                                     </Button>
                                                 )}
                                             </div>
