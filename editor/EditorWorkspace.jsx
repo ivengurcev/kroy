@@ -47,10 +47,6 @@ export default function EditorWorkspace({
     function selectPart(event, id) {
         if (event.target.closest?.('[data-editor-control]')) return;
 
-        if (event.target.closest?.('a')) {
-            event.preventDefault();
-        }
-
         onSelectPart(id);
     }
 
@@ -96,7 +92,9 @@ export default function EditorWorkspace({
                             onMove={onMovePart}
                             onRemove={onRemovePart}
                         />
-                        <Page content={[item]} parts={parts} />
+                        <div className={styles.partContent} inert="">
+                            <Page content={[item]} parts={parts} />
+                        </div>
                     </div>,
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
