@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Page from './Page.jsx';
+import SiteRoot from './SiteRoot.jsx';
 
 const RESERVED_PATHS = [
     '/_kroy',
@@ -93,5 +94,9 @@ export default function SiteApp({ pages, path, parts }) {
         };
     }, [pages]);
 
-    return <Page key={page.path} content={page.content} parts={parts} />;
+    return (
+        <SiteRoot>
+            <Page key={page.path} content={page.content} parts={parts} />
+        </SiteRoot>
+    );
 }

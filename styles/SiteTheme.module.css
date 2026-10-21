@@ -1,0 +1,33 @@
+.theme {
+    --site-color-bg: #f6f5f2;
+    --site-color-text: #10221e;
+    --site-color-text-secondary: #3b4743;
+    --site-color-accent: #355851;
+    --site-color-accent-hover: #21786b;
+    --site-color-border: rgb(36 64 57 / 24%);
+    --site-color-surface: #f7f7f4;
+    --site-color-surface-soft: #e3e7e2;
+
+    --site-font-body: Arial, Helvetica, sans-serif;
+    --site-font-heading: Georgia, "Times New Roman", serif;
+    --site-font-size-base: 16px;
+    --site-line-height: 1.5;
+
+    --site-container-max: 1760px;
+    --site-page-gutter: clamp(20px, 5vw, 90px);
+
+    --site-space-1: 4px;
+    --site-space-2: 8px;
+    --site-space-3: 12px;
+    --site-space-4: 16px;
+    --site-space-6: 24px;
+    --site-space-8: 32px;
+    --site-space-12: 48px;
+    --site-space-16: 64px;
+
+    color: var(--site-color-text);
+    font-family: var(--site-font-body);
+    font-size: var(--site-font-size-base);
+    line-height: var(--site-line-height);
+    background: var(--site-color-bg);
+}

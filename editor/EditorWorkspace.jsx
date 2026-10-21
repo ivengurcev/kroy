@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import Page from '../layout/Page.jsx';
+import SiteRoot from '../layout/SiteRoot.jsx';
 import BlockInspector from './BlockInspector.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../components/ui/Card.jsx';
@@ -93,7 +94,9 @@ export default function EditorWorkspace({
                             onRemove={onRemovePart}
                         />
                         <div className={styles.partContent} inert="">
-                            <Page content={[item]} parts={parts} />
+                            <SiteRoot>
+                                <Page content={[item]} parts={parts} />
+                            </SiteRoot>
                         </div>
                     </div>,
                 ])}
