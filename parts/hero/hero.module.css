@@ -133,7 +133,7 @@
     backdrop-filter: blur(9px);
 }
 
-.doctorName {
+.captionTitle {
     margin: 0 0 var(--site-space-2);
     font: 400 clamp(19px, 1.5cqw, 23px)/1.16 var(--site-font-heading);
 }
@@ -166,7 +166,7 @@
     .eyebrow { margin-bottom: 28px; font-size: clamp(14px, 3.1cqw, 19px); letter-spacing: .13em; }
     .title { font-size: clamp(43px, 8.5cqw, 65px); }
     .caption { top: 34%; right: var(--site-page-gutter); bottom: auto; width: 165px; padding: var(--site-space-4); }
-    .doctorName { font-size: 19px; }
+    .captionTitle { font-size: 19px; }
     .description { font-size: 13px; }
     .socials { right: var(--site-page-gutter); bottom: 3.5%; left: var(--site-page-gutter); justify-content: space-between; }
     .social { gap: var(--site-space-2); padding-right: var(--site-space-3); font-size: 13px; }
@@ -177,7 +177,7 @@
 }
 
 @container hero (min-width: 761px) {
-    .doctorName { white-space: nowrap; }
+    .captionTitle { white-space: nowrap; }
 }
 
 @container hero (max-width: 390px) {

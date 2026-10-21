@@ -94,6 +94,10 @@ function applyKroy(field, settings) {
         }
 
         switch (key) {
+            case 'label':
+                field.label = value;
+                break;
+
             case 'widget':
                 // Совместимость с текущим редактором
                 if (value === 'tel' || value === 'url') {

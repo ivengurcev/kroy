@@ -18,13 +18,33 @@ function InstagramIcon() {
     );
 }
 
-function SocialLink({ href, icon, children }) {
-    if (!href) return null;
-
+function LinkIcon() {
     return (
-        <a className={styles.social} href={href} target="_blank" rel="noopener noreferrer">
-            <span className={styles.socialIcon} aria-hidden="true">{icon}</span>
-            {children}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" />
+            <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1" />
+        </svg>
+    );
+}
+
+function socialIcon(name) {
+    switch (name.toLowerCase()) {
+        case 'telegram':
+            return <TelegramIcon />;
+        case 'max':
+            return <span className={styles.maxMark}>MAX</span>;
+        case 'instagram':
+            return <InstagramIcon />;
+        default:
+            return <LinkIcon />;
+    }
+}
+
+function SocialLink({ name, link }) {
+    return (
+        <a className={styles.social} href={link} target="_blank" rel="noopener noreferrer">
+            <span className={styles.socialIcon} aria-hidden="true">{socialIcon(name)}</span>
+            {name}
         </a>
     );
 }
@@ -33,33 +53,36 @@ function SocialLink({ href, icon, children }) {
  * @param {object} props
  * @param {string} props.eyebrow - Надпись над заголовком
  * @param {string} props.title - Главный заголовок
- * @param {string} props.doctorName - Имя врача
- * @param {string} props.description - Описание врача и стажа
+ * @param {string} props.captionTitle - Заголовок плашки
+ * @param {string} props.description - Текст плашки
  * @param {string} props.photo - Фотография
- * @param {string} props.telegramUrl - Telegram
- * @param {string} props.maxUrl - MAX
- * @param {string} props.instagramUrl - Instagram
+ * @param {{name: string, link: string}[]} props.socials - Социальные сети
  *
  * @kroy eyebrow widget=input
  * @kroy title widget=textarea
- * @kroy doctorName widget=input
+ * @kroy captionTitle widget=input
  * @kroy description widget=textarea
  * @kroy photo widget=image
- * @kroy telegramUrl widget=url
- * @kroy maxUrl widget=url
- * @kroy instagramUrl widget=url
+ * @kroy socials.name label=Название maxLength=30
+ * @kroy socials.link label=Ссылка widget=url
  */
 export default function Hero({
     eyebrow = '',
     title = '',
-    doctorName = '',
+    captionTitle = '',
     description = '',
     photo = '',
-    telegramUrl = '',
-    maxUrl = '',
-    instagramUrl = '',
+    socials = [],
 }) {
-    const hasCaption = doctorName || description;
+    const visibleSocials = Array.isArray(socials)
+        ? socials
+            .map(({ name, link }) => ({
+                name: typeof name === 'string' ? name.trim() : '',
+                link: typeof link === 'string' ? link.trim() : '',
+            }))
+            .filter(({ name, link }) => name && link)
+        : [];
+    const hasCaption = captionTitle || description;
 
     return (
         <section className={styles.heroContainer}>
@@ -75,17 +98,17 @@ export default function Hero({
                         {title && <h1 className={styles.title}>{title}</h1>}
                     </div>
 
-                    {(telegramUrl || maxUrl || instagramUrl) && (
+                    {visibleSocials.length > 0 && (
                         <nav className={styles.socials} aria-label="Социальные сети">
-                            <SocialLink href={telegramUrl} icon={<TelegramIcon />}>Telegram</SocialLink>
-                            <SocialLink href={maxUrl} icon={<span className={styles.maxMark}>MAX</span>}>MAX</SocialLink>
-                            <SocialLink href={instagramUrl} icon={<InstagramIcon />}>Instagram</SocialLink>
+                            {visibleSocials.map(({ name, link }, index) => (
+                                <SocialLink key={`${name}-${link}-${index}`} name={name} link={link} />
+                            ))}
                         </nav>
                     )}
 
                     {hasCaption && (
                         <div className={styles.caption}>
-                            {doctorName && <p className={styles.doctorName}>{doctorName}</p>}
+                            {captionTitle && <p className={styles.captionTitle}>{captionTitle}</p>}
                             {description && <p className={styles.description}>{description}</p>}
                         </div>
                     )}

@@ -1,5 +1,5 @@
 export default function SectionMain() {
     return <section>
-        MAIN
+        MAIN sdsfsdfsdfsdfsdf
     </section>
 }
