@@ -1,8 +1,10 @@
 import createApp from '@vyaz/core/createApp.mjs';
 import deletePage from './api/deletePage.mjs';
+import getMedia from './api/getMedia.mjs';
 import getPage from './api/getPage.mjs';
 import patchPage from './api/patchPage.mjs';
 import postPage from './api/postPage.mjs';
+import postMedia from './api/postMedia.mjs';
 import putPage from './api/putPage.mjs';
 import restorePage from './api/restorePage.mjs';
 
@@ -32,6 +34,16 @@ await createApp({
         },
     ],
     api: [
+        [
+            '/media',
+            { method: 'POST' },
+            postMedia,
+        ],
+        [
+            '/media/:mediaId',
+            { method: 'GET' },
+            getMedia,
+        ],
         [
             '/pages',
             { method: 'GET' },

@@ -20,6 +20,9 @@ dist/
 build/
 .cache/
 
+# Persistent media
+/data/
+
 # Environment
 .env
 .env.*

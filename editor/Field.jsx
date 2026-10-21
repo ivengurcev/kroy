@@ -1,5 +1,6 @@
 
 import ListField from './ListField.jsx';
+import ImageField from './ImageField.jsx';
 import styles from './Field.module.css';
 
 export default function Field({ name, schema, value, onChange }) {
@@ -14,6 +15,16 @@ export default function Field({ name, schema, value, onChange }) {
                 value={value}
                 onChange={onChange}
                 FieldComponent={Field}
+            />
+        );
+    }
+
+    if (schema.type === 'image') {
+        return (
+            <ImageField
+                label={label}
+                value={value}
+                onChange={onChange}
             />
         );
     }

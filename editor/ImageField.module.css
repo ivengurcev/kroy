@@ -1,0 +1,21 @@
+.field {
+    display: grid;
+    gap: var(--space-2);
+    color: var(--color-text-secondary);
+}
+
+.label { color: var(--color-text-secondary); }
+
+.preview {
+    display: block;
+    width: 100%;
+    max-height: 180px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    object-fit: contain;
+    background: var(--color-canvas);
+}
+
+.input { display: none; }
+.field button { justify-self: start; }
+.error { min-height: 18px; color: var(--color-error-text); }
