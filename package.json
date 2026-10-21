@@ -10,6 +10,8 @@
     "esbuild": "^0.28.2"
   },
   "scripts": {
+    "help": "node scripts/help.mjs",
+    "kroy:help": "node scripts/help.mjs",
     "db": "docker compose up -d db",
     "db:seed": "yarn node --env-file=.env db/seed.mjs",
     "parts:generate": "node scripts/discoverParts.mjs",

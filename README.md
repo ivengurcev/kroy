@@ -38,6 +38,39 @@ Kroy — прототип мультисайтовой платформы для
 | `dist/kroy/staging/<site>/` | Подготовленная, но не опубликованная версия сайта |
 | `dist/sites/<site>/` | Готовые статические сайты |
 
+## Справка по командам
+
+Компактная справка доступна непосредственно в терминале:
+
+```bash
+yarn kroy:help
+```
+
+В Yarn 4 вызов `yarn help` зарезервирован встроенной справкой Yarn. Тот же
+скрипт Kroy можно явно запустить как `yarn run help`, но рекомендуемый и
+гарантированный вариант — `yarn kroy:help`.
+
+| Назначение | Команды |
+|---|---|
+| Разработка | `yarn vyaz:build`, `yarn vyaz:serve`, `yarn parts:generate` |
+| База данных | `yarn db`, `yarn db:seed`, `docker compose run --rm migrate up` |
+| Сайты | `yarn site:create <slug> <hostname> [name]`, `yarn site:list`, `yarn site:info <slug>` |
+| Домены | `yarn site:domain:add <slug> <hostname>`, `yarn site:domain:remove <slug> <hostname>` |
+| Публикация | `yarn site:build <slug>`, `yarn site:publish <slug>`, `yarn site:releases <slug>`, `yarn site:rollback <slug> <release-id>` |
+| Preview | `yarn preview`, `yarn preview:reload`, `yarn preview:validate` |
+
+Быстрые сценарии:
+
+- Изменить запчасть: `yarn vyaz:build`; для публичного сайта дополнительно
+  `yarn site:build <slug>`.
+- Открыть редактор: `yarn db` → `yarn vyaz:build` → `yarn vyaz:serve`.
+- Посмотреть публичный сайт: `yarn preview` → `yarn site:build <slug>` →
+  `yarn site:publish <slug>`.
+- Опубликовать изменения: `yarn site:build <slug>` →
+  `yarn site:publish <slug>`.
+- Откатить релиз: `yarn site:releases <slug>` →
+  `yarn site:rollback <slug> <release-id>`.
+
 ## Запчасти
 
 Запчасти обнаруживаются в `parts/`. JSDoc над `export default` описывает редактируемые свойства: обычные `@param` задают поля, а `@kroy` — виджеты и ограничения.
