@@ -1,10 +1,5 @@
 {
     "private": true,
     "name": "@kroy/hero",
-    "main": "Hero.jsx",
-    "fields": {
-        "title": {"type": "input", "validators": {"maxLength": 30}},
-        "description": {"type": "textarea"},
-        "testfield": {"type": "input", "validators": {"maxLength": 3}}
-    }
+    "main": "Hero.jsx"
 }
