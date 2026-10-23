@@ -1,16 +1,22 @@
 .primaryBar {
     display: grid;
-    grid-template-columns: 145px 265px 265px minmax(410px, 1fr) auto auto;
+    grid-template-columns: max-content minmax(190px, 0.75fr) minmax(190px, 0.75fr) minmax(360px, 1.5fr) auto auto;
+    grid-template-areas: "logo settings pages current preview publish";
     gap: var(--space-3);
     align-items: center;
-    height: 84px;
+    min-height: 84px;
     padding: 10px var(--space-4);
 }
 
-.pagesPrimaryBar { grid-template-columns: 145px 265px 265px minmax(0, 1fr); }
-.logo { display: flex; align-items: center; color: var(--color-text); }
+.pagesPrimaryBar {
+    grid-template-columns: max-content minmax(190px, 265px) minmax(190px, 265px) minmax(0, 1fr);
+    grid-template-areas: "logo settings pages .";
+}
+.logo { grid-area: logo; display: flex; align-items: center; color: var(--color-text); }
 .logoMark { display: block; width: 108px; height: auto; }
 .logoMark [data-accent] { color: var(--color-primary); }
+.settingsTile { grid-area: settings; }
+.pagesTile { grid-area: pages; }
 
 .headerTile,
 .currentPage {
@@ -27,7 +33,7 @@
 }
 
 a.headerTile { color: inherit; text-decoration: none; }
-.activeHeaderTile { border-color: var(--color-border); color: var(--color-primary); background: var(--color-primary-soft); }
+.headerTile.activeHeaderTile:disabled { border-color: var(--color-border); color: var(--color-primary); background: var(--color-primary-soft); }
 .tileIcon { display: grid; flex: 0 0 44px; height: 44px; place-items: center; border-radius: var(--radius-md); color: var(--color-primary); background: var(--color-primary-soft); }
 .headerTile > span:nth-child(2), .pageName { display: grid; min-width: 0; gap: var(--space-1); }
 .headerTile b, .headerTile small, .pageName b, .pageName small, .pageAddress > small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -39,29 +45,72 @@ a.headerTile { color: inherit; text-decoration: none; }
 .pageAddress > span { display: flex; gap: var(--space-2); }
 .pageAddress code { flex: 1; height: 34px; padding: 7px 11px; border: 1px solid var(--color-border); border-radius: var(--space-2); background: var(--color-canvas); }
 .pageAddress button { min-height: 34px; height: 34px; color: var(--color-primary); }
+.currentPage { grid-area: current; }
+.previewAction { grid-area: preview; }
+.publishAction { grid-area: publish; }
 .previewAction, .publishAction { min-height: var(--control-height); }
 
 @media (max-width: 1550px) {
-    .primaryBar { grid-template-columns: 125px 220px 220px minmax(330px, 1fr) auto auto; }
-    .pagesPrimaryBar { grid-template-columns: 125px 220px 220px minmax(0, 1fr); }
+    .primaryBar { grid-template-columns: max-content minmax(170px, 0.7fr) minmax(170px, 0.7fr) minmax(320px, 1.4fr) auto auto; }
+    .pagesPrimaryBar { grid-template-columns: max-content minmax(170px, 230px) minmax(170px, 230px) minmax(0, 1fr); }
     .headerTile { padding-inline: 9px; }
 }
 
-@media (max-width: 1100px) {
-    .primaryBar { grid-template-columns: 125px minmax(350px, 1fr) auto auto; }
-    .pagesPrimaryBar { grid-template-columns: 125px minmax(220px, 1fr); }
-    .headerTile { display: none; }
-    .pagesPrimaryBar .activeHeaderTile { display: flex; }
+@media (max-width: 1280px) {
+    .primaryBar {
+        grid-template-columns: max-content minmax(170px, 220px) minmax(300px, 1fr) auto auto;
+        grid-template-areas: "logo pages current preview publish";
+    }
+    .pagesPrimaryBar {
+        grid-template-columns: max-content minmax(190px, 260px) minmax(0, 1fr);
+        grid-template-areas: "logo pages .";
+    }
+    .settingsTile { display: none; }
+}
+
+@media (max-width: 1024px) {
+    .primaryBar {
+        grid-template-columns: max-content minmax(180px, 1fr) auto auto;
+        grid-template-areas:
+            "logo pages preview publish"
+            "current current current current";
+    }
+    .pagesPrimaryBar {
+        grid-template-columns: max-content minmax(180px, 1fr);
+        grid-template-areas: "logo pages";
+    }
 }
 
 @media (max-width: 760px) {
-    .primaryBar { grid-template-columns: 1fr auto; height: 64px; padding: 7px var(--space-3); }
-    .pagesPrimaryBar { grid-template-columns: 1fr auto; }
+    .primaryBar {
+        grid-template-columns: max-content minmax(0, 1fr) auto;
+        grid-template-areas:
+            "logo pages publish"
+            "current current current";
+        padding: 7px var(--space-3);
+    }
+    .pagesPrimaryBar {
+        grid-template-columns: max-content minmax(0, 1fr);
+        grid-template-areas: "logo pages";
+    }
     .logoMark { width: 92px; }
-    .currentPage, .previewAction { display: none; }
+    .previewAction { display: none; }
+    .currentPage { min-height: 58px; height: auto; }
+    .pageAddress { min-width: 180px; }
+    .headerTile small { display: none; }
     .publishAction { min-height: 42px; padding-inline: 13px; }
 }
 
 @media (max-width: 420px) {
+    .primaryBar { gap: var(--space-2); padding-inline: 10px; }
+    .logoMark { width: 72px; }
+    .headerTile { gap: var(--space-2); padding-inline: var(--space-2); }
+    .tileIcon { flex-basis: 38px; height: 38px; }
+    .currentPage {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+    .pageAddress { grid-column: 1 / -1; min-width: 0; max-width: none; margin-left: 0; padding: var(--space-2) 0 0; border-top: 1px solid var(--color-border); border-left: 0; }
+    .pageAddress button em { display: none; }
     .publishAction span { display: none; }
 }

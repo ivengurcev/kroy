@@ -43,7 +43,7 @@
     font-size: var(--font-size-sm);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
     .createForm {
         grid-template-columns: minmax(0, 1fr);
     }

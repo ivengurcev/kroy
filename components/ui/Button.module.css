@@ -13,11 +13,6 @@
     background: var(--color-surface);
 }
 
-.button:disabled {
-    cursor: default;
-    opacity: 1;
-}
-
 .primary {
     border-color: var(--color-primary);
     color: var(--color-on-primary);
@@ -26,9 +21,15 @@
 }
 
 .success {
-    border-color: var(--color-success);
+    border-color: var(--color-primary);
     color: var(--color-on-primary);
-    background: linear-gradient(135deg, var(--color-green-600), var(--color-green-500));
+    background: var(--color-primary);
+}
+
+.outline {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-surface);
 }
 
 .secondary {
@@ -39,4 +40,12 @@
     min-width: var(--control-height-sm);
     min-height: var(--control-height-sm);
     padding: 0 var(--space-3);
+}
+
+.button:disabled {
+    border-color: var(--color-disabled-border);
+    color: var(--color-disabled-text);
+    background: var(--color-disabled-bg);
+    box-shadow: none;
+    cursor: default;
 }

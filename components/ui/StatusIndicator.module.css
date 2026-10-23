@@ -10,8 +10,8 @@
 
 .status > i {
     display: grid;
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     place-items: center;
     border-radius: var(--radius-round);
     background: var(--color-success-soft);
@@ -36,3 +36,4 @@
 .warning > i { background: var(--color-warning-soft); }
 .error > i { background: var(--color-error-soft); }
 .progress > i { background: var(--color-primary-soft); }
+.success > i { color: var(--color-primary); }

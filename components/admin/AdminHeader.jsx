@@ -22,19 +22,19 @@ export default function AdminHeader({ mode = 'editor', page = {}, isDirty = fals
                 <OysiteLogo className={styles.logoMark} aria-hidden="true" />
             </div>
 
-            <Button className={styles.headerTile} disabled>
+            <Button className={`${styles.headerTile} ${styles.settingsTile}`} disabled>
                 <span className={styles.tileIcon}><Icon name="settings" size={22} /></span>
                 <span><b>Настройки сайта</b><small>Дизайн, меню, контакты</small></span>
                 <Icon className={styles.chevron} name="chevronRight" />
             </Button>
 
             {pagesMode ? (
-                <Button className={`${styles.headerTile} ${styles.activeHeaderTile}`} disabled>
+                <Button className={`${styles.headerTile} ${styles.pagesTile} ${styles.activeHeaderTile}`} disabled>
                     <span className={styles.tileIcon}><Icon name="pages" size={22} /></span>
                     <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
                 </Button>
             ) : (
-                <a className={styles.headerTile} href="/admin/pages" onClick={openPageMap}>
+                <a className={`${styles.headerTile} ${styles.pagesTile}`} href="/admin/pages" onClick={openPageMap}>
                     <span className={styles.tileIcon}><Icon name="pages" size={22} /></span>
                     <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
                     <Icon className={styles.chevron} name="chevronRight" />
@@ -55,7 +55,7 @@ export default function AdminHeader({ mode = 'editor', page = {}, isDirty = fals
             {!pagesMode && (
                 <>
                     <Button className={styles.previewAction} disabled><Icon name="preview" /> Посмотреть сайт</Button>
-                    <Button className={styles.publishAction} variant="success" disabled><Icon name="publish" /> <span>Опубликовать</span></Button>
+                    <Button className={styles.publishAction} variant="outline" disabled><Icon name="publish" /> <span>Опубликовать</span></Button>
                 </>
             )}
         </Card>
