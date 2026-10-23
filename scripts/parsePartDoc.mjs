@@ -1,6 +1,43 @@
 
 import { parse } from 'comment-parser';
 
+function splitTopLevel(source, delimiter) {
+    const parts = [];
+    const depths = { '{': 0, '[': 0, '(': 0 };
+    const opening = new Set(Object.keys(depths));
+    const closing = { '}': '{', ']': '[', ')': '(' };
+    let start = 0;
+
+    for (let index = 0; index < source.length; index += 1) {
+        const character = source[index];
+
+        if (opening.has(character)) {
+            depths[character] += 1;
+        } else if (closing[character]) {
+            const opener = closing[character];
+
+            if (depths[opener] === 0) {
+                throw new Error(`Несбалансированный тип: ${source}`);
+            }
+
+            depths[opener] -= 1;
+        } else if (
+            character === delimiter
+            && Object.values(depths).every((depth) => depth === 0)
+        ) {
+            parts.push(source.slice(start, index));
+            start = index + 1;
+        }
+    }
+
+    if (Object.values(depths).some((depth) => depth !== 0)) {
+        throw new Error(`Несбалансированный тип: ${source}`);
+    }
+
+    parts.push(source.slice(start));
+    return parts;
+}
+
 export function extractJsdoc(source) {
     const match = source.match(
         /(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\s*export\s+default\b/
@@ -21,34 +58,21 @@ function parseType(type) {
             return { type: 'checkbox' };
     }
 
-    // 'left'|'center'|'right' → select
-    const options = type.split('|').map(value => value.trim());
-
-    if (
-        options.length > 1 &&
-        options.every(value => /^(['"]).*\1$/.test(value))
-    ) {
-        return {
-            type: 'select',
-            options: options.map(value => value.slice(1, -1)),
-        };
-    }
-
     // {name: string, link: string}[] → list
     const list = type.match(/^\{(.+)\}\[\]$/s);
 
     if (list) {
         const fields = {};
 
-        for (const property of list[1].split(',')) {
-            const separator = property.indexOf(':');
+        for (const property of splitTopLevel(list[1], ',')) {
+            const segments = splitTopLevel(property, ':');
 
-            if (separator === -1) {
+            if (segments.length !== 2) {
                 throw new Error(`Некорректное поле списка: ${property}`);
             }
 
-            const name = property.slice(0, separator).trim();
-            const fieldType = property.slice(separator + 1).trim();
+            const name = segments[0].trim();
+            const fieldType = segments[1].trim();
 
             if (!name || !fieldType) {
                 throw new Error(`Некорректное поле списка: ${property}`);
@@ -58,6 +82,19 @@ function parseType(type) {
         }
 
         return { type: 'list', fields };
+    }
+
+    // 'left'|'center'|'right' → select
+    const options = splitTopLevel(type, '|').map(value => value.trim());
+
+    if (
+        options.length > 1 &&
+        options.every(value => /^(['"]).*\1$/.test(value))
+    ) {
+        return {
+            type: 'select',
+            options: options.map(value => value.slice(1, -1)),
+        };
     }
 
     throw new Error(`Неподдерживаемый JSDoc-тип: ${type}`);

@@ -40,28 +40,61 @@ export default function ListField({
     FieldComponent,
 }) {
     const items = Array.isArray(value) ? value : [];
-    const [expandedIndex, setExpandedIndex] = useState(null);
-    const [menuIndex, setMenuIndex] = useState(null);
+    const [expandedKey, setExpandedKey] = useState(null);
+    const [menuKey, setMenuKey] = useState(null);
     const listId = useId();
+    const keySequence = useRef(0);
+    const itemKeysRef = useRef(null);
+    const lastValueRef = useRef(value);
+    const pendingValueRef = useRef(null);
+    const externalVersionRef = useRef(0);
     const menuRef = useRef(null);
     const menuTriggerRef = useRef(null);
 
+    function createItemKey() {
+        keySequence.current += 1;
+        return `${listId}-${keySequence.current}`;
+    }
+
+    if (itemKeysRef.current === null) {
+        itemKeysRef.current = items.map(createItemKey);
+    }
+
+    if (value !== lastValueRef.current) {
+        if (value === pendingValueRef.current) {
+            pendingValueRef.current = null;
+        } else {
+            itemKeysRef.current = items.map(createItemKey);
+            pendingValueRef.current = null;
+            externalVersionRef.current += 1;
+        }
+
+        lastValueRef.current = value;
+    }
+
+    const externalVersion = externalVersionRef.current;
+
     useEffect(() => {
-        if (menuIndex === null) return undefined;
+        setExpandedKey(null);
+        setMenuKey(null);
+    }, [externalVersion]);
+
+    useEffect(() => {
+        if (menuKey === null) return undefined;
 
         function handlePointerDown(event) {
             if (
                 !menuRef.current?.contains(event.target)
                 && !menuTriggerRef.current?.contains(event.target)
             ) {
-                setMenuIndex(null);
+                setMenuKey(null);
             }
         }
 
         function handleKeyDown(event) {
             if (event.key === 'Escape') {
                 event.preventDefault();
-                setMenuIndex(null);
+                setMenuKey(null);
                 menuTriggerRef.current?.focus();
             }
         }
@@ -73,25 +106,33 @@ export default function ListField({
             document.removeEventListener('pointerdown', handlePointerDown, true);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [menuIndex]);
+    }, [menuKey]);
+
+    function emitChange(nextItems) {
+        pendingValueRef.current = nextItems;
+        onChange(nextItems);
+    }
 
     function addItem() {
-        onChange([...items, defaultProps(fields)]);
-        setExpandedIndex(items.length);
-        setMenuIndex(null);
+        const itemKey = createItemKey();
+
+        itemKeysRef.current = [...itemKeysRef.current, itemKey];
+        emitChange([...items, defaultProps(fields)]);
+        setExpandedKey(itemKey);
+        setMenuKey(null);
     }
 
     function removeItem(index) {
-        onChange(items.filter((_, i) => i !== index));
-        setExpandedIndex((current) => {
-            if (current === index) return null;
-            return current > index ? current - 1 : current;
-        });
-        setMenuIndex(null);
+        const removedKey = itemKeysRef.current[index];
+
+        itemKeysRef.current = itemKeysRef.current.filter((_, i) => i !== index);
+        emitChange(items.filter((_, i) => i !== index));
+        setExpandedKey((current) => current === removedKey ? null : current);
+        setMenuKey(null);
     }
 
     function updateItem(index, name, value) {
-        onChange(
+        emitChange(
             items.map((item, i) =>
                 i === index
                     ? { ...item, [name]: value }
@@ -106,19 +147,20 @@ export default function ListField({
         if (target < 0 || target >= items.length) return;
 
         const next = [...items];
+        const nextKeys = [...itemKeysRef.current];
 
         [next[index], next[target]] = [
             next[target],
             next[index],
         ];
+        [nextKeys[index], nextKeys[target]] = [
+            nextKeys[target],
+            nextKeys[index],
+        ];
 
-        onChange(next);
-        setExpandedIndex((current) => {
-            if (current === index) return target;
-            if (current === target) return index;
-            return current;
-        });
-        setMenuIndex(null);
+        itemKeysRef.current = nextKeys;
+        emitChange(next);
+        setMenuKey(null);
     }
 
     return (
@@ -127,19 +169,20 @@ export default function ListField({
 
             <div className={styles.items}>
                 {items.map((item, index) => {
+                    const itemKey = itemKeysRef.current[index];
                     const summary = itemSummary(item, fields, index);
-                    const isExpanded = expandedIndex === index;
-                    const isMenuOpen = menuIndex === index;
-                    const editorId = `${listId}-item-${index}`;
+                    const isExpanded = expandedKey === itemKey;
+                    const isMenuOpen = menuKey === itemKey;
+                    const editorId = `${itemKey}-editor`;
 
                     return (
-                        <div className={styles.listItem} key={index}>
+                        <div className={styles.listItem} key={itemKey}>
                             <div className={styles.itemRow}>
                                 <Button
                                     className={styles.summary}
                                     aria-expanded={isExpanded}
                                     aria-controls={editorId}
-                                    onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                                    onClick={() => setExpandedKey(isExpanded ? null : itemKey)}
                                 >
                                     <span className={styles.summaryText}>
                                         <strong>{summary.primary}</strong>
@@ -155,7 +198,7 @@ export default function ListField({
                                     aria-label={`Действия: ${summary.primary}`}
                                     aria-haspopup="menu"
                                     aria-expanded={isMenuOpen}
-                                    onClick={() => setMenuIndex(isMenuOpen ? null : index)}
+                                    onClick={() => setMenuKey(isMenuOpen ? null : itemKey)}
                                 >
                                     <Icon name="more" />
                                 </Button>
@@ -195,7 +238,7 @@ export default function ListField({
                                         />
                                     ))}
 
-                                    <Button onClick={() => setExpandedIndex(null)}>
+                                    <Button onClick={() => setExpandedKey(null)}>
                                         Готово
                                     </Button>
                                 </div>
