@@ -2,7 +2,7 @@
 .pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; }
 .previewPart { position: relative; border-radius: var(--radius-md); }
 .partContent { pointer-events: none; }
-.previewPart:hover, .selectedPart { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.previewPart:hover, .selectedPart { box-shadow: 0 0 0 2px var(--color-primary); }
 .partHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
 .partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
