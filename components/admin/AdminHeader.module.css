@@ -1,7 +1,7 @@
 .headerBar {
     position: relative;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
     align-items: center;
     width: 100%;
@@ -98,7 +98,8 @@ span.activeAction {
 }
 
 .pageTitle {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    max-width: 100%;
     min-width: 0;
     overflow: hidden;
     color: var(--color-text);
