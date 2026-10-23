@@ -7,11 +7,23 @@ export default function PartControls({
     partId,
     isFirst,
     isLast,
+    onEdit,
     onMove,
     onRemove,
 }) {
     return (
         <div className={`${styles.controls} ${className}`} data-editor-control>
+            <Button
+                className={styles.editAction}
+                variant="compact"
+                onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onEdit(partId);
+                }}
+            >
+                <Icon name="edit" /> Редактировать
+            </Button>
             <Button
                 variant="compact"
                 aria-label="Переместить вверх"

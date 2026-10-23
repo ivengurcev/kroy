@@ -45,8 +45,8 @@ export default function AdminShell({
                     onMovePart={onMovePart}
                     onPropChange={onPropChange}
                 />
+                <EditorFooter />
             </main>
-            <EditorFooter />
         </div>
     );
 }

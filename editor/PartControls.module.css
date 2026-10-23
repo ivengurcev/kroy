@@ -20,3 +20,7 @@
     min-height: 34px;
     padding: 0;
 }
+
+.controls .editAction {
+    padding-inline: var(--space-3);
+}

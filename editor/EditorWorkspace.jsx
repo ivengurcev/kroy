@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import Page from '../layout/Page.jsx';
 import SiteRoot from '../layout/SiteRoot.jsx';
-import BlockInspector from './BlockInspector.jsx';
+import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -22,6 +22,7 @@ export default function EditorWorkspace({
     onPropChange,
 }) {
     const [picker, setPicker] = useState(null);
+    const [editingPartId, setEditingPartId] = useState(null);
 
     const closePicker = useCallback((restoreFocus = true) => {
         setPicker((current) => {
@@ -43,8 +44,6 @@ export default function EditorWorkspace({
         );
     }
 
-    const selectedPart = content.find(({ id }) => id === selectedPartId) ?? null;
-
     function selectPart(event, id) {
         if (event.target.closest?.('[data-editor-control]')) return;
 
@@ -65,6 +64,20 @@ export default function EditorWorkspace({
         closePicker(false);
     }
 
+    function editPart(id) {
+        onSelectPart(id);
+        setEditingPartId(id);
+    }
+
+    function closePartEditor() {
+        setEditingPartId(null);
+    }
+
+    function removePart(id) {
+        if (editingPartId === id) setEditingPartId(null);
+        onRemovePart(id);
+    }
+
     function insertionPoint(position, key) {
         return (
             <div className={styles.insertionPoint} data-editor-control key={key}>
@@ -81,7 +94,7 @@ export default function EditorWorkspace({
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <div
-                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''}`}
+                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''} ${item.id === editingPartId ? styles.editingPart : ''}`}
                         onClickCapture={(event) => selectPart(event, item.id)}
                         key={item.id}
                     >
@@ -90,24 +103,41 @@ export default function EditorWorkspace({
                             partId={item.id}
                             isFirst={index === 0}
                             isLast={index === content.length - 1}
+                            onEdit={editPart}
                             onMove={onMovePart}
-                            onRemove={onRemovePart}
+                            onRemove={removePart}
                         />
-                        <div className={styles.partContent} inert="">
-                            <SiteRoot>
-                                <Page content={[item]} parts={parts} />
-                            </SiteRoot>
-                        </div>
+                        {item.id === editingPartId ? (
+                            <Card className={styles.inlineEditor}>
+                                <div className={styles.inlineEditorBody}>
+                                    <header className={styles.inlineEditorHeader}>
+                                        <span>
+                                            <small>Редактирование запчасти</small>
+                                            <b>{item.part}</b>
+                                        </span>
+                                        <Button variant="compact" data-editor-control onClick={closePartEditor}>
+                                            <Icon name="close" /> Закрыть
+                                        </Button>
+                                    </header>
+                                    <PartEditor
+                                        part={item.part}
+                                        props={item.props}
+                                        fields={metadata[item.part]?.fields ?? {}}
+                                        onPropChange={(name, value) => onPropChange(item.id, name, value)}
+                                    />
+                                </div>
+                            </Card>
+                        ) : (
+                            <div className={styles.partContent} inert="">
+                                <SiteRoot>
+                                    <Page content={[item]} parts={parts} />
+                                </SiteRoot>
+                            </div>
+                        )}
                     </div>,
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
             </section>
-
-            <BlockInspector
-                metadata={metadata}
-                selectedPart={selectedPart}
-                onPropChange={onPropChange}
-            />
 
             {picker && (
                 <PartPicker

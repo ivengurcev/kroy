@@ -1,9 +1,8 @@
 .adminShell {
-    --inspector-width: 455px;
     position: fixed;
     inset: 0;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
     width: 100%;
     height: 100dvh;
     overflow: hidden;
@@ -24,12 +23,7 @@
     overscroll-behavior: contain;
 }
 
-@media (max-width: 1550px) {
-    .adminShell { --inspector-width: 390px; }
-}
-
 @media (max-width: 1100px) {
-    .adminShell { --inspector-width: 350px; }
     .header { padding-inline: var(--space-5); }
     .scrollArea { padding-inline: var(--space-5); }
 }
