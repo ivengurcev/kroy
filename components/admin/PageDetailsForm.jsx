@@ -19,8 +19,10 @@ export default function PageDetailsForm({
     onCancel,
     onDirtyChange,
     onErrorChange,
+    onSubmittingChange,
     showError = true,
     cancelFirst = false,
+    handleEscape = true,
     className = '',
     pathClassName = '',
     titleClassName = '',
@@ -58,6 +60,10 @@ export default function PageDetailsForm({
     }, [isDirty, onDirtyChange]);
 
     useEffect(() => {
+        onSubmittingChange?.(isSubmitting);
+    }, [isSubmitting, onSubmittingChange]);
+
+    useEffect(() => {
         const frame = requestAnimationFrame(() => {
             (isMainPage ? titleInputRef : pathInputRef).current?.focus();
         });
@@ -76,7 +82,7 @@ export default function PageDetailsForm({
     }
 
     function handleKeyDown(event) {
-        if (event.key !== 'Escape') return;
+        if (!handleEscape || event.key !== 'Escape') return;
 
         event.preventDefault();
         event.stopPropagation();
@@ -112,7 +118,7 @@ export default function PageDetailsForm({
     }
 
     return (
-        <form className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleKeyDown}>
+        <form className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
             <label className={joinClasses(styles.field, pathClassName)}>
                 <span>Путь</span>
                 <input
