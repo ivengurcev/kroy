@@ -2,7 +2,7 @@
 .pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2);}
 .previewPart { position: relative; border-radius: 0; box-shadow: 0 0 0 1px var(--color-border); }
 .partContent { pointer-events: none; }
-.partHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.partHeader { position: sticky; z-index: 5; top: var(--admin-header-offset); display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
 .partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
 .insertionPoint { position: relative; z-index: 3; display: grid; height: 28px; place-items: center; }
