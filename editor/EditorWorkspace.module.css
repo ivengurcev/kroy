@@ -3,23 +3,20 @@
 .previewPart { position: relative; border-radius: var(--radius-md); }
 .partContent { pointer-events: none; }
 .previewPart:hover, .selectedPart { outline: 2px solid var(--color-primary); outline-offset: -2px; }
-.previewPart:hover .partControls,
-.previewPart:focus-within .partControls,
-.selectedPart .partControls { opacity: 1; pointer-events: auto; }
+.partHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
 .insertionPoint { position: relative; z-index: 3; display: grid; height: 28px; place-items: center; }
 .insertionPoint button { min-height: 26px; padding-inline: var(--space-3); border-color: transparent; color: var(--color-text-muted); opacity: 0.72; }
 .insertionPoint button:hover,
 .insertionPoint button:focus-visible { border-color: var(--color-border); color: var(--color-primary); opacity: 1; }
 .workspaceStatus { padding: var(--space-8); color: var(--color-text-muted); text-align: center; }
 .workspaceStatus { max-width: 760px; margin: var(--space-8) auto; }
-.editingHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
-.editingTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.editingHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
 .inlineEditor { min-width: 0; padding: 0 var(--space-6) var(--space-6); }
 .inlineEditorBody { width: 100%; max-width: 760px; min-width: 0; margin: 0 auto; }
 .inlineEditorBody > section > h3 { display: none; }
 
 @media (max-width: 600px) {
-    .editingHeader { padding-inline: var(--space-2); }
+    .partHeader { padding-inline: var(--space-2); }
     .inlineEditor { padding: 0 var(--space-4) var(--space-4); }
 }

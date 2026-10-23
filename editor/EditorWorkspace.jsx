@@ -94,36 +94,24 @@ export default function EditorWorkspace({
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <div
-                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''} ${item.id === editingPartId ? styles.editingPart : ''}`}
+                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''}`}
                         onClickCapture={(event) => selectPart(event, item.id)}
                         key={item.id}
                     >
-                        {item.id === editingPartId ? (
-                            <div className={styles.editingHeader}>
-                                <b className={styles.editingTitle}>{item.part}</b>
-                                <PartControls
-                                    className={styles.partControls}
-                                    partId={item.id}
-                                    isFirst={index === 0}
-                                    isLast={index === content.length - 1}
-                                    isEditing
-                                    onEdit={editPart}
-                                    onClose={closePartEditor}
-                                    onMove={onMovePart}
-                                    onRemove={removePart}
-                                />
-                            </div>
-                        ) : (
+                        <div className={styles.partHeader}>
+                            <b className={styles.partTitle}>{item.part}</b>
                             <PartControls
                                 className={styles.partControls}
                                 partId={item.id}
                                 isFirst={index === 0}
                                 isLast={index === content.length - 1}
+                                isEditing={item.id === editingPartId}
                                 onEdit={editPart}
+                                onClose={closePartEditor}
                                 onMove={onMovePart}
                                 onRemove={removePart}
                             />
-                        )}
+                        </div>
                         {item.id === editingPartId ? (
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
