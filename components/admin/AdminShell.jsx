@@ -1,6 +1,5 @@
 import AdminHeader from './AdminHeader.jsx';
 import EditorFooter from '../../editor/EditorFooter.jsx';
-import EditorToolbar from '../../editor/EditorToolbar.jsx';
 import EditorWorkspace from '../../editor/EditorWorkspace.jsx';
 import styles from './AdminShell.module.css';
 import theme from '../../styles/AdminTheme.module.css';
@@ -24,8 +23,8 @@ export default function AdminShell({
     return (
         <div className={`${theme.theme} ${styles.adminShell}`}>
             <header className={styles.header}>
-                <AdminHeader page={page} isDirty={isDirty} />
-                <EditorToolbar
+                <AdminHeader
+                    page={page}
                     loadStatus={loadStatus}
                     saveStatus={saveStatus}
                     isDirty={isDirty}

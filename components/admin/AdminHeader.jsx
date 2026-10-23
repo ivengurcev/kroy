@@ -1,11 +1,28 @@
 import styles from './AdminHeader.module.css';
 import OysiteLogo from './OysiteLogo.svg';
+import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
 
-export default function AdminHeader({ mode = 'editor', page = {}, isDirty = false }) {
+export default function AdminHeader({
+    mode = 'editor',
+    page = {},
+    isDirty = false,
+    loadStatus = 'loading',
+    saveStatus = 'idle',
+    onSave,
+}) {
     const pagesMode = mode === 'pages';
+    const isSaving = saveStatus === 'saving';
+    const saveDisabled = loadStatus !== 'success' || !isDirty || isSaving;
+    const saveLabel = loadStatus !== 'success'
+        ? 'Сохранение недоступно'
+        : isSaving
+            ? 'Сохранение…'
+            : !isDirty && saveStatus === 'success'
+                ? 'Сохранено'
+                : 'Сохранить';
 
     function openPageMap(event) {
         if (
@@ -17,46 +34,62 @@ export default function AdminHeader({ mode = 'editor', page = {}, isDirty = fals
     }
 
     return (
-        <Card className={`${styles.primaryBar} ${pagesMode ? styles.pagesPrimaryBar : ''}`}>
+        <Card className={`${styles.headerBar} ${pagesMode ? styles.pagesHeader : ''}`}>
             <div className={styles.logo} role="img" aria-label="Oysite">
-                <OysiteLogo className={styles.logoMark} aria-hidden="true" />
+                <OysiteLogo className={styles.fullLogo} aria-hidden="true" />
+                <OysiteMark className={styles.compactLogo} aria-hidden="true" />
             </div>
 
-            <Button className={`${styles.headerTile} ${styles.settingsTile}`} disabled>
-                <span className={styles.tileIcon}><Icon name="settings" size={22} /></span>
-                <span><b>Настройки сайта</b><small>Дизайн, меню, контакты</small></span>
-                <Icon className={styles.chevron} name="chevronRight" />
+            <Button className={styles.action} aria-label="Настройки сайта" disabled>
+                <Icon name="settings" />
+                <span className={styles.actionLabel}>Настройки</span>
             </Button>
 
             {pagesMode ? (
-                <Button className={`${styles.headerTile} ${styles.pagesTile} ${styles.activeHeaderTile}`} disabled>
-                    <span className={styles.tileIcon}><Icon name="pages" size={22} /></span>
-                    <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
-                </Button>
+                <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
+                    <Icon name="pages" />
+                    <span className={styles.actionLabel}>Карта страниц</span>
+                </span>
             ) : (
-                <a className={`${styles.headerTile} ${styles.pagesTile}`} href="/admin/pages" onClick={openPageMap}>
-                    <span className={styles.tileIcon}><Icon name="pages" size={22} /></span>
-                    <span><b>Карта страниц</b><small>Все страницы сайта</small></span>
-                    <Icon className={styles.chevron} name="chevronRight" />
+                <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" onClick={openPageMap}>
+                    <Icon name="pages" />
+                    <span className={styles.actionLabel}>Карта страниц</span>
                 </a>
             )}
 
             {!pagesMode && (
-                <section className={styles.currentPage}>
-                    <span className={styles.tileIcon}><Icon name="home" size={22} /></span>
-                    <span className={styles.pageName}><small>Текущая страница</small><b>{page.title || '—'} <span className={styles.editIcon}><Icon name="edit" size={15} /></span></b></span>
-                    <span className={styles.pageAddress}>
-                        <small>Адрес страницы</small>
-                        <span><code>{page.path || '—'}</code><Button variant="compact" disabled><Icon name="edit" size={16} /> <em>Изменить</em></Button></span>
+                <>
+                    <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
+                        {page.title || '—'}
                     </span>
-                </section>
+                    <Button className={styles.iconAction} variant="compact" aria-label="Изменить страницу" disabled>
+                        <Icon name="edit" />
+                    </Button>
+                    <Button
+                        className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
+                        variant="primary"
+                        aria-label={saveLabel}
+                        title={saveLabel}
+                        disabled={saveDisabled}
+                        onClick={onSave}
+                    >
+                        <Icon name="save" />
+                        <span className={styles.actionLabel}>{saveLabel}</span>
+                    </Button>
+                </>
             )}
 
-            {!pagesMode && (
-                <>
-                    <Button className={styles.previewAction} disabled><Icon name="preview" /> Посмотреть сайт</Button>
-                    <Button className={styles.publishAction} variant="outline" disabled><Icon name="publish" /> <span>Опубликовать</span></Button>
-                </>
+            <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" disabled>
+                <Icon name="publish" />
+                <span className={styles.actionLabel}>Опубликовать</span>
+            </Button>
+            <Button className={styles.action} aria-label="Посмотреть сайт" disabled>
+                <Icon name="preview" />
+                <span className={styles.actionLabel}>Предпросмотр</span>
+            </Button>
+
+            {!pagesMode && saveStatus === 'error' && (
+                <span className={styles.saveError} role="alert">Не удалось сохранить страницу.</span>
             )}
         </Card>
     );

@@ -1,6 +1,6 @@
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; width: 100%; max-width: 1800px; min-width: 0; min-height: 100%; margin: 0 auto; }
-.pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; }
-.previewPart { position: relative; border-radius: var(--radius-md); }
+.pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2);}
+.previewPart { position: relative; }
 .partContent { pointer-events: none; }
 .previewPart:hover, .selectedPart { box-shadow: 0 0 0 2px var(--color-primary); }
 .partHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
