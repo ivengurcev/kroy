@@ -7,7 +7,9 @@ export default function PartControls({
     partId,
     isFirst,
     isLast,
+    isEditing = false,
     onEdit,
+    onClose,
     onMove,
     onRemove,
 }) {
@@ -19,10 +21,12 @@ export default function PartControls({
                 onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    onEdit(partId);
+                    if (isEditing) onClose();
+                    else onEdit(partId);
                 }}
             >
-                <Icon name="edit" /> Редактировать
+                <Icon name={isEditing ? 'close' : 'edit'} />
+                {isEditing ? 'Закрыть' : 'Редактировать'}
             </Button>
             <Button
                 variant="compact"

@@ -12,17 +12,14 @@
 .insertionPoint button:focus-visible { border-color: var(--color-border); color: var(--color-primary); opacity: 1; }
 .workspaceStatus { padding: var(--space-8); color: var(--color-text-muted); text-align: center; }
 .workspaceStatus { max-width: 760px; margin: var(--space-8) auto; }
-.editingPart .partControls { position: relative; top: auto; right: auto; width: max-content; max-width: calc(100% - 2 * var(--space-2)); margin: var(--space-2) var(--space-2) 0 auto; opacity: 1; pointer-events: auto; }
-.inlineEditor { min-width: 0; padding: var(--space-6); border-color: var(--color-primary); background: var(--color-surface); }
+.editingHeader { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; min-width: 0; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+.editingTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.editingHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
+.inlineEditor { min-width: 0; padding: 0 var(--space-6) var(--space-6); }
 .inlineEditorBody { width: 100%; max-width: 760px; min-width: 0; margin: 0 auto; }
-.inlineEditorHeader { display: flex; gap: var(--space-4); align-items: center; justify-content: space-between; padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); }
-.inlineEditorHeader > span { display: grid; min-width: 0; gap: var(--space-1); }
-.inlineEditorHeader small { color: var(--color-text-muted); }
-.inlineEditorHeader b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .inlineEditorBody > section > h3 { display: none; }
 
 @media (max-width: 600px) {
-    .inlineEditor { padding: var(--space-4); }
-    .inlineEditorHeader { align-items: stretch; flex-direction: column; }
-    .inlineEditorHeader button { align-self: flex-end; }
+    .editingHeader { padding-inline: var(--space-2); }
+    .inlineEditor { padding: 0 var(--space-4) var(--space-4); }
 }

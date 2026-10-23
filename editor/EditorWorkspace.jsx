@@ -98,27 +98,35 @@ export default function EditorWorkspace({
                         onClickCapture={(event) => selectPart(event, item.id)}
                         key={item.id}
                     >
-                        <PartControls
-                            className={styles.partControls}
-                            partId={item.id}
-                            isFirst={index === 0}
-                            isLast={index === content.length - 1}
-                            onEdit={editPart}
-                            onMove={onMovePart}
-                            onRemove={removePart}
-                        />
                         {item.id === editingPartId ? (
-                            <Card className={styles.inlineEditor}>
+                            <div className={styles.editingHeader}>
+                                <b className={styles.editingTitle}>{item.part}</b>
+                                <PartControls
+                                    className={styles.partControls}
+                                    partId={item.id}
+                                    isFirst={index === 0}
+                                    isLast={index === content.length - 1}
+                                    isEditing
+                                    onEdit={editPart}
+                                    onClose={closePartEditor}
+                                    onMove={onMovePart}
+                                    onRemove={removePart}
+                                />
+                            </div>
+                        ) : (
+                            <PartControls
+                                className={styles.partControls}
+                                partId={item.id}
+                                isFirst={index === 0}
+                                isLast={index === content.length - 1}
+                                onEdit={editPart}
+                                onMove={onMovePart}
+                                onRemove={removePart}
+                            />
+                        )}
+                        {item.id === editingPartId ? (
+                            <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
-                                    <header className={styles.inlineEditorHeader}>
-                                        <span>
-                                            <small>Редактирование запчасти</small>
-                                            <b>{item.part}</b>
-                                        </span>
-                                        <Button variant="compact" data-editor-control onClick={closePartEditor}>
-                                            <Icon name="close" /> Закрыть
-                                        </Button>
-                                    </header>
                                     <PartEditor
                                         part={item.part}
                                         props={item.props}
@@ -126,7 +134,7 @@ export default function EditorWorkspace({
                                         onPropChange={(name, value) => onPropChange(item.id, name, value)}
                                     />
                                 </div>
-                            </Card>
+                            </div>
                         ) : (
                             <div className={styles.partContent} inert="">
                                 <SiteRoot>
