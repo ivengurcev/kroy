@@ -70,26 +70,7 @@ export default function PagesPage() {
         }
     }
 
-    async function updatePage(pageId, values) {
-        const page = pages.find(({ id }) => id === pageId);
-
-        if (!page) throw new Error('Page not found');
-
-        const body = page.path === '/'
-            ? { title: values.title }
-            : values;
-        const response = await fetch(`/api/pages/${pageId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Не удалось изменить страницу: ${response.status}`);
-        }
-
-        const updatedPage = await response.json();
-
+    function updatePage(updatedPage) {
         setPages((previous) => previous.map((item) =>
             item.id === updatedPage.id
                 ? { ...item, title: updatedPage.title, path: updatedPage.path }

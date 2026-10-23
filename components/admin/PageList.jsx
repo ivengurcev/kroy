@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import styles from './PageList.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
+import PageDetailsForm from './PageDetailsForm.jsx';
 
 function pathDepth(path) {
     return path.split('/').filter(Boolean).length;
@@ -16,97 +17,58 @@ export default function PageList({
     onDelete,
     onRestore,
 }) {
-    const [editing, setEditing] = useState(null);
-    const [editStatus, setEditStatus] = useState('idle');
-    const [editError, setEditError] = useState(false);
-    const firstInputRef = useRef(null);
+    const [editingPage, setEditingPage] = useState(null);
+    const [editDirty, setEditDirty] = useState(false);
+    const [editErrorMessage, setEditErrorMessage] = useState('');
     const editButtons = useRef(new Map());
     const sortedPages = [...pages].sort((left, right) =>
         pathDepth(left.path) - pathDepth(right.path)
         || left.path.localeCompare(right.path)
     );
-    const hasEditChanges = Boolean(editing) && (
-        editing.title !== editing.originalTitle
-        || editing.path !== editing.originalPath
-    );
-
-    useEffect(() => {
-        firstInputRef.current?.focus();
-    }, [editing?.id]);
-
     function returnFocus(pageId) {
         requestAnimationFrame(() => editButtons.current.get(pageId)?.focus());
     }
 
     function startEditing(page) {
-        if (editing?.id !== page.id && hasEditChanges) return;
+        if (editingPage?.id !== page.id && editDirty) return;
 
-        setEditing({
-            id: page.id,
-            originalTitle: page.title,
-            originalPath: page.path,
-            title: page.title,
-            path: page.path,
-        });
-        setEditStatus('idle');
-        setEditError(false);
+        setEditingPage(page);
+        setEditDirty(false);
+        setEditErrorMessage('');
     }
 
     function cancelEditing() {
-        const pageId = editing?.id;
+        const pageId = editingPage?.id;
 
-        setEditing(null);
-        setEditStatus('idle');
-        setEditError(false);
+        setEditingPage(null);
+        setEditDirty(false);
+        setEditErrorMessage('');
 
         if (pageId) returnFocus(pageId);
     }
 
-    async function submitEditing(event) {
-        event.preventDefault();
+    function finishEditing(updatedPage) {
+        const pageId = updatedPage.id;
 
-        if (!editing || !hasEditChanges || editStatus === 'submitting') return;
-
-        setEditStatus('submitting');
-        setEditError(false);
-
-        try {
-            await onUpdate(editing.id, {
-                title: editing.title,
-                path: editing.path,
-            });
-            const pageId = editing.id;
-
-            setEditing(null);
-            setEditStatus('idle');
-            returnFocus(pageId);
-        } catch {
-            setEditStatus('idle');
-            setEditError(true);
-        }
+        onUpdate(updatedPage);
+        setEditingPage(null);
+        setEditDirty(false);
+        setEditErrorMessage('');
+        returnFocus(pageId);
     }
 
-    function handleEditKeyDown(event) {
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            event.stopPropagation();
-            cancelEditing();
-        }
-    }
-
-    const errorMessage = editError
-        ? 'Не удалось изменить страницу.'
-        : actionErrorId
+    const errorMessage = editErrorMessage
+        || (actionErrorId
             ? mode === 'trash'
                 ? 'Не удалось восстановить страницу.'
                 : 'Не удалось удалить страницу.'
-            : '';
+            : '');
 
     return (
         <section className={styles.pageList}>
-            <div className={styles.errorArea} role={errorMessage ? 'alert' : undefined}>
-                {errorMessage}
-            </div>
+            {errorMessage && (
+                <div className={styles.errorArea} role="alert">{errorMessage}</div>
+            )}
 
             {sortedPages.length === 0 ? (
                 <p className={styles.emptyState}>
@@ -119,35 +81,24 @@ export default function PageList({
                     </div>
                     <ul className={styles.list}>
                         {sortedPages.map((page) => {
-                            const isEditing = editing?.id === page.id;
+                            const isEditing = editingPage?.id === page.id;
 
                             return (
                                 <li className={styles.row} key={page.id}>
                                     {isEditing ? (
-                                        <form className={styles.rowContents} onSubmit={submitEditing} onKeyDown={handleEditKeyDown}>
-                                            <input
-                                                className={styles.path}
-                                                ref={page.path === '/' ? undefined : firstInputRef}
-                                                aria-label="Путь"
-                                                value={editing.path}
-                                                disabled={page.path === '/' || editStatus === 'submitting'}
-                                                onChange={(event) => setEditing({ ...editing, path: event.target.value })}
-                                            />
-                                            <input
-                                                className={styles.title}
-                                                ref={page.path === '/' ? firstInputRef : undefined}
-                                                aria-label="Название"
-                                                value={editing.title}
-                                                disabled={editStatus === 'submitting'}
-                                                onChange={(event) => setEditing({ ...editing, title: event.target.value })}
-                                            />
-                                            <div className={styles.actions}>
-                                                <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!hasEditChanges || editStatus === 'submitting'}>
-                                                    <Icon name="save" /> {editStatus === 'submitting' ? 'Сохранение…' : 'Сохранить'}
-                                                </Button>
-                                                <Button title="Отменить изменение страницы" disabled={editStatus === 'submitting'} onClick={cancelEditing}><Icon name="close" /> Отмена</Button>
-                                            </div>
-                                        </form>
+                                        <PageDetailsForm
+                                            key={page.id}
+                                            className={styles.rowContents}
+                                            pathClassName={styles.path}
+                                            titleClassName={styles.title}
+                                            actionsClassName={styles.actions}
+                                            page={page}
+                                            showError={false}
+                                            onDirtyChange={setEditDirty}
+                                            onErrorChange={setEditErrorMessage}
+                                            onSaved={finishEditing}
+                                            onCancel={cancelEditing}
+                                        />
                                     ) : (
                                         <>
                                             <span className={styles.path} title={page.path}>{page.path}</span>
@@ -164,7 +115,7 @@ export default function PageList({
                                                                 if (node) editButtons.current.set(page.id, node);
                                                                 else editButtons.current.delete(page.id);
                                                             }}
-                                                            disabled={Boolean(editing && editing.id !== page.id && hasEditChanges)}
+                                                            disabled={Boolean(editingPage && editingPage.id !== page.id && editDirty)}
                                                             title="Изменить название и путь страницы"
                                                             onClick={() => startEditing(page)}
                                                         >

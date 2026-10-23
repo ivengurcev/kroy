@@ -1,0 +1,40 @@
+.form {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.field {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.field input {
+    width: 100%;
+    min-width: 0;
+    height: var(--control-height-sm);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font: inherit;
+    background: var(--color-surface);
+}
+
+.field input:focus {
+    border-color: var(--color-primary);
+    outline: 3px solid rgb(12 129 122 / 12%);
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+}
+
+.error {
+    color: var(--color-error-text);
+    font-size: var(--font-size-sm);
+}

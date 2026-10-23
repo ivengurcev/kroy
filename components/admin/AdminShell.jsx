@@ -16,6 +16,7 @@ export default function AdminShell({
     onMovePart,
     onPropChange,
     onSave,
+    onPageDetailsChange,
 }) {
     return (
         <div className={`${theme.theme} ${styles.adminShell}`}>
@@ -26,6 +27,7 @@ export default function AdminShell({
                     saveStatus={saveStatus}
                     isDirty={isDirty}
                     onSave={onSave}
+                    onPageDetailsChange={onPageDetailsChange}
                 />
             </header>
             <main className={styles.scrollArea}>

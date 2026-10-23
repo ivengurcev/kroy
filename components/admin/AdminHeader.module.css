@@ -71,6 +71,14 @@ span.activeAction {
     background: var(--color-primary-soft);
 }
 
+.pageDetails {
+    flex: 1 1 auto;
+    display: flex;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 0;
+}
+
 .pageTitle {
     flex: 1 1 auto;
     min-width: 0;
@@ -80,6 +88,8 @@ span.activeAction {
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+.pageDetails .iconAction { flex: 0 0 auto; }
 
 .pagesHeader .publishAction {
     margin-left: auto;

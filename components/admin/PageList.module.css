@@ -5,7 +5,7 @@
 }
 
 .errorArea {
-    height: 24px;
+    margin-bottom: var(--space-2);
     color: var(--color-error-text);
     font-size: var(--font-size-sm);
 }
@@ -44,6 +44,8 @@
     display: contents;
 }
 
+.pageList .rowContents { display: contents; }
+
 .path { grid-area: path; }
 .title { grid-area: title; }
 .actions { grid-area: actions; }
@@ -62,8 +64,28 @@ a.title {
     text-decoration: none;
 }
 
-input.path,
-input.title {
+.rowContents .path,
+.rowContents .title {
+    gap: 0;
+    overflow: visible;
+    color: inherit;
+    font-size: inherit;
+}
+
+.rowContents .path > span,
+.rowContents .title > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.rowContents input {
     width: 100%;
     height: var(--control-height-sm);
     padding: 0 var(--space-3);
@@ -74,8 +96,7 @@ input.title {
     background: var(--color-surface);
 }
 
-input.path:focus,
-input.title:focus {
+.rowContents input:focus {
     border-color: var(--color-primary);
     outline: 3px solid rgb(12 129 122 / 12%);
 }

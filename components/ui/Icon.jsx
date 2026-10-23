@@ -7,6 +7,7 @@ import DesktopIcon from './icons/desktop.svg';
 import DownIcon from './icons/down.svg';
 import EditIcon from './icons/edit.svg';
 import ForwardIcon from './icons/forward.svg';
+import GlobeIcon from './icons/globe.svg';
 import HomeIcon from './icons/home.svg';
 import MoreIcon from './icons/more.svg';
 import PagesIcon from './icons/pages.svg';
@@ -38,6 +39,7 @@ const icons = {
     down: DownIcon,
     back: BackIcon,
     forward: ForwardIcon,
+    globe: GlobeIcon,
     seo: SeoIcon,
     home: HomeIcon,
     more: MoreIcon,

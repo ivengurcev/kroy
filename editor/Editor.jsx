@@ -156,6 +156,14 @@ export default function Editor() {
         );
     }
 
+    function updatePageDetails(updatedPage) {
+        setPage({
+            id: updatedPage.id,
+            title: updatedPage.title,
+            path: updatedPage.path,
+        });
+    }
+
     return (
         <AdminShell
             page={page}
@@ -170,6 +178,7 @@ export default function Editor() {
             onMovePart={movePart}
             onPropChange={updateProp}
             onSave={savePage}
+            onPageDetailsChange={updatePageDetails}
         />
     );
 }
