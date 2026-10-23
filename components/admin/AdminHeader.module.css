@@ -1,8 +1,8 @@
 .headerBar {
     position: relative;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: var(--space-2);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--space-3);
     align-items: center;
     width: 100%;
     max-width: var(--admin-content-max);
@@ -11,6 +11,32 @@
     margin-inline: auto;
     padding: 7px 10px;
     box-shadow: 0 5px 14px rgb(32 51 48 / 10%);
+}
+
+.leftGroup,
+.centerGroup,
+.rightGroup {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.leftGroup {
+    grid-column: 1;
+    justify-self: start;
+}
+
+.centerGroup {
+    grid-column: 2;
+    justify-self: center;
+    max-width: 100%;
+}
+
+.rightGroup {
+    grid-column: 3;
+    justify-self: end;
 }
 
 .logo {
@@ -71,16 +97,8 @@ span.activeAction {
     background: var(--color-primary-soft);
 }
 
-.pageDetails {
-    flex: 1 1 auto;
-    display: flex;
-    gap: var(--space-1);
-    align-items: center;
-    min-width: 0;
-}
-
 .pageTitle {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
     color: var(--color-text);
@@ -89,11 +107,7 @@ span.activeAction {
     text-overflow: ellipsis;
 }
 
-.pageDetails .iconAction { flex: 0 0 auto; }
-
-.pagesHeader .publishAction {
-    margin-left: auto;
-}
+.centerGroup .iconAction { flex: 0 0 auto; }
 
 .savingAction svg {
     animation: save-pulse 900ms ease-in-out infinite;
@@ -119,6 +133,20 @@ span.activeAction {
 }
 
 @media (max-width: 1100px) {
+    .headerBar {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: var(--space-2);
+    }
+
+    .leftGroup,
+    .centerGroup,
+    .rightGroup { gap: var(--space-1); }
+
+    .centerGroup {
+        width: 100%;
+        justify-self: stretch;
+    }
+
     .actionLabel { display: none; }
 
     .headerBar .action,
@@ -177,4 +205,8 @@ span.activeAction {
         width: 30px;
         height: auto;
     }
+
+    .leftGroup,
+    .centerGroup,
+    .rightGroup { gap: 2px; }
 }

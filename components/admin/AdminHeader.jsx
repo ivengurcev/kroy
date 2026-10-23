@@ -55,46 +55,51 @@ export default function AdminHeader({
     return (
         <>
             <Card className={`${styles.headerBar} ${pagesMode ? styles.pagesHeader : ''}`}>
-                <div className={styles.logo} role="img" aria-label="Oysite">
-                    <OysiteLogo className={styles.fullLogo} aria-hidden="true" />
-                    <OysiteMark className={styles.compactLogo} aria-hidden="true" />
+                <div className={styles.leftGroup}>
+                    <div className={styles.logo} role="img" aria-label="Oysite">
+                        <OysiteLogo className={styles.fullLogo} aria-hidden="true" />
+                        <OysiteMark className={styles.compactLogo} aria-hidden="true" />
+                    </div>
+
+                    <Button className={styles.action} aria-label="Сайт" title="Управление сайтом" disabled>
+                        <Icon name="globe" />
+                        <span className={styles.actionLabel}>Сайт</span>
+                    </Button>
+
+                    {pagesMode ? (
+                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
+                            <Icon name="pages" />
+                            <span className={styles.actionLabel}>Карта страниц</span>
+                        </span>
+                    ) : (
+                        <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" title="Открыть карту страниц" onClick={openPageMap}>
+                            <Icon name="pages" />
+                            <span className={styles.actionLabel}>Карта страниц</span>
+                        </a>
+                    )}
                 </div>
 
-                <Button className={styles.action} aria-label="Сайт" title="Управление сайтом" disabled>
-                    <Icon name="globe" />
-                    <span className={styles.actionLabel}>Сайт</span>
-                </Button>
-
-                {pagesMode ? (
-                    <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
-                        <Icon name="pages" />
-                        <span className={styles.actionLabel}>Карта страниц</span>
-                    </span>
-                ) : (
-                    <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" title="Открыть карту страниц" onClick={openPageMap}>
-                        <Icon name="pages" />
-                        <span className={styles.actionLabel}>Карта страниц</span>
-                    </a>
+                {!pagesMode && (
+                    <div className={styles.centerGroup}>
+                        <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
+                            {page.title || '—'}
+                        </span>
+                        <Button
+                            className={styles.iconAction}
+                            variant="compact"
+                            ref={detailsButtonRef}
+                            aria-label="Настройки страницы"
+                            title="Настройки страницы"
+                            disabled={detailsDisabled}
+                            onClick={() => setDetailsOpen(true)}
+                        >
+                            <Icon name="settings" />
+                        </Button>
+                    </div>
                 )}
 
-                {!pagesMode && (
-                    <>
-                        <div className={styles.pageDetails}>
-                            <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
-                                {page.title || '—'}
-                            </span>
-                            <Button
-                                className={styles.iconAction}
-                                variant="compact"
-                                ref={detailsButtonRef}
-                                aria-label="Настройки страницы"
-                                title="Настройки страницы"
-                                disabled={detailsDisabled}
-                                onClick={() => setDetailsOpen(true)}
-                            >
-                                <Icon name="settings" />
-                            </Button>
-                        </div>
+                <div className={styles.rightGroup}>
+                    {!pagesMode && (
                         <Button
                             className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                             variant="primary"
@@ -106,17 +111,17 @@ export default function AdminHeader({
                             <Icon name="save" />
                             <span className={styles.actionLabel}>{saveLabel}</span>
                         </Button>
-                    </>
-                )}
+                    )}
 
-                <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" title="Опубликовать сайт" disabled>
-                    <Icon name="publish" />
-                    <span className={styles.actionLabel}>Опубликовать</span>
-                </Button>
-                <Button className={styles.action} aria-label="Посмотреть сайт" title="Открыть предпросмотр сайта" disabled>
-                    <Icon name="preview" />
-                    <span className={styles.actionLabel}>Предпросмотр</span>
-                </Button>
+                    <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" title="Опубликовать сайт" disabled>
+                        <Icon name="publish" />
+                        <span className={styles.actionLabel}>Опубликовать</span>
+                    </Button>
+                    <Button className={styles.action} aria-label="Посмотреть сайт" title="Открыть предпросмотр сайта" disabled>
+                        <Icon name="preview" />
+                        <span className={styles.actionLabel}>Предпросмотр</span>
+                    </Button>
+                </div>
 
                 {!pagesMode && saveStatus === 'error' && (
                     <span className={styles.saveError} role="alert">Не удалось сохранить страницу.</span>
