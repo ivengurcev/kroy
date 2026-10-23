@@ -9,7 +9,7 @@
 .field select {
     width: 100%;
     padding: 11px 13px;
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--color-border);
     border-radius: 9px;
     outline: none;
     color: var(--color-text);
@@ -25,7 +25,7 @@
 .field textarea:focus,
 .field select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgb(9 100 249 / 10%);
+    box-shadow: 0 0 0 3px rgb(12 129 122 / 12%);
 }
 
 .checkboxField {

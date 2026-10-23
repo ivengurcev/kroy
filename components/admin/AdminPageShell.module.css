@@ -14,7 +14,7 @@
     left: 0;
     height: var(--page-header-height);
     padding: 14px var(--space-8) 0;
-    background: linear-gradient(var(--color-canvas) 92%, rgb(244 248 252 / 0%));
+    background: linear-gradient(var(--color-canvas) 92%, rgb(245 248 247 / 0%));
 }
 
 .sectionBar {

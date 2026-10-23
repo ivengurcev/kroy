@@ -35,4 +35,4 @@
 
 .warning > i { background: var(--color-warning-soft); }
 .error > i { background: var(--color-error-soft); }
-.progress > i { background: var(--color-blue-100); }
+.progress > i { background: var(--color-primary-soft); }

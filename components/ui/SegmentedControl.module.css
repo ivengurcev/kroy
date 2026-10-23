@@ -16,7 +16,7 @@
     width: calc((100% - var(--space-2)) / 3);
     border-radius: var(--radius-sm);
     background: var(--color-surface);
-    box-shadow: 0 2px 8px rgb(43 73 124 / 12%);
+    box-shadow: 0 2px 8px rgb(32 51 48 / 12%);
     content: '';
     transition: transform 180ms ease;
 }

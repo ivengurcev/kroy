@@ -10,26 +10,27 @@ import restorePage from './api/restorePage.mjs';
 
 await createApp({
     PORT: 3000,
-    PAGE_TITLE: 'Kroy',
+    PAGE_TITLE: 'Oysite',
+    LAYOUT_HTML: './components/admin/AdminDocument.jsx',
     routes: [
         {
             path: '/admin',
-            title: 'Редактор Kroy',
+            title: 'Редактор Oysite',
             component: './pages/EditorPage.jsx',
         },
         {
             path: '/admin/pages',
-            title: 'Страницы Kroy',
+            title: 'Страницы Oysite',
             component: './pages/PagesPage.jsx',
         },
         {
             path: '/admin/pages/trash',
-            title: 'Корзина Kroy',
+            title: 'Корзина Oysite',
             component: './pages/TrashPage.jsx',
         },
         {
             path: '/admin/pages/:pageId/edit',
-            title: 'Редактор Kroy',
+            title: 'Редактор Oysite',
             component: './pages/EditorPage.jsx',
         },
     ],

@@ -1,5 +1,5 @@
 import styles from './AdminHeader.module.css';
-import KroyLogo from '../../design/kroy-logo.svg';
+import OysiteLogo from './OysiteLogo.svg';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -18,9 +18,8 @@ export default function AdminHeader({ mode = 'editor', page = {}, isDirty = fals
 
     return (
         <Card className={`${styles.primaryBar} ${pagesMode ? styles.pagesPrimaryBar : ''}`}>
-            <div className={styles.logo} aria-label="Kroy">
-                <KroyLogo className={styles.logoMark} aria-hidden="true" />
-                <strong>Kroy</strong>
+            <div className={styles.logo} role="img" aria-label="Oysite">
+                <OysiteLogo className={styles.logoMark} aria-hidden="true" />
             </div>
 
             <Button className={styles.headerTile} disabled>
