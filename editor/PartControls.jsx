@@ -18,6 +18,7 @@ export default function PartControls({
             <Button
                 className={styles.editAction}
                 variant="compact"
+                title={isEditing ? 'Закрыть редактор запчасти' : 'Редактировать свойства запчасти'}
                 onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -30,7 +31,8 @@ export default function PartControls({
             </Button>
             <Button
                 variant="compact"
-                aria-label="Переместить вверх"
+                aria-label="Переместить запчасть вверх"
+                title="Переместить запчасть вверх"
                 disabled={isFirst}
                 onClick={(event) => {
                     event.preventDefault();
@@ -42,7 +44,8 @@ export default function PartControls({
             </Button>
             <Button
                 variant="compact"
-                aria-label="Переместить вниз"
+                aria-label="Переместить запчасть вниз"
+                title="Переместить запчасть вниз"
                 disabled={isLast}
                 onClick={(event) => {
                     event.preventDefault();
@@ -55,6 +58,7 @@ export default function PartControls({
             <Button
                 variant="compact"
                 aria-label="Удалить запчасть"
+                title="Удалить запчасть"
                 onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();

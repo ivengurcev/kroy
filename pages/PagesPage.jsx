@@ -131,8 +131,8 @@ export default function PagesPage() {
 
     const actions = (
         <>
-            <a href="/admin/pages/trash"><Icon name="trash" /> Корзина</a>
-            <Button variant="primary" disabled={showForm} onClick={() => setShowForm(true)}>
+            <a href="/admin/pages/trash" title="Открыть корзину страниц"><Icon name="trash" /> Корзина</a>
+            <Button variant="primary" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
                 <Icon name="add" /> Создать страницу
             </Button>
         </>
@@ -157,10 +157,10 @@ export default function PagesPage() {
                             <input value={path} onChange={(event) => setPath(event.target.value)} />
                         </label>
                         <div className={styles.formActions}>
-                            <Button type="submit" variant="primary" disabled={createStatus === 'submitting'}>
+                            <Button type="submit" variant="primary" title="Создать страницу" disabled={createStatus === 'submitting'}>
                                 <Icon name="add" /> {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
                             </Button>
-                            <Button disabled={createStatus === 'submitting'} onClick={closeCreateForm}><Icon name="close" /> Отмена</Button>
+                            <Button title="Отменить создание страницы" disabled={createStatus === 'submitting'} onClick={closeCreateForm}><Icon name="close" /> Отмена</Button>
                         </div>
                         <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
                             {createStatus === 'error' && 'Не удалось создать страницу.'}

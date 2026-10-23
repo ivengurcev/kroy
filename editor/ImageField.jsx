@@ -51,6 +51,7 @@ export default function ImageField({ label, value, onChange }) {
                 onChange={uploadImage}
             />
             <Button
+                title={imageUrl ? 'Заменить изображение' : 'Загрузить изображение'}
                 disabled={status === 'uploading'}
                 onClick={() => inputRef.current?.click()}
             >

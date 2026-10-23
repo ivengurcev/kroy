@@ -182,6 +182,7 @@ export default function ListField({
                                     className={styles.summary}
                                     aria-expanded={isExpanded}
                                     aria-controls={editorId}
+                                    title={isExpanded ? `Свернуть ${summary.primary}` : `Редактировать ${summary.primary}`}
                                     onClick={() => setExpandedKey(isExpanded ? null : itemKey)}
                                 >
                                     <span className={styles.summaryText}>
@@ -196,6 +197,7 @@ export default function ListField({
                                     variant="compact"
                                     ref={isMenuOpen ? menuTriggerRef : undefined}
                                     aria-label={`Действия: ${summary.primary}`}
+                                    title={`Действия с элементом ${summary.primary}`}
                                     aria-haspopup="menu"
                                     aria-expanded={isMenuOpen}
                                     onClick={() => setMenuKey(isMenuOpen ? null : itemKey)}
@@ -208,6 +210,7 @@ export default function ListField({
                                 <div className={styles.menu} ref={menuRef} role="menu">
                                     <Button
                                         role="menuitem"
+                                        title="Переместить элемент выше"
                                         disabled={index === 0}
                                         onClick={() => moveItem(index, -1)}
                                     >
@@ -215,12 +218,13 @@ export default function ListField({
                                     </Button>
                                     <Button
                                         role="menuitem"
+                                        title="Переместить элемент ниже"
                                         disabled={index === items.length - 1}
                                         onClick={() => moveItem(index, 1)}
                                     >
                                         <Icon name="down" /> Переместить ниже
                                     </Button>
-                                    <Button role="menuitem" onClick={() => removeItem(index)}>
+                                    <Button role="menuitem" title="Удалить элемент" onClick={() => removeItem(index)}>
                                         <Icon name="delete" /> Удалить
                                     </Button>
                                 </div>
@@ -238,7 +242,7 @@ export default function ListField({
                                         />
                                     ))}
 
-                                    <Button onClick={() => setExpandedKey(null)}>
+                                    <Button title="Закончить редактирование элемента" onClick={() => setExpandedKey(null)}>
                                         Готово
                                     </Button>
                                 </div>
@@ -248,7 +252,7 @@ export default function ListField({
                 })}
             </div>
 
-            <Button className={styles.addButton} onClick={addItem}>
+            <Button className={styles.addButton} title="Добавить элемент списка" onClick={addItem}>
                 <Icon name="add" /> Добавить
             </Button>
         </fieldset>

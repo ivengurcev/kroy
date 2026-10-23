@@ -57,7 +57,7 @@ export default function TrashPage() {
     return (
         <AdminPageShell
             title="Корзина"
-            actions={<a href="/admin/pages"><Icon name="back" /> Вернуться к страницам</a>}
+            actions={<a href="/admin/pages" title="Вернуться к карте страниц"><Icon name="back" /> Вернуться к страницам</a>}
             status={status}
             errorMessage="Не удалось загрузить корзину."
         >

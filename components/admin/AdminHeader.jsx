@@ -23,6 +23,9 @@ export default function AdminHeader({
             : !isDirty && saveStatus === 'success'
                 ? 'Сохранено'
                 : 'Сохранить';
+    const saveTitle = isDirty && !isSaving
+        ? 'Сохранить изменения страницы'
+        : saveLabel;
 
     function openPageMap(event) {
         if (
@@ -40,7 +43,7 @@ export default function AdminHeader({
                 <OysiteMark className={styles.compactLogo} aria-hidden="true" />
             </div>
 
-            <Button className={styles.action} aria-label="Настройки сайта" disabled>
+            <Button className={styles.action} aria-label="Настройки сайта" title="Открыть настройки сайта" disabled>
                 <Icon name="settings" />
                 <span className={styles.actionLabel}>Настройки</span>
             </Button>
@@ -51,7 +54,7 @@ export default function AdminHeader({
                     <span className={styles.actionLabel}>Карта страниц</span>
                 </span>
             ) : (
-                <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" onClick={openPageMap}>
+                <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" title="Открыть карту страниц" onClick={openPageMap}>
                     <Icon name="pages" />
                     <span className={styles.actionLabel}>Карта страниц</span>
                 </a>
@@ -62,14 +65,14 @@ export default function AdminHeader({
                     <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
                         {page.title || '—'}
                     </span>
-                    <Button className={styles.iconAction} variant="compact" aria-label="Изменить страницу" disabled>
+                    <Button className={styles.iconAction} variant="compact" aria-label="Изменить страницу" title="Изменить название и путь страницы" disabled>
                         <Icon name="edit" />
                     </Button>
                     <Button
                         className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                         variant="primary"
                         aria-label={saveLabel}
-                        title={saveLabel}
+                        title={saveTitle}
                         disabled={saveDisabled}
                         onClick={onSave}
                     >
@@ -79,11 +82,11 @@ export default function AdminHeader({
                 </>
             )}
 
-            <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" disabled>
+            <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" title="Опубликовать сайт" disabled>
                 <Icon name="publish" />
                 <span className={styles.actionLabel}>Опубликовать</span>
             </Button>
-            <Button className={styles.action} aria-label="Посмотреть сайт" disabled>
+            <Button className={styles.action} aria-label="Посмотреть сайт" title="Открыть предпросмотр сайта" disabled>
                 <Icon name="preview" />
                 <span className={styles.actionLabel}>Предпросмотр</span>
             </Button>

@@ -85,7 +85,7 @@ export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
         >
             <header className={styles.header}>
                 <h2>Добавить запчасть</h2>
-                <Button variant="compact" aria-label="Закрыть" onClick={() => onClose()}>
+                <Button variant="compact" aria-label="Закрыть выбор запчасти" title="Закрыть выбор запчасти" onClick={() => onClose()}>
                     <Icon name="close" />
                 </Button>
             </header>
@@ -100,7 +100,7 @@ export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
             />
             <div className={styles.list}>
                 {parts.map((identifier) => (
-                    <Button className={styles.part} key={identifier} onClick={() => onSelect(identifier)}>
+                    <Button className={styles.part} title={`Добавить запчасть ${identifier}`} key={identifier} onClick={() => onSelect(identifier)}>
                         <span>{partTitle(identifier)}</span>
                         <small>{identifier}</small>
                     </Button>

@@ -29,7 +29,7 @@ await createApp({
             component: './pages/TrashPage.jsx',
         },
         {
-            path: '/admin/pages/:pageId/edit',
+            path: '/admin/pages/:pageId',
             title: 'Редактор Oysite',
             component: './pages/EditorPage.jsx',
         },

@@ -1,5 +1,4 @@
 import AdminHeader from './AdminHeader.jsx';
-import EditorFooter from '../../editor/EditorFooter.jsx';
 import EditorWorkspace from '../../editor/EditorWorkspace.jsx';
 import styles from './AdminShell.module.css';
 import theme from '../../styles/AdminTheme.module.css';
@@ -9,11 +8,9 @@ export default function AdminShell({
     content,
     metadata,
     parts,
-    selectedPartId,
     loadStatus,
     saveStatus,
     isDirty,
-    onSelectPart,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -36,15 +33,12 @@ export default function AdminShell({
                     content={content}
                     metadata={metadata}
                     parts={parts}
-                    selectedPartId={selectedPartId}
                     loadStatus={loadStatus}
-                    onSelectPart={onSelectPart}
                     onAddPart={onAddPart}
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}
                     onPropChange={onPropChange}
                 />
-                <EditorFooter />
             </main>
         </div>
     );

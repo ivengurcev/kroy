@@ -5,9 +5,12 @@
     gap: var(--space-2);
     align-items: center;
     width: 100%;
+    max-width: var(--admin-content-max);
     min-width: 0;
     min-height: 60px;
+    margin-inline: auto;
     padding: 7px 10px;
+    box-shadow: 0 5px 14px rgb(32 51 48 / 10%);
 }
 
 .logo {
@@ -59,6 +62,8 @@ span.action {
     text-decoration: none;
     background: var(--color-surface);
 }
+
+a.action { cursor: pointer; }
 
 span.activeAction {
     border-color: var(--color-primary);

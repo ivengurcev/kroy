@@ -10,7 +10,6 @@ import { createPart } from './partModel.js';
 export default function Editor() {
     const [content, setContent] = useState([]);
     const [page, setPage] = useState({ id: null, title: '', path: '' });
-    const [selectedPartId, setSelectedPartId] = useState(null);
     const [loadStatus, setLoadStatus] = useState('loading');
     const [saveStatus, setSaveStatus] = useState('idle');
     const [isDirty, setIsDirty] = useState(false);
@@ -19,7 +18,7 @@ export default function Editor() {
     useEffect(() => {
         const controller = new AbortController();
         const match = window.location.pathname.match(
-            /^\/admin\/pages\/([^/]+)\/edit$/
+            /^\/admin\/pages\/([^/]+)$/
         );
         const pageUrl = match
             ? `/api/pages/${encodeURIComponent(match[1])}`
@@ -43,7 +42,6 @@ export default function Editor() {
 
                 setContent(loadedContent);
                 setPage({ id: page.id, title: page.title, path: page.path });
-                setSelectedPartId(loadedContent[0]?.id ?? null);
                 setIsDirty(false);
                 setSaveStatus('success');
                 revision.current = 0;
@@ -113,26 +111,15 @@ export default function Editor() {
                 ...previous.slice(insertionIndex),
             ];
         });
-        setSelectedPartId(newPart.id);
     }
 
     function removePart(id) {
-        const index = content.findIndex((item) => item.id === id);
-
-        if (index === -1) return;
+        if (!content.some((item) => item.id === id)) return;
 
         const nextContent = content.filter((item) => item.id !== id);
 
         markDirty();
         setContent(nextContent);
-
-        if (selectedPartId === id) {
-            setSelectedPartId(
-                nextContent[index]?.id
-                ?? nextContent[index - 1]?.id
-                ?? null
-            );
-        }
     }
 
     function movePart(id, direction) {
@@ -175,11 +162,9 @@ export default function Editor() {
             content={content}
             metadata={metadata}
             parts={parts}
-            selectedPartId={selectedPartId}
             loadStatus={loadStatus}
             saveStatus={saveStatus}
             isDirty={isDirty}
-            onSelectPart={setSelectedPartId}
             onAddPart={addPart}
             onRemovePart={removePart}
             onMovePart={movePart}

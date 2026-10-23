@@ -142,17 +142,17 @@ export default function PageList({
                                                 onChange={(event) => setEditing({ ...editing, title: event.target.value })}
                                             />
                                             <div className={styles.actions}>
-                                                <Button type="submit" variant="primary" disabled={!hasEditChanges || editStatus === 'submitting'}>
+                                                <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!hasEditChanges || editStatus === 'submitting'}>
                                                     <Icon name="save" /> {editStatus === 'submitting' ? 'Сохранение…' : 'Сохранить'}
                                                 </Button>
-                                                <Button disabled={editStatus === 'submitting'} onClick={cancelEditing}><Icon name="close" /> Отмена</Button>
+                                                <Button title="Отменить изменение страницы" disabled={editStatus === 'submitting'} onClick={cancelEditing}><Icon name="close" /> Отмена</Button>
                                             </div>
                                         </form>
                                     ) : (
                                         <>
                                             <span className={styles.path} title={page.path}>{page.path}</span>
                                             {mode === 'active' ? (
-                                                <a className={styles.title} href={`/admin/pages/${page.id}/edit`} title={page.title}>{page.title}</a>
+                                                <a className={styles.title} href={`/admin/pages/${page.id}`} title={page.title}>{page.title}</a>
                                             ) : (
                                                 <span className={styles.title} title={page.title}>{page.title}</span>
                                             )}
@@ -165,18 +165,19 @@ export default function PageList({
                                                                 else editButtons.current.delete(page.id);
                                                             }}
                                                             disabled={Boolean(editing && editing.id !== page.id && hasEditChanges)}
+                                                            title="Изменить название и путь страницы"
                                                             onClick={() => startEditing(page)}
                                                         >
                                                             <Icon name="edit" /> Изменить
                                                         </Button>
                                                         {page.path === '/' ? <span /> : (
-                                                            <Button disabled={busyPageId !== null} onClick={() => onDelete(page)}>
+                                                            <Button title="Удалить страницу в корзину" disabled={busyPageId !== null} onClick={() => onDelete(page)}>
                                                                 <Icon name="delete" /> {busyPageId === page.id ? 'Удаление…' : 'Удалить'}
                                                             </Button>
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <Button disabled={busyPageId !== null} onClick={() => onRestore(page.id)}>
+                                                    <Button title="Восстановить страницу" disabled={busyPageId !== null} onClick={() => onRestore(page.id)}>
                                                         <Icon name="restore" /> {busyPageId === page.id ? 'Восстановление…' : 'Восстановить'}
                                                     </Button>
                                                 )}

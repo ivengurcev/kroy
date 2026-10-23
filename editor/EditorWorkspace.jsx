@@ -13,9 +13,7 @@ export default function EditorWorkspace({
     content,
     metadata,
     parts,
-    selectedPartId,
     loadStatus,
-    onSelectPart,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -44,12 +42,6 @@ export default function EditorWorkspace({
         );
     }
 
-    function selectPart(event, id) {
-        if (event.target.closest?.('[data-editor-control]')) return;
-
-        onSelectPart(id);
-    }
-
     function openPicker(event, position) {
         event.preventDefault();
         event.stopPropagation();
@@ -65,7 +57,6 @@ export default function EditorWorkspace({
     }
 
     function editPart(id) {
-        onSelectPart(id);
         setEditingPartId(id);
     }
 
@@ -81,7 +72,7 @@ export default function EditorWorkspace({
     function insertionPoint(position, key) {
         return (
             <div className={styles.insertionPoint} data-editor-control key={key}>
-                <Button variant="compact" onClick={(event) => openPicker(event, position)}>
+                <Button variant="compact" title="Добавить запчасть в эту позицию" onClick={(event) => openPicker(event, position)}>
                     <Icon name="add" size={17} /> Добавить запчасть
                 </Button>
             </div>
@@ -94,8 +85,7 @@ export default function EditorWorkspace({
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <div
-                        className={`${styles.previewPart} ${item.id === selectedPartId ? styles.selectedPart : ''}`}
-                        onClickCapture={(event) => selectPart(event, item.id)}
+                        className={styles.previewPart}
                         key={item.id}
                     >
                         <div className={styles.partHeader}>
