@@ -5,6 +5,7 @@ import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
+import barStyles from '../ui/AdminBar.module.css';
 import PageDetailsDialog from './PageDetailsDialog.jsx';
 
 export default function AdminHeader({
@@ -54,7 +55,7 @@ export default function AdminHeader({
 
     return (
         <>
-            <Card className={`${styles.headerBar} ${pagesMode ? styles.pagesHeader : ''}`}>
+            <Card className={`${barStyles.bar} ${barStyles.floating} ${styles.headerBar} ${pagesMode ? styles.pagesHeader : ''}`}>
                 <div className={styles.leftGroup}>
                     <div className={styles.logo} role="img" aria-label="Oysite">
                         <OysiteLogo className={styles.fullLogo} aria-hidden="true" />

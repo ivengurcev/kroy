@@ -1,0 +1,20 @@
+.bar.bar {
+    border: var(--admin-bar-border-width) solid var(--admin-bar-border-color);
+    border-radius: var(--admin-bar-radius);
+    background: var(--admin-bar-background);
+    box-shadow: var(--admin-bar-shadow);
+    backdrop-filter: none;
+    transition: border-radius 140ms ease, background-color 140ms ease, box-shadow 140ms ease, backdrop-filter 140ms ease;
+}
+
+.bar.attached {
+    border-radius: var(--admin-bar-radius) var(--admin-bar-radius) 0 0;
+}
+
+.bar.floating,
+.bar.attached[data-stuck] {
+    border-radius: var(--admin-bar-radius);
+    background: var(--admin-bar-floating-background);
+    box-shadow: var(--admin-bar-floating-shadow);
+    backdrop-filter: var(--admin-bar-backdrop-filter);
+}

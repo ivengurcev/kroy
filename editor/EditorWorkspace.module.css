@@ -13,17 +13,6 @@
     justify-content: space-between; 
     min-width: 0; 
     padding: var(--space-3) var(--space-4); 
-    /* border: var(--admin-bar-border-width) solid var(--admin-bar-border-color);  */
-    /* border-radius: var(--admin-bar-radius) var(--admin-bar-radius) 0 0;  */
-    background: var(--admin-bar-background); 
-    box-shadow: var(--admin-bar-shadow); 
-    transition: border-radius 140ms ease, background-color 140ms ease, box-shadow 140ms ease; 
-}
-.partHeader[data-stuck] { 
-    border: var(--admin-bar-border-width) solid var(--admin-bar-border-color);
-    border-radius: var(--admin-bar-radius); 
-    background: var(--admin-bar-sticky-background); 
-    box-shadow: var(--admin-bar-sticky-shadow); 
 }
 .partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }

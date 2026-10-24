@@ -60,13 +60,14 @@
     --radius-round: 50%;
     --shadow-panel: 0 10px 28px rgb(32 51 48 / 7%);
     --shadow-action: 0 8px 18px rgb(12 129 122 / 20%);
-    --admin-bar-background: var(--color-surface-translucent);
+    --admin-bar-background: var(--color-surface);
     --admin-bar-border-color: var(--color-border-subtle);
     --admin-bar-border-width: 1px;
     --admin-bar-radius: var(--radius-lg);
     --admin-bar-shadow: 0 5px 14px rgb(32 51 48 / 10%);
-    --admin-bar-sticky-background: var(--color-surface);
-    --admin-bar-sticky-shadow: var(--shadow-panel);
+    --admin-bar-floating-background: var(--color-surface-translucent);
+    --admin-bar-floating-shadow: var(--shadow-panel);
+    --admin-bar-backdrop-filter: blur(14px);
     --control-height: 46px;
     --control-height-sm: 40px;
     --admin-content-max: 1800px;

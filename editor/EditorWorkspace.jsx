@@ -6,6 +6,7 @@ import styles from './EditorWorkspace.module.css';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import barStyles from '../components/ui/AdminBar.module.css';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
 
@@ -34,7 +35,7 @@ function StickyPartHeader({ children }) {
     return (
         <>
             <span ref={sentinelRef} className={styles.stickySentinel} aria-hidden="true" />
-            <div ref={headerRef} className={styles.partHeader}>
+            <div ref={headerRef} className={`${barStyles.bar} ${barStyles.attached} ${styles.partHeader}`}>
                 {children}
             </div>
         </>
