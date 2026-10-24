@@ -1,5 +1,6 @@
 .adminShell {
     --admin-header-offset: 74px;
+    --admin-part-sticky-offset: calc(var(--admin-header-offset) + var(--space-2));
 
     width: 100%;
     min-width: 0;

@@ -24,3 +24,22 @@
 .controls .editAction {
     padding-inline: var(--space-3);
 }
+
+@media (max-width: 600px) {
+    .controls .editAction {
+        width: 34px;
+        padding: 0;
+        gap: 0;
+        font-size: 0;
+    }
+}
+
+@media (max-width: 375px) {
+    .controls button,
+    .controls .editAction {
+        width: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        height: 30px;
+    }
+}

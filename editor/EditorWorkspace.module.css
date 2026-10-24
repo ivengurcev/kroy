@@ -2,15 +2,16 @@
 .pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2);}
 .previewPart { position: relative; border-radius: 0; box-shadow: 0 0 0 1px var(--color-border); }
 .partContent { pointer-events: none; }
-.stickySentinel { position: absolute; top: calc(-1 * var(--admin-header-offset)); width: 1px; height: 1px; pointer-events: none; }
+.stickySentinel { position: absolute; top: calc(0px - var(--admin-part-sticky-offset)); width: 1px; height: 1px; pointer-events: none; }
 .partHeader { 
     position: sticky; 
     z-index: 5; 
-    top: var(--admin-header-offset); 
+    top: var(--admin-part-sticky-offset);
     display: flex; 
     gap: var(--space-3); 
     align-items: center; 
     justify-content: space-between; 
+    border: 0;
     min-width: 0; 
     padding: var(--space-3) var(--space-4); 
 }
@@ -27,6 +28,6 @@
 .inlineEditorBody > section > h3 { display: none; }
 
 @media (max-width: 600px) {
-    .partHeader { padding-inline: var(--space-2); }
+    .partHeader { min-height: 48px; padding: var(--space-1) var(--space-2); }
     .inlineEditor { padding: 0 var(--space-4) var(--space-4); }
 }
