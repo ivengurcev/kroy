@@ -15,6 +15,7 @@
     min-width: 0; 
     padding: var(--space-3) var(--space-4); 
 }
+.partHeader.partHeader:not([data-stuck]) { border: none; border-radius: 0; }
 .partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
 .insertionPoint { position: relative; z-index: 3; display: grid; height: 28px; place-items: center; }

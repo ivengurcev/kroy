@@ -8,10 +8,6 @@
     transition: border-radius 140ms ease, background-color 140ms ease, box-shadow 140ms ease, backdrop-filter 140ms ease;
 }
 
-.bar.attached {
-    border-radius: 0;
-}
-
 .bar.floating,
 .bar.attached[data-stuck] {
     border-radius: var(--admin-bar-radius);
