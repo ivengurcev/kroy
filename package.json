@@ -32,7 +32,7 @@
     "vyaz:serve": "yarn node --env-file=.env server.mjs --serve"
   },
   "dependencies": {
-    "@vyaz/core": "portal:../vyaz",
+    "@vyaz/core": "portal:./vyaz",
     "pg": "^8.23.1",
     "prop-types": "^15.8.1",
     "react": "^19",

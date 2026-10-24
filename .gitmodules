@@ -1,0 +1,3 @@
+[submodule "vyaz"]
+	path = vyaz
+	url = git@github.com:ivengurcev/vyaz.git
