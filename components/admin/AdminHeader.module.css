@@ -10,7 +10,10 @@
     min-height: 60px;
     margin-inline: auto;
     padding: 7px 10px;
-    box-shadow: 0 5px 14px rgb(32 51 48 / 10%);
+    border: var(--admin-bar-border-width) solid var(--admin-bar-border-color);
+    border-radius: var(--admin-bar-radius);
+    background: var(--admin-bar-background);
+    box-shadow: var(--admin-bar-shadow);
 }
 
 .leftGroup,

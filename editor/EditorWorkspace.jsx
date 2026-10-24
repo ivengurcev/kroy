@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Page from '../layout/Page.jsx';
 import SiteRoot from '../layout/SiteRoot.jsx';
 import PartEditor from './PartEditor.jsx';
@@ -8,6 +8,38 @@ import Button from '../components/ui/Button.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
+
+function StickyPartHeader({ children }) {
+    const sentinelRef = useRef(null);
+    const headerRef = useRef(null);
+
+    useEffect(() => {
+        const sentinel = sentinelRef.current;
+        const header = headerRef.current;
+
+        if (!sentinel || !header) return undefined;
+
+        const observer = new IntersectionObserver(([entry]) => {
+            header.toggleAttribute(
+                'data-stuck',
+                !entry.isIntersecting && entry.boundingClientRect.top < 0,
+            );
+        });
+
+        observer.observe(sentinel);
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <>
+            <span ref={sentinelRef} className={styles.stickySentinel} aria-hidden="true" />
+            <div ref={headerRef} className={styles.partHeader}>
+                {children}
+            </div>
+        </>
+    );
+}
 
 export default function EditorWorkspace({
     content,
@@ -88,7 +120,7 @@ export default function EditorWorkspace({
                         className={styles.previewPart}
                         key={item.id}
                     >
-                        <div className={styles.partHeader}>
+                        <StickyPartHeader>
                             <b className={styles.partTitle}>{item.part}</b>
                             <PartControls
                                 className={styles.partControls}
@@ -101,7 +133,7 @@ export default function EditorWorkspace({
                                 onMove={onMovePart}
                                 onRemove={removePart}
                             />
-                        </div>
+                        </StickyPartHeader>
                         {item.id === editingPartId ? (
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
