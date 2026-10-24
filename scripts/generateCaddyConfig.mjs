@@ -69,7 +69,7 @@ export default async function generateCaddyConfig(
         ...(releaseId ? [`# Kroy release: ${releaseId}`] : []),
         `${domains.map((hostname) => `http://${hostname}:8080`).join(', ')} {`,
         '\troute {',
-        '\t\t@vyaz path /admin /admin/* /api /api/* /public /public/* /static /static/* /uploads /uploads/*',
+        '\t\t@vyaz path /admin /admin/* /auth /auth/* /api /api/* /public /public/* /static /static/* /uploads /uploads/*',
         '\t\treverse_proxy @vyaz host.docker.internal:3000 {',
         '\t\t\theader_up Host {hostport}',
         '\t\t}',
