@@ -147,7 +147,7 @@ export default function EditorWorkspace({
                                 </div>
                             </div>
                         ) : (
-                            <div className={styles.partContent} inert="">
+                            <div className={styles.partContent} inert={false}>
                                 <SiteRoot>
                                     <Page content={[item]} parts={parts} />
                                 </SiteRoot>
