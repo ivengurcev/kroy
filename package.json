@@ -19,6 +19,7 @@
     "site:create": "yarn node --env-file=.env scripts/createSite.mjs",
     "site:domain:add": "yarn node --env-file=.env scripts/addSiteDomain.mjs",
     "site:domain:remove": "yarn node --env-file=.env scripts/removeSiteDomain.mjs",
+    "site:user:add": "yarn node --env-file=.env scripts/addSiteUser.mjs",
     "site:list": "yarn node --env-file=.env scripts/listSites.mjs",
     "site:info": "yarn node --env-file=.env scripts/getSiteInfo.mjs",
     "site:build": "yarn node --env-file=.env scripts/buildSite.mjs",

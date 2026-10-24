@@ -1,5 +1,7 @@
 import { findUserByEmail } from './db/users.mjs';
 import { verifyPassword } from './db/passwords.mjs';
+import { pool } from './db/client.mjs';
+import getHostname from './api/getHostname.mjs';
 
 async function authorize(credentials) {
     if (typeof credentials?.email !== 'string' || !credentials.email.trim()
@@ -12,11 +14,28 @@ async function authorize(credentials) {
     return { id: user.id, email: user.email, is_superadmin: user.is_superadmin };
 }
 
-export async function hasAccess(authUser) {
-    const identity = authUser?.session?.user ?? authUser;
+export async function hasAccess(authUser, requirements, c) {
+    const identity = authUser?.session?.user ?? authUser?.user ?? authUser?.token ?? authUser;
     if (!identity?.id || typeof identity.email !== 'string') return false;
-    const user = await findUserByEmail(identity.email);
-    return user?.id === identity.id && user.status === 'active' && user.is_superadmin === true;
+    const { rows: [user] } = await pool.query(
+        `SELECT id, email, status, is_superadmin
+         FROM users
+         WHERE id = $1 AND lower(email) = lower($2)`,
+        [identity.id, identity.email],
+    );
+    if (!user || user.status !== 'active') return false;
+    if (user.is_superadmin) return true;
+
+    const hostname = c && getHostname(c);
+    if (!hostname) return false;
+    const { rowCount } = await pool.query(
+        `SELECT 1
+         FROM site_memberships sm
+         JOIN domains d ON d.site_id = sm.site_id
+         WHERE sm.user_id = $1 AND sm.role = 'admin' AND d.hostname = $2`,
+        [user.id, hostname],
+    );
+    return rowCount > 0;
 }
 
 export default function auth({ AUTH_URL, CredentialsProvider }) {
