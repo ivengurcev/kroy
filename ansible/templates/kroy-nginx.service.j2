@@ -7,6 +7,7 @@ Type=simple
 User={{ kroy_user }}
 Group={{ kroy_user }}
 WorkingDirectory={{ kroy_root }}
+ExecStartPre={{ kroy_node_binary | default('/usr/bin/node') }} {{ kroy_root }}/scripts/initNginx.mjs
 ExecStart={{ kroy_nginx_binary }} -c {{ kroy_nginx_config }} -g 'daemon off;'
 ExecReload=/bin/sh -c '{{ kroy_nginx_binary }} -t -c {{ kroy_nginx_config }} && {{ kroy_nginx_binary }} -s reload -c {{ kroy_nginx_config }}'
 Restart=on-failure

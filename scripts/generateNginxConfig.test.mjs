@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import test from 'node:test';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import generateNginxConfig, { renderNginxConfig } from './generateNginxConfig.mjs';
+import generateNginxConfig, { ensureNginxConfig, renderNginxConfig } from './generateNginxConfig.mjs';
 
 test('renders Nginx proxy, release and routing rules', async () => {
     const config = await renderNginxConfig('demo', ['demo.example.test'], {
@@ -48,6 +48,23 @@ test('writes a server fragment for an existing Nginx include', async () => {
         assert.match(mainConfig, /include .*sites\/\*\.conf/);
         assert.match(mainConfig, /listen 127\.0\.0\.1:8080 default_server/);
         assert.match(mainConfig, /return 404/);
+        assert.match(mainConfig, /include .*mime\.types/);
+        assert.match(mainConfig, /set_real_ip_from 127\.0\.0\.1/);
+        const mimeTypes = await readFile(join(directory, 'mime.types'), 'utf8');
+        assert.match(mimeTypes, /text\/html html/);
+        assert.match(mimeTypes, /text\/css css/);
+        assert.match(mimeTypes, /application\/javascript js mjs/);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('creates the base runtime before any site is published', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'kroy-nginx-'));
+    try {
+        const configPath = await ensureNginxConfig({ outputDir: directory });
+        assert.equal(configPath, join(directory, 'nginx.conf'));
+        assert.match(await readFile(configPath, 'utf8'), /include .*mime\.types/);
     } finally {
         await rm(directory, { recursive: true, force: true });
     }

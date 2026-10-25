@@ -6,6 +6,7 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_nginx_binary: /usr/sbin/nginx
+    kroy_node_binary: /usr/bin/node
     kroy_nginx_config: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
     kroy_domains:
       - '*.oysite.ru'
