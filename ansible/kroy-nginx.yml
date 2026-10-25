@@ -5,18 +5,42 @@
   vars:
     kroy_root: /srv/kroy
     kroy_user: kroy
+    kroy_group: "{{ kroy_user }}"
     kroy_nginx_binary: /usr/sbin/nginx
     kroy_node_binary: /usr/bin/node
     kroy_nginx_config: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
     kroy_domains:
       - '*.oysite.ru'
   tasks:
+    - name: Ensure Kroy system group exists
+      ansible.builtin.group:
+        name: "{{ kroy_group }}"
+        system: true
+        state: present
+
+    - name: Ensure Kroy service user exists without interactive login
+      ansible.builtin.user:
+        name: "{{ kroy_user }}"
+        group: "{{ kroy_group }}"
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+        state: present
+
+    - name: Ensure Kroy working directory exists
+      ansible.builtin.file:
+        path: "{{ kroy_root }}"
+        state: directory
+        owner: "{{ kroy_user }}"
+        group: "{{ kroy_group }}"
+        mode: '0755'
+
     - name: Ensure Kroy runtime directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         owner: "{{ kroy_user }}"
-        group: "{{ kroy_user }}"
+        group: "{{ kroy_group }}"
         mode: '0755'
       loop:
         - "{{ kroy_root }}/dist/kroy/nginx"
