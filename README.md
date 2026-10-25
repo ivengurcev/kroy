@@ -163,6 +163,19 @@ yarn site:build demo
 yarn preview
 ```
 
+Первоначальная настройка Nginx выполняется один раз администратором системы.
+Внутри уже существующего блока `http {}` добавьте include каталога Kroy:
+
+```nginx
+include /absolute/path/to/kroy/dist/kroy/nginx/*.conf;
+```
+
+После этого Kroy только заменяет отдельные `server`-фрагменты и не перезаписывает
+основной `nginx.conf` и не запускает отдельный экземпляр Nginx. Для локального
+preview используется `NGINX_LISTEN=8080`; при необходимости задайте
+`NGINX_CONFIG_DIR`, `NGINX_SITES_ROOT` и `NGINX_UPSTREAM` в `.env`.
+Проверка и reload выполняются системными `nginx -t` и `nginx -s reload`.
+
 Сайты доступны на доменах из таблицы `domains`. `site:build` только подготавливает версию, а `site:publish` переключает preview на новый релиз и перезагружает Nginx. Порт, upstream, корень сайтов и pid-файл задаются переменными `NGINX_LISTEN`, `NGINX_UPSTREAM`, `NGINX_SITES_ROOT` и `NGINX_PID_FILE`. Если системный Nginx требует прав для reload, настройте их отдельно в конфигурации ОС; Kroy не вызывает `sudo`.
 
 Для применения уже опубликованной конфигурации без пересоздания контейнера:
@@ -189,7 +202,7 @@ curl --resolve vet.example.test:8080:127.0.0.1 http://vet.example.test:8080/
 
 ```bash
 cp .env.example .env
-createuser --createdb kroy
+createuser --pwprompt --createdb kroy
 createdb -O kroy kroy
 ```
 

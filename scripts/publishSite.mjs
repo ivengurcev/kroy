@@ -17,7 +17,7 @@ import generateNginxConfig from './generateNginxConfig.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
-const NGINX_DIR = join(ROOT, 'dist', 'kroy', 'nginx');
+const NGINX_DIR = process.env.NGINX_CONFIG_DIR || join(ROOT, 'dist', 'kroy', 'nginx');
 const RELEASE_PATTERN = /^\d{17}$/;
 const RELEASE_MARKER = '__KROY_RELEASE__';
 const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css']);
@@ -67,7 +67,13 @@ async function versionAssets(directory, releaseId) {
 }
 
 async function reloadNginx() {
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', join(NGINX_DIR, 'nginx.conf')], { cwd: ROOT });
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload'], { cwd: ROOT });
+}
+
+async function validateNginx() {
+    const args = ['-t'];
+    if (process.env.NGINX_CONFIG) args.push('-c', process.env.NGINX_CONFIG);
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', args, { cwd: ROOT });
 }
 
 let client;
@@ -129,22 +135,22 @@ try {
     await rename(temporaryDirectory, releaseDirectory);
     temporaryDirectory = undefined;
 
-    const configPath = join(NGINX_DIR, 'nginx.conf');
     const fragmentPath = join(NGINX_DIR, `${siteSlug}.conf`);
-    const previousConfig = await readOptional(configPath);
     const previousFragment = await readOptional(fragmentPath);
 
     try {
         await generateNginxConfig(siteSlug, site.domains, {
+            outputDir: NGINX_DIR,
             routingPath: join(releaseDirectory, 'routing.json'),
             siteRoot: `${siteSlug}/${releaseId}`,
             releaseId,
         });
+        await validateNginx();
         await reloadNginx();
         await writeFile(publishedMarkerPath, `${releaseId}\n`);
     } catch (error) {
-        await restoreFile(configPath, previousConfig);
         await restoreFile(fragmentPath, previousFragment);
+        await validateNginx().catch(() => {});
         await reloadNginx().catch(() => {});
         throw error;
     }

@@ -9,7 +9,7 @@ import getActiveRelease from './getActiveRelease.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
-const NGINX_DIR = join(ROOT, 'dist', 'kroy', 'nginx');
+const NGINX_DIR = process.env.NGINX_CONFIG_DIR || join(ROOT, 'dist', 'kroy', 'nginx');
 const execFileAsync = promisify(execFile);
 const siteSlug = process.argv[2];
 const releaseId = process.argv[3];
@@ -34,7 +34,13 @@ async function restoreFile(path, content) {
 }
 
 async function reloadNginx() {
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', join(NGINX_DIR, 'nginx.conf')], { cwd: ROOT });
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload'], { cwd: ROOT });
+}
+
+async function validateNginx() {
+    const args = ['-t'];
+    if (process.env.NGINX_CONFIG) args.push('-c', process.env.NGINX_CONFIG);
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', args, { cwd: ROOT });
 }
 
 let client;
@@ -72,21 +78,21 @@ try {
         client.release();
         client = undefined;
 
-        const configPath = join(NGINX_DIR, 'nginx.conf');
         const fragmentPath = join(NGINX_DIR, `${siteSlug}.conf`);
-        const previousConfig = await readOptional(configPath);
         const previousFragment = await readOptional(fragmentPath);
 
         try {
             await generateNginxConfig(siteSlug, site.domains, {
+                outputDir: NGINX_DIR,
                 routingPath,
                 siteRoot: `${siteSlug}/${releaseId}`,
                 releaseId,
             });
+            await validateNginx();
             await reloadNginx();
         } catch (error) {
-            await restoreFile(configPath, previousConfig);
             await restoreFile(fragmentPath, previousFragment);
+            await validateNginx().catch(() => {});
             await reloadNginx().catch(() => {});
             throw error;
         }
