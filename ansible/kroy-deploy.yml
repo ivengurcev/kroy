@@ -92,7 +92,7 @@
           - "--exclude=dist/sites/"
           - "--exclude=dist/kroy/nginx/"
           - "--exclude=data/"
-          - "--exclude=node_modules/"
+          - "--exclude=/node_modules/"
           - "--exclude=.cache/"
           - "--exclude=*.log"
           - "--exclude=ansible/"
