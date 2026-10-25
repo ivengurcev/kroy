@@ -4,12 +4,10 @@
 - name: Transfer and build Kroy on the VPS
   hosts: kroy
   become: false
-  remote_user: "{{ kroy_ssh_user | default('ivan') }}"
   vars:
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
-    kroy_ssh_user: ivan
   tasks:
     - name: Synchronize Kroy sources without deleting server data
       ansible.posix.synchronize:

@@ -6,8 +6,14 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
-    kroy_ssh_user: ivan
   tasks:
+    - name: Determine the SSH connection user
+      ansible.builtin.command: id -un
+      become: false
+      register: kroy_connection_user
+      changed_when: false
+      check_mode: false
+
     - name: Ensure Kroy system group exists
       ansible.builtin.group:
         name: "{{ kroy_group }}"
@@ -25,7 +31,7 @@
 
     - name: Add SSH user to the Kroy group
       ansible.builtin.user:
-        name: "{{ kroy_ssh_user }}"
+        name: "{{ kroy_connection_user.stdout | trim }}"
         groups: "{{ kroy_group }}"
         append: true
         state: present
