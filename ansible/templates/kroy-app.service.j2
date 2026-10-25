@@ -8,7 +8,7 @@ User={{ kroy_user }}
 Group={{ kroy_group | default(kroy_user) }}
 WorkingDirectory={{ kroy_root }}
 EnvironmentFile=-{{ kroy_root }}/.env
-ExecStart={{ kroy_yarn_binary | default(kroy_root ~ '/.yarn/releases/yarn-4.18.1.cjs') }} vyaz:serve
+ExecStart={{ kroy_node_binary | default('/usr/bin/node') }} {{ kroy_yarn_release | default(kroy_root ~ '/.yarn/releases/yarn-4.18.1.cjs') }} vyaz:serve
 Restart=on-failure
 RestartSec=2
 
