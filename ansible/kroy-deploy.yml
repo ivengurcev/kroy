@@ -130,6 +130,5 @@
       ansible.builtin.systemd:
         name: kroy-app
         state: restarted
-        daemon_reload: true
 
 - import_playbook: kroy-nginx.yml
