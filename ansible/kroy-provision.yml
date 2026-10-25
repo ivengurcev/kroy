@@ -14,6 +14,13 @@
     kroy_database_user: kroy
     kroy_env_file: "{{ kroy_root }}/.env"
   tasks:
+    - name: Ensure Python PostgreSQL driver is installed
+      ansible.builtin.apt:
+        name: python3-psycopg2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
     - name: Check whether the existing environment file is present
       ansible.builtin.stat:
         path: "{{ kroy_env_file }}"

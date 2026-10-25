@@ -27,8 +27,9 @@ SSH-доступ и `rsync`. Установите коллекции:
 ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
-На VPS также должен быть доступен Python-модуль PostgreSQL для Ansible
-(`psycopg2` или `psycopg`).
+На VPS playbook автоматически устанавливает пакет `python3-psycopg2` для
+Ansible. PostgreSQL, Node.js, Yarn/Corepack и Nginx должны быть установлены
+заранее; PostgreSQL не переустанавливается и не переконфигурируется.
 Пользователь берётся из настроек Ansible, inventory или `~/.ssh/config`.
 После bootstrap переподключитесь по SSH, чтобы обновилось членство в
 группе. На VPS нужны `rsync`, Node.js, Yarn/Corepack, PostgreSQL и установленный Nginx;
