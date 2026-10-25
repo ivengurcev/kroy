@@ -28,9 +28,9 @@ console.log(`Kroy — команды проекта
   yarn site:releases demo            Показать сохранённые релизы сайта
   yarn site:rollback demo <release-id>
                                      Переключить сайт на сохранённый релиз
-  yarn preview                       Проверить и перезагрузить системный Nginx
-  yarn preview:reload                Перезагрузить конфигурацию Nginx
-  yarn preview:validate              Проверить конфигурацию Nginx
+  yarn preview                       Проверить и перезагрузить Nginx Kroy
+  yarn preview:reload                Перезагрузить Nginx Kroy
+  yarn preview:validate              Проверить nginx.conf экземпляра Kroy
 
 Быстрые сценарии
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>

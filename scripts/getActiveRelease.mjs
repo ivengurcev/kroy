@@ -8,7 +8,7 @@ const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX
 export default async function getActiveRelease(siteSlug, nginxDir = NGINX_DIR) {
     try {
         const fragment = await readFile(
-            join(nginxDir, `${siteSlug}.conf`),
+            join(nginxDir, 'sites', `${siteSlug}.conf`),
             'utf8'
         );
         const metadata = fragment.match(/^# Kroy release: (\d{17})$/m);

@@ -22,43 +22,38 @@ function locationPath(path) {
     return path === '/' ? '/' : path.replace(/\/$/, '');
 }
 
-export function renderNginxConfig(siteSlug, domains, options = {}) {
-    const {
-        routing = { redirects: [], gone: [] },
-        siteRoot = siteSlug,
-        sitesRoot: sitesRootOption,
-        upstream = process.env.NGINX_UPSTREAM || '127.0.0.1:3000',
-        listen = process.env.NGINX_LISTEN || '8080',
-        releaseId,
-    } = options;
-    if (releaseId !== undefined && !RELEASE_PATTERN.test(releaseId)) throw new Error(`Некорректный ID релиза: ${releaseId}`);
-    if (!Array.isArray(domains) || domains.length === 0 || domains.some((domain) => !isValidHostname(domain))) throw new Error(`Некорректные домены сайта ${siteSlug}`);
-    if (!Array.isArray(routing.redirects) || !routing.redirects.every((item) => item?.status === 301 && isValidPagePath(item.from) && isValidPagePath(item.to))) throw new Error(`Некорректные правила redirect сайта ${siteSlug}`);
-    if (!Array.isArray(routing.gone) || !routing.gone.every(isValidPagePath)) throw new Error(`Некорректные правила gone сайта ${siteSlug}`);
+function buildServer(siteSlug, domains, routing, options) {
+    const redirects = routing.redirects.map(({ from, to }) => [
+        `    location = ${quote(locationPath(from))} {`,
+        `        return 301 ${quote(to)};`,
+        '    }',
+    ].join('\n'));
+    const gone = routing.gone.map((path) => [
+        `    location = ${quote(locationPath(path))} {`,
+        '        return 410;',
+        '    }',
+    ].join('\n'));
+    const root = join(options.sitesRoot, options.siteRoot);
 
-    const sitesRoot = projectPath(sitesRootOption || process.env.NGINX_SITES_ROOT, DEFAULT_SITES_ROOT);
-    const root = join(sitesRoot, siteRoot);
-    const redirects = routing.redirects.map(({ from, to }) => [`    location = ${quote(locationPath(from))} {`, `        return 301 ${quote(to)};`, '    }'].join('\n'));
-    const gone = routing.gone.map((path) => [`    location = ${quote(locationPath(path))} {`, '        return 410;', '    }'].join('\n'));
     return [
         HEADER,
         'server {',
-        `    listen ${listen};`,
+        `    listen ${options.listen};`,
         `    server_name ${domains.map(quote).join(' ')};`,
         `    root ${quote(root)};`,
         '    index index.html;',
-        `    # Kroy release: ${releaseId || 'staging'}`,
+        `    # Kroy release: ${options.releaseId || 'staging'}`,
         '',
         '    location ~ ^/(admin|auth|api|public|static|uploads)(/|$) {',
-        `        proxy_pass http://${upstream};`,
+        `        proxy_pass http://${options.upstream};`,
         '        proxy_set_header Host $http_host;',
         '        proxy_set_header X-Real-IP $remote_addr;',
         '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;',
-        '        proxy_set_header X-Forwarded-Proto $scheme;',
+        '        proxy_set_header X-Forwarded-Proto $kroy_forwarded_proto;',
         '    }',
         '',
         '    location ^~ /_kroy/releases/ {',
-        `        alias ${quote(`${sitesRoot}/${siteSlug}/`)};`,
+        `        alias ${quote(`${options.sitesRoot}/${siteSlug}/`)};`,
         '        try_files $uri =404;',
         '    }',
         '',
@@ -72,29 +67,73 @@ export function renderNginxConfig(siteSlug, domains, options = {}) {
     ].join('\n');
 }
 
+export function renderNginxConfig(siteSlug, domains, options = {}) {
+    const sitesRoot = projectPath(options.sitesRoot || process.env.NGINX_SITES_ROOT, DEFAULT_SITES_ROOT);
+    const normalized = {
+        sitesRoot,
+        siteRoot: options.siteRoot || siteSlug,
+        upstream: options.upstream || process.env.NGINX_UPSTREAM || '127.0.0.1:3000',
+        listen: options.listen || process.env.NGINX_LISTEN || '127.0.0.1:8080',
+        releaseId: options.releaseId,
+    };
+    const routing = options.routing || { redirects: [], gone: [] };
+    if (normalized.releaseId !== undefined && !RELEASE_PATTERN.test(normalized.releaseId)) throw new Error(`Некорректный ID релиза: ${normalized.releaseId}`);
+    if (!Array.isArray(domains) || domains.length === 0 || domains.some((domain) => !isValidHostname(domain))) throw new Error(`Некорректные домены сайта ${siteSlug}`);
+    if (!Array.isArray(routing.redirects) || !routing.redirects.every((item) => item?.status === 301 && isValidPagePath(item.from) && isValidPagePath(item.to))) throw new Error(`Некорректные правила redirect сайта ${siteSlug}`);
+    if (!Array.isArray(routing.gone) || !routing.gone.every(isValidPagePath)) throw new Error(`Некорректные правила gone сайта ${siteSlug}`);
+    return buildServer(siteSlug, domains, routing, normalized);
+}
+
+function renderMainConfig(outputDir, options = {}) {
+    const listen = options.listen || process.env.NGINX_LISTEN || '127.0.0.1:8080';
+    const runtime = (name) => quote(join(outputDir, name));
+    return [
+        HEADER,
+        'worker_processes 1;',
+        `pid ${runtime('nginx.pid')};`,
+        `error_log ${runtime('logs/error.log')} notice;`,
+        'events {',
+        '    worker_connections 1024;',
+        '}',
+        'http {',
+        '    access_log off;',
+        '    default_type application/octet-stream;',
+        '    sendfile on;',
+        `    client_body_temp_path ${runtime('tmp/client_body')};`,
+        `    proxy_temp_path ${runtime('tmp/proxy')};`,
+        '    map $http_x_forwarded_proto $kroy_forwarded_proto {',
+        '        default $http_x_forwarded_proto;',
+        '        "" $scheme;',
+        '    }',
+        `    server { listen ${listen} default_server; server_name _; return 404; }`,
+        `    include ${runtime('sites/*.conf')};`,
+        '}',
+        '',
+    ].join('\n');
+}
+
 export default async function generateNginxConfig(siteSlug, domains, options = {}) {
     const outputDir = projectPath(options.outputDir || process.env.NGINX_CONFIG_DIR, DEFAULT_OUTPUT_DIR);
-    const fragmentPath = join(outputDir, `${siteSlug}.conf`);
-    const temporaryPath = `${fragmentPath}.tmp`;
+    const sitesDir = join(outputDir, 'sites');
+    const fragmentPath = join(sitesDir, `${siteSlug}.conf`);
+    const temporaryFragmentPath = `${fragmentPath}.tmp`;
+    const configPath = join(outputDir, 'nginx.conf');
+    const temporaryConfigPath = `${configPath}.tmp`;
     const routing = options.routing || JSON.parse(await readFile(options.routingPath, 'utf8'));
     const fragment = renderNginxConfig(siteSlug, domains, { ...options, routing });
-    await mkdir(outputDir, { recursive: true });
-    if (String(options.listen || process.env.NGINX_LISTEN || '8080') === (process.env.NGINX_PREVIEW_LISTEN || '8080')) {
-        await writeFile(join(outputDir, 'kroy-default.conf'), [
-            HEADER,
-            'server {',
-            `    listen ${options.listen || process.env.NGINX_LISTEN || '8080'} default_server;`,
-            '    server_name _;',
-            '    return 404;',
-            '}',
-            '',
-        ].join('\n'));
-    }
-    await writeFile(temporaryPath, fragment);
+
+    await mkdir(join(outputDir, 'logs'), { recursive: true });
+    await mkdir(join(outputDir, 'tmp', 'client_body'), { recursive: true });
+    await mkdir(join(outputDir, 'tmp', 'proxy'), { recursive: true });
+    await mkdir(sitesDir, { recursive: true });
+    await writeFile(temporaryFragmentPath, fragment);
+    await writeFile(temporaryConfigPath, renderMainConfig(outputDir, options));
     try {
-        await rename(temporaryPath, fragmentPath);
+        await rename(temporaryFragmentPath, fragmentPath);
+        await rename(temporaryConfigPath, configPath);
     } finally {
-        await rm(temporaryPath, { force: true });
+        await rm(temporaryFragmentPath, { force: true });
+        await rm(temporaryConfigPath, { force: true });
     }
-    return fragmentPath;
+    return { configPath, fragmentPath };
 }

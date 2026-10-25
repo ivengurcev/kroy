@@ -1,0 +1,15 @@
+[Unit]
+Description=Kroy Nginx instance
+After=network.target
+
+[Service]
+Type=simple
+User={{ kroy_user }}
+Group={{ kroy_user }}
+WorkingDirectory={{ kroy_root }}
+ExecStart={{ kroy_nginx_binary }} -c {{ kroy_nginx_config }} -g 'daemon off;'
+ExecReload=/bin/sh -c '{{ kroy_nginx_binary }} -t -c {{ kroy_nginx_config }} && {{ kroy_nginx_binary }} -s reload -c {{ kroy_nginx_config }}'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

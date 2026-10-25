@@ -1,0 +1,66 @@
+---
+- name: Configure the separate Kroy Nginx instance
+  hosts: kroy
+  become: true
+  vars:
+    kroy_root: /srv/kroy
+    kroy_user: kroy
+    kroy_nginx_binary: /usr/sbin/nginx
+    kroy_nginx_config: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+    kroy_domains:
+      - '*.oysite.ru'
+  tasks:
+    - name: Ensure Kroy runtime directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ kroy_user }}"
+        group: "{{ kroy_user }}"
+        mode: '0755'
+      loop:
+        - "{{ kroy_root }}/dist/kroy/nginx"
+        - "{{ kroy_root }}/dist/kroy/nginx/sites"
+        - "{{ kroy_root }}/dist/kroy/nginx/logs"
+        - "{{ kroy_root }}/dist/kroy/nginx/tmp/client_body"
+        - "{{ kroy_root }}/dist/kroy/nginx/tmp/proxy"
+
+    - name: Install Kroy systemd unit
+      ansible.builtin.template:
+        src: templates/kroy-nginx.service.j2
+        dest: /etc/systemd/system/kroy-nginx.service
+        mode: '0644'
+      notify: Restart Kroy Nginx
+
+    - name: Add system Nginx reverse proxy for Oysite domains
+      ansible.builtin.template:
+        src: templates/oysite-proxy.conf.j2
+        dest: /etc/nginx/conf.d/oysite-kroy.conf
+        mode: '0644'
+      vars:
+        proxy_domains: "{{ kroy_domains }}"
+      notify: Reload system Nginx
+
+    - name: Enable and start Kroy Nginx
+      ansible.builtin.systemd:
+        name: kroy-nginx
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart Kroy Nginx
+      ansible.builtin.systemd:
+        name: kroy-nginx
+        state: restarted
+        daemon_reload: true
+
+    - name: Reload system Nginx
+      ansible.builtin.command:
+        argv: [nginx, -t]
+      changed_when: false
+      notify: Reload system Nginx after validation
+
+    - name: Reload system Nginx after validation
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

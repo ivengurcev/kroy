@@ -7,6 +7,7 @@
   "devDependencies": {
     "@yarnpkg/sdks": "^3.3.1",
     "comment-parser": "^1.4.9",
+    "dbmate": "2.36.0",
     "esbuild": "^0.28.2"
   },
   "scripts": {
@@ -30,9 +31,9 @@
     "site:releases": "yarn node scripts/listSiteReleases.mjs",
     "site:rollback": "yarn node --env-file=.env scripts/rollbackSite.mjs",
     "demo": "yarn site:build demo",
-    "preview": "nginx -t && nginx -s reload",
-    "preview:validate": "nginx -t",
-    "preview:reload": "nginx -s reload",
+    "preview": "nginx -t -c \"${NGINX_CONFIG_DIR:-dist/kroy/nginx}/nginx.conf\" && nginx -s reload -c \"${NGINX_CONFIG_DIR:-dist/kroy/nginx}/nginx.conf\"",
+    "preview:validate": "nginx -t -c \"${NGINX_CONFIG_DIR:-dist/kroy/nginx}/nginx.conf\"",
+    "preview:reload": "nginx -s reload -c \"${NGINX_CONFIG_DIR:-dist/kroy/nginx}/nginx.conf\"",
     "vyaz:build": "yarn parts:generate && yarn node --env-file=.env server.mjs --build-public --build-ssr",
     "vyaz:serve": "yarn node --env-file=.env server.mjs --serve"
   },

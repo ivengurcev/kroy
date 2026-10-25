@@ -18,6 +18,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
 const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX_CONFIG_DIR) : join(ROOT, 'dist', 'kroy', 'nginx');
+const NGINX_CONFIG = join(NGINX_DIR, 'nginx.conf');
 const RELEASE_PATTERN = /^\d{17}$/;
 const RELEASE_MARKER = '__KROY_RELEASE__';
 const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css']);
@@ -67,12 +68,11 @@ async function versionAssets(directory, releaseId) {
 }
 
 async function reloadNginx() {
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload'], { cwd: ROOT });
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', NGINX_CONFIG], { cwd: ROOT });
 }
 
 async function validateNginx() {
-    const args = ['-t'];
-    if (process.env.NGINX_CONFIG) args.push('-c', process.env.NGINX_CONFIG);
+    const args = ['-t', '-c', NGINX_CONFIG];
     await execFileAsync(process.env.NGINX_BIN || 'nginx', args, { cwd: ROOT });
 }
 
@@ -135,7 +135,9 @@ try {
     await rename(temporaryDirectory, releaseDirectory);
     temporaryDirectory = undefined;
 
-    const fragmentPath = join(NGINX_DIR, `${siteSlug}.conf`);
+    const configPath = NGINX_CONFIG;
+    const fragmentPath = join(NGINX_DIR, 'sites', `${siteSlug}.conf`);
+    const previousConfig = await readOptional(configPath);
     const previousFragment = await readOptional(fragmentPath);
 
     try {
@@ -150,6 +152,7 @@ try {
         await writeFile(publishedMarkerPath, `${releaseId}\n`);
     } catch (error) {
         await restoreFile(fragmentPath, previousFragment);
+        await restoreFile(configPath, previousConfig);
         await validateNginx().catch(() => {});
         await reloadNginx().catch(() => {});
         throw error;
