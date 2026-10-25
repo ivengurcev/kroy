@@ -45,12 +45,4 @@
         mode: '2770'
       loop:
         - "{{ kroy_root }}"
-        - "{{ kroy_root }}/dist"
-        - "{{ kroy_root }}/dist/kroy"
-        - "{{ kroy_root }}/dist/sites"
         - "{{ kroy_root }}/data"
-        - "{{ kroy_root }}/dist/kroy/nginx"
-        - "{{ kroy_root }}/dist/kroy/nginx/sites"
-        - "{{ kroy_root }}/dist/kroy/nginx/logs"
-        - "{{ kroy_root }}/dist/kroy/nginx/tmp/client_body"
-        - "{{ kroy_root }}/dist/kroy/nginx/tmp/proxy"

@@ -23,6 +23,7 @@
           - "--exclude=.git"
           - "--exclude=.env"
           - "--exclude=dist/"
+          - "--exclude=data/"
           - "--exclude=node_modules/"
           - "--exclude=.yarn/cache/"
           - "--exclude=.yarn/unplugged/"
