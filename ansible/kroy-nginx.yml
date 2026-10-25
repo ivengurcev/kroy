@@ -81,13 +81,14 @@
         state: restarted
         daemon_reload: true
 
-    - name: Reload system Nginx
+    - name: Validate system Nginx
       ansible.builtin.command:
         argv: [nginx, -t]
       changed_when: false
-      notify: Reload system Nginx after validation
+      listen: Reload system Nginx
 
     - name: Reload system Nginx after validation
       ansible.builtin.service:
         name: nginx
         state: reloaded
+      listen: Reload system Nginx
