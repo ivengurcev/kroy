@@ -12,9 +12,10 @@ Nginx от пользователя приложения. Системный Ngi
 переданные им файлы наследуют группу `kroy` и доступны сборщику `kroy`.
 Существующий пользователь и каталоги не пересоздаются и не удаляются.
 
-Nginx, PostgreSQL и Node.js должны быть установлены заранее; playbook их не
-устанавливает и не обновляет. Исходный код Kroy должен быть размещён в
-`kroy_root` до запуска systemd-сервиса.
+Bootstrap устанавливает системные зависимости: Nginx, PostgreSQL, `rsync`,
+`acl`, `python3-psycopg2` и строго Node.js `24.19.0` из NodeSource. При наличии
+Node.js 22 или другой версии пакет обновляется до этой точной версии; после
+установки выполняется проверка `node --version`.
 
 Playbook не перезаписывает основной `nginx.conf`; он добавляет отдельный файл в
 `conf.d` и systemd unit Kroy.
@@ -27,13 +28,12 @@ SSH-доступ и `rsync`. Установите коллекции:
 ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
-На VPS playbook автоматически устанавливает пакет `python3-psycopg2` для
-Ansible. PostgreSQL, Node.js, Yarn/Corepack и Nginx должны быть установлены
-заранее; PostgreSQL не переустанавливается и не переконфигурируется.
+Bootstrap не изменяет конфигурации Nginx и PostgreSQL и не затрагивает другие
+приложения сервера. Для Node.js `24.19.0` включается Corepack с Yarn-shim в
+`/usr/local/bin/yarn`; Yarn выбирает версию из `packageManager` проекта.
 Пользователь берётся из настроек Ansible, inventory или `~/.ssh/config`.
 После bootstrap переподключитесь по SSH, чтобы обновилось членство в
-группе. На VPS нужны `rsync`, Node.js, Yarn/Corepack, PostgreSQL и установленный Nginx;
-playbook их не устанавливает. Отдельный sudoers или привилегированный помощник
+группе. Отдельный sudoers или привилегированный помощник
 Kroy не добавляется.
 
 Сначала выполните bootstrap:

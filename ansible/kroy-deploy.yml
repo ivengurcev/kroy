@@ -8,7 +8,7 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
-    kroy_yarn_binary: /usr/bin/yarn
+    kroy_yarn_binary: /usr/local/bin/yarn
   tasks:
     - name: Synchronize Kroy sources without deleting server data
       ansible.posix.synchronize:

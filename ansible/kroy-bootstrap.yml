@@ -6,7 +6,62 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
+    kroy_node_version: 24.19.0
+    kroy_node_package_version: 24.19.0-1nodesource1
   tasks:
+    - name: Install Kroy system dependencies
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - postgresql
+          - rsync
+          - acl
+          - python3-psycopg2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure APT keyring directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Install NodeSource signing key
+      ansible.builtin.get_url:
+        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+        dest: /etc/apt/keyrings/nodesource.asc
+        mode: '0644'
+
+    - name: Configure NodeSource Node.js 24 repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/nodesource.asc] https://deb.nodesource.com/node_24.x nodistro main"
+        filename: nodesource
+        state: present
+        update_cache: true
+
+    - name: Install exact Node.js version
+      ansible.builtin.apt:
+        name: "nodejs={{ kroy_node_package_version }}"
+        state: present
+
+    - name: Check installed Node.js version
+      ansible.builtin.command: node --version
+      register: kroy_installed_node_version
+      changed_when: false
+      check_mode: false
+
+    - name: Require exact Node.js version
+      ansible.builtin.assert:
+        that:
+          - (kroy_installed_node_version.stdout | trim) == ('v' ~ kroy_node_version)
+        fail_msg: "Expected Node.js v{{ kroy_node_version }}, got {{ kroy_installed_node_version.stdout | trim }}"
+
+    - name: Enable Corepack and install Yarn shims
+      ansible.builtin.command: corepack enable --install-directory /usr/local/bin
+      changed_when: false
+      check_mode: false
+
     - name: Determine the SSH connection user
       ansible.builtin.command: id -un
       become: false
