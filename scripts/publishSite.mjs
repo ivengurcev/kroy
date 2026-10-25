@@ -17,7 +17,7 @@ import generateNginxConfig from './generateNginxConfig.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
-const NGINX_DIR = process.env.NGINX_CONFIG_DIR || join(ROOT, 'dist', 'kroy', 'nginx');
+const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX_CONFIG_DIR) : join(ROOT, 'dist', 'kroy', 'nginx');
 const RELEASE_PATTERN = /^\d{17}$/;
 const RELEASE_MARKER = '__KROY_RELEASE__';
 const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css']);

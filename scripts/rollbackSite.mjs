@@ -9,7 +9,7 @@ import getActiveRelease from './getActiveRelease.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
-const NGINX_DIR = process.env.NGINX_CONFIG_DIR || join(ROOT, 'dist', 'kroy', 'nginx');
+const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX_CONFIG_DIR) : join(ROOT, 'dist', 'kroy', 'nginx');
 const execFileAsync = promisify(execFile);
 const siteSlug = process.argv[2];
 const releaseId = process.argv[3];
