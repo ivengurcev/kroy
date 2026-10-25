@@ -15,10 +15,12 @@
         dest: "{{ kroy_root }}/"
         archive: true
         delete: false
-        perms: false
+        owner: false
+        group: false
+        perms: true
         rsync_opts:
-          - "--chmod=Du=rwx,Dg=rwx,Fu=rw,Fg=rw"
-          - "--exclude=.git/"
+          - "--chmod=D2770,Fug+rwX,o-rwx"
+          - "--exclude=.git"
           - "--exclude=.env"
           - "--exclude=dist/"
           - "--exclude=node_modules/"
