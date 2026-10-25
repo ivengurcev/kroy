@@ -1,0 +1,77 @@
+---
+- name: Issue and configure the Oysite HTTPS certificate
+  hosts: kroy
+  become: true
+  vars:
+    acme_dns_credentials_path: "{{ lookup('env', 'HOME') }}/.config/kroy/acme-dns.json"
+    kroy_certbot_email: ''
+    kroy_certificate_name: oysite.ru
+    kroy_certificate_live: "/etc/letsencrypt/live/{{ kroy_certificate_name }}"
+    kroy_acme_dns_credentials: /etc/letsencrypt/acme-dns.json
+  tasks:
+    - name: Check local acme-dns credentials
+      ansible.builtin.stat:
+        path: "{{ acme_dns_credentials_path }}"
+      register: kroy_local_acme_credentials
+      delegate_to: localhost
+      become: false
+      no_log: true
+
+    - name: Require certificate email and local credentials
+      ansible.builtin.assert:
+        that:
+          - kroy_certbot_email | length > 0
+          - kroy_local_acme_credentials.stat.exists
+        fail_msg: Set kroy_certbot_email and provide acme-dns credentials locally.
+      no_log: true
+
+    - name: Install acme-dns credentials for Certbot
+      ansible.builtin.copy:
+        content: "{{ lookup('ansible.builtin.file', acme_dns_credentials_path) }}"
+        dest: "{{ kroy_acme_dns_credentials }}"
+        owner: root
+        group: root
+        mode: '0600'
+      no_log: true
+
+    - name: Install Certbot deploy hook for system Nginx
+      ansible.builtin.copy:
+        dest: /etc/letsencrypt/renewal-hooks/deploy/kroy-nginx-reload
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/sh
+          set -eu
+          /usr/sbin/nginx -t
+          /usr/bin/systemctl reload nginx
+
+    - name: Check whether the certificate already exists
+      ansible.builtin.stat:
+        path: "{{ kroy_certificate_live }}/fullchain.pem"
+      register: kroy_certificate
+
+    - name: Obtain Oysite wildcard certificate with DNS-01
+      ansible.builtin.command:
+        argv:
+          - certbot
+          - certonly
+          - --non-interactive
+          - --agree-tos
+          - --email
+          - "{{ kroy_certbot_email }}"
+          - --dns-acmedns
+          - --dns-acmedns-credentials
+          - "{{ kroy_acme_dns_credentials }}"
+          - --cert-name
+          - "{{ kroy_certificate_name }}"
+          - --keep-until-expiring
+          - -d
+          - oysite.ru
+          - -d
+          - '*.oysite.ru'
+      when: not kroy_certificate.stat.exists
+      no_log: true
+      changed_when: true
+
+- import_playbook: kroy-nginx.yml

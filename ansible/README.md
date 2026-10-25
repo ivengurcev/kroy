@@ -21,6 +21,23 @@ Playbook не перезаписывает основной `nginx.conf`; он �
 `conf.d` и systemd unit Kroy.
 TLS-сертификаты намеренно не настраиваются.
 
+Для первоначального выпуска сертификата `oysite.ru` и `*.oysite.ru` используйте
+отдельный playbook после настройки DNS-записи `_acme-challenge.oysite.ru`:
+
+```bash
+ansible-playbook -i inventory ansible/kroy-https.yml \
+  -e kroy_certbot_email=admin@oysite.ru \
+  -e acme_dns_credentials_path="$HOME/.config/kroy/acme-dns.json"
+```
+
+Учётные данные acme-dns передаются только во время этого запуска, сохраняются
+на VPS с правами `0600` и не выводятся в лог. Обычный deploy не требует
+локального файла секретов. После успешного выпуска подключается HTTPS и HTTP
+начинает перенаправляться на HTTPS. Certbot использует deploy-hook:
+конфигурация системного Nginx проверяется через `nginx -t` и затем
+перезагружается. Существующий Certbot timer выполняет автоматическое продление.
+До получения сертификата HTTPS-конфигурация не включается.
+
 Локально нужны Ansible с коллекциями `ansible.posix` и `community.postgresql`,
 SSH-доступ и `rsync`. Установите коллекции:
 

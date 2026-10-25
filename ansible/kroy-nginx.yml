@@ -9,9 +9,15 @@
     kroy_nginx_binary: /usr/sbin/nginx
     kroy_node_binary: /usr/bin/node
     kroy_nginx_config: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+    kroy_letsencrypt_live: /etc/letsencrypt/live/oysite.ru
     kroy_domains:
       - '*.oysite.ru'
   tasks:
+    - name: Check whether the Oysite certificate is available
+      ansible.builtin.stat:
+        path: "{{ kroy_letsencrypt_live }}/fullchain.pem"
+      register: kroy_oysite_certificate
+
     - name: Install Kroy systemd unit
       ansible.builtin.template:
         src: templates/kroy-nginx.service.j2
@@ -26,6 +32,7 @@
         mode: '0644'
       vars:
         proxy_domains: "{{ kroy_domains }}"
+        tls_enabled: "{{ kroy_oysite_certificate.stat.exists }}"
       notify: Reload system Nginx
 
     - name: Ensure Oysite placeholder directory exists
@@ -65,6 +72,8 @@
         src: templates/oysite-placeholder.conf.j2
         dest: /etc/nginx/conf.d/oysite-placeholder.conf
         mode: '0644'
+      vars:
+        tls_enabled: "{{ kroy_oysite_certificate.stat.exists }}"
       notify: Reload system Nginx
 
     - name: Enable and start Kroy Nginx
