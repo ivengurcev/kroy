@@ -127,6 +127,7 @@
 
   handlers:
     - name: Restart Kroy app
+      become: true
       ansible.builtin.systemd:
         name: kroy-app
         state: restarted

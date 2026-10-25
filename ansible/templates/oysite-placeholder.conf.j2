@@ -1,0 +1,12 @@
+# Temporary static landing for oysite.ru; managed by Ansible.
+server {
+    listen 80;
+    server_name oysite.ru;
+
+    root /var/www/oysite;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

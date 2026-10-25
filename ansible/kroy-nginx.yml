@@ -28,6 +28,45 @@
         proxy_domains: "{{ kroy_domains }}"
       notify: Reload system Nginx
 
+    - name: Ensure Oysite placeholder directory exists
+      ansible.builtin.file:
+        path: /var/www/oysite
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Install Oysite placeholder page
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/oysite-placeholder/index.html"
+        dest: /var/www/oysite/index.html
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install Oysite logo for placeholder
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../design/oysite-brand-kit/logo/oysite-logo.svg"
+        dest: /var/www/oysite/logo.svg
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install Oysite favicon for placeholder
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../design/oysite-brand-kit/icons/favicon.svg"
+        dest: /var/www/oysite/favicon.svg
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Add Oysite placeholder virtual host
+      ansible.builtin.template:
+        src: templates/oysite-placeholder.conf.j2
+        dest: /etc/nginx/conf.d/oysite-placeholder.conf
+        mode: '0644'
+      notify: Reload system Nginx
+
     - name: Enable and start Kroy Nginx
       ansible.builtin.systemd:
         name: kroy-nginx
