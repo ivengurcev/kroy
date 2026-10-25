@@ -6,9 +6,11 @@ console.log(`Kroy — команды проекта
   yarn parts:generate                Обновить реестр запчастей из JSDoc
 
 База данных
-  yarn db                            Запустить PostgreSQL через Docker Compose
+  yarn db                            Применить миграции PostgreSQL через dbmate
+  yarn db:migrate                    Применить ожидающие миграции
+  yarn db:status                     Показать состояние миграций
+  yarn db:rollback                   Откатить последнюю миграцию
   yarn db:seed                       Заполнить локальную базу тестовыми данными
-  docker compose run --rm migrate up Применить миграции PostgreSQL
 
 Сайты
   yarn site:create vet vet.example.test "Семейный ветеринар"
@@ -26,9 +28,9 @@ console.log(`Kroy — команды проекта
   yarn site:releases demo            Показать сохранённые релизы сайта
   yarn site:rollback demo <release-id>
                                      Переключить сайт на сохранённый релиз
-  yarn preview                       Запустить локальный Caddy preview
-  yarn preview:reload                Перезагрузить конфигурацию Caddy
-  yarn preview:validate              Проверить текущую конфигурацию Caddy
+  yarn preview                       Проверить и перезагрузить системный Nginx
+  yarn preview:reload                Перезагрузить конфигурацию Nginx
+  yarn preview:validate              Проверить конфигурацию Nginx
 
 Быстрые сценарии
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>

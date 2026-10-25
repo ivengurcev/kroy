@@ -4,12 +4,12 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { pool } from '../db/client.mjs';
-import generateCaddyConfig from './generateCaddyConfig.mjs';
+import generateNginxConfig from './generateNginxConfig.mjs';
 import getActiveRelease from './getActiveRelease.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
-const CADDY_DIR = join(ROOT, 'dist', 'kroy', 'caddy');
+const NGINX_DIR = join(ROOT, 'dist', 'kroy', 'nginx');
 const execFileAsync = promisify(execFile);
 const siteSlug = process.argv[2];
 const releaseId = process.argv[3];
@@ -33,24 +33,8 @@ async function restoreFile(path, content) {
     await writeFile(path, content);
 }
 
-async function reloadCaddy() {
-    await execFileAsync(
-        'docker',
-        [
-            'compose',
-            '--profile',
-            'preview',
-            'exec',
-            'caddy',
-            'caddy',
-            'reload',
-            '--config',
-            '/etc/caddy/Caddyfile',
-            '--adapter',
-            'caddyfile',
-        ],
-        { cwd: ROOT }
-    );
+async function reloadNginx() {
+    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', join(NGINX_DIR, 'nginx.conf')], { cwd: ROOT });
 }
 
 let client;
@@ -88,22 +72,22 @@ try {
         client.release();
         client = undefined;
 
-        const configPath = join(CADDY_DIR, 'Caddyfile');
-        const fragmentPath = join(CADDY_DIR, `${siteSlug}.Caddyfile`);
+        const configPath = join(NGINX_DIR, 'nginx.conf');
+        const fragmentPath = join(NGINX_DIR, `${siteSlug}.conf`);
         const previousConfig = await readOptional(configPath);
         const previousFragment = await readOptional(fragmentPath);
 
         try {
-            await generateCaddyConfig(siteSlug, site.domains, {
+            await generateNginxConfig(siteSlug, site.domains, {
                 routingPath,
                 siteRoot: `${siteSlug}/${releaseId}`,
                 releaseId,
             });
-            await reloadCaddy();
+            await reloadNginx();
         } catch (error) {
             await restoreFile(configPath, previousConfig);
             await restoreFile(fragmentPath, previousFragment);
-            await reloadCaddy().catch(() => {});
+            await reloadNginx().catch(() => {});
             throw error;
         }
 

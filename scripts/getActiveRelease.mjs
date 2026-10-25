@@ -3,21 +3,19 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const CADDY_DIR = join(ROOT, 'dist', 'kroy', 'caddy');
+const NGINX_DIR = join(ROOT, 'dist', 'kroy', 'nginx');
 
-export default async function getActiveRelease(siteSlug) {
+export default async function getActiveRelease(siteSlug, nginxDir = process.env.NGINX_CONFIG_DIR || NGINX_DIR) {
     try {
         const fragment = await readFile(
-            join(CADDY_DIR, `${siteSlug}.Caddyfile`),
+            join(nginxDir, `${siteSlug}.conf`),
             'utf8'
         );
         const metadata = fragment.match(/^# Kroy release: (\d{17})$/m);
 
         if (metadata) return metadata[1];
 
-        return fragment.match(
-            new RegExp(`root \\* "/srv/${siteSlug}/(\\d{17})"`)
-        )?.[1];
+        return fragment.match(new RegExp(`root .*${siteSlug}/(\\d{17})[";]`))?.[1];
     } catch (error) {
         if (error.code === 'ENOENT') return undefined;
         throw error;
