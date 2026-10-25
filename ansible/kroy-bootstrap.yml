@@ -40,22 +40,37 @@
         state: present
         update_cache: true
 
-    - name: Install exact Node.js version
-      ansible.builtin.apt:
-        name: "nodejs={{ kroy_node_package_version }}"
-        state: present
-
-    - name: Check installed Node.js version
+    - name: Check installed Node.js version before installation
       ansible.builtin.command: node --version
       register: kroy_installed_node_version
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Install exact Node.js version
+      ansible.builtin.command:
+        argv:
+          - apt-get
+          - --yes
+          - --no-remove
+          - install
+          - "nodejs={{ kroy_node_package_version }}"
+      when:
+        - kroy_installed_node_version.rc != 0 or (kroy_installed_node_version.stdout | trim) != ('v' ~ kroy_node_version)
+      changed_when: true
+      check_mode: false
+
+    - name: Check installed Node.js version after installation
+      ansible.builtin.command: node --version
+      register: kroy_installed_node_version_after
       changed_when: false
       check_mode: false
 
     - name: Require exact Node.js version
       ansible.builtin.assert:
         that:
-          - (kroy_installed_node_version.stdout | trim) == ('v' ~ kroy_node_version)
-        fail_msg: "Expected Node.js v{{ kroy_node_version }}, got {{ kroy_installed_node_version.stdout | trim }}"
+          - (kroy_installed_node_version_after.stdout | trim) == ('v' ~ kroy_node_version)
+        fail_msg: "Expected Node.js v{{ kroy_node_version }}, got {{ kroy_installed_node_version_after.stdout | trim }}"
 
     - name: Enable Corepack and install Yarn shims
       ansible.builtin.command: corepack enable --install-directory /usr/local/bin
