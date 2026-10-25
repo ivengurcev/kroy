@@ -1,0 +1,38 @@
+---
+- name: Bootstrap Kroy host
+  hosts: kroy
+  become: true
+  vars:
+    kroy_root: /srv/kroy
+    kroy_user: kroy
+    kroy_group: "{{ kroy_user }}"
+  tasks:
+    - name: Ensure Kroy system group exists
+      ansible.builtin.group:
+        name: "{{ kroy_group }}"
+        system: true
+        state: present
+
+    - name: Ensure Kroy service user exists without interactive login
+      ansible.builtin.user:
+        name: "{{ kroy_user }}"
+        group: "{{ kroy_group }}"
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+        state: present
+
+    - name: Ensure Kroy working and runtime directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ kroy_user }}"
+        group: "{{ kroy_group }}"
+        mode: '0755'
+      loop:
+        - "{{ kroy_root }}"
+        - "{{ kroy_root }}/dist/kroy/nginx"
+        - "{{ kroy_root }}/dist/kroy/nginx/sites"
+        - "{{ kroy_root }}/dist/kroy/nginx/logs"
+        - "{{ kroy_root }}/dist/kroy/nginx/tmp/client_body"
+        - "{{ kroy_root }}/dist/kroy/nginx/tmp/proxy"

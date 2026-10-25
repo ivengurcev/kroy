@@ -1,0 +1,45 @@
+---
+- import_playbook: kroy-bootstrap.yml
+
+- name: Transfer and build Kroy on the VPS
+  hosts: kroy
+  become: true
+  vars:
+    kroy_root: /srv/kroy
+    kroy_user: kroy
+    kroy_group: "{{ kroy_user }}"
+  tasks:
+    - name: Synchronize Kroy sources without deleting server data
+      ansible.posix.synchronize:
+        src: "{{ playbook_dir }}/../"
+        dest: "{{ kroy_root }}/"
+        rsync_path: "sudo -n rsync"
+        archive: true
+        delete: false
+        rsync_opts:
+          - "--chown={{ kroy_user }}:{{ kroy_group }}"
+          - "--exclude=.git/"
+          - "--exclude=.env"
+          - "--exclude=dist/"
+          - "--exclude=node_modules/"
+          - "--exclude=.yarn/cache/"
+          - "--exclude=.yarn/unplugged/"
+          - "--exclude=.cache/"
+          - "--exclude=*.log"
+          - "--exclude=ansible/"
+
+    - name: Install VPS dependencies from the transferred lockfile
+      become_user: "{{ kroy_user }}"
+      ansible.builtin.command:
+        cmd: yarn install --immutable
+        chdir: "{{ kroy_root }}"
+      changed_when: true
+
+    - name: Build Kroy on the VPS
+      become_user: "{{ kroy_user }}"
+      ansible.builtin.command:
+        cmd: yarn vyaz:build
+        chdir: "{{ kroy_root }}"
+      changed_when: true
+
+- import_playbook: kroy-nginx.yml
