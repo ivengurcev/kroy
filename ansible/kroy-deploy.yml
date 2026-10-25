@@ -8,6 +8,7 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
+    kroy_yarn_binary: /usr/bin/yarn
   tasks:
     - name: Synchronize Kroy sources without deleting server data
       ansible.posix.synchronize:
@@ -39,6 +40,14 @@
         chdir: "{{ kroy_root }}"
       changed_when: true
 
+    - name: Apply PostgreSQL migrations
+      become: true
+      become_user: "{{ kroy_user }}"
+      ansible.builtin.command:
+        cmd: yarn db:migrate
+        chdir: "{{ kroy_root }}"
+      changed_when: true
+
     - name: Build Kroy on the VPS
       become: true
       become_user: "{{ kroy_user }}"
@@ -46,5 +55,28 @@
         cmd: yarn vyaz:build
         chdir: "{{ kroy_root }}"
       changed_when: true
+
+    - name: Install Kroy application systemd unit
+      become: true
+      ansible.builtin.template:
+        src: templates/kroy-app.service.j2
+        dest: /etc/systemd/system/kroy-app.service
+        mode: '0644'
+      notify: Restart Kroy app
+
+    - name: Enable and start Kroy application before Nginx
+      become: true
+      ansible.builtin.systemd:
+        name: kroy-app
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart Kroy app
+      ansible.builtin.systemd:
+        name: kroy-app
+        state: restarted
+        daemon_reload: true
 
 - import_playbook: kroy-nginx.yml

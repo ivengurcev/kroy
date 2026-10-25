@@ -65,9 +65,15 @@ Deploy передаёт исходники через rsync напрямую о�
 используются: `.env`, опубликованные релизы, загрузки и прочие серверные данные
 сохраняются. Устаревшие исходники намеренно не удаляются автоматически.
 
+После установки зависимостей deploy выполняет `yarn db:migrate` от имени
+пользователя `kroy`, затем собирает приложение и устанавливает
+`kroy-app.service`. Сервис запускает `yarn vyaz:serve` из `/srv/kroy`,
+перезапускается при обновлении приложения и включается в автозапуск раньше
+`kroy-nginx.service`.
+
 После первого применения проверьте сервис:
 
 ```bash
-systemctl status kroy-nginx
-systemctl is-enabled kroy-nginx
+systemctl status kroy-app kroy-nginx
+systemctl is-enabled kroy-app kroy-nginx
 ```
