@@ -6,6 +6,7 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
+    kroy_ssh_user: ivan
   tasks:
     - name: Ensure Kroy system group exists
       ansible.builtin.group:
@@ -22,15 +23,26 @@
         shell: /usr/sbin/nologin
         state: present
 
+    - name: Add SSH user to the Kroy group
+      ansible.builtin.user:
+        name: "{{ kroy_ssh_user }}"
+        groups: "{{ kroy_group }}"
+        append: true
+        state: present
+
     - name: Ensure Kroy working and runtime directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         owner: "{{ kroy_user }}"
         group: "{{ kroy_group }}"
-        mode: '0755'
+        mode: '2770'
       loop:
         - "{{ kroy_root }}"
+        - "{{ kroy_root }}/dist"
+        - "{{ kroy_root }}/dist/kroy"
+        - "{{ kroy_root }}/dist/sites"
+        - "{{ kroy_root }}/data"
         - "{{ kroy_root }}/dist/kroy/nginx"
         - "{{ kroy_root }}/dist/kroy/nginx/sites"
         - "{{ kroy_root }}/dist/kroy/nginx/logs"
