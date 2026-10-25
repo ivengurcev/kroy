@@ -25,6 +25,7 @@
         name: "{{ kroy_user }}"
         group: "{{ kroy_group }}"
         system: true
+        home: "{{ kroy_root }}"
         create_home: false
         shell: /usr/sbin/nologin
         state: present

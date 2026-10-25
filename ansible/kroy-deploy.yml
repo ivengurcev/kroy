@@ -55,6 +55,7 @@
         cmd: yarn vyaz:build
         chdir: "{{ kroy_root }}"
       changed_when: true
+      notify: Restart Kroy app
 
     - name: Install Kroy application systemd unit
       become: true
