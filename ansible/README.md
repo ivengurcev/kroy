@@ -61,8 +61,16 @@ ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
   -e kroy_user=kroy
 ```
 
-Для provision PostgreSQL и `.env`, а затем deploy из локального checkout Kroy,
-используйте одну команду:
+Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
+
+```bash
+ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
+  -e kroy_root=/srv/kroy \
+  -e kroy_user=kroy
+```
+
+После этого для регулярного обновления приложения из локального checkout Kroy
+используйте deploy:
 
 ```bash
 ansible-playbook -i inventory ansible/kroy-deploy.yml \
@@ -75,6 +83,12 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 `/srv/kroy/.env` с правами `0600`. Пароль базы и `AUTH_SECRET` генерируются
 только при первом запуске. Существующий `.env` не перезаписывается; если роль
 базы отсутствует, она восстанавливается с паролем из этого файла.
+
+`kroy-deploy.yml` не импортирует bootstrap или provision и не устанавливает
+системные пакеты, пользователей или PostgreSQL. При несовпадении Node.js или
+отсутствии Yarn release deploy завершается с рекомендацией повторно запустить
+bootstrap. `kroy-provision.yml` сохранён как совместимая точка входа и просто
+вызывает bootstrap.
 
 Перед deploy на локальной машине выполняются `yarn set version 4.18.1 --yarn-path`,
 настройка `enableGlobalCache: false`, затем `yarn install --immutable` и

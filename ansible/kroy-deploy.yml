@@ -1,6 +1,4 @@
 ---
-- import_playbook: kroy-provision.yml
-
 - name: Transfer and build Kroy on the VPS
   hosts: kroy
   become: false
@@ -13,6 +11,29 @@
     kroy_yarn_release: "{{ kroy_root }}/.yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
     kroy_local_root: "{{ playbook_dir }}/.."
   tasks:
+    - name: Check Node.js version on the VPS
+      ansible.builtin.command: node --version
+      register: kroy_remote_node_version
+      changed_when: false
+      failed_when: false
+
+    - name: Require bootstrapped Node.js environment
+      ansible.builtin.assert:
+        that:
+          - kroy_remote_node_version.rc == 0
+          - (kroy_remote_node_version.stdout | trim) == 'v24.19.0'
+        fail_msg: "Node.js v24.19.0 is required on the VPS. Run ansible/kroy-bootstrap.yml first."
+
+    - name: Check the bootstrapped Yarn release on the VPS
+      ansible.builtin.stat:
+        path: "{{ kroy_yarn_release }}"
+      register: kroy_remote_yarn_release
+
+    - name: Require bootstrapped Yarn release
+      ansible.builtin.assert:
+        that: kroy_remote_yarn_release.stat.exists
+        fail_msg: Run ansible/kroy-bootstrap.yml and deploy the application environment first.
+
     - name: Pin the project Yarn release locally
       ansible.builtin.command:
         cmd: "yarn set version {{ kroy_yarn_version }} --yarn-path"
