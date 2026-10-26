@@ -45,6 +45,8 @@ export default function auth({ AUTH_URL, CredentialsProvider }) {
     return {
         secret,
         basePath: AUTH_URL,
+        // Кастомная страница входа (pages/SignInPage.jsx) вместо стандартной Auth.js.
+        pages: { signIn: '/auth/signin' },
         session: { strategy: 'jwt' },
         providers: [CredentialsProvider({
             credentials: {
