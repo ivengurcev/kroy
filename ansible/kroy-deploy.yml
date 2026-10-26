@@ -7,8 +7,6 @@
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
     kroy_yarn_version: 4.18.1
-    kroy_node_binary: /usr/bin/node
-    kroy_yarn_release: "{{ kroy_root }}/.yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
     kroy_local_root: "{{ playbook_dir }}/.."
   tasks:
     - name: Check Node.js version on the VPS
@@ -99,11 +97,14 @@
       register: kroy_nginx_config_before
 
     - name: Regenerate Kroy Nginx main configuration
-      become: true
-      become_user: "{{ kroy_user }}"
       ansible.builtin.command:
-        cmd: "{{ kroy_node_binary }} scripts/initNginx.mjs"
-        chdir: "{{ kroy_root }}"
+        argv:
+          - sudo
+          - -n
+          - -u
+          - "{{ kroy_user }}"
+          - /usr/local/sbin/kroy-run
+          - nginx:init
       changed_when: false
 
     - name: Read generated Kroy Nginx configuration checksum
@@ -119,13 +120,14 @@
              or kroy_nginx_config_before.stat.checksum != kroy_nginx_config_after.stat.checksum }}
 
     - name: Validate Kroy Nginx configuration
-      become: true
       ansible.builtin.command:
         argv:
-          - /usr/sbin/nginx
-          - -t
-          - -c
-          - "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+          - sudo
+          - -n
+          - -u
+          - "{{ kroy_user }}"
+          - /usr/local/sbin/kroy-run
+          - nginx:validate
       when: kroy_nginx_config_changed | default(false) | bool
       changed_when: false
 
@@ -134,37 +136,30 @@
       when: kroy_nginx_config_changed | default(false) | bool
 
     - name: Reload Kroy Nginx after configuration changes
-      become: true
-      ansible.builtin.systemd:
-        name: kroy-nginx
-        state: reloaded
+      ansible.builtin.command:
+        argv: [sudo, -n, /usr/bin/systemctl, reload, kroy-nginx]
       when:
         - kroy_nginx_config_changed | default(false) | bool
         - "'kroy-nginx.service' in ansible_facts.services"
         - ansible_facts.services['kroy-nginx.service'].state == 'running'
 
     - name: Apply PostgreSQL migrations
-      become: true
-      become_user: "{{ kroy_user }}"
       ansible.builtin.command:
         argv:
-          - "{{ kroy_node_binary }}"
-          - "{{ kroy_yarn_release }}"
+          - sudo
+          - -n
+          - -u
+          - "{{ kroy_user }}"
+          - /usr/local/sbin/kroy-run
           - db:migrate
-        chdir: "{{ kroy_root }}"
       changed_when: true
 
-    - name: Ensure Kroy application is enabled and started
-      become: true
-      ansible.builtin.systemd:
-        name: kroy-app
-        enabled: true
-        state: started
-        daemon_reload: true
+    - name: Ensure Kroy application is started
+      ansible.builtin.command:
+        argv: [sudo, -n, /usr/bin/systemctl, start, kroy-app]
+      changed_when: false
 
   handlers:
     - name: Restart Kroy app
-      become: true
-      ansible.builtin.systemd:
-        name: kroy-app
-        state: restarted
+      ansible.builtin.command:
+        argv: [sudo, -n, /usr/bin/systemctl, restart, kroy-app]
