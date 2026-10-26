@@ -57,6 +57,7 @@ yarn kroy:help
 | Сайты | `yarn site:create <slug> <hostname> [name]`, `yarn site:list`, `yarn site:info <slug>` |
 | Домены | `yarn site:domain:add <slug> <hostname>`, `yarn site:domain:remove <slug> <hostname>` |
 | Публикация | `yarn site:build <slug>`, `yarn site:publish <slug>`, `yarn site:releases <slug>`, `yarn site:rollback <slug> <release-id>` |
+| Удалённое управление | `yarn remote <script> [...args]`, `yarn deploy app`, `yarn deploy site <slug>` |
 | Preview | `yarn preview`, `yarn preview:reload`, `yarn preview:validate` |
 
 Быстрые сценарии:
@@ -66,8 +67,8 @@ yarn kroy:help
 - Открыть редактор: `yarn db` → `yarn vyaz:build` → `yarn vyaz:serve`.
 - Посмотреть публичный сайт: `yarn preview` → `yarn site:build <slug>` →
   `yarn site:publish <slug>`.
-- Опубликовать изменения: `yarn site:build <slug>` →
-  `yarn site:publish <slug>`.
+- Опубликовать изменения: `yarn deploy site <slug>`.
+- Выполнить команду на VPS: `yarn remote <script> [...args]`.
 - Откатить релиз: `yarn site:releases <slug>` →
   `yarn site:rollback <slug> <release-id>`.
 
@@ -126,6 +127,36 @@ yarn site:rollback demo 20261017010101439
 ```
 
 Список отмечает активный релиз по опубликованному Nginx-фрагменту. Откат не копирует и не удаляет релизы, не меняет staging и повторно не переключает уже активную версию.
+
+## Удалённое управление и деплой
+
+Для SSH и Ansible задайте хост в `KROY_REMOTE_HOST`:
+
+```bash
+export KROY_REMOTE_HOST=user@example.org
+```
+
+Без этой переменной команды `remote` и `deploy` завершаются с ошибкой до сборки и подключения.
+
+Выполнить любой скрипт из `package.json` на VPS:
+
+```bash
+yarn remote db:status
+yarn remote site:list
+yarn remote user:create user@example.org --superadmin
+yarn remote site:user:add enduro-koltushi user@example.org
+```
+
+Скрипты запускаются из `/srv/kroy` от пользователя `kroy` через защищённый запускатель и узкое правило sudoers. Аргументы передаются без shell-подстановки. Для интерактивных команд вроде `user:create` выделяется TTY, поэтому пароль вводится скрыто.
+
+Развернуть приложение через Ansible или собрать и опубликовать сайт:
+
+```bash
+yarn deploy app
+yarn deploy site enduro-koltushi
+```
+
+`deploy app` использует `ansible/kroy-deploy.yml` и inventory, читающий `KROY_REMOTE_HOST`. `deploy site` сначала выполняет `site:build`, затем `site:publish` на VPS; при ошибке сборки публикация не запускается. Команды `db:rollback` и `db:seed` запрашивают явное подтверждение.
 
 Создать новый сайт с пустой главной страницей и собрать его:
 
@@ -227,7 +258,7 @@ yarn db:rollback
 yarn db:seed
 ```
 
-Параметры подключения задаются в `DATABASE_URL`. Пользователь PostgreSQL и база создаются средствами системного PostgreSQL; Docker Compose для проекта не требуется.
+`db:rollback` и `db:seed` перед выполнением запрашивают подтверждение в интерактивном терминале. Параметры подключения задаются в `DATABASE_URL`. Пользователь PostgreSQL и база создаются средствами системного PostgreSQL; Docker Compose для проекта не требуется.
 
 ## Вход в административную панель
 

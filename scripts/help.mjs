@@ -9,8 +9,8 @@ console.log(`Kroy — команды проекта
   yarn db                            Применить миграции PostgreSQL через dbmate
   yarn db:migrate                    Применить ожидающие миграции
   yarn db:status                     Показать состояние миграций
-  yarn db:rollback                   Откатить последнюю миграцию
-  yarn db:seed                       Заполнить локальную базу тестовыми данными
+  yarn db:rollback                   Откатить последнюю миграцию (с подтверждением)
+  yarn db:seed                       Заполнить локальную базу тестовыми данными (с подтверждением)
 
 Сайты
   yarn site:create vet vet.example.test "Семейный ветеринар"
@@ -23,7 +23,6 @@ console.log(`Kroy — команды проекта
                                      Удалить домен сайта
 
 Публикация
-  yarn site:deploy demo             Собрать и опубликовать сайт на VPS
   yarn site:build demo               Подготовить статическую версию сайта
   yarn site:publish demo             Опубликовать подготовленную версию
   yarn site:releases demo            Показать сохранённые релизы сайта
@@ -33,11 +32,17 @@ console.log(`Kroy — команды проекта
   yarn preview:reload                Перезагрузить Nginx Kroy
   yarn preview:validate              Проверить nginx.conf экземпляра Kroy
 
+Удалённое управление (нужен KROY_REMOTE_HOST)
+  yarn remote <script> [...args]     Выполнить скрипт Kroy на VPS
+  yarn deploy app                    Развернуть приложение на VPS через Ansible
+  yarn deploy site <slug>            Собрать и опубликовать сайт на VPS
+
 Быстрые сценарии
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>
   Хочу открыть редактор              yarn db → yarn vyaz:build → yarn vyaz:serve
   Хочу посмотреть публичный сайт     yarn preview → yarn site:build <slug> → yarn site:publish <slug>
-  Хочу опубликовать изменения        yarn site:deploy <slug>
+  Хочу опубликовать изменения        yarn deploy site <slug>
+  Хочу выполнить команду на VPS      yarn remote <script> [...args]
   Хочу откатить релиз                yarn site:releases <slug> → yarn site:rollback <slug> <release-id>
 
 Полная документация: README.md`);

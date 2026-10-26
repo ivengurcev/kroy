@@ -1,2 +1,40 @@
-[kroy]
-enduro-koltushi.ru
+#!/bin/sh
+set -eu
+
+host=${KROY_REMOTE_HOST:-}
+if [ -z "$host" ]; then
+    echo 'KROY_REMOTE_HOST is not set' >&2
+    exit 1
+fi
+
+case "$host" in
+    -*|*[!A-Za-z0-9._@:\[\]-]*)
+        echo 'KROY_REMOTE_HOST contains invalid characters' >&2
+        exit 1
+        ;;
+esac
+
+user=
+case "$host" in
+    *@*)
+        user=${host%%@*}
+        host=${host#*@}
+        ;;
+esac
+
+case "${1:-}" in
+    --list)
+        if [ -n "$user" ]; then
+            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"],"vars":{"ansible_user":"%s"}}}\n' "$host" "$user"
+        else
+            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"]}}\n' "$host"
+        fi
+        ;;
+    --host)
+        printf '{}\n'
+        ;;
+    *)
+        echo 'Unsupported inventory argument' >&2
+        exit 1
+        ;;
+esac

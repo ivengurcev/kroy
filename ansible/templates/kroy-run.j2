@@ -1,0 +1,47 @@
+#!/usr/bin/env node
+const { spawn } = require('node:child_process');
+const { readFileSync } = require('node:fs');
+const { dirname, join } = require('node:path');
+
+const ROOT = '{{ kroy_root }}';
+const NODE = '{{ kroy_node_binary }}';
+const YARN_RELEASE = '{{ kroy_yarn_release }}';
+const BLOCKED_SCRIPTS = new Set(['remote', 'deploy', 'site:deploy']);
+const [script, ...args] = process.argv.slice(2);
+
+if (!script || !/^[a-z0-9][a-z0-9:-]*$/.test(script) || BLOCKED_SCRIPTS.has(script)) {
+    console.error('Unknown or forbidden Kroy script');
+    process.exit(2);
+}
+
+let scripts;
+try {
+    scripts = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts || {};
+} catch (error) {
+    console.error(`Cannot read package.json: ${error.message}`);
+    process.exit(2);
+}
+
+if (typeof scripts[script] !== 'string') {
+    console.error(`Unknown Kroy script: ${script}`);
+    process.exit(2);
+}
+
+const child = spawn(NODE, [YARN_RELEASE, 'run', script, ...args], {
+    cwd: ROOT,
+    env: {
+        ...process.env,
+        PATH: `${dirname(NODE)}:/usr/local/bin:${process.env.PATH || ''}`,
+    },
+    stdio: 'inherit',
+});
+
+child.on('error', (error) => {
+    console.error(`Cannot start ${script}: ${error.message}`);
+    process.exitCode = 1;
+});
+
+child.on('exit', (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    else process.exitCode = code ?? 1;
+});

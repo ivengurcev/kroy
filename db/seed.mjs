@@ -1,5 +1,21 @@
+import { createInterface } from "node:readline/promises";
+import { stdin, stdout } from "node:process";
 import pageContent from "../demo/page.json" with { type: "json" };
 import { pool } from "./client.mjs";
+
+if (!stdin.isTTY) {
+  console.error("Заполнение базы требует интерактивного терминала.");
+  process.exit(1);
+}
+
+const readline = createInterface({ input: stdin, output: stdout });
+const answer = await readline.question("Заполнить базу тестовыми данными? [y/N] ");
+readline.close();
+
+if (!/^y(es)?$/i.test(answer.trim())) {
+  console.log("Отменено.");
+  process.exit(0);
+}
 
 const testPageContent = [
   {

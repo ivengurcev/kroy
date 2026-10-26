@@ -133,22 +133,32 @@
         enabled: true
         daemon_reload: true
 
-    - name: Install protected site deployment script
+    - name: Install protected Kroy command runner
       ansible.builtin.template:
-        src: templates/kroy-site-deploy.j2
-        dest: /usr/local/sbin/kroy-site-deploy
+        src: templates/kroy-run.j2
+        dest: /usr/local/sbin/kroy-run
         owner: root
         group: root
         mode: '0755'
 
-    - name: Allow SSH user to run only site deployment as kroy
+    - name: Allow SSH user to run Kroy scripts as kroy
       ansible.builtin.copy:
-        dest: /etc/sudoers.d/kroy-site-deploy
+        dest: /etc/sudoers.d/kroy-run
         owner: root
         group: root
         mode: '0440'
-        content: "{{ kroy_connection_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-site-deploy *\n"
+        content: "{{ kroy_connection_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-run *\n"
         validate: /usr/sbin/visudo -cf %s
+
+    - name: Remove legacy site deployment script
+      ansible.builtin.file:
+        path: /usr/local/sbin/kroy-site-deploy
+        state: absent
+
+    - name: Remove legacy site deployment sudoers rule
+      ansible.builtin.file:
+        path: /etc/sudoers.d/kroy-site-deploy
+        state: absent
 
     - name: Check whether the existing environment file is present
       ansible.builtin.stat:

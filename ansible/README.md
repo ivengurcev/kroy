@@ -4,8 +4,12 @@ Ansible-шаблоны запускают один отдельный экзем
 Nginx от пользователя приложения. Системный Nginx остаётся владельцем HTTPS и
 проксирует домены Oysite на `127.0.0.1:8080`.
 
+Хост задаётся переменной `KROY_REMOTE_HOST`; файл `inventory` — исполняемый
+скрипт, который читает её для Ansible. Без переменной inventory завершается
+ошибкой.
+
 Перед применением задайте `kroy_root`, `kroy_user`, при необходимости
-`kroy_group`, и `kroy_domains` в inventory или через `-e`. Playbook идемпотентно
+`kroy_group`, и `kroy_domains` через `-e`. Playbook идемпотентно
 создаёт системную группу, пользователя без интерактивного shell, рабочий
 каталог и runtime-каталоги с правильным владельцем. Пользователь SSH-подключения
 добавляется в группу Kroy, а каталоги получают setgid и права `2770`, поэтому
@@ -50,8 +54,9 @@ Bootstrap не изменяет конфигурации Nginx и PostgreSQL и 
 `/usr/local/bin/yarn`; Yarn выбирает версию из `packageManager` проекта.
 Пользователь берётся из настроек Ansible, inventory или `~/.ssh/config`.
 После bootstrap переподключитесь по SSH, чтобы обновилось членство в
-группе. Отдельный sudoers или привилегированный помощник
-Kroy не добавляется.
+группе. Bootstrap устанавливает защищённый запускатель
+`/usr/local/sbin/kroy-run` и узкое правило sudoers, разрешающее SSH-пользователю
+запускать только скрипты Kroy от имени `kroy`.
 
 Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
 
@@ -62,6 +67,13 @@ ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
 ```
 
 После bootstrap выполните первый deploy приложения из локального checkout Kroy:
+
+```bash
+export KROY_REMOTE_HOST=user@example.org
+yarn deploy app
+```
+
+Эквивалентный прямой вызов Ansible:
 
 ```bash
 ansible-playbook -i inventory ansible/kroy-deploy.yml \
@@ -118,10 +130,10 @@ systemctl is-enabled kroy-app kroy-nginx
 командой:
 
 ```bash
-yarn site:deploy demo
+yarn deploy site demo
 ```
 
-Команда подключается по SSH-алиасу `enduro-koltushi.ru`. На VPS защищённый
-скрипт сначала запускает существующие `site:build`, затем `site:publish` от
-пользователя `kroy`; при ошибке сборки публикация не запускается. Sudo разрешён
-только для этого скрипта и только без запроса пароля.
+Команда использует `KROY_REMOTE_HOST`. На VPS защищённый запускатель сначала
+выполняет `site:build`, затем `site:publish` от пользователя `kroy`; при ошибке
+сборки публикация не запускается. Sudo разрешён только для запускателя и только
+без запроса пароля.
