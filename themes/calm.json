@@ -18,17 +18,8 @@
       "--site-line-height": "1.5",
       "--site-container-max": "1760px",
       "--site-page-gutter": "clamp(20px, 5vw, 90px)",
-      "--site-radius-sm": "8px",
-      "--site-radius-md": "16px",
-      "--site-radius-lg": "24px",
-      "--site-space-1": "4px",
-      "--site-space-2": "8px",
-      "--site-space-3": "12px",
-      "--site-space-4": "16px",
-      "--site-space-6": "24px",
-      "--site-space-8": "32px",
-      "--site-space-12": "48px",
-      "--site-space-16": "64px"
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
     },
     "dark": {
       "--site-color-bg": "#101b18",
@@ -45,17 +36,8 @@
       "--site-line-height": "1.5",
       "--site-container-max": "1760px",
       "--site-page-gutter": "clamp(20px, 5vw, 90px)",
-      "--site-radius-sm": "8px",
-      "--site-radius-md": "16px",
-      "--site-radius-lg": "24px",
-      "--site-space-1": "4px",
-      "--site-space-2": "8px",
-      "--site-space-3": "12px",
-      "--site-space-4": "16px",
-      "--site-space-6": "24px",
-      "--site-space-8": "32px",
-      "--site-space-12": "48px",
-      "--site-space-16": "64px"
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
     }
   }
 }

@@ -16,6 +16,11 @@ const TOKEN_GROUPS = [
     { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('container') || token.includes('page-gutter') || token.includes('radius') },
     { id: 'spacing', label: 'Отступы', match: (token) => token.startsWith('--site-space-') },
 ];
+const SHARED_GROUPS = [
+    { id: 'statuses', label: 'Статусы', match: (token) => token.startsWith('--site-color-') },
+    { id: 'typography', label: 'Типографика', match: (token) => token.startsWith('--site-font-') || token === '--site-line-height' },
+    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('space-base') || token.includes('radius-base') || token.includes('container') || token.includes('page-gutter') },
+];
 const FONT_OPTIONS = [
     'Arial, Helvetica, sans-serif',
     'Georgia, "Times New Roman", serif',
@@ -23,16 +28,18 @@ const FONT_OPTIONS = [
 ];
 
 function cloneSettings(settings) {
-    return { themeId: settings.themeId, themeMode: settings.themeMode, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) } } };
+    return { themeId: settings.themeId, themeMode: settings.themeMode, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
 }
 
 function hexColor(value) {
     if (typeof value !== 'string') return '#000000';
-    if (/^#[0-9a-f]{6}$/i.test(value)) return value;
-    if (/^#[0-9a-f]{8}$/i.test(value)) return value.slice(0, 7);
+    if (/^#[0-9a-f]{6}$/i.test(value)) return `${value}ff`;
+    if (/^#[0-9a-f]{8}$/i.test(value)) return value;
     const match = value.match(/rgba?\(\s*(\d+)\s*[ ,]\s*(\d+)\s*[ ,]\s*(\d+)(?:\s*\/\s*([\d.]+))?\s*\)/i);
     if (!match) return '#000000';
-    return `#${match.slice(1, 4).map((channel) => Math.max(0, Math.min(255, Number(channel))).toString(16).padStart(2, '0')).join('')}`;
+    const channels = match.slice(1, 4).map((channel) => Math.max(0, Math.min(255, Number(channel))).toString(16).padStart(2, '0'));
+    const alpha = match[4] === undefined ? 'ff' : Math.round(Math.max(0, Math.min(1, Number(match[4]))) * 255).toString(16).padStart(2, '0');
+    return `#${channels.join('')}${alpha}`;
 }
 
 function parseDimension(value) {
@@ -49,9 +56,9 @@ function tokenInfo(token, metadata) {
 function ThemeThumbnail({ theme, compact = false }) {
     return (
         <span className={`${styles.thumbnail} ${compact ? styles.thumbnailCompact : ''}`} style={{
-            '--thumb-light-bg': theme.tokens.light['--site-color-bg'], '--thumb-light-surface': theme.tokens.light['--site-color-surface'], '--thumb-light-text': theme.tokens.light['--site-color-text'], '--thumb-light-accent': theme.tokens.light['--site-color-accent'], '--thumb-light-soft': theme.tokens.light['--site-color-surface-soft'],
-            '--thumb-dark-bg': theme.tokens.dark['--site-color-bg'], '--thumb-dark-surface': theme.tokens.dark['--site-color-surface'], '--thumb-dark-text': theme.tokens.dark['--site-color-text'], '--thumb-dark-accent': theme.tokens.dark['--site-color-accent'], '--thumb-dark-soft': theme.tokens.dark['--site-color-surface-soft'],
-            '--thumb-font': theme.tokens.light['--site-font-body'], '--thumb-radius': theme.tokens.light['--site-radius-md'] || theme.tokens.light['--site-space-2'], '--thumb-space': theme.tokens.light['--site-space-2'],
+            '--thumb-light-bg': theme.palettes.light['--site-color-bg'], '--thumb-light-surface': theme.palettes.light['--site-color-bg'], '--thumb-light-text': theme.palettes.light['--site-color-text'], '--thumb-light-accent': theme.palettes.light['--site-color-accent'], '--thumb-light-soft': theme.palettes.light['--site-color-accent'],
+            '--thumb-dark-bg': theme.palettes.dark['--site-color-bg'], '--thumb-dark-surface': theme.palettes.dark['--site-color-bg'], '--thumb-dark-text': theme.palettes.dark['--site-color-text'], '--thumb-dark-accent': theme.palettes.dark['--site-color-accent'], '--thumb-dark-soft': theme.palettes.dark['--site-color-accent'],
+            '--thumb-font': theme.shared['--site-font-body'], '--thumb-radius': theme.shared['--site-radius-base'], '--thumb-space': theme.shared['--site-space-base'],
         }} aria-hidden="true">
             {['light', 'dark'].map((palette) => <span className={`${styles.thumbnailPane} ${palette === 'dark' ? styles.thumbnailDark : ''}`} key={palette}><span className={styles.thumbnailTop} /><span className={styles.thumbnailBody}><span className={styles.thumbnailTitle}>Aa</span><span className={styles.thumbnailLine} /><span className={styles.thumbnailLineShort} /></span></span>)}
         </span>
@@ -85,7 +92,7 @@ function TokenControl({ palette, token, baseValue, overrideValue, info, disabled
     const reset = overridden && <button className={styles.resetToken} type="button" title="Вернуть значение темы" aria-label={`Сбросить ${info.label}`} disabled={disabled} onClick={() => onReset(palette, token)}>↶</button>;
     if (info.type === 'color') {
         const value = hexColor(draftValue);
-        return <div className={styles.tokenControl}><input className={styles.colorPicker} type="color" value={value} disabled={disabled} title={`Выбрать цвет: ${info.label}`} onChange={(event) => changeValue(event.target.value)} /><input className={styles.colorHex} value={focused ? draftValue : value} disabled={disabled} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(event) => { const next = event.target.value; setDraftValue(next); if (next === '' || /^#[0-9a-f]{0,8}$/i.test(next)) onChange(palette, token, next); }} aria-label={`${info.label}, HEX`} />{reset}</div>;
+        return <div className={styles.tokenControl}><input className={styles.colorPicker} type="color" value={value.slice(0, 7)} disabled={disabled} title={`Выбрать цвет: ${info.label}`} onChange={(event) => changeValue(`${event.target.value}ff`)} /><input className={styles.colorHex} value={focused ? draftValue : value} disabled={disabled} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(event) => { const next = event.target.value; setDraftValue(next); if (next === '' || /^#[0-9a-f]{0,8}$/i.test(next)) onChange(palette, token, next); }} aria-label={`${info.label}, HEX8`} />{reset}</div>;
     }
     if (info.type === 'font') {
         const options = FONT_OPTIONS.includes(effectiveValue) ? FONT_OPTIONS : [effectiveValue, ...FONT_OPTIONS];
@@ -100,9 +107,14 @@ function TokenControl({ palette, token, baseValue, overrideValue, info, disabled
 }
 
 function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset }) {
-    const tokens = Object.keys(theme.tokens.light);
-    const groups = TOKEN_GROUPS.map((group) => ({ ...group, tokens: tokens.filter(group.match) })).filter((group) => group.tokens.length);
-    return <div className={styles.tokenScroll}><table className={styles.tokenTable}><thead><tr><th>Токен</th><th><span className={styles.paletteHeading}><Icon name="sun" size={16} /> Светлая</span></th><th><span className={styles.paletteHeading}><Icon name="moon" size={16} /> Тёмная</span></th></tr></thead><tbody>{groups.flatMap((group) => [<tr className={styles.groupRow} key={`${group.id}-heading`}><th colSpan="3">{group.label}</th></tr>, ...group.tokens.map((token) => { const info = tokenInfo(token, metadata); return <tr key={token}><th scope="row" title={token}>{info.label}</th><td><TokenControl palette="light" token={token} baseValue={theme.tokens.light[token]} overrideValue={draft.overrides.light[token]} info={info} disabled={disabledPalette === 'light'} onChange={onChange} onReset={onReset} /></td><td><TokenControl palette="dark" token={token} baseValue={theme.tokens.dark[token]} overrideValue={draft.overrides.dark[token]} info={info} disabled={disabledPalette === 'dark'} onChange={onChange} onReset={onReset} /></td></tr>; })])}</tbody></table></div>;
+    const paletteGroups = TOKEN_GROUPS.slice(0, 1).map((group) => ({ ...group, tokens: Object.keys(theme.palettes.light).filter(group.match) })).filter((group) => group.tokens.length);
+    const sharedGroups = SHARED_GROUPS.map((group) => ({ ...group, tokens: Object.keys(theme.shared).filter(group.match) })).filter((group) => group.tokens.length);
+    const row = (token, palette) => {
+        const info = tokenInfo(token, metadata);
+        const base = palette === 'shared' ? theme.shared[token] : theme.palettes[palette][token];
+        return <tr key={`${palette}-${token}`}><th scope="row" title={token}>{info.label}</th><td colSpan={palette === 'shared' ? 2 : undefined}><TokenControl palette={palette} token={token} baseValue={base} overrideValue={draft.overrides[palette][token]} info={info} disabled={palette !== 'shared' && disabledPalette === palette} onChange={onChange} onReset={onReset} /></td>{palette !== 'shared' && <td><TokenControl palette="dark" token={token} baseValue={theme.palettes.dark[token]} overrideValue={draft.overrides.dark[token]} info={info} disabled={disabledPalette === 'dark'} onChange={onChange} onReset={onReset} /></td>}</tr>;
+    };
+    return <div className={styles.tokenScroll}><table className={styles.tokenTable}><thead><tr><th>Токен</th><th><span className={styles.paletteHeading}><Icon name="sun" size={16} /> Светлая</span></th><th><span className={styles.paletteHeading}><Icon name="moon" size={16} /> Тёмная</span></th></tr></thead><tbody>{paletteGroups.flatMap((group) => [<tr className={styles.groupRow} key={`${group.id}-heading`}><th colSpan="3">{group.label}</th></tr>, ...group.tokens.map((token) => row(token, 'light'))])}{sharedGroups.flatMap((group) => [<tr className={styles.groupRow} key={`${group.id}-heading`}><th colSpan="3">{group.label}</th></tr>, ...group.tokens.map((token) => row(token, 'shared'))])}</tbody></table></div>;
 }
 
 export default function SitePage() {
@@ -112,11 +124,11 @@ export default function SitePage() {
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function updateDraft(change) { setDraft((current) => ({ ...current, ...change })); }
-    function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; if (!value.trim() || value === selectedTheme.tokens[palette][token]) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
+    function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft(next); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
     const activeMode = draft?.themeMode;
     return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} actions={<Button variant="primary" title="Сохранить настройки оформления" disabled={!dirty || saveStatus === 'saving'} onClick={save}>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>}>
-        {draft && selectedTheme && <div className={styles.content}><Card className={styles.panel}><div className={styles.sectionHeading}><div><h2>Оформление</h2><p>{selectedTheme.name}</p></div><Button className={styles.resetAll} title="Сбросить все переопределения" aria-label="Сбросить все переопределения" disabled={!Object.keys(draft.overrides.light).length && !Object.keys(draft.overrides.dark).length} onClick={() => updateDraft({ overrides: { light: {}, dark: {} } })}><Icon name="restore" /> Сбросить</Button></div><ThemePicker themes={themes} selectedId={draft.themeId} onChange={(themeId) => updateDraft({ themeId })} /><div className={styles.modeSwitch} role="group" aria-label="Режим темы">{MODE_OPTIONS.map((option) => <button className={activeMode === option.value ? styles.modeActive : ''} type="button" aria-pressed={activeMode === option.value} title={option.label} key={option.value} onClick={() => updateDraft({ themeMode: option.value })}><Icon name={option.icon} size={18} /><span>{option.label}</span></button>)}</div></Card><Card className={styles.tokensPanel}><TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} /></Card>{error && <p className={styles.error} role="alert">{error}</p>}</div>}
+        {draft && selectedTheme && <div className={styles.content}><Card className={styles.panel}><div className={styles.sectionHeading}><div><h2>Оформление</h2><p>{selectedTheme.name}</p></div><Button className={styles.resetAll} title="Сбросить все переопределения" aria-label="Сбросить все переопределения" disabled={!Object.keys(draft.overrides.light).length && !Object.keys(draft.overrides.dark).length && !Object.keys(draft.overrides.shared).length} onClick={() => updateDraft({ overrides: { light: {}, dark: {}, shared: {} } })}><Icon name="restore" /> Сбросить</Button></div><ThemePicker themes={themes} selectedId={draft.themeId} onChange={(themeId) => updateDraft({ themeId })} /><div className={styles.modeSwitch} role="group" aria-label="Режим темы">{MODE_OPTIONS.map((option) => <button className={activeMode === option.value ? styles.modeActive : ''} type="button" aria-pressed={activeMode === option.value} title={option.label} key={option.value} onClick={() => updateDraft({ themeMode: option.value })}><Icon name={option.icon} size={18} /><span>{option.label}</span></button>)}</div></Card><Card className={styles.tokensPanel}><TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} /></Card>{error && <p className={styles.error} role="alert">{error}</p>}</div>}
     </AdminPageShell>;
 }

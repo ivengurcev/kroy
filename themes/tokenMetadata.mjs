@@ -1,4 +1,8 @@
 const explicitMetadata = {
+    '--site-color-danger': { label: 'Ошибка', type: 'color' },
+    '--site-color-info': { label: 'Информация', type: 'color' },
+    '--site-color-success': { label: 'Успех', type: 'color' },
+    '--site-color-warning': { label: 'Предупреждение', type: 'color' },
     '--site-color-bg': { label: 'Фон', type: 'color' },
     '--site-color-text': { label: 'Основной текст', type: 'color' },
     '--site-color-text-secondary': { label: 'Вторичный текст', type: 'color' },
@@ -13,9 +17,8 @@ const explicitMetadata = {
     '--site-line-height': { label: 'Межстрочный интервал', type: 'number', units: [''] },
     '--site-container-max': { label: 'Максимальная ширина', type: 'dimension', units: ['px', 'rem'] },
     '--site-page-gutter': { label: 'Боковой отступ', type: 'dimension', units: ['px', 'rem', 'vw'] },
-    '--site-radius-sm': { label: 'Малое скругление', type: 'dimension', units: ['px', 'rem'] },
-    '--site-radius-md': { label: 'Среднее скругление', type: 'dimension', units: ['px', 'rem'] },
-    '--site-radius-lg': { label: 'Большое скругление', type: 'dimension', units: ['px', 'rem'] },
+    '--site-space-base': { label: 'Базовый шаг', type: 'dimension', units: ['px', 'rem'] },
+    '--site-radius-base': { label: 'Базовое скругление', type: 'dimension', units: ['px', 'rem'] },
 };
 
 export function getTokenMetadata(token) {

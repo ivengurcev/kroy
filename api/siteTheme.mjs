@@ -1,7 +1,7 @@
 import { pool } from "../db/client.mjs";
 import { getSiteTheme, setSiteTheme } from "../db/siteThemes.mjs";
 import getHostname from "./getHostname.mjs";
-import { getTheme, listThemes } from "../themes/themeRegistry.mjs";
+import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../themes/themeRegistry.mjs";
 import { getAllTokenMetadata } from "../themes/tokenMetadata.mjs";
 
 async function getCurrentSite(c) {
@@ -20,10 +20,7 @@ async function getCurrentSite(c) {
 }
 
 function themeDetails() {
-  return listThemes().map((theme) => ({
-    ...theme,
-    tokens: getTheme(theme.id).tokens,
-  }));
+  return listThemes().map(({ id }) => getThemeEditorModel(id));
 }
 
 export async function getSiteThemeSettings(c) {
@@ -31,7 +28,11 @@ export async function getSiteThemeSettings(c) {
     const site = await getCurrentSite(c);
     if (!site) return c.json({ error: "Site not found" }, 404);
 
-    const settings = await getSiteTheme(site.id);
+    const rawSettings = await getSiteTheme(site.id);
+    const settings = {
+      ...rawSettings,
+      overrides: normalizeThemeOverrides(rawSettings.themeId, rawSettings.themeMode, rawSettings.overrides),
+    };
     return c.json({ themes: themeDetails(), metadata: getAllTokenMetadata(), settings });
   } catch (error) {
     console.error("Failed to load site theme", error);
