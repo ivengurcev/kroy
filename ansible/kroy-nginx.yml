@@ -115,6 +115,18 @@
         state: started
         daemon_reload: true
 
+    - name: Validate Kroy Nginx before reload
+      ansible.builtin.command:
+        argv: ["{{ kroy_nginx_binary }}", -t, -c, "{{ kroy_nginx_config }}"]
+      when: kroy_nginx_reload_required | default(false) | bool
+      changed_when: false
+
+    - name: Reload Kroy Nginx after application changes
+      ansible.builtin.systemd:
+        name: kroy-nginx
+        state: reloaded
+      when: kroy_nginx_reload_required | default(false) | bool
+
   handlers:
     - name: Restart Kroy Nginx
       ansible.builtin.systemd:

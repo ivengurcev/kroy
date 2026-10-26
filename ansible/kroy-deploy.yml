@@ -90,7 +90,11 @@
           - "--exclude=ansible/"
       notify:
         - Restart Kroy app
-        - Reload Kroy Nginx
+      register: kroy_sync_result
+
+    - name: Mark Kroy Nginx for reload after application changes
+      ansible.builtin.set_fact:
+        kroy_nginx_reload_required: "{{ kroy_sync_result.changed }}"
 
     - name: Regenerate Kroy Nginx main configuration
       become: true

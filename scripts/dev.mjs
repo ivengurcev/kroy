@@ -7,13 +7,13 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 await generateParts();
 const watcher = spawn(process.execPath, ['scripts/watchParts.mjs'], {
     cwd: ROOT,
-    env: { ...process.env, KROY_WATCH_ONLY: '1' },
+    env: { ...process.env, KROY_WATCH_ONLY: '1', NODE_ENV: 'development' },
     stdio: 'inherit',
 });
 const vyaz = spawn(
     'yarn',
     ['node', '--env-file=.env', 'server.mjs', '--build-public', '--build-ssr', '--serve', '--watch', '--sourcemap'],
-    { cwd: ROOT, stdio: 'inherit' }
+    { cwd: ROOT, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'development' } }
 );
 
 let shuttingDown = false;
