@@ -35,6 +35,11 @@ await createApp({
             component: './pages/TrashPage.jsx',
         },
         {
+            path: '/auth/signin',
+            title: 'Вход в Oysite',
+            component: './pages/SignInPage.jsx',
+        },
+        {
             path: '/admin/pages/:pageId',
             isPrivate: true,
             title: 'Редактор Oysite',
