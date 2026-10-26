@@ -92,9 +92,11 @@
         - Restart Kroy app
       register: kroy_sync_result
 
-    - name: Mark Kroy Nginx for reload after application changes
-      ansible.builtin.set_fact:
-        kroy_nginx_reload_required: "{{ kroy_sync_result.changed }}"
+    - name: Read current Kroy Nginx configuration checksum
+      ansible.builtin.stat:
+        path: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+        checksum_algorithm: sha256
+      register: kroy_nginx_config_before
 
     - name: Regenerate Kroy Nginx main configuration
       become: true
@@ -104,6 +106,18 @@
         chdir: "{{ kroy_root }}"
       changed_when: false
 
+    - name: Read generated Kroy Nginx configuration checksum
+      ansible.builtin.stat:
+        path: "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+        checksum_algorithm: sha256
+      register: kroy_nginx_config_after
+
+    - name: Mark Kroy Nginx configuration changes
+      ansible.builtin.set_fact:
+        kroy_nginx_config_changed: >-
+          {{ (not kroy_nginx_config_before.stat.exists)
+             or kroy_nginx_config_before.stat.checksum != kroy_nginx_config_after.stat.checksum }}
+
     - name: Validate Kroy Nginx configuration
       become: true
       ansible.builtin.command:
@@ -112,14 +126,22 @@
           - -t
           - -c
           - "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+      when: kroy_nginx_config_changed | default(false) | bool
       changed_when: false
+
+    - name: Check whether Kroy Nginx is already running
+      ansible.builtin.service_facts:
+      when: kroy_nginx_config_changed | default(false) | bool
 
     - name: Reload Kroy Nginx after configuration changes
       become: true
       ansible.builtin.systemd:
         name: kroy-nginx
         state: reloaded
-      when: kroy_nginx_reload_required | default(false) | bool
+      when:
+        - kroy_nginx_config_changed | default(false) | bool
+        - "'kroy-nginx.service' in ansible_facts.services"
+        - ansible_facts.services['kroy-nginx.service'].state == 'running'
 
     - name: Apply PostgreSQL migrations
       become: true

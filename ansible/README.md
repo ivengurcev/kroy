@@ -61,22 +61,21 @@ ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
   -e kroy_user=kroy
 ```
 
-Затем один раз настройте отдельный Kroy Nginx и системный reverse proxy:
-
-```bash
-ansible-playbook -i inventory ansible/kroy-nginx.yml \
-  -e kroy_root=/srv/kroy \
-  -e kroy_user=kroy
-```
-
-После этого для регулярного обновления приложения из локального checkout Kroy
-используйте deploy:
+После bootstrap выполните первый deploy приложения из локального checkout Kroy:
 
 ```bash
 ansible-playbook -i inventory ansible/kroy-deploy.yml \
   -e kroy_root=/srv/kroy \
   -e kroy_user=kroy \
   -e 'kroy_domains=["example.oysite.ru"]'
+```
+
+Затем один раз настройте отдельный Kroy Nginx и системный reverse proxy:
+
+```bash
+ansible-playbook -i inventory ansible/kroy-nginx.yml \
+  -e kroy_root=/srv/kroy \
+  -e kroy_user=kroy
 ```
 
 Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` и файл
