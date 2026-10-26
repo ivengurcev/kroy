@@ -24,36 +24,6 @@
           - (kroy_remote_node_version.stdout | trim) == 'v24.19.0'
         fail_msg: "Node.js v24.19.0 is required on the VPS. Run ansible/kroy-bootstrap.yml first."
 
-    - name: Check the bootstrapped Yarn release on the VPS
-      ansible.builtin.stat:
-        path: "{{ kroy_yarn_release }}"
-      register: kroy_remote_yarn_release
-
-    - name: Require bootstrapped Yarn release
-      ansible.builtin.assert:
-        that: kroy_remote_yarn_release.stat.exists
-        fail_msg: Run ansible/kroy-bootstrap.yml and deploy the application environment first.
-
-    - name: Pin the project Yarn release locally
-      ansible.builtin.command:
-        cmd: "yarn set version {{ kroy_yarn_version }} --yarn-path"
-        chdir: "{{ kroy_local_root }}"
-      delegate_to: localhost
-      become: false
-      run_once: true
-      changed_when: true
-
-    - name: Disable the global Yarn cache locally
-      ansible.builtin.lineinfile:
-        path: "{{ kroy_local_root }}/.yarnrc.yml"
-        regexp: '^enableGlobalCache:'
-        line: 'enableGlobalCache: false'
-        create: true
-        mode: '0644'
-      delegate_to: localhost
-      become: false
-      run_once: true
-
     - name: Install Kroy dependencies locally
       ansible.builtin.command:
         cmd: yarn install --immutable

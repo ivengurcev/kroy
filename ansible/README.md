@@ -85,10 +85,11 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 базы отсутствует, она восстанавливается с паролем из этого файла.
 
 `kroy-deploy.yml` не импортирует bootstrap или provision и не устанавливает
-системные пакеты, пользователей или PostgreSQL. При несовпадении Node.js или
-отсутствии Yarn release deploy завершается с рекомендацией повторно запустить
-bootstrap. `kroy-provision.yml` сохранён как совместимая точка входа и просто
-вызывает bootstrap.
+системные пакеты, пользователей или PostgreSQL. При несовпадении Node.js deploy
+завершается с рекомендацией повторно запустить bootstrap. Yarn release не
+проверяется отдельной удалённой задачей: необходимые PnP-артефакты проверяются
+локально перед rsync. `kroy-provision.yml` сохранён как совместимая точка входа
+и просто вызывает bootstrap.
 
 Перед deploy на локальной машине выполняются `yarn set version 4.18.1 --yarn-path`,
 настройка `enableGlobalCache: false`, затем `yarn install --immutable` и
