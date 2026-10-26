@@ -88,7 +88,27 @@
           - "--exclude=.cache/"
           - "--exclude=*.log"
           - "--exclude=ansible/"
-      notify: Restart Kroy app
+      notify:
+        - Restart Kroy app
+        - Reload Kroy Nginx
+
+    - name: Regenerate Kroy Nginx main configuration
+      become: true
+      become_user: "{{ kroy_user }}"
+      ansible.builtin.command:
+        cmd: "{{ kroy_node_binary }} scripts/initNginx.mjs"
+        chdir: "{{ kroy_root }}"
+      changed_when: false
+
+    - name: Validate Kroy Nginx configuration
+      become: true
+      ansible.builtin.command:
+        argv:
+          - /usr/sbin/nginx
+          - -t
+          - -c
+          - "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
+      changed_when: false
 
     - name: Determine the SSH connection user for site deployment
       ansible.builtin.command: id -un
@@ -150,5 +170,11 @@
       ansible.builtin.systemd:
         name: kroy-app
         state: restarted
+
+    - name: Reload Kroy Nginx
+      become: true
+      ansible.builtin.systemd:
+        name: kroy-nginx
+        state: reloaded
 
 - import_playbook: kroy-nginx.yml

@@ -99,6 +99,9 @@ export function renderNginxConfig(siteSlug, domains, options = {}) {
 
 function renderMainConfig(outputDir, options = {}) {
     const listen = options.listen || process.env.NGINX_LISTEN || '127.0.0.1:8080';
+    const gzipEnabled = options.gzipEnabled ?? (
+        process.env.KROY_NGINX_GZIP !== '0' && process.env.NODE_ENV !== 'development'
+    );
     const runtime = (name) => quote(join(outputDir, name));
     return [
         HEADER,
@@ -113,9 +116,9 @@ function renderMainConfig(outputDir, options = {}) {
         `    include ${runtime('mime.types')};`,
         '    default_type application/octet-stream;',
         '    sendfile on;',
-        '    gzip on;',
+        `    gzip ${gzipEnabled ? 'on' : 'off'};`,
         '    gzip_vary on;',
-        '    gzip_types text/html text/css application/javascript application/json image/svg+xml;',
+        '    gzip_types text/css application/javascript application/json image/svg+xml;',
         '    set_real_ip_from 127.0.0.1;',
         '    real_ip_header X-Real-IP;',
         '    real_ip_recursive off;',
