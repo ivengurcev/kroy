@@ -114,7 +114,36 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
         const base = palette === 'shared' ? theme.shared[token] : theme.palettes[palette][token];
         return <tr key={`${palette}-${token}`}><th scope="row" title={token}>{info.label}</th><td colSpan={palette === 'shared' ? 2 : undefined}><TokenControl palette={palette} token={token} baseValue={base} overrideValue={draft.overrides[palette][token]} info={info} disabled={palette !== 'shared' && disabledPalette === palette} onChange={onChange} onReset={onReset} /></td>{palette !== 'shared' && <td><TokenControl palette="dark" token={token} baseValue={theme.palettes.dark[token]} overrideValue={draft.overrides.dark[token]} info={info} disabled={disabledPalette === 'dark'} onChange={onChange} onReset={onReset} /></td>}</tr>;
     };
-    return <div className={styles.tokenScroll}><table className={styles.tokenTable}><thead><tr><th>Токен</th><th><span className={styles.paletteHeading}><Icon name="sun" size={16} /> Светлая</span></th><th><span className={styles.paletteHeading}><Icon name="moon" size={16} /> Тёмная</span></th></tr></thead><tbody>{paletteGroups.flatMap((group) => [<tr className={styles.groupRow} key={`${group.id}-heading`}><th colSpan="3">{group.label}</th></tr>, ...group.tokens.map((token) => row(token, 'light'))])}{sharedGroups.flatMap((group) => [<tr className={styles.groupRow} key={`${group.id}-heading`}><th colSpan="3">{group.label}</th></tr>, ...group.tokens.map((token) => row(token, 'shared'))])}</tbody></table></div>;
+    return <div className={styles.tokenScroll}>
+        <table className={styles.tokenTable}>
+            <thead>
+                <tr>
+                    <th>Токен</th>
+                    <th>
+                        <span className={styles.paletteHeading}>
+                            <Icon name="sun" size={16} /> Светлая
+                        </span>
+                    </th>
+                    <th>
+                        <span className={styles.paletteHeading}>
+                            <Icon name="moon" size={16} /> Тёмная
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>{paletteGroups.flatMap((group) => [
+                <tr className={styles.groupRow} key={`${group.id}-heading`}>
+                    <th colSpan="3">{group.label}</th>
+                </tr>,
+                ...group.tokens.map((token) => row(token, 'light'))])}{sharedGroups.flatMap((group) => [
+                    <tr className={styles.groupRow} key={`${group.id}-heading`}>
+                        <th colSpan="3">{group.label}</th>
+                    </tr>,
+                ...group.tokens.map((token) => row(token, 'shared'))
+                ])}
+            </tbody>
+        </table>
+    </div>;
 }
 
 export default function SitePage() {
@@ -129,6 +158,27 @@ export default function SitePage() {
     async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft(next); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
     const activeMode = draft?.themeMode;
     return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} actions={<Button variant="primary" title="Сохранить настройки оформления" disabled={!dirty || saveStatus === 'saving'} onClick={save}>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>}>
-        {draft && selectedTheme && <div className={styles.content}><Card className={styles.panel}><div className={styles.sectionHeading}><div><h2>Оформление</h2><p>{selectedTheme.name}</p></div><Button className={styles.resetAll} title="Сбросить все переопределения" aria-label="Сбросить все переопределения" disabled={!Object.keys(draft.overrides.light).length && !Object.keys(draft.overrides.dark).length && !Object.keys(draft.overrides.shared).length} onClick={() => updateDraft({ overrides: { light: {}, dark: {}, shared: {} } })}><Icon name="restore" /> Сбросить</Button></div><ThemePicker themes={themes} selectedId={draft.themeId} onChange={(themeId) => updateDraft({ themeId })} /><div className={styles.modeSwitch} role="group" aria-label="Режим темы">{MODE_OPTIONS.map((option) => <button className={activeMode === option.value ? styles.modeActive : ''} type="button" aria-pressed={activeMode === option.value} title={option.label} key={option.value} onClick={() => updateDraft({ themeMode: option.value })}><Icon name={option.icon} size={18} /><span>{option.label}</span></button>)}</div></Card><Card className={styles.tokensPanel}><TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} /></Card>{error && <p className={styles.error} role="alert">{error}</p>}</div>}
+        {draft && selectedTheme && <div className={styles.content}>
+            <Card className={styles.panel}>
+                <div className={styles.sectionHeading}>
+                    <div>
+                        <h2>Оформление</h2>
+                        <p>{selectedTheme.name}</p>
+                    </div>
+                    <Button className={styles.resetAll} title="Сбросить все переопределения" aria-label="Сбросить все переопределения" disabled={!Object.keys(draft.overrides.light).length && !Object.keys(draft.overrides.dark).length && !Object.keys(draft.overrides.shared).length} onClick={() => updateDraft({ overrides: { light: {}, dark: {}, shared: {} } })}>
+                        <Icon name="restore" /> Сбросить
+                    </Button>
+                </div>
+                <ThemePicker themes={themes} selectedId={draft.themeId} onChange={(themeId) => updateDraft({ themeId })} />
+                <div className={styles.modeSwitch} role="group" aria-label="Режим темы">{MODE_OPTIONS.map((option) => <button className={activeMode === option.value ? styles.modeActive : ''} type="button" aria-pressed={activeMode === option.value} title={option.label} key={option.value} onClick={() => updateDraft({ themeMode: option.value })}>
+                    <Icon name={option.icon} size={18} />
+                    <span>{option.label}</span>
+                    </button>)}
+                </div>
+            </Card>
+            <Card className={styles.tokensPanel}>
+                <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
+            </Card>{error && <p className={styles.error} role="alert">{error}</p>}
+        </div>}
     </AdminPageShell>;
 }
