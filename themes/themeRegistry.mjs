@@ -88,10 +88,8 @@ function resolveThemeMode(mode, systemMode = 'light') {
     throw new Error(`Некорректный режим темы: ${mode}`);
 }
 
-function validateOverrides(theme, overrides) {
-    if (!isPlainObject(overrides)) {
-        throw new Error('Переопределения темы должны быть объектом');
-    }
+function validatePaletteOverrides(theme, overrides) {
+    if (!isPlainObject(overrides)) throw new Error('Переопределения палитры должны быть объектом');
 
     for (const [token, value] of Object.entries(overrides)) {
         if (!Object.hasOwn(theme.tokens.light, token)) {
@@ -102,14 +100,31 @@ function validateOverrides(theme, overrides) {
         }
     }
 
-    return overrides;
+    return { ...overrides };
 }
 
-function isRedundant(theme, mode, token, value) {
-    if (mode === 'system') {
-        return value === theme.tokens.light[token] && value === theme.tokens.dark[token];
+function normalizeOverrideShape(theme, mode, overrides = {}) {
+    if (!isPlainObject(overrides)) {
+        throw new Error('Переопределения темы должны быть объектом');
     }
-    return value === theme.tokens[mode][token];
+
+    const hasPalettes = Object.hasOwn(overrides, 'light') || Object.hasOwn(overrides, 'dark');
+    if (!hasPalettes) {
+        const legacyPalette = mode === 'dark' ? 'dark' : 'light';
+        return {
+            light: legacyPalette === 'light' ? validatePaletteOverrides(theme, overrides) : {},
+            dark: legacyPalette === 'dark' ? validatePaletteOverrides(theme, overrides) : {},
+        };
+    }
+
+    return {
+        light: validatePaletteOverrides(theme, overrides.light ?? {}),
+        dark: validatePaletteOverrides(theme, overrides.dark ?? {}),
+    };
+}
+
+function isRedundant(theme, palette, token, value) {
+    return value === theme.tokens[palette][token];
 }
 
 export function listThemes() {
@@ -121,25 +136,19 @@ export function getThemeTokens(themeId, mode, overrides = {}, systemMode = 'ligh
     const resolvedMode = resolveThemeMode(mode, systemMode);
     return {
         ...theme.tokens[resolvedMode],
-        ...validateOverrides(theme, overrides),
+        ...normalizeOverrideShape(theme, mode, overrides)[resolvedMode],
     };
 }
 
 export function normalizeThemeOverrides(themeId, mode, overrides = {}) {
     const theme = getTheme(themeId);
     resolveThemeMode(mode);
-    const normalized = {};
-
-    for (const [token, value] of Object.entries(validateOverrides(theme, overrides))) {
-        if (!isRedundant(theme, mode, token, value)) normalized[token] = value;
-    }
-
-    return normalized;
+    return normalizeOverrideShape(theme, mode, overrides);
 }
 
-export function setThemeOverride(themeId, mode, overrides, token, value) {
+export function setThemeOverride(themeId, palette, overrides, token, value) {
     const theme = getTheme(themeId);
-    resolveThemeMode(mode);
+    if (palette !== 'light' && palette !== 'dark') throw new Error(`Некорректная палитра темы: ${palette}`);
 
     if (!Object.hasOwn(theme.tokens.light, token)) {
         throw new Error(`Неизвестный токен темы: ${token}`);
@@ -148,24 +157,24 @@ export function setThemeOverride(themeId, mode, overrides, token, value) {
         throw new Error(`Некорректное значение токена: ${token}`);
     }
 
-    const normalized = normalizeThemeOverrides(themeId, mode, overrides);
-    if (isRedundant(theme, mode, token, value)) {
-        delete normalized[token];
+    const normalized = normalizeThemeOverrides(themeId, palette, overrides);
+    if (isRedundant(theme, palette, token, value)) {
+        delete normalized[palette][token];
     } else {
-        normalized[token] = value;
+        normalized[palette][token] = value;
     }
     return normalized;
 }
 
-export function resetThemeOverride(themeId, mode, overrides, token) {
+export function resetThemeOverride(themeId, palette, overrides, token) {
     const theme = getTheme(themeId);
-    resolveThemeMode(mode);
+    if (palette !== 'light' && palette !== 'dark') throw new Error(`Некорректная палитра темы: ${palette}`);
 
     if (!Object.hasOwn(theme.tokens.light, token)) {
         throw new Error(`Неизвестный токен темы: ${token}`);
     }
 
-    const normalized = normalizeThemeOverrides(themeId, mode, overrides);
-    delete normalized[token];
+    const normalized = normalizeThemeOverrides(themeId, palette, overrides);
+    delete normalized[palette][token];
     return normalized;
 }
