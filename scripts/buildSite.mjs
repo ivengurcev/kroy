@@ -138,8 +138,6 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
-    await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
-    await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
     await generateSiteParts(pages, site.slug);
     const pageRegistry = Object.fromEntries(
         pages.map(({ path, title, content }) => [path, { path, title, content }])
@@ -171,6 +169,8 @@ try {
     );
 
     await renderSite(site, pages, temporaryDirectory, ASSET_BASE);
+    await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
+    await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
     await build({
         entryPoints: [CLIENT_ENTRY_PATH],
         minify: true,

@@ -30,7 +30,9 @@ async function regenerate() {
     }
 }
 
-await regenerate();
+if (process.env.KROY_WATCH_ONLY !== '1') {
+    await regenerate();
+}
 const watcher = watch(PARTS_DIR, { recursive: true }, () => {
     clearTimeout(timer);
     timer = setTimeout(() => void regenerate(), 100);

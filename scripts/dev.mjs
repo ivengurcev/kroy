@@ -1,10 +1,13 @@
 import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generateParts } from './discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+await generateParts();
 const watcher = spawn(process.execPath, ['scripts/watchParts.mjs'], {
     cwd: ROOT,
+    env: { ...process.env, KROY_WATCH_ONLY: '1' },
     stdio: 'inherit',
 });
 const vyaz = spawn(
