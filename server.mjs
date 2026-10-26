@@ -15,6 +15,7 @@ await createApp({
     PORT: 3000,
     PAGE_TITLE: 'Oysite',
     LAYOUT_HTML: './components/admin/AdminDocument.jsx',
+    LAYOUT_AUTH: './pages/SignInPage.jsx',
     routes: [
         {
             path: '/admin',
@@ -33,11 +34,6 @@ await createApp({
             isPrivate: true,
             title: 'Корзина Oysite',
             component: './pages/TrashPage.jsx',
-        },
-        {
-            path: '/auth/signin',
-            title: 'Вход в Oysite',
-            component: './pages/SignInPage.jsx',
         },
         {
             path: '/admin/pages/:pageId',

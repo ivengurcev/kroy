@@ -1,110 +1,121 @@
-import { useEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
+import { useState } from 'react';
+import Button from '../components/ui/Button.jsx';
+import Card from '../components/ui/Card.jsx';
+import FormField from '../components/ui/FormField.jsx';
+import OysiteLogo from '../components/admin/OysiteLogo.svg';
+import theme from '../styles/AdminTheme.module.css';
 import styles from './SignInPage.module.css';
 
-/**
- * Кастомная страница входа вместо стандартной страницы Auth.js `/auth/signin`.
- * Подключается через `pages: { signIn: ... }` в конфигурации auth.mjs.
- */
-export default function SignInPage({ callbackUrl = '/admin', error }) {
-    const [status, setStatus] = useState(error ? 'error' : 'idle');
-    const formRef = useRef(null);
+function readCallbackUrl() {
+    const value = new URLSearchParams(window.location.search).get('callbackUrl');
+    if (!value) return '/admin';
 
-    useEffect(() => {
-        async function loadCsrfToken() {
-            try {
-                const response = await fetch('/auth/csrf');
-                if (!response.ok) return;
-                const { csrfToken } = await response.json();
-                const field = formRef.current?.elements.csrfToken;
-                if (field && csrfToken) field.value = csrfToken;
-            } catch {
-                // CSRF-токен загрузить не удалось, ошибка появится при отправке формы.
-            }
+    try {
+        const url = new URL(value, window.location.origin);
+        if (url.origin !== window.location.origin || url.pathname.startsWith('/auth/')) {
+            return '/admin';
         }
+        return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+        return '/admin';
+    }
+}
 
-        loadCsrfToken();
-    }, []);
+export default function SignInPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [pending, setPending] = useState(false);
 
     async function handleSubmit(event) {
         event.preventDefault();
-        if (status === 'submitting') return;
+        if (pending) return;
 
-        setStatus('submitting');
+        setPending(true);
+        setError('');
 
-        const formData = new FormData(event.currentTarget);
+        const callbackUrl = readCallbackUrl();
+
         try {
+            const csrfResponse = await fetch('/auth/csrf', { credentials: 'same-origin' });
+            if (!csrfResponse.ok) throw new Error('CSRF token request failed');
+            const { csrfToken } = await csrfResponse.json();
+
             const response = await fetch('/auth/callback/credentials', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Auth-Return-Redirect': '1',
+                },
                 body: new URLSearchParams({
-                    email: formData.get('email'),
-                    password: formData.get('password'),
-                    csrfToken: formData.get('csrfToken'),
+                    email,
+                    password,
+                    csrfToken,
                     callbackUrl,
-                    json: 'true',
-                }).toString(),
+                }),
             });
 
             const data = await response.json().catch(() => ({}));
+            const redirectUrl = data?.url ? new URL(data.url, window.location.origin) : null;
+            const authError = redirectUrl?.searchParams.get('error');
 
-            if (response.ok && data?.ok) {
-                window.location.assign(data.url || callbackUrl);
+            if (response.ok && redirectUrl && !authError) {
+                window.location.assign(redirectUrl.href);
                 return;
             }
 
-            setStatus('error');
+            setError('Неверный email или пароль. Попробуйте ещё раз.');
         } catch {
-            setStatus('error');
+            setError('Не удалось войти. Попробуйте ещё раз.');
+        } finally {
+            setPending(false);
         }
     }
 
     return (
-        <main className={styles.page}>
-            <form className={styles.card} ref={formRef} method="post" onSubmit={handleSubmit}>
-                <h1 className={styles.title}>Вход в Oysite</h1>
+        <main className={`${theme.theme} ${styles.page}`}>
+            <Card className={styles.window}>
+                <div className={styles.logo} role="img" aria-label="Oysite">
+                    <OysiteLogo aria-hidden="true" />
+                </div>
                 <p className={styles.subtitle}>Авторизуйтесь, чтобы управлять сайтом.</p>
 
-                <input type="hidden" name="csrfToken" defaultValue="" />
+                <form className={styles.form} onSubmit={handleSubmit}>
+                    <FormField label="Email">
+                        <input
+                            className={styles.input}
+                            type="email"
+                            name="email"
+                            autoComplete="email"
+                            autoFocus
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                            required
+                        />
+                    </FormField>
 
-                <label className={`${styles.field} ${styles.emailField}`}>
-                    <span className={styles.label}>Email</span>
-                    <input
-                        className={styles.input}
-                        type="email"
-                        name="email"
-                        autoComplete="email"
-                        autoFocus
-                        required
-                    />
-                </label>
+                    <FormField label="Пароль">
+                        <input
+                            className={styles.input}
+                            type="password"
+                            name="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            required
+                        />
+                    </FormField>
 
-                <label className={`${styles.field} ${styles.passwordField}`}>
-                    <span className={styles.label}>Пароль</span>
-                    <input
-                        className={styles.input}
-                        type="password"
-                        name="password"
-                        autoComplete="current-password"
-                        required
-                    />
-                </label>
+                    {error && (
+                        <p className={styles.error} role="alert">{error}</p>
+                    )}
 
-                {status === 'error' && (
-                    <p className={styles.error} role="alert">
-                        Неверный email или пароль. Попробуйте ещё раз.
-                    </p>
-                )}
-
-                <button className={styles.submit} type="submit" disabled={status === 'submitting'}>
-                    {status === 'submitting' ? 'Входим…' : 'Войти'}
-                </button>
-            </form>
+                    <Button className={styles.submit} variant="primary" type="submit" disabled={pending}>
+                        {pending ? 'Входим…' : 'Войти'}
+                    </Button>
+                </form>
+            </Card>
         </main>
     );
 }
-
-SignInPage.propTypes = {
-    callbackUrl: PropTypes.string,
-    error: PropTypes.string,
-};
