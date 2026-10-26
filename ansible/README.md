@@ -26,10 +26,10 @@ TLS-сертификаты намеренно не настраиваются.
 
 ```bash
 ansible-playbook -i inventory ansible/kroy-https.yml \
-  -e kroy_certbot_email=admin@oysite.ru \
   -e acme_dns_credentials_path="$HOME/.config/kroy/acme-dns.json"
 ```
 
+Certbot использует существующий аккаунт Let's Encrypt без обязательного email.
 Учётные данные acme-dns передаются только во время этого запуска, сохраняются
 на VPS с правами `0600` и не выводятся в лог. Обычный deploy не требует
 локального файла секретов. После успешного выпуска подключается HTTPS и HTTP

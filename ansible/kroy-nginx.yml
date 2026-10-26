@@ -18,6 +18,28 @@
         path: "{{ kroy_letsencrypt_live }}/fullchain.pem"
       register: kroy_oysite_certificate
 
+    - name: Check Oysite certificate validity
+      ansible.builtin.command:
+        argv: [openssl, x509, -in, "{{ kroy_letsencrypt_live }}/fullchain.pem", -noout, -checkend, '0']
+      when: kroy_oysite_certificate.stat.exists
+      register: kroy_oysite_certificate_valid
+      changed_when: false
+
+    - name: Check Oysite certificate names
+      ansible.builtin.command:
+        argv: [openssl, x509, -in, "{{ kroy_letsencrypt_live }}/fullchain.pem", -noout, -ext, subjectAltName]
+      when: kroy_oysite_certificate.stat.exists and kroy_oysite_certificate_valid.rc == 0
+      register: kroy_oysite_certificate_san
+      changed_when: false
+
+    - name: Determine whether HTTPS may be enabled
+      ansible.builtin.set_fact:
+        kroy_tls_enabled: >-
+          {{ kroy_oysite_certificate.stat.exists
+             and (kroy_oysite_certificate_valid.rc | default(1)) == 0
+             and 'DNS:oysite.ru' in kroy_oysite_certificate_san.stdout | default('')
+             and 'DNS:*.oysite.ru' in kroy_oysite_certificate_san.stdout | default('') }}
+
     - name: Install Kroy systemd unit
       ansible.builtin.template:
         src: templates/kroy-nginx.service.j2
@@ -32,7 +54,7 @@
         mode: '0644'
       vars:
         proxy_domains: "{{ kroy_domains }}"
-        tls_enabled: "{{ kroy_oysite_certificate.stat.exists }}"
+        tls_enabled: "{{ kroy_tls_enabled }}"
       notify: Reload system Nginx
 
     - name: Ensure Oysite placeholder directory exists
@@ -73,7 +95,7 @@
         dest: /etc/nginx/conf.d/oysite-placeholder.conf
         mode: '0644'
       vars:
-        tls_enabled: "{{ kroy_oysite_certificate.stat.exists }}"
+        tls_enabled: "{{ kroy_tls_enabled }}"
       notify: Reload system Nginx
 
     - name: Enable and start Kroy Nginx
