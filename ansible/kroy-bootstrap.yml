@@ -8,6 +8,9 @@
     kroy_group: "{{ kroy_user }}"
     kroy_node_version: 24.19.0
     kroy_node_package_version: 24.19.0-1nodesource1
+    kroy_yarn_version: 4.18.1
+    kroy_node_binary: /usr/bin/node
+    kroy_yarn_release: "{{ kroy_root }}/.yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
   tasks:
     - name: Install Kroy system dependencies
       ansible.builtin.apt:
@@ -117,6 +120,35 @@
       loop:
         - "{{ kroy_root }}"
         - "{{ kroy_root }}/data"
+
+    - name: Install Kroy application systemd unit
+      ansible.builtin.template:
+        src: templates/kroy-app.service.j2
+        dest: /etc/systemd/system/kroy-app.service
+        mode: '0644'
+
+    - name: Enable Kroy application at boot without starting it yet
+      ansible.builtin.systemd:
+        name: kroy-app
+        enabled: true
+        daemon_reload: true
+
+    - name: Install protected site deployment script
+      ansible.builtin.template:
+        src: templates/kroy-site-deploy.j2
+        dest: /usr/local/sbin/kroy-site-deploy
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Allow SSH user to run only site deployment as kroy
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/kroy-site-deploy
+        owner: root
+        group: root
+        mode: '0440'
+        content: "{{ kroy_connection_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-site-deploy *\n"
+        validate: /usr/sbin/visudo -cf %s
 
     - name: Check whether the existing environment file is present
       ansible.builtin.stat:

@@ -53,7 +53,7 @@ Bootstrap не изменяет конфигурации Nginx и PostgreSQL и 
 группе. Отдельный sudoers или привилегированный помощник
 Kroy не добавляется.
 
-Сначала выполните bootstrap:
+Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
 
 ```bash
 ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
@@ -61,10 +61,10 @@ ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
   -e kroy_user=kroy
 ```
 
-Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
+Затем один раз настройте отдельный Kroy Nginx и системный reverse proxy:
 
 ```bash
-ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
+ansible-playbook -i inventory ansible/kroy-nginx.yml \
   -e kroy_root=/srv/kroy \
   -e kroy_user=kroy
 ```
@@ -104,11 +104,9 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 используют переданный release Yarn через `/usr/bin/node` и зависимости без
 обращения к реестру пакетов.
 
-После установки зависимостей deploy выполняет `yarn db:migrate` от имени
-пользователя `kroy`, затем собирает приложение и устанавливает
-`kroy-app.service`. Сервис запускает `yarn vyaz:serve` из `/srv/kroy`,
-перезапускается при обновлении приложения и включается в автозапуск раньше
-`kroy-nginx.service`.
+После bootstrap systemd-unit `kroy-app` уже подготовлен. Deploy выполняет
+`yarn db:migrate` от имени пользователя `kroy`, запускает приложение и
+перезапускает его только при изменениях.
 
 После первого применения проверьте сервис:
 

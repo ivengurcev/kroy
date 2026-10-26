@@ -114,32 +114,12 @@
           - "{{ kroy_root }}/dist/kroy/nginx/nginx.conf"
       changed_when: false
 
-    - name: Determine the SSH connection user for site deployment
-      ansible.builtin.command: id -un
-      become: false
-      register: kroy_deploy_ssh_user
-      changed_when: false
-      check_mode: false
-
-    - name: Install protected site deployment script
+    - name: Reload Kroy Nginx after configuration changes
       become: true
-      ansible.builtin.template:
-        src: templates/kroy-site-deploy.j2
-        dest: /usr/local/sbin/kroy-site-deploy
-        owner: root
-        group: root
-        mode: '0755'
-      notify: Restart Kroy app
-
-    - name: Allow SSH user to run only site deployment as kroy
-      become: true
-      ansible.builtin.copy:
-        dest: /etc/sudoers.d/kroy-site-deploy
-        owner: root
-        group: root
-        mode: '0440'
-        content: "{{ kroy_deploy_ssh_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-site-deploy *\n"
-        validate: /usr/sbin/visudo -cf %s
+      ansible.builtin.systemd:
+        name: kroy-nginx
+        state: reloaded
+      when: kroy_nginx_reload_required | default(false) | bool
 
     - name: Apply PostgreSQL migrations
       become: true
@@ -152,15 +132,7 @@
         chdir: "{{ kroy_root }}"
       changed_when: true
 
-    - name: Install Kroy application systemd unit
-      become: true
-      ansible.builtin.template:
-        src: templates/kroy-app.service.j2
-        dest: /etc/systemd/system/kroy-app.service
-        mode: '0644'
-      notify: Restart Kroy app
-
-    - name: Enable and start Kroy application before Nginx
+    - name: Ensure Kroy application is enabled and started
       become: true
       ansible.builtin.systemd:
         name: kroy-app
@@ -174,11 +146,3 @@
       ansible.builtin.systemd:
         name: kroy-app
         state: restarted
-
-    - name: Reload Kroy Nginx
-      become: true
-      ansible.builtin.systemd:
-        name: kroy-nginx
-        state: reloaded
-
-- import_playbook: kroy-nginx.yml
