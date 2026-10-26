@@ -2,6 +2,7 @@ import { pool } from "../db/client.mjs";
 import { getSiteTheme, setSiteTheme } from "../db/siteThemes.mjs";
 import getHostname from "./getHostname.mjs";
 import { getTheme, listThemes } from "../themes/themeRegistry.mjs";
+import { getAllTokenMetadata } from "../themes/tokenMetadata.mjs";
 
 async function getCurrentSite(c) {
   const hostname = getHostname(c);
@@ -31,7 +32,7 @@ export async function getSiteThemeSettings(c) {
     if (!site) return c.json({ error: "Site not found" }, 404);
 
     const settings = await getSiteTheme(site.id);
-    return c.json({ themes: themeDetails(), settings });
+    return c.json({ themes: themeDetails(), metadata: getAllTokenMetadata(), settings });
   } catch (error) {
     console.error("Failed to load site theme", error);
     return c.json({ error: "Internal server error" }, 500);

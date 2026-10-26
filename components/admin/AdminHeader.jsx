@@ -22,6 +22,8 @@ export default function AdminHeader({
     const [logoutError, setLogoutError] = useState('');
     const detailsButtonRef = useRef(null);
     const pagesMode = mode === 'pages';
+    const siteMode = mode === 'site';
+    const editorMode = !pagesMode && !siteMode;
     const isSaving = saveStatus === 'saving';
     const saveDisabled = loadStatus !== 'success' || !isDirty || isSaving;
     const saveLabel = loadStatus !== 'success'
@@ -41,6 +43,12 @@ export default function AdminHeader({
             isDirty
             && !window.confirm('Есть несохранённые изменения. Перейти к карте страниц?')
         ) {
+            event.preventDefault();
+        }
+    }
+
+    function openSiteSettings(event) {
+        if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти к настройкам сайта?')) {
             event.preventDefault();
         }
     }
@@ -95,10 +103,17 @@ export default function AdminHeader({
                         <OysiteMark className={styles.compactLogo} aria-hidden="true" />
                     </div>
 
-                    <a className={styles.action} href="/admin/site" aria-label="Сайт" title="Управление оформлением сайта">
-                        <Icon name="globe" />
-                        <span className={styles.actionLabel}>Сайт</span>
-                    </a>
+                    {siteMode ? (
+                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Сайт" aria-current="page">
+                            <Icon name="globe" />
+                            <span className={styles.actionLabel}>Сайт</span>
+                        </span>
+                    ) : (
+                        <a className={styles.action} href="/admin/site" aria-label="Сайт" title="Управление оформлением сайта" onClick={openSiteSettings}>
+                            <Icon name="globe" />
+                            <span className={styles.actionLabel}>Сайт</span>
+                        </a>
+                    )}
 
                     {pagesMode ? (
                         <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
@@ -113,7 +128,7 @@ export default function AdminHeader({
                     )}
                 </div>
 
-                {!pagesMode && (
+                {editorMode && (
                     <div className={styles.centerGroup}>
                         <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
                             {page.title || '—'}
@@ -133,7 +148,7 @@ export default function AdminHeader({
                 )}
 
                 <div className={styles.rightGroup}>
-                    {!pagesMode && (
+                    {editorMode && (
                         <Button
                             className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                             variant="primary"
@@ -167,7 +182,7 @@ export default function AdminHeader({
                     </Button>
                 </div>
 
-                {!pagesMode && saveStatus === 'error' && (
+                {editorMode && saveStatus === 'error' && (
                     <span className={styles.saveError} role="alert">Не удалось сохранить страницу.</span>
                 )}
                 {logoutError && (
@@ -175,7 +190,7 @@ export default function AdminHeader({
                 )}
             </Card>
 
-            {!pagesMode && detailsOpen && (
+            {editorMode && detailsOpen && (
                 <PageDetailsDialog
                     page={page}
                     onSaved={savePageDetails}

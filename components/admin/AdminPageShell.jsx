@@ -8,12 +8,13 @@ export default function AdminPageShell({
     actions,
     status = 'success',
     errorMessage,
+    headerMode = 'pages',
     children,
 }) {
     return (
         <div className={`${theme.theme} ${styles.shell}`}>
             <header className={styles.header}>
-                <AdminHeader mode="pages" />
+                <AdminHeader mode={headerMode} />
                 <Card className={styles.sectionBar}>
                     <h1>{title}</h1>
                     <div className={styles.actions}>{actions}</div>

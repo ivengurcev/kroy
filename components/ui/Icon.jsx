@@ -11,6 +11,7 @@ import GlobeIcon from './icons/globe.svg';
 import HomeIcon from './icons/home.svg';
 import LogoutIcon from './icons/logout.svg';
 import MoreIcon from './icons/more.svg';
+import MoonIcon from './icons/moon.svg';
 import PagesIcon from './icons/pages.svg';
 import PhoneIcon from './icons/phone.svg';
 import PreviewIcon from './icons/preview.svg';
@@ -19,6 +20,7 @@ import RestoreIcon from './icons/restore.svg';
 import SaveIcon from './icons/save.svg';
 import SeoIcon from './icons/seo.svg';
 import SettingsIcon from './icons/settings.svg';
+import SunIcon from './icons/sun.svg';
 import TabletIcon from './icons/tablet.svg';
 import TrashIcon from './icons/trash.svg';
 import UpIcon from './icons/up.svg';
@@ -45,10 +47,12 @@ const icons = {
     home: HomeIcon,
     logout: LogoutIcon,
     more: MoreIcon,
+    moon: MoonIcon,
     chevronRight: ChevronRightIcon,
     desktop: DesktopIcon,
     tablet: TabletIcon,
     phone: PhoneIcon,
+    sun: SunIcon,
 };
 
 export default function Icon({ name, size = 20, className = '', ...props }) {
