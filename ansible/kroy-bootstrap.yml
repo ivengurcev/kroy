@@ -150,6 +150,16 @@
         content: "{{ kroy_connection_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-run *\n"
         validate: /usr/sbin/visudo -cf %s
 
+    - name: Allow SSH user to manage only Kroy services
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/kroy-services
+        owner: root
+        group: root
+        mode: '0440'
+        content: |
+          {{ kroy_connection_user.stdout | trim }} ALL=(root) NOPASSWD: /usr/bin/systemctl start kroy-app, /usr/bin/systemctl restart kroy-app, /usr/bin/systemctl reload kroy-nginx
+        validate: /usr/sbin/visudo -cf %s
+
     - name: Remove legacy site deployment script
       ansible.builtin.file:
         path: /usr/local/sbin/kroy-site-deploy
