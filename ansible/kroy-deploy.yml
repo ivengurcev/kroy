@@ -90,6 +90,7 @@
           - "--exclude=.git"
           - "--exclude=.env"
           - "--exclude=dist/sites/"
+          - "--exclude=dist/kroy/staging/"
           - "--exclude=dist/kroy/nginx/"
           - "--exclude=data/"
           - "--exclude=/node_modules/"
@@ -97,6 +98,33 @@
           - "--exclude=*.log"
           - "--exclude=ansible/"
       notify: Restart Kroy app
+
+    - name: Determine the SSH connection user for site deployment
+      ansible.builtin.command: id -un
+      become: false
+      register: kroy_deploy_ssh_user
+      changed_when: false
+      check_mode: false
+
+    - name: Install protected site deployment script
+      become: true
+      ansible.builtin.template:
+        src: templates/kroy-site-deploy.j2
+        dest: /usr/local/sbin/kroy-site-deploy
+        owner: root
+        group: root
+        mode: '0755'
+      notify: Restart Kroy app
+
+    - name: Allow SSH user to run only site deployment as kroy
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/kroy-site-deploy
+        owner: root
+        group: root
+        mode: '0440'
+        content: "{{ kroy_deploy_ssh_user.stdout | trim }} ALL=(kroy) NOPASSWD: /usr/local/sbin/kroy-site-deploy *\n"
+        validate: /usr/sbin/visudo -cf %s
 
     - name: Apply PostgreSQL migrations
       become: true

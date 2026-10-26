@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ] || ! printf '%s\n' "$1" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$'; then
+    echo 'Invalid site slug' >&2
+    exit 2
+fi
+
+cd {{ kroy_root }}
+{{ kroy_node_binary }} {{ kroy_yarn_release }} site:build "$1"
+{{ kroy_node_binary }} {{ kroy_yarn_release }} site:publish "$1"

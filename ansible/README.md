@@ -101,3 +101,15 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 systemctl status kroy-app kroy-nginx
 systemctl is-enabled kroy-app kroy-nginx
 ```
+
+После deploy приложения публикация отдельного сайта выполняется локально одной
+командой:
+
+```bash
+yarn site:deploy demo
+```
+
+Команда подключается по SSH-алиасу `enduro-koltushi.ru`. На VPS защищённый
+скрипт сначала запускает существующие `site:build`, затем `site:publish` от
+пользователя `kroy`; при ошибке сборки публикация не запускается. Sudo разрешён
+только для этого скрипта и только без запроса пароля.

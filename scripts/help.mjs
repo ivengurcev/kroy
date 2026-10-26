@@ -23,6 +23,7 @@ console.log(`Kroy — команды проекта
                                      Удалить домен сайта
 
 Публикация
+  yarn site:deploy demo             Собрать и опубликовать сайт на VPS
   yarn site:build demo               Подготовить статическую версию сайта
   yarn site:publish demo             Опубликовать подготовленную версию
   yarn site:releases demo            Показать сохранённые релизы сайта
@@ -36,7 +37,7 @@ console.log(`Kroy — команды проекта
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>
   Хочу открыть редактор              yarn db → yarn vyaz:build → yarn vyaz:serve
   Хочу посмотреть публичный сайт     yarn preview → yarn site:build <slug> → yarn site:publish <slug>
-  Хочу опубликовать изменения        yarn site:build <slug> → yarn site:publish <slug>
+  Хочу опубликовать изменения        yarn site:deploy <slug>
   Хочу откатить релиз                yarn site:releases <slug> → yarn site:rollback <slug> <release-id>
 
 Полная документация: README.md`);
