@@ -9,6 +9,7 @@ import EditIcon from './icons/edit.svg';
 import ForwardIcon from './icons/forward.svg';
 import GlobeIcon from './icons/globe.svg';
 import HomeIcon from './icons/home.svg';
+import LogoutIcon from './icons/logout.svg';
 import MoreIcon from './icons/more.svg';
 import PagesIcon from './icons/pages.svg';
 import PhoneIcon from './icons/phone.svg';
@@ -42,6 +43,7 @@ const icons = {
     globe: GlobeIcon,
     seo: SeoIcon,
     home: HomeIcon,
+    logout: LogoutIcon,
     more: MoreIcon,
     chevronRight: ChevronRightIcon,
     desktop: DesktopIcon,

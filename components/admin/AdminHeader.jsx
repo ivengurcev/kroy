@@ -18,6 +18,8 @@ export default function AdminHeader({
     onPageDetailsChange,
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [logoutError, setLogoutError] = useState('');
     const detailsButtonRef = useRef(null);
     const pagesMode = mode === 'pages';
     const isSaving = saveStatus === 'saving';
@@ -51,6 +53,37 @@ export default function AdminHeader({
     function savePageDetails(updatedPage) {
         onPageDetailsChange(updatedPage);
         closePageDetails();
+    }
+
+    async function logOut() {
+        if (
+            isDirty
+            && !window.confirm('Есть несохранённые изменения. Выйти из аккаунта?')
+        ) {
+            return;
+        }
+
+        setLogoutError('');
+        setIsLoggingOut(true);
+        try {
+            const csrfResponse = await fetch('/auth/csrf', { credentials: 'same-origin' });
+            if (!csrfResponse.ok) throw new Error('Не удалось получить CSRF-токен.');
+            const { csrfToken } = await csrfResponse.json();
+            if (!csrfToken) throw new Error('CSRF-токен отсутствует.');
+
+            const body = new URLSearchParams({ csrfToken });
+            const response = await fetch('/auth/signout', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body,
+            });
+            if (!response.ok) throw new Error('Не удалось завершить сессию.');
+            window.location.assign('/auth/signin');
+        } catch (error) {
+            setLogoutError(error.message || 'Не удалось выйти из аккаунта.');
+            setIsLoggingOut(false);
+        }
     }
 
     return (
@@ -122,10 +155,23 @@ export default function AdminHeader({
                         <Icon name="preview" />
                         <span className={styles.actionLabel}>Предпросмотр</span>
                     </Button>
+                    <Button
+                        className={styles.action}
+                        aria-label="Выйти"
+                        title="Выйти из аккаунта"
+                        disabled={isLoggingOut}
+                        onClick={logOut}
+                    >
+                        <Icon name="logout" />
+                        <span className={styles.actionLabel}>{isLoggingOut ? 'Выход…' : 'Выйти'}</span>
+                    </Button>
                 </div>
 
                 {!pagesMode && saveStatus === 'error' && (
                     <span className={styles.saveError} role="alert">Не удалось сохранить страницу.</span>
+                )}
+                {logoutError && (
+                    <span className={styles.saveError} role="alert">{logoutError}</span>
                 )}
             </Card>
 
