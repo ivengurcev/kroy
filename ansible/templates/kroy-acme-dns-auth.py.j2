@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Certbot manual DNS-01 hook for an existing acme-dns account."""
-import base64
 import json
 import os
 import time
@@ -22,9 +21,8 @@ request = urllib.request.Request(
     data=payload,
     headers={
         "Content-Type": "application/json",
-        "Authorization": "Basic " + base64.b64encode(
-            (credentials["username"] + ":" + credentials["password"]).encode("utf-8")
-        ).decode("ascii"),
+        "X-Api-User": credentials["username"],
+        "X-Api-Key": credentials["password"],
     },
     method="POST",
 )

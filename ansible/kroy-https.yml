@@ -43,6 +43,14 @@
         group: root
         mode: '0700'
 
+    - name: Ensure hook directory exists
+      ansible.builtin.file:
+        path: /usr/local/libexec
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Install acme-dns credentials for the DNS hook
       ansible.builtin.copy:
         content: "{{ lookup('ansible.builtin.file', acme_dns_credentials_path) }}"

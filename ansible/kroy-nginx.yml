@@ -18,17 +18,26 @@
         path: "{{ kroy_letsencrypt_live }}/fullchain.pem"
       register: kroy_oysite_certificate
 
+    - name: Check whether the Oysite private key is available
+      ansible.builtin.stat:
+        path: "{{ kroy_letsencrypt_live }}/privkey.pem"
+      register: kroy_oysite_private_key
+
     - name: Check Oysite certificate validity
       ansible.builtin.command:
         argv: [openssl, x509, -in, "{{ kroy_letsencrypt_live }}/fullchain.pem", -noout, -checkend, '0']
       when: kroy_oysite_certificate.stat.exists
       register: kroy_oysite_certificate_valid
       changed_when: false
+      failed_when: false
 
     - name: Check Oysite certificate names
       ansible.builtin.command:
         argv: [openssl, x509, -in, "{{ kroy_letsencrypt_live }}/fullchain.pem", -noout, -ext, subjectAltName]
-      when: kroy_oysite_certificate.stat.exists and kroy_oysite_certificate_valid.rc == 0
+      when:
+        - kroy_oysite_certificate.stat.exists
+        - kroy_oysite_private_key.stat.exists
+        - (kroy_oysite_certificate_valid.rc | default(1)) == 0
       register: kroy_oysite_certificate_san
       changed_when: false
 
@@ -36,6 +45,7 @@
       ansible.builtin.set_fact:
         kroy_tls_enabled: >-
           {{ kroy_oysite_certificate.stat.exists
+             and kroy_oysite_private_key.stat.exists
              and (kroy_oysite_certificate_valid.rc | default(1)) == 0
              and 'DNS:oysite.ru' in kroy_oysite_certificate_san.stdout | default('')
              and 'DNS:*.oysite.ru' in kroy_oysite_certificate_san.stdout | default('') }}
