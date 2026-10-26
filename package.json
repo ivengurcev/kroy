@@ -38,7 +38,7 @@
     "preview:start": "yarn node --env-file=.env scripts/startNginx.mjs",
     "preview:validate": "yarn node --env-file=.env scripts/nginxControl.mjs validate",
     "preview:reload": "yarn node --env-file=.env scripts/nginxControl.mjs reload",
-    "vyaz:build": "yarn parts:generate && yarn node --env-file=.env server.mjs --build-public --build-ssr",
+    "vyaz:build": "yarn parts:generate && yarn node --env-file=.env server.mjs --build-public --build-ssr --minify",
     "vyaz:serve": "yarn node --env-file=.env server.mjs --serve"
   },
   "dependencies": {
