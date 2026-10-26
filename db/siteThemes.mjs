@@ -43,19 +43,19 @@ async function saveSiteTheme(siteId, themeId, themeMode, overrides) {
   return toSiteTheme(row);
 }
 
-export async function setSiteTheme(siteId, { themeId, themeMode } = {}) {
+export async function setSiteTheme(siteId, { themeId, themeMode, overrides } = {}) {
   const current = await getSiteTheme(siteId);
   if (!current) throw new Error(`Сайт ${siteId} не найден`);
 
   const nextThemeId = themeId ?? current.themeId;
   const nextThemeMode = themeMode ?? current.themeMode;
-  const overrides = normalizeThemeOverrides(
+  const nextOverrides = normalizeThemeOverrides(
     nextThemeId,
     nextThemeMode,
-    current.overrides,
+    overrides ?? current.overrides,
   );
 
-  return saveSiteTheme(siteId, nextThemeId, nextThemeMode, overrides);
+  return saveSiteTheme(siteId, nextThemeId, nextThemeMode, nextOverrides);
 }
 
 export async function setSiteThemeOverride(siteId, palette, token, value) {

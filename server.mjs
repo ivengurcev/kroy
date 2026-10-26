@@ -8,6 +8,7 @@ import postPage from './api/postPage.mjs';
 import postMedia from './api/postMedia.mjs';
 import putPage from './api/putPage.mjs';
 import restorePage from './api/restorePage.mjs';
+import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
 
 await createApp({
     auth,
@@ -34,6 +35,12 @@ await createApp({
             isPrivate: true,
             title: 'Корзина Oysite',
             component: './pages/TrashPage.jsx',
+        },
+        {
+            path: '/admin/site',
+            isPrivate: true,
+            title: 'Оформление сайта Oysite',
+            component: './pages/SitePage.jsx',
         },
         {
             path: '/admin/pages/:pageId',
@@ -94,6 +101,16 @@ await createApp({
             '/pages/:pageId/restore',
             { method: 'POST', private: true },
             restorePage,
+        ],
+        [
+            '/site/theme',
+            { method: 'GET', private: true },
+            getSiteThemeSettings,
+        ],
+        [
+            '/site/theme',
+            { method: 'PATCH', private: true },
+            patchSiteTheme,
         ],
         [
             '*',

@@ -95,10 +95,10 @@ export default function AdminHeader({
                         <OysiteMark className={styles.compactLogo} aria-hidden="true" />
                     </div>
 
-                    <Button className={styles.action} aria-label="Сайт" title="Управление сайтом" disabled>
+                    <a className={styles.action} href="/admin/site" aria-label="Сайт" title="Управление оформлением сайта">
                         <Icon name="globe" />
                         <span className={styles.actionLabel}>Сайт</span>
-                    </Button>
+                    </a>
 
                     {pagesMode ? (
                         <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
