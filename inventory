@@ -25,9 +25,9 @@ esac
 case "${1:-}" in
     --list)
         if [ -n "$user" ]; then
-            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"],"vars":{"ansible_user":"%s"}}}\n' "$host" "$user"
+            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"],"vars":{"ansible_user":"%s","ansible_python_interpreter":"/usr/bin/python3"}}}\n' "$host" "$user"
         else
-            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"]}}\n' "$host"
+            printf '{"_meta":{"hostvars":{}},"kroy":{"hosts":["%s"],"vars":{"ansible_python_interpreter":"/usr/bin/python3"}}}\n' "$host"
         fi
         ;;
     --host)

@@ -17,9 +17,11 @@ Nginx от пользователя приложения. Системный Ngi
 Существующий пользователь и каталоги не пересоздаются и не удаляются.
 
 Bootstrap устанавливает системные зависимости: Nginx, PostgreSQL, `rsync`,
-`acl`, `python3-psycopg2` и строго Node.js `24.19.0` из NodeSource. При наличии
-Node.js 22 или другой версии пакет обновляется до этой точной версии; после
-установки выполняется проверка `node --version`.
+`acl`, `python3-debian`, `python3-psycopg2` и строго Node.js `24.19.0` из
+NodeSource. Репозиторий NodeSource настраивается в формате deb822
+(`/etc/apt/sources.list.d/nodesource.sources`), а legacy `nodesource.list`
+удаляется. При наличии Node.js 22 или другой версии пакет обновляется до этой
+точной версии; после установки выполняется проверка `node --version`.
 
 Playbook не перезаписывает основной `nginx.conf`; он добавляет отдельный файл в
 `conf.d` и systemd unit Kroy.

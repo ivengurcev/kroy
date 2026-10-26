@@ -19,6 +19,7 @@
           - postgresql
           - rsync
           - acl
+          - python3-debian
           - python3-psycopg2
         state: present
         update_cache: true
@@ -36,12 +37,32 @@
         dest: /etc/apt/keyrings/nodesource.asc
         mode: '0644'
 
+    - name: Remove legacy NodeSource APT list
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/nodesource.list
+        state: absent
+      register: kroy_nodesource_legacy
+
     - name: Configure NodeSource Node.js 24 repository
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/nodesource.asc] https://deb.nodesource.com/node_24.x nodistro main"
-        filename: nodesource
+      ansible.builtin.deb822_repository:
+        name: nodesource
+        types:
+          - deb
+        uris:
+          - https://deb.nodesource.com/node_24.x
+        suites:
+          - nodistro
+        components:
+          - main
+        signed_by: /etc/apt/keyrings/nodesource.asc
+        enabled: true
         state: present
+      register: kroy_nodesource_repository
+
+    - name: Update APT cache after NodeSource repository changes
+      ansible.builtin.apt:
         update_cache: true
+      when: kroy_nodesource_legacy.changed or kroy_nodesource_repository.changed
 
     - name: Check installed Node.js version before installation
       ansible.builtin.command: node --version
