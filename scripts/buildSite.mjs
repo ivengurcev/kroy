@@ -1,5 +1,5 @@
 import { dirname, join, resolve } from 'node:path';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
@@ -9,6 +9,7 @@ import generateSiteRouting from './generateSiteRouting.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
+const DEFAULT_FAVICON_PATH = join(ROOT, 'design', 'oysite-brand-kit', 'icons', 'favicon.svg');
 const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
 const ASSET_BASE = '/_kroy/releases/__KROY_RELEASE__/assets';
@@ -137,6 +138,8 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
+    await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
+    await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
     await generateSiteParts(pages, site.slug);
     const pageRegistry = Object.fromEntries(
         pages.map(({ path, title, content }) => [path, { path, title, content }])

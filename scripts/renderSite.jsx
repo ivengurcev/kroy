@@ -42,6 +42,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                     <meta charSet="UTF-8" />
                     <title>{page.title}</title>
                     <link rel="stylesheet" href={`${assetBase}/app.css`} />
+                    <link rel="icon" href={`${assetBase}/favicon.svg`} type="image/svg+xml" />
                 </head>
                 <body>
                     <div id="root">

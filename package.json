@@ -20,6 +20,7 @@
     "db:seed": "yarn node --env-file=.env db/seed.mjs",
     "user:create": "yarn node --env-file=.env scripts/createUser.mjs",
     "parts:generate": "node scripts/discoverParts.mjs",
+    "dev": "node scripts/dev.mjs",
     "site:create": "yarn node --env-file=.env scripts/createSite.mjs",
     "site:domain:add": "yarn node --env-file=.env scripts/addSiteDomain.mjs",
     "site:domain:remove": "yarn node --env-file=.env scripts/removeSiteDomain.mjs",
