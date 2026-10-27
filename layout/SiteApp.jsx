@@ -24,23 +24,43 @@ export function normalizePathname(pathname) {
         : pathname;
 }
 
-export default function SiteApp({ pages, path, parts }) {
-    const [page, setPage] = useState(() => pages[path]);
+function defaultPathFromUrl(url) {
+    return normalizePathname(url.pathname);
+}
+
+function defaultUrlForPath(path, url) {
+    return url ?? path;
+}
+
+export default function SiteApp({
+    pages,
+    path,
+    parts,
+    pathFromUrl = defaultPathFromUrl,
+    urlForPath = defaultUrlForPath,
+    notFound,
+    tokens,
+}) {
+    const [currentPath, setCurrentPath] = useState(path);
+    const page = pages[currentPath];
+
+    useEffect(() => setCurrentPath(path), [path]);
 
     useEffect(() => {
         function navigate(url, push) {
-            const nextPage = pages[normalizePathname(url.pathname)];
+            const nextPath = normalizePathname(pathFromUrl(url));
+            const nextPage = pages[nextPath];
 
-            if (!nextPage) {
+            if (!nextPage && notFound === undefined) {
                 window.location.assign(url.href);
                 return;
             }
 
-            setPage(nextPage);
-            document.title = nextPage.title;
+            setCurrentPath(nextPath);
+            document.title = nextPage?.title ?? 'Страница не найдена';
 
             if (push) {
-                history.pushState(null, '', url);
+                history.pushState(null, '', urlForPath(nextPath, url));
             }
         }
 
@@ -92,11 +112,13 @@ export default function SiteApp({ pages, path, parts }) {
             document.removeEventListener('click', handleClick);
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [pages]);
+    }, [notFound, pages, pathFromUrl, urlForPath]);
 
     return (
-        <SiteRoot>
-            <Page key={page.path} content={page.content} parts={parts} />
+        <SiteRoot tokens={tokens}>
+            {page
+                ? <Page key={page.path} content={page.content} parts={parts} />
+                : notFound}
         </SiteRoot>
     );
 }

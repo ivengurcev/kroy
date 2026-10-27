@@ -61,6 +61,12 @@ export default function AdminHeader({
         }
     }
 
+    function openPreview(event) {
+        if (isDirty && !window.confirm('В предпросмотре будут показаны только сохранённые изменения. Продолжить?')) {
+            event.preventDefault();
+        }
+    }
+
     function closePageDetails() {
         setDetailsOpen(false);
         requestAnimationFrame(() => detailsButtonRef.current?.focus());
@@ -186,10 +192,18 @@ export default function AdminHeader({
                         <Icon name="publish" />
                         <span className={styles.actionLabel}>Опубликовать</span>
                     </Button>
-                    <Button className={styles.action} aria-label="Посмотреть сайт" title="Открыть предпросмотр сайта" disabled>
+                    <a
+                        className={styles.action}
+                        href={`/admin/preview?path=${encodeURIComponent(editorMode && page.path ? page.path : '/')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Посмотреть сайт"
+                        title="Открыть предпросмотр сайта"
+                        onClick={openPreview}
+                    >
                         <Icon name="preview" />
                         <span className={styles.actionLabel}>Предпросмотр</span>
-                    </Button>
+                    </a>
                     <Button
                         className={styles.action}
                         aria-label="Выйти"

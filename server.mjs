@@ -3,6 +3,7 @@ import auth, { hasAccess } from './auth.mjs';
 import deletePage from './api/deletePage.mjs';
 import getMedia from './api/getMedia.mjs';
 import getPage from './api/getPage.mjs';
+import getSitePreview from './api/getSitePreview.mjs';
 import patchPage from './api/patchPage.mjs';
 import postPage from './api/postPage.mjs';
 import postMedia from './api/postMedia.mjs';
@@ -41,6 +42,12 @@ await createApp({
             isPrivate: true,
             title: 'Оформление сайта Oysite',
             component: './pages/SitePage.jsx',
+        },
+        {
+            path: '/admin/preview',
+            isPrivate: true,
+            title: 'Предпросмотр Oysite',
+            component: './pages/PreviewPage.jsx',
         },
         {
             path: '/admin/pages/:pageId',
@@ -111,6 +118,11 @@ await createApp({
             '/site/theme',
             { method: 'PATCH', private: true },
             patchSiteTheme,
+        ],
+        [
+            '/site/preview',
+            { method: 'GET', private: true },
+            getSitePreview,
         ],
         [
             '*',
