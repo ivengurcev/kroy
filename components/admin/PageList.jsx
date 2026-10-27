@@ -103,7 +103,7 @@ export default function PageList({
                                         <>
                                             <span className={styles.path} title={page.path}>{page.path}</span>
                                             {mode === 'active' ? (
-                                                <a className={styles.title} href={`/admin/pages/${page.id}`} title={page.title}>{page.title}</a>
+                                                <a className={styles.title} href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`} title={page.title}>{page.title}</a>
                                             ) : (
                                                 <span className={styles.title} title={page.title}>{page.title}</span>
                                             )}

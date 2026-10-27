@@ -64,7 +64,7 @@ export default function PagesPage() {
 
             const page = await response.json();
 
-            window.location.assign(`/admin/pages/${page.id}/edit`);
+            window.location.assign(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`);
         } catch {
             setCreateStatus('error');
         }
@@ -112,21 +112,21 @@ export default function PagesPage() {
 
     const actions = (
         <>
-            <a href="/admin/pages/trash" title="Открыть корзину страниц"><Icon name="trash" /> Корзина</a>
             <Button variant="primary" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
                 <Icon name="add" /> Создать страницу
             </Button>
+            <a href="/admin/pages/trash" title="Открыть корзину страниц"><Icon name="trash" /> Корзина</a>
         </>
     );
 
     return (
         <AdminPageShell
             title="Карта страниц"
-            actions={actions}
             status={status}
             errorMessage="Не удалось загрузить страницы."
         >
             <div className={styles.content}>
+                <div className={styles.pageActions}>{actions}</div>
                 {showForm && (
                     <Card as="form" className={styles.createForm} onSubmit={createPage}>
                         <label>

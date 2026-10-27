@@ -42,6 +42,9 @@ export default function Editor() {
 
                 setContent(loadedContent);
                 setPage({ id: page.id, title: page.title, path: page.path });
+                if (page.path === '/' && window.location.pathname !== '/admin') {
+                    window.history.replaceState({}, '', '/admin');
+                }
                 setIsDirty(false);
                 setSaveStatus('success');
                 revision.current = 0;

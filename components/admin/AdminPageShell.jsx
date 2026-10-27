@@ -18,7 +18,7 @@ export default function AdminPageShell({
         <AdminLayout header={(
             <>
                 <AdminHeader mode={headerMode} title={title} isDirty={isDirty} saveStatus={saveStatus} loadStatus={status} onSave={onSave} />
-                {headerMode !== 'site' && <Card className={styles.sectionBar}>
+                {headerMode !== 'site' && headerMode !== 'pages' && <Card className={styles.sectionBar}>
                     <h1>{title}</h1>
                     <div className={styles.actions}>{actions}</div>
                 </Card>}

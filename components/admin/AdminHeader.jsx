@@ -23,8 +23,9 @@ export default function AdminHeader({
     const [logoutError, setLogoutError] = useState('');
     const detailsButtonRef = useRef(null);
     const pagesMode = mode === 'pages';
+    const trashMode = mode === 'trash';
     const siteMode = mode === 'site';
-    const editorMode = !pagesMode && !siteMode;
+    const editorMode = mode === 'editor';
     const isSaving = saveStatus === 'saving';
     const saveDisabled = loadStatus !== 'success' || !isDirty || isSaving;
     const saveLabel = loadStatus !== 'success'
@@ -50,6 +51,12 @@ export default function AdminHeader({
 
     function openSiteSettings(event) {
         if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти к настройкам сайта?')) {
+            event.preventDefault();
+        }
+    }
+
+    function openHome(event) {
+        if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти на главную страницу?')) {
             event.preventDefault();
         }
     }
@@ -104,6 +111,18 @@ export default function AdminHeader({
                         <OysiteMark className={styles.compactLogo} aria-hidden="true" />
                     </div>
 
+                    {editorMode && page.path === '/' ? (
+                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Главная страница" aria-current="page">
+                            <Icon name="home" />
+                            <span className={styles.actionLabel}>Главная</span>
+                        </span>
+                    ) : (
+                        <a className={styles.action} href="/admin" aria-label="Главная страница" title="Открыть главную страницу" onClick={openHome}>
+                            <Icon name="home" />
+                            <span className={styles.actionLabel}>Главная</span>
+                        </a>
+                    )}
+
                     {siteMode ? (
                         <span className={`${styles.action} ${styles.activeAction}`} aria-label="Сайт" aria-current="page">
                             <Icon name="globe" />
@@ -129,10 +148,10 @@ export default function AdminHeader({
                     )}
                 </div>
 
-                {(editorMode || siteMode) && (
+                {(editorMode || siteMode || pagesMode || trashMode) && (
                     <div className={styles.centerGroup}>
-                        <span className={styles.pageTitle} title={siteMode ? title : (page.title || 'Текущая страница')}>
-                            {siteMode ? title : (page.title || '—')}
+                        <span className={styles.pageTitle} title={siteMode || pagesMode || trashMode ? title : (page.title || 'Текущая страница')}>
+                            {siteMode || pagesMode || trashMode ? title : (page.title || '—')}
                         </span>
                         {editorMode && <Button
                             className={styles.iconAction}

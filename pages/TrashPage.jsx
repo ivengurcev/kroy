@@ -56,6 +56,7 @@ export default function TrashPage() {
 
     return (
         <AdminPageShell
+            headerMode="trash"
             title="Корзина"
             actions={<a href="/admin/pages" title="Вернуться к карте страниц"><Icon name="back" /> Вернуться к страницам</a>}
             status={status}
