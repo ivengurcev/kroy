@@ -1,4 +1,5 @@
 import styles from './hero.module.css';
+import { socialType } from '../../socialLinks.mjs';
 
 function TelegramIcon() {
     return (
@@ -27,8 +28,8 @@ function LinkIcon() {
     );
 }
 
-function socialIcon(name) {
-    switch (name.toLowerCase()) {
+function socialIcon(type) {
+    switch (type) {
         case 'telegram':
             return <TelegramIcon />;
         case 'max':
@@ -40,10 +41,10 @@ function socialIcon(name) {
     }
 }
 
-function SocialLink({ name, link }) {
+function SocialLink({ name, link, type }) {
     return (
         <a className={styles.social} href={link} target="_blank" rel="noopener noreferrer">
-            <span className={styles.socialIcon} aria-hidden="true">{socialIcon(name)}</span>
+            <span className={styles.socialIcon} aria-hidden="true">{socialIcon(type)}</span>
             {name}
         </a>
     );
@@ -76,7 +77,13 @@ export default function Hero({
 }) {
     const visibleSocials = Array.isArray(socials)
         ? socials
-            .map(({ name, link }) => ({
+            .map((social) => ({
+                type: socialType(social),
+                name: social.name,
+                link: social.link,
+            }))
+            .map(({ type, name, link }) => ({
+                type,
                 name: typeof name === 'string' ? name.trim() : '',
                 link: typeof link === 'string' ? link.trim() : '',
             }))
@@ -100,8 +107,8 @@ export default function Hero({
 
                     {visibleSocials.length > 0 && (
                         <nav className={styles.socials} aria-label="Социальные сети">
-                            {visibleSocials.map(({ name, link }, index) => (
-                                <SocialLink key={`${name}-${link}-${index}`} name={name} link={link} />
+                            {visibleSocials.map(({ type, name, link }, index) => (
+                                <SocialLink key={`${name}-${link}-${index}`} type={type} name={name} link={link} />
                             ))}
                         </nav>
                     )}

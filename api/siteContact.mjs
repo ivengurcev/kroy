@@ -22,14 +22,13 @@ export async function patchSiteContactSettings(c) {
     const site = await getCurrentSite(c);
     if (!site) return c.json({ error: 'Site not found' }, 404);
 
-    const contacts = normalizeSiteContacts(body);
-    if (contacts.socials.some(({ name, link }) => !name || !link)) {
-        return c.json({ error: 'У каждой социальной ссылки должны быть название и URL.' }, 400);
-    }
-
     try {
+        const contacts = normalizeSiteContacts(body, { strictSocials: true });
         return c.json(await setSiteContacts(site.id, contacts));
     } catch (error) {
+        if (/корректную HTTPS-ссылку/.test(error.message)) {
+            return c.json({ error: error.message }, 400);
+        }
         console.error('Failed to save site contact settings', error);
         return c.json({ error: 'Internal server error' }, 500);
     }

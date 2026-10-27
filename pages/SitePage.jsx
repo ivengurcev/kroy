@@ -3,7 +3,7 @@ import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import TokenControl from '../components/ui/TokenControls.jsx';
-import Field from '../editor/Field.jsx';
+import SocialLinksEditor from '../components/admin/SocialLinksEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/admin/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 
@@ -107,17 +107,6 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
     </div>;
 }
 
-const CONTACT_FIELDS = {
-    socials: {
-        type: 'list',
-        label: 'Социальные сети',
-        fields: {
-            name: { type: 'input', label: 'Название', validators: { maxLength: 80 } },
-            link: { type: 'input', label: 'Ссылка', validators: { type: 'url', maxLength: 500 } },
-        },
-    },
-};
-
 function ContactSettings({ value, onChange }) {
     const contacts = value ?? {};
     const update = (name, nextValue) => onChange({ ...contacts, [name]: nextValue });
@@ -148,12 +137,7 @@ function ContactSettings({ value, onChange }) {
                     </label>
                 </div>
             </div>
-            <Field
-                name="socials"
-                schema={CONTACT_FIELDS.socials}
-                value={contacts.socials ?? []}
-                onChange={(socials) => update('socials', socials)}
-            />
+            <SocialLinksEditor value={contacts.socials ?? []} onChange={(socials) => update('socials', socials)} />
         </Card>
     );
 }

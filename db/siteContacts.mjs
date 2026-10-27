@@ -1,4 +1,5 @@
 import { pool } from './client.mjs';
+import { normalizeSocialLinks } from '../socialLinks.mjs';
 
 export const EMPTY_SITE_CONTACTS = {
     address: '',
@@ -19,7 +20,7 @@ function coordinate(value, min, max) {
     return Number.isFinite(number) && number >= min && number <= max ? number : null;
 }
 
-export function normalizeSiteContacts(value = {}) {
+export function normalizeSiteContacts(value = {}, { strictSocials = false } = {}) {
     const source = value && typeof value === 'object' && !Array.isArray(value)
         ? value
         : {};
@@ -30,12 +31,7 @@ export function normalizeSiteContacts(value = {}) {
         phone: text(source.phone, 100),
         latitude: coordinate(source.latitude, -90, 90),
         longitude: coordinate(source.longitude, -180, 180),
-        socials: Array.isArray(source.socials)
-            ? source.socials.slice(0, 50).map((social) => ({
-                name: text(social?.name, 80),
-                link: text(social?.link, 500),
-            })).filter(({ name, link }) => name || link)
-            : [],
+        socials: normalizeSocialLinks(source.socials, { strict: strictSocials }),
     };
 }
 
@@ -52,7 +48,7 @@ export async function getSiteContacts(siteId) {
 }
 
 export async function setSiteContacts(siteId, value) {
-    const contacts = normalizeSiteContacts(value);
+    const contacts = normalizeSiteContacts(value, { strictSocials: true });
     const { rows: [row] } = await pool.query(
         `UPDATE sites
          SET contact_settings = $2::jsonb
