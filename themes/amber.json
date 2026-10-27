@@ -1,0 +1,43 @@
+{
+  "id": "amber",
+  "name": "Янтарь",
+  "description": "Тёплая жёлто-оранжевая палитра с насыщенным янтарным акцентом.",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#fff9ed",
+      "--site-color-text": "#30200f",
+      "--site-color-text-secondary": "#715536",
+      "--site-color-accent": "#ff7000",
+      "--site-color-accent-hover": "#c95500",
+      "--site-color-border": "#30200f2e",
+      "--site-color-surface": "#ffffff",
+      "--site-color-surface-soft": "#fff0c7",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#26190a",
+      "--site-color-text": "#fff7e5",
+      "--site-color-text-secondary": "#dfc99c",
+      "--site-color-accent": "#ffd400",
+      "--site-color-accent-hover": "#ffe66b",
+      "--site-color-border": "#fff7e538",
+      "--site-color-surface": "#38240d",
+      "--site-color-surface-soft": "#52350b",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}
