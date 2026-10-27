@@ -50,6 +50,7 @@ export default function AdminHeader({
         : publication.status === 'publishing'
             ? 'Публикация…'
             : 'Опубликовать';
+    const logoutLabel = isLoggingOut ? 'Выход…' : 'Выйти';
 
     useEffect(() => {
         let cancelled = false;
@@ -276,7 +277,7 @@ export default function AdminHeader({
                 <div className={styles.rightGroup}>
                     {(editorMode || siteMode) && (
                         <Button
-                            className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
+                            className={`${styles.action} ${styles.compactAction} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                             variant="primary"
                             aria-label={saveLabel}
                             title={siteMode ? (isDirty && !isSaving ? 'Сохранить настройки оформления' : saveLabel) : saveTitle}
@@ -284,12 +285,11 @@ export default function AdminHeader({
                             onClick={onSave}
                         >
                             <Icon name="save" />
-                            <span className={styles.actionLabel}>{saveLabel}</span>
                         </Button>
                     )}
 
                     <Button
-                        className={`${styles.action} ${styles.publishAction}`}
+                        className={`${styles.action} ${styles.compactAction} ${styles.publishAction}`}
                         variant="outline"
                         aria-label={publishLabel}
                         title={isPublishing ? publishLabel : 'Опубликовать сайт'}
@@ -297,10 +297,9 @@ export default function AdminHeader({
                         onClick={publishSite}
                     >
                         <Icon name="publish" />
-                        <span className={styles.actionLabel}>{publishLabel}</span>
                     </Button>
                     <a
-                        className={styles.action}
+                        className={`${styles.action} ${styles.compactAction}`}
                         href={`/admin/preview?path=${encodeURIComponent(editorMode && page.path ? page.path : '/')}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -309,17 +308,15 @@ export default function AdminHeader({
                         onClick={openPreview}
                     >
                         <Icon name="preview" />
-                        <span className={styles.actionLabel}>Предпросмотр</span>
                     </a>
                     <Button
-                        className={styles.action}
-                        aria-label="Выйти"
-                        title="Выйти из аккаунта"
+                        className={`${styles.action} ${styles.compactAction}`}
+                        aria-label={logoutLabel}
+                        title={isLoggingOut ? 'Выход из аккаунта…' : 'Выйти из аккаунта'}
                         disabled={isLoggingOut}
                         onClick={logOut}
                     >
                         <Icon name="logout" />
-                        <span className={styles.actionLabel}>{isLoggingOut ? 'Выход…' : 'Выйти'}</span>
                     </Button>
                 </div>
 

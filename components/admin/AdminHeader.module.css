@@ -74,6 +74,13 @@
     padding-inline: var(--space-3);
 }
 
+.rightGroup .compactAction {
+    width: var(--control-height-sm);
+    min-width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    padding: 0;
+}
+
 a.action,
 span.action {
     display: inline-flex;
