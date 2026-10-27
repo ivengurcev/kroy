@@ -117,12 +117,11 @@ export default function SitePage() {
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; const requestDraft = cloneSettings(draft); const requestFingerprint = JSON.stringify(requestDraft); setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestDraft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft((current) => JSON.stringify(current) === requestFingerprint ? next : current); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
     const activeMode = draft?.themeMode;
-    return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} actions={<Button variant="primary" title="Сохранить настройки оформления" disabled={!dirty || saveStatus === 'saving'} onClick={save}>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>}>
+    return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save}>
         {draft && selectedTheme && <div className={styles.content}>
             <Card className={styles.panel}>
                 <div className={styles.sectionHeading}>
                     <div>
-                        <h2>Оформление</h2>
                         <p>{selectedTheme.name}</p>
                     </div>
                     <Button className={styles.resetAll} title="Сбросить все переопределения" aria-label="Сбросить все переопределения" disabled={!Object.keys(draft.overrides.light).length && !Object.keys(draft.overrides.dark).length && !Object.keys(draft.overrides.shared).length} onClick={() => updateDraft({ overrides: { light: {}, dark: {}, shared: {} } })}>

@@ -10,6 +10,7 @@ import PageDetailsDialog from './PageDetailsDialog.jsx';
 
 export default function AdminHeader({
     mode = 'editor',
+    title = '',
     page = {},
     isDirty = false,
     loadStatus = 'loading',
@@ -128,12 +129,12 @@ export default function AdminHeader({
                     )}
                 </div>
 
-                {editorMode && (
+                {(editorMode || siteMode) && (
                     <div className={styles.centerGroup}>
-                        <span className={styles.pageTitle} title={page.title || 'Текущая страница'}>
-                            {page.title || '—'}
+                        <span className={styles.pageTitle} title={siteMode ? title : (page.title || 'Текущая страница')}>
+                            {siteMode ? title : (page.title || '—')}
                         </span>
-                        <Button
+                        {editorMode && <Button
                             className={styles.iconAction}
                             variant="compact"
                             ref={detailsButtonRef}
@@ -143,17 +144,17 @@ export default function AdminHeader({
                             onClick={() => setDetailsOpen(true)}
                         >
                             <Icon name="settings" />
-                        </Button>
+                        </Button>}
                     </div>
                 )}
 
                 <div className={styles.rightGroup}>
-                    {editorMode && (
+                    {(editorMode || siteMode) && (
                         <Button
                             className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                             variant="primary"
                             aria-label={saveLabel}
-                            title={saveTitle}
+                            title={siteMode ? (isDirty && !isSaving ? 'Сохранить настройки оформления' : saveLabel) : saveTitle}
                             disabled={saveDisabled}
                             onClick={onSave}
                         >
@@ -182,8 +183,8 @@ export default function AdminHeader({
                     </Button>
                 </div>
 
-                {editorMode && saveStatus === 'error' && (
-                    <span className={styles.saveError} role="alert">Не удалось сохранить страницу.</span>
+                {(editorMode || siteMode) && saveStatus === 'error' && (
+                    <span className={styles.saveError} role="alert">Не удалось сохранить {siteMode ? 'оформление' : 'страницу'}.</span>
                 )}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>

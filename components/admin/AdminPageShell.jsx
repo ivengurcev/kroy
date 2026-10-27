@@ -9,16 +9,19 @@ export default function AdminPageShell({
     status = 'success',
     errorMessage,
     headerMode = 'pages',
+    isDirty = false,
+    saveStatus = 'idle',
+    onSave,
     children,
 }) {
     return (
         <div className={`${theme.theme} ${styles.shell}`}>
             <header className={styles.header}>
-                <AdminHeader mode={headerMode} />
-                <Card className={styles.sectionBar}>
+                <AdminHeader mode={headerMode} title={title} isDirty={isDirty} saveStatus={saveStatus} loadStatus={status} onSave={onSave} />
+                {headerMode !== 'site' && <Card className={styles.sectionBar}>
                     <h1>{title}</h1>
                     <div className={styles.actions}>{actions}</div>
-                </Card>
+                </Card>}
             </header>
 
             <main className={styles.content}>
