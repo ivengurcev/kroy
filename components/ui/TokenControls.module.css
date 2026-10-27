@@ -1,0 +1,128 @@
+.control {
+    display: inline-flex;
+    gap: var(--space-1);
+    min-width: 0;
+    width: 100%;
+    align-items: center;
+}
+
+.input,
+.trigger {
+    min-width: 0;
+    width: 100%;
+    height: 34px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: inherit;
+    font: inherit;
+    background: var(--color-surface);
+}
+
+.input:focus,
+.trigger:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(12 129 122 / 12%);
+}
+
+.colorPicker {
+    width: 34px;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+}
+
+.colorPicker:disabled,
+.colorPicker:disabled + .input,
+.control:has(.input:disabled) {
+    filter: saturate(.35);
+    cursor: not-allowed;
+}
+
+.input:disabled,
+.trigger:disabled {
+    color: var(--color-disabled-text);
+    border-color: var(--color-disabled-border);
+    background: var(--color-disabled-bg);
+    cursor: not-allowed;
+}
+
+.colorHex {
+    max-width: 110px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.reset {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    background: transparent;
+    cursor: pointer;
+}
+
+.reset:disabled {
+    cursor: default;
+}
+
+.expression {
+    color: var(--color-text-secondary);
+    background: var(--color-sidebar);
+}
+
+.fontMenu {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    cursor: pointer;
+}
+
+.trigger:disabled {
+    cursor: not-allowed;
+}
+
+.menu {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + var(--space-1));
+    right: 0;
+    left: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+}
+
+.option {
+    display: block;
+    width: 100%;
+    padding: var(--space-2);
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    text-align: left;
+    background: transparent;
+    cursor: pointer;
+}
+
+.option:hover,
+.option:focus {
+    background: var(--color-sidebar);
+    outline: none;
+}

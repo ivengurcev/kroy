@@ -69,7 +69,6 @@ function sharedDefaults(theme) {
         '--site-space-base': theme.tokens.light['--site-space-base'],
         '--site-radius-base': theme.tokens.light['--site-radius-base'],
         '--site-container-max': theme.tokens.light['--site-container-max'],
-        '--site-page-gutter': theme.tokens.light['--site-page-gutter'],
     };
 }
 
@@ -161,7 +160,7 @@ export function getThemeTokens(themeId, mode, overrides = {}, systemMode = 'ligh
     const theme = getTheme(themeId);
     const palette = resolveThemeMode(mode, systemMode);
     const normalized = normalizeOverrideShape(theme, mode, overrides);
-    return { ...paletteDefaults(theme, palette), ...sharedDefaults(theme), ...(normalized[palette] ?? {}), ...(normalized.shared ?? {}), ...computedTokens() };
+    return { ...paletteDefaults(theme, palette), ...sharedDefaults(theme), '--site-page-gutter': theme.tokens.light['--site-page-gutter'], ...(normalized[palette] ?? {}), ...(normalized.shared ?? {}), ...computedTokens() };
 }
 
 export function normalizeThemeOverrides(themeId, mode, overrides = {}) {

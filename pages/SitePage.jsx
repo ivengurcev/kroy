@@ -3,6 +3,7 @@ import AdminPageShell from '../components/admin/AdminPageShell.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import TokenControl from '../components/ui/TokenControls.jsx';
 import styles from './SitePage.module.css';
 
 const MODE_OPTIONS = [
@@ -13,38 +14,17 @@ const MODE_OPTIONS = [
 const TOKEN_GROUPS = [
     { id: 'colors', label: 'Цвета', match: (token) => token.startsWith('--site-color-') },
     { id: 'typography', label: 'Типографика', match: (token) => token.startsWith('--site-font-') || token === '--site-line-height' },
-    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('container') || token.includes('page-gutter') || token.includes('radius') },
+    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('container') || token.includes('radius') },
     { id: 'spacing', label: 'Отступы', match: (token) => token.startsWith('--site-space-') },
 ];
 const SHARED_GROUPS = [
     { id: 'statuses', label: 'Статусы', match: (token) => token.startsWith('--site-color-') },
     { id: 'typography', label: 'Типографика', match: (token) => token.startsWith('--site-font-') || token === '--site-line-height' },
-    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('space-base') || token.includes('radius-base') || token.includes('container') || token.includes('page-gutter') },
-];
-const FONT_OPTIONS = [
-    'Arial, Helvetica, sans-serif',
-    'Georgia, "Times New Roman", serif',
-    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('space-base') || token.includes('radius-base') || token.includes('container') },
 ];
 
 function cloneSettings(settings) {
     return { themeId: settings.themeId, themeMode: settings.themeMode, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
-}
-
-function hexColor(value) {
-    if (typeof value !== 'string') return '#000000';
-    if (/^#[0-9a-f]{6}$/i.test(value)) return `${value}ff`;
-    if (/^#[0-9a-f]{8}$/i.test(value)) return value;
-    const match = value.match(/rgba?\(\s*(\d+)\s*[ ,]\s*(\d+)\s*[ ,]\s*(\d+)(?:\s*\/\s*([\d.]+))?\s*\)/i);
-    if (!match) return '#000000';
-    const channels = match.slice(1, 4).map((channel) => Math.max(0, Math.min(255, Number(channel))).toString(16).padStart(2, '0'));
-    const alpha = match[4] === undefined ? 'ff' : Math.round(Math.max(0, Math.min(1, Number(match[4]))) * 255).toString(16).padStart(2, '0');
-    return `#${channels.join('')}${alpha}`;
-}
-
-function parseDimension(value) {
-    const match = typeof value === 'string' && value.trim().match(/^(-?(?:\d+\.?\d*|\.\d+))(px|rem|em|vw|vh|%)?$/);
-    return match ? { number: match[1], unit: match[2] || '' } : null;
 }
 
 function tokenInfo(token, metadata) {
@@ -78,41 +58,21 @@ function ThemePicker({ themes, selectedId, onChange }) {
     );
 }
 
-function TokenControl({ palette, token, baseValue, overrideValue, info, disabled, onChange, onReset }) {
-    const effectiveValue = overrideValue ?? baseValue;
-    const [draftValue, setDraftValue] = useState(effectiveValue);
-    const [focused, setFocused] = useState(false);
-    const overridden = overrideValue !== undefined;
-    const dimension = parseDimension(effectiveValue);
-    const hasExpression = !dimension && (info.type === 'dimension' || info.type === 'number');
-    useEffect(() => { if (!focused) setDraftValue(effectiveValue); }, [effectiveValue, focused]);
-    function changeValue(value) { setDraftValue(value); onChange(palette, token, value); }
-    function changeDimensionNumber(value) { const current = parseDimension(draftValue) || parseDimension(baseValue) || { unit: info.units?.[0] || '' }; changeValue(value === '' ? '' : `${value}${current.unit}`); }
-    function changeDimensionUnit(unit) { const current = parseDimension(draftValue) || parseDimension(baseValue); if (current) changeValue(`${current.number}${unit}`); }
-    const reset = overridden && <button className={styles.resetToken} type="button" title="Вернуть значение темы" aria-label={`Сбросить ${info.label}`} disabled={disabled} onClick={() => onReset(palette, token)}>↶</button>;
-    if (info.type === 'color') {
-        const value = hexColor(draftValue);
-        return <div className={styles.tokenControl}><input className={styles.colorPicker} type="color" value={value.slice(0, 7)} disabled={disabled} title={`Выбрать цвет: ${info.label}`} onChange={(event) => changeValue(`${event.target.value}ff`)} /><input className={styles.colorHex} value={focused ? draftValue : value} disabled={disabled} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(event) => { const next = event.target.value; setDraftValue(next); if (next === '' || /^#[0-9a-f]{0,8}$/i.test(next)) onChange(palette, token, next); }} aria-label={`${info.label}, HEX8`} />{reset}</div>;
-    }
-    if (info.type === 'font') {
-        const options = FONT_OPTIONS.includes(effectiveValue) ? FONT_OPTIONS : [effectiveValue, ...FONT_OPTIONS];
-        return <div className={styles.tokenControl}><select value={effectiveValue} disabled={disabled} style={{ fontFamily: effectiveValue }} title={info.label} onChange={(event) => changeValue(event.target.value)}>{options.map((font) => <option value={font} key={font}>{font.split(',')[0]}</option>)}</select>{reset}</div>;
-    }
-    if (info.type === 'dimension' && hasExpression) return <input className={styles.expressionValue} value={effectiveValue} readOnly disabled={disabled} title="Адаптивное значение задаётся внутренними стилями" />;
-    if (info.type === 'dimension' || info.type === 'number') {
-        const parsed = dimension || { number: '', unit: info.units?.[0] || '' };
-        return <div className={styles.tokenControl}><input className={styles.dimensionNumber} type="number" step={info.type === 'number' ? '0.05' : '1'} value={focused ? (parseDimension(draftValue)?.number ?? '') : parsed.number} disabled={disabled} title={info.label} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(event) => changeDimensionNumber(event.target.value)} />{info.type === 'dimension' && <select className={styles.dimensionUnit} value={parsed.unit} disabled={disabled} title="Единица измерения" onChange={(event) => changeDimensionUnit(event.target.value)}>{info.units.map((unit) => <option value={unit} key={unit}>{unit}</option>)}</select>}{reset}</div>;
-    }
-    return <div className={styles.tokenControl}><input value={draftValue} disabled={disabled} title={info.label} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onChange={(event) => !/[()]|\b(?:clamp|calc|var|min|max)\s*\(/i.test(event.target.value) && changeValue(event.target.value)} />{reset}</div>;
-}
-
 function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset }) {
     const paletteGroups = TOKEN_GROUPS.slice(0, 1).map((group) => ({ ...group, tokens: Object.keys(theme.palettes.light).filter(group.match) })).filter((group) => group.tokens.length);
     const sharedGroups = SHARED_GROUPS.map((group) => ({ ...group, tokens: Object.keys(theme.shared).filter(group.match) })).filter((group) => group.tokens.length);
+    const control = (palette, token, baseValue, disabled) => {
+        const info = tokenInfo(token, metadata);
+        const overridden = draft.overrides[palette][token] !== undefined;
+        return <div className={styles.tokenControl}>
+            <TokenControl type={info.type} value={draft.overrides[palette][token] ?? baseValue} label={info.label} units={info.units} disabled={disabled} onChange={(value) => onChange(palette, token, value)} />
+            {overridden && <button className={styles.resetToken} type="button" title="Вернуть значение темы" aria-label={`Сбросить ${info.label}`} disabled={disabled} onClick={() => onReset(palette, token)}>↶</button>}
+        </div>;
+    };
     const row = (token, palette) => {
         const info = tokenInfo(token, metadata);
         const base = palette === 'shared' ? theme.shared[token] : theme.palettes[palette][token];
-        return <tr key={`${palette}-${token}`}><th scope="row" title={token}>{info.label}</th><td colSpan={palette === 'shared' ? 2 : undefined}><TokenControl palette={palette} token={token} baseValue={base} overrideValue={draft.overrides[palette][token]} info={info} disabled={palette !== 'shared' && disabledPalette === palette} onChange={onChange} onReset={onReset} /></td>{palette !== 'shared' && <td><TokenControl palette="dark" token={token} baseValue={theme.palettes.dark[token]} overrideValue={draft.overrides.dark[token]} info={info} disabled={disabledPalette === 'dark'} onChange={onChange} onReset={onReset} /></td>}</tr>;
+        return <tr key={`${palette}-${token}`}><th scope="row" title={token}>{info.label}</th><td colSpan={palette === 'shared' ? 2 : undefined}>{control(palette, token, base, palette !== 'shared' && disabledPalette === palette)}</td>{palette !== 'shared' && <td>{control('dark', token, theme.palettes.dark[token], disabledPalette === 'dark')}</td>}</tr>;
     };
     return <div className={styles.tokenScroll}>
         <table className={styles.tokenTable}>
@@ -155,7 +115,7 @@ export default function SitePage() {
     function updateDraft(change) { setDraft((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
-    async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft(next); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
+    async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; const requestDraft = cloneSettings(draft); const requestFingerprint = JSON.stringify(requestDraft); setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestDraft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft((current) => JSON.stringify(current) === requestFingerprint ? next : current); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
     const activeMode = draft?.themeMode;
     return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} actions={<Button variant="primary" title="Сохранить настройки оформления" disabled={!dirty || saveStatus === 'saving'} onClick={save}>{saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>}>
         {draft && selectedTheme && <div className={styles.content}>

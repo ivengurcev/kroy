@@ -16,7 +16,6 @@ const explicitMetadata = {
     '--site-font-size-base': { label: 'Размер текста', type: 'dimension', units: ['px', 'rem'] },
     '--site-line-height': { label: 'Межстрочный интервал', type: 'number', units: [''] },
     '--site-container-max': { label: 'Максимальная ширина', type: 'dimension', units: ['px', 'rem'] },
-    '--site-page-gutter': { label: 'Боковой отступ', type: 'dimension', units: ['px', 'rem', 'vw'] },
     '--site-space-base': { label: 'Базовый шаг', type: 'dimension', units: ['px', 'rem'] },
     '--site-radius-base': { label: 'Базовое скругление', type: 'dimension', units: ['px', 'rem'] },
 };
