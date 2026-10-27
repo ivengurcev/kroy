@@ -4,7 +4,9 @@ function publicProps(part, props, contacts, catalog) {
         return { ...props, products: props.productIds?.map((id) => catalog.products.find((product) => product.id === id)).filter(Boolean) ?? [] };
     }
     if (part === '@kroy/category-products' && catalog) {
-        return { ...props, products: catalog.products.filter((product) => product.categoryId === props.categoryId) };
+        return { ...props, products: catalog.products.filter((product) => props.categoryId === '__all__'
+            || props.categoryId === '__uncategorized__' && !product.categoryId
+            || product.categoryId === props.categoryId) };
     }
     if (!contacts) return props;
 

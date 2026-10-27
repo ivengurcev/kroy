@@ -15,7 +15,12 @@ import styles from './category-products.module.css';
  * @kroy limit widget=number
  */
 export default function CategoryProducts({ title = '', categoryId = '', limit = 0, products = [] }) {
-    const filtered = products.filter((product) => product.categoryId === categoryId).slice(0, Number(limit) > 0 ? Number(limit) : undefined);
+    const filtered = products
+        .filter((product) => product.status === 'published')
+        .filter((product) => categoryId === '__all__'
+            || categoryId === '__uncategorized__' && !product.categoryId
+            || product.categoryId === categoryId)
+        .slice(0, Number(limit) > 0 ? Number(limit) : undefined);
     if (!filtered.length) return null;
     return <section className={styles.section}><div className={styles.inner}>{title && <h2>{title}</h2>}<ProductCards products={filtered} /></div></section>;
 }

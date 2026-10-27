@@ -16,7 +16,7 @@ function CatalogProductField({ value, onChange, catalog }) {
 }
 
 function CatalogCategoryField({ value, onChange, catalog }) {
-    return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
+    return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
 }
 
 export default function Field({ name, schema, value, onChange, catalog }) {
