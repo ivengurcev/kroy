@@ -24,11 +24,8 @@
 
 | Путь | Имя |
 |---|---|
-| `parts/Gallery.jsx` | `@kroy/gallery` |
-| `parts/GallerySimple.jsx` | `@kroy/gallery-simple` |
-| `parts/section/Main.jsx` | `@kroy/section/main` |
-| `parts/section/subsection/package.json` без `name` | `@kroy/section/subsection` |
-| `parts/contacts/package.json` с `name: "@kroy/contacts"` и `main: "Contacts.jsx"` | `@kroy/contacts` |
+| `parts/hero/package.json` с `name: "@kroy/hero"` и `main: "Hero.jsx"` | `@kroy/hero` |
+| `parts/services/package.json` с `name: "@kroy/services"` и `main: "Services.jsx"` | `@kroy/services` |
 
 Генератор проверяет формат и коллизии итоговых имён, в том числе возникшие после нормализации, существование входного файла и выход `main` за границы каталога. Наличие JSDoc **не определяет**, является файл запчастью или нет.
 
@@ -38,24 +35,18 @@
 
 ~~~jsx
 /**
- * @kroy-title Контакты
- * @kroy-category Основное
+ * @kroy-title Услуги
+ * @kroy-category Контент
  *
  * @param {object} props
- * @param {string} props.phone - Телефон
- * @param {{name: string, link: string}[]} props.socials - Социальные сети
+ * @param {string} props.title - Заголовок секции
  *
- * @kroy phone widget=tel format=ru
- * @kroy socials.name maxLength=30
- * @kroy socials.link widget=url
+ * @kroy title widget=textarea
  */
-export default function Contacts({ phone = '', socials = [] }) {
+export default function Services({ title = '' }) {
     return (
         <div>
-            <a href={phone}>{phone}</a>
-            {socials.map(({ name, link }) => (
-                <a key={name} href={link}>{name}</a>
-            ))}
+            <h2>{title}</h2>
         </div>
     );
 }

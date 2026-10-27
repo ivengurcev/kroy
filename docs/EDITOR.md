@@ -23,8 +23,8 @@
 ~~~js
 {
     id: 'temporary-editor-id',
-    part: '@kroy/contacts',
-    props: { phone: '+7 999 123-45-67', socials: [] }
+    part: '@kroy/services',
+    props: { title: 'Услуги', categories: [] }
 }
 ~~~
 

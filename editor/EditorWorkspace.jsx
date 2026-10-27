@@ -52,6 +52,7 @@ export default function EditorWorkspace({
     metadata,
     parts,
     loadStatus,
+    theme,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -153,7 +154,7 @@ export default function EditorWorkspace({
                             </div>
                         ) : (
                             <div className={styles.partContent} inert={false}>
-                                <SiteRoot>
+                                <SiteRoot theme={theme}>
                                     <Page content={[item]} parts={parts} />
                                 </SiteRoot>
                             </div>

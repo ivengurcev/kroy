@@ -13,6 +13,7 @@ export default function Editor() {
     const [loadStatus, setLoadStatus] = useState('loading');
     const [saveStatus, setSaveStatus] = useState('idle');
     const [isDirty, setIsDirty] = useState(false);
+    const [theme, setTheme] = useState();
     const revision = useRef(0);
 
     useEffect(() => {
@@ -57,6 +58,22 @@ export default function Editor() {
         }
 
         loadPage();
+
+        return () => controller.abort();
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        fetch('/api/site/preview', { signal: controller.signal })
+            .then(async (response) => {
+                if (!response.ok) throw new Error('Не удалось загрузить тему сайта.');
+                return response.json();
+            })
+            .then(({ theme: nextTheme }) => setTheme(nextTheme))
+            .catch((error) => {
+                if (error.name !== 'AbortError') setTheme(undefined);
+            });
 
         return () => controller.abort();
     }, []);
@@ -176,6 +193,7 @@ export default function Editor() {
             loadStatus={loadStatus}
             saveStatus={saveStatus}
             isDirty={isDirty}
+            theme={theme}
             onAddPart={addPart}
             onRemovePart={removePart}
             onMovePart={movePart}

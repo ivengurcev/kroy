@@ -113,7 +113,7 @@
 .note {
     margin-top: var(--site-space-1);
     color: var(--site-color-text-secondary);
-    font-size: 14px;
+    font-size: calc(var(--site-font-size-base) * .875);
 }
 
 .price {

@@ -2,18 +2,24 @@
   {
     "part": "@kroy/hero",
     "props": {
-      "title": "Ветеринарный врач Test",
-      "description": "Забота о ваших питомцах"
+      "title": "Демонстрационный сайт",
+      "description": "Пример содержимого главной страницы"
     }
   },
   {
-    "part": "@kroy/contacts",
+    "part": "@kroy/services",
     "props": {
-      "phone": "+7 999 123-45-67",
-      "socials": [
+      "title": "Услуги",
+      "categories": [
         {
-          "name": "Telegram",
-          "link": "https://t.me/example"
+          "title": "Направление",
+          "items": [
+            {
+              "name": "Услуга",
+              "price": "",
+              "note": ""
+            }
+          ]
         }
       ]
     }

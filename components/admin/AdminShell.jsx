@@ -10,6 +10,7 @@ export default function AdminShell({
     loadStatus,
     saveStatus,
     isDirty,
+    theme,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -33,6 +34,7 @@ export default function AdminShell({
                     metadata={metadata}
                     parts={parts}
                     loadStatus={loadStatus}
+                    theme={theme}
                     onAddPart={onAddPart}
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}

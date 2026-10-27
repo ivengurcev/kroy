@@ -1,9 +1,0 @@
-{
-    "private": true,
-    "name": "@kroy/contacts",
-    "main": "Contacts.jsx",
-    "fields": {
-        "phone": {"type": "input", "validators": {"type": "phone"}},
-        "socials": {"type": "contactsList"}
-    }
-}

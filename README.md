@@ -80,21 +80,21 @@ yarn kroy:help
 
 ```jsx
 /**
- * @kroy-title Контакты
- * @kroy-category Основное
+ * @kroy-title Услуги
+ * @kroy-category Контент
  *
  * @param {object} props
- * @param {string} props.phone - Телефон
- * @kroy phone widget=tel format=ru
+ * @param {string} props.title - Заголовок секции
+ * @kroy title widget=textarea
  */
-export default function Contacts({ phone }) {
-    return <a href={`tel:${phone}`}>{phone}</a>;
+export default function Services({ title }) {
+    return <h2>{title}</h2>;
 }
 ```
 
 На основе описаний Kroy создаёт полный реестр для редактора и сокращённый реестр используемых запчастей для статического сайта. Если название или категория не заданы, для старой запчасти используются название из её идентификатора и категория «Другое».
 
-Идентификаторы имеют вид `@kroy/<kebab-case>`. Имена, выведенные из путей, нормализуются автоматически: `GallerySimple.jsx` → `@kroy/gallery-simple`, `section/Main.jsx` → `@kroy/section/main`. Явное `name` из `package.json` имеет приоритет и должно соответствовать тому же формату.
+Идентификаторы имеют вид `@kroy/<kebab-case>`. Имена, выведенные из путей, нормализуются автоматически. Явное `name` из `package.json` имеет приоритет и должно соответствовать тому же формату.
 
 ## Запуск
 

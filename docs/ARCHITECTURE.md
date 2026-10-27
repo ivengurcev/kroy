@@ -157,10 +157,10 @@ SSR Vyaz ориентирован на обработку HTTP-запросов.
     }
   },
   {
-    "part": "@kroy/contacts",
+    "part": "@kroy/services",
     "props": {
-      "phone": "+7 999 123-45-67",
-      "socials": []
+      "title": "Услуги",
+      "categories": []
     }
   }
 ]
