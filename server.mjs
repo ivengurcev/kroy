@@ -11,6 +11,8 @@ import postMedia from './api/postMedia.mjs';
 import putPage from './api/putPage.mjs';
 import restorePage from './api/restorePage.mjs';
 import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
+import getSiteSettings from './api/siteSettings.mjs';
+import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 
 await createApp({
     auth,
@@ -119,6 +121,21 @@ await createApp({
             '/site/theme',
             { method: 'PATCH', private: true },
             patchSiteTheme,
+        ],
+        [
+            '/site/settings',
+            { method: 'GET', private: true },
+            getSiteSettings,
+        ],
+        [
+            '/site/contact',
+            { method: 'GET', private: true },
+            getSiteContactSettings,
+        ],
+        [
+            '/site/contact',
+            { method: 'PATCH', private: true },
+            patchSiteContactSettings,
         ],
         [
             '/site/preview',

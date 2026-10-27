@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import AdminPageShell from '../components/admin/AdminPageShell.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import TokenControl from '../components/ui/TokenControls.jsx';
+import Field from '../editor/Field.jsx';
+import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/admin/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 
 const MODE_OPTIONS = [
@@ -106,19 +107,136 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
     </div>;
 }
 
+const CONTACT_FIELDS = {
+    socials: {
+        type: 'list',
+        label: 'Социальные сети',
+        fields: {
+            name: { type: 'input', label: 'Название', validators: { maxLength: 80 } },
+            link: { type: 'input', label: 'Ссылка', validators: { type: 'url', maxLength: 500 } },
+        },
+    },
+};
+
+function ContactSettings({ value, onChange }) {
+    const contacts = value ?? {};
+    const update = (name, nextValue) => onChange({ ...contacts, [name]: nextValue });
+
+    return (
+        <Card className={styles.contactPanel}>
+            <div className={styles.formGrid}>
+                <label className={styles.formField}>
+                    <span>Адрес</span>
+                    <textarea rows="3" value={contacts.address ?? ''} onChange={(event) => update('address', event.target.value)} />
+                </label>
+                <label className={styles.formField}>
+                    <span>Режим работы</span>
+                    <textarea rows="3" value={contacts.hours ?? ''} onChange={(event) => update('hours', event.target.value)} />
+                </label>
+                <label className={styles.formField}>
+                    <span>Телефон</span>
+                    <input type="tel" value={contacts.phone ?? ''} onChange={(event) => update('phone', event.target.value)} />
+                </label>
+                <div className={styles.coordinateGrid}>
+                    <label className={styles.formField}>
+                        <span>Широта</span>
+                        <input type="number" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
+                    </label>
+                    <label className={styles.formField}>
+                        <span>Долгота</span>
+                        <input type="number" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
+                    </label>
+                </div>
+            </div>
+            <Field
+                name="socials"
+                schema={CONTACT_FIELDS.socials}
+                value={contacts.socials ?? []}
+                onChange={(socials) => update('socials', socials)}
+            />
+        </Card>
+    );
+}
+
+function Overview({ siteData }) {
+    return <Card className={styles.overviewPanel}>
+        <dl className={styles.overviewList}>
+            <div><dt>Название сайта</dt><dd>{siteData?.site?.name || '—'}</dd></div>
+            <div><dt>Идентификатор</dt><dd>{siteData?.site?.slug || '—'}</dd></div>
+            <div><dt>Домены</dt><dd>{siteData?.domains?.length ? siteData.domains.join(', ') : 'Домены не добавлены'}</dd></div>
+        </dl>
+    </Card>;
+}
+
+function SeoPlaceholder() {
+    return <Card className={styles.placeholder}><h2>SEO</h2><p>Настройки SEO появятся позже.</p></Card>;
+}
+
 export default function SitePage() {
-    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
-    useEffect(() => { const controller = new AbortController(); fetch('/api/site/theme', { signal: controller.signal }).then(async (response) => { if (!response.ok) throw new Error('Не удалось загрузить настройки оформления.'); return response.json(); }).then(({ themes: nextThemes, metadata: nextMetadata, settings }) => { const next = cloneSettings(settings); setThemes(nextThemes); setMetadata(nextMetadata || {}); setSaved(next); setDraft(next); setStatus('success'); }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } }); return () => controller.abort(); }, []);
-    const dirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
+    const initialSection = typeof window === 'undefined'
+        ? 'appearance'
+        : new URL(window.location.href).searchParams.get('section') || 'appearance';
+    const [section, setSection] = useState(SITE_SETTINGS_SECTIONS.some(({ id }) => id === initialSection) ? initialSection : 'appearance');
+    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
+    useEffect(() => {
+        const controller = new AbortController();
+        Promise.all([
+            fetch('/api/site/theme', { signal: controller.signal }),
+            fetch('/api/site/settings', { signal: controller.signal }),
+        ]).then(async ([themeResponse, siteResponse]) => {
+            if (!themeResponse.ok || !siteResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
+            return Promise.all([themeResponse.json(), siteResponse.json()]);
+        }).then(([themeResult, siteResult]) => {
+            const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
+            setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
+        }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
+        return () => controller.abort();
+    }, []);
+    useEffect(() => {
+        function syncSection() { const next = new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id }) => id === next)) setSection(next); }
+        window.addEventListener('popstate', syncSection);
+        return () => window.removeEventListener('popstate', syncSection);
+    }, []);
+    const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
+    const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
+    const dirty = themeDirty || contactsDirty;
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function updateDraft(change) { setDraft((current) => ({ ...current, ...change })); }
+    function updateContacts(change) { setContacts((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
-    async function save() { if (!draft || saveStatus === 'saving' || !dirty) return; const requestDraft = cloneSettings(draft); const requestFingerprint = JSON.stringify(requestDraft); setSaveStatus('saving'); setError(''); try { const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestDraft) }); const result = await response.json().catch(() => ({})); if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.'); const next = cloneSettings(result); setSaved(next); setDraft((current) => JSON.stringify(current) === requestFingerprint ? next : current); setSaveStatus('success'); } catch (saveError) { setError(saveError.message); setSaveStatus('error'); } }
+    function changeSection(nextSection) { if (nextSection === section) return; if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return; window.history.pushState({}, '', `/admin/site?section=${nextSection}`); setSection(nextSection); }
+    async function save() {
+        if (saveStatus === 'saving' || !dirty) return;
+        const requestTheme = themeDirty ? cloneSettings(draft) : null;
+        const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
+        const themeFingerprint = requestTheme && JSON.stringify(requestTheme);
+        const contactsFingerprint = requestContacts && JSON.stringify(requestContacts);
+        setSaveStatus('saving'); setError('');
+        try {
+            if (requestTheme) {
+                const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestTheme) });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.');
+                const next = cloneSettings(result); setSaved(next); setDraft((current) => JSON.stringify(current) === themeFingerprint ? next : current);
+            }
+            if (requestContacts) {
+                const response = await fetch('/api/site/contact', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestContacts) });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить контакты.');
+                setSavedContacts(result); setContacts((current) => JSON.stringify(current) === contactsFingerprint ? result : current);
+            }
+            setSaveStatus('success');
+        } catch (saveError) { setError(saveError.message); setSaveStatus('error'); }
+    }
     const activeMode = draft?.themeMode;
-    return <AdminPageShell headerMode="site" title="Оформление" status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save}>
-        {draft && selectedTheme && <div className={styles.content}>
+    const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
+    return <SiteSettingsLayout section={section} title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save} onSectionChange={changeSection}>
+        {section === 'overview' && <Overview siteData={siteData} />}
+        {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} />}
+        {section === 'seo' && <SeoPlaceholder />}
+        {section === 'appearance' && draft && selectedTheme && <div className={styles.content}>
             <Card className={styles.panel}>
                 <div className={styles.sectionHeading}>
                     <div>
@@ -139,5 +257,5 @@ export default function SitePage() {
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
             </Card>{error && <p className={styles.error} role="alert">{error}</p>}
         </div>}
-    </AdminPageShell>;
+    </SiteSettingsLayout>;
 }

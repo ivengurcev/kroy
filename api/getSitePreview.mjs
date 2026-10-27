@@ -1,27 +1,27 @@
 import { pool } from '../db/client.mjs';
 import { getSiteTheme } from '../db/siteThemes.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
-import getHostname from './getHostname.mjs';
+import getCurrentSite from './siteContext.mjs';
+import { getSiteContacts } from '../db/siteContacts.mjs';
 
 export default async function getSitePreview(c) {
-    const hostname = getHostname(c);
-    if (!hostname) return c.json({ error: 'Site not found' }, 404);
-
     try {
+        const site = await getCurrentSite(c);
+        if (!site) return c.json({ error: 'Site not found' }, 404);
         const { rows } = await pool.query(
             `SELECT s.id AS site_id, p.path, p.title, p.content
              FROM sites s
              JOIN domains d ON d.site_id = s.id
              LEFT JOIN pages p ON p.site_id = s.id
               AND p.deleted_at IS NULL
-             WHERE d.hostname = $1
+             WHERE s.id = $1
              ORDER BY p.path`,
-            [hostname],
+            [site.id],
         );
 
         if (rows.length === 0) return c.json({ error: 'Site not found' }, 404);
 
-        const settings = await getSiteTheme(rows[0].site_id);
+        const settings = await getSiteTheme(site.id);
         if (!settings) return c.json({ error: 'Site not found' }, 404);
 
         const pages = Object.fromEntries(
@@ -37,6 +37,7 @@ export default async function getSitePreview(c) {
                 light: getThemeTokens(settings.themeId, 'light', settings.overrides),
                 dark: getThemeTokens(settings.themeId, 'dark', settings.overrides),
             },
+            contacts: await getSiteContacts(site.id),
         });
     } catch (error) {
         console.error('Failed to load site preview', error);

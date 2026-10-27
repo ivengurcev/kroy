@@ -117,6 +117,8 @@ CREATE TABLE public.sites (
     theme_id text DEFAULT 'calm'::text NOT NULL,
     theme_mode text DEFAULT 'light'::text NOT NULL,
     theme_overrides jsonb DEFAULT '{}'::jsonb NOT NULL,
+    contact_settings jsonb DEFAULT '{"hours": "", "phone": "", "address": "", "socials": [], "latitude": null, "longitude": null}'::jsonb NOT NULL,
+    CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
     CONSTRAINT sites_theme_overrides_check CHECK ((jsonb_typeof(theme_overrides) = 'object'::text))
 );
@@ -329,4 +331,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610160001'),
     ('202610210001'),
     ('202610250001'),
-    ('202610270001');
+    ('202610270001'),
+    ('202610270002');

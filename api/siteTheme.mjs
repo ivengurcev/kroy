@@ -1,23 +1,7 @@
-import { pool } from "../db/client.mjs";
 import { getSiteTheme, setSiteTheme } from "../db/siteThemes.mjs";
-import getHostname from "./getHostname.mjs";
+import getCurrentSite from "./siteContext.mjs";
 import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../themes/themeRegistry.mjs";
 import { getAllTokenMetadata } from "../themes/tokenMetadata.mjs";
-
-async function getCurrentSite(c) {
-  const hostname = getHostname(c);
-  if (!hostname) return null;
-
-  const { rows: [site] } = await pool.query(
-    `SELECT s.id
-     FROM sites s
-     JOIN domains d ON d.site_id = s.id
-     WHERE d.hostname = $1`,
-    [hostname],
-  );
-
-  return site ?? null;
-}
 
 function themeDetails() {
   return listThemes().map(({ id }) => getThemeEditorModel(id));

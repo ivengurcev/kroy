@@ -61,6 +61,7 @@ export default function PreviewPage() {
             path={path}
             parts={parts}
             theme={snapshot.theme}
+            contacts={snapshot.contacts}
             pathFromUrl={pathFromPreviewUrl}
             urlForPath={previewUrlForPath}
             notFound={<main className={styles.notFound}><h1>404</h1><p>Страница не найдена.</p></main>}

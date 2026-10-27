@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
+import { normalizeSiteContacts } from '../db/siteContacts.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 
@@ -53,7 +54,7 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings
              FROM sites
              WHERE slug = $1`,
             [siteSlug]
@@ -158,6 +159,10 @@ try {
     await writeFile(
         SITE_THEME_PATH,
         `export const theme = ${JSON.stringify(theme)};\n`
+    );
+    await writeFile(
+        join(ROOT, 'dist', 'kroy', 'site-contacts.mjs'),
+        `export const contacts = ${JSON.stringify(normalizeSiteContacts(site.contact_settings))};\n`
     );
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],

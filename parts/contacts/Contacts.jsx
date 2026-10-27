@@ -13,20 +13,10 @@ function telephoneHref(phone) {
  *
  * @param {object} props
  * @param {string} props.title - Заголовок секции
- * @param {string} props.address - Адрес
- * @param {string} props.hours - Режим работы
- * @param {string} props.phone - Телефон
- * @param {number} props.latitude - Широта
- * @param {number} props.longitude - Долгота
  * @param {number} props.zoom - Масштаб карты
  * @param {string} props.markerText - Подпись маркера
  *
  * @kroy title widget=textarea
- * @kroy address widget=textarea
- * @kroy hours widget=textarea
- * @kroy phone widget=tel
- * @kroy latitude widget=number
- * @kroy longitude widget=number
  * @kroy zoom widget=number
  * @kroy markerText widget=input
  */
@@ -35,12 +25,14 @@ export default function Contacts({
     address = '',
     hours = '',
     phone = '',
-    latitude = 55.75,
-    longitude = 37.62,
+    latitude = null,
+    longitude = null,
     zoom = 14,
     markerText = '',
 }) {
     const href = telephoneHref(phone);
+    const hasCoordinates = Number.isFinite(Number(latitude))
+        && Number.isFinite(Number(longitude));
 
     return (
         <section className={styles.contactsContainer}>
@@ -53,13 +45,13 @@ export default function Contacts({
                         {phone && <div><dt>Телефон</dt><dd>{href ? <a href={href}>{phone}</a> : phone}</dd></div>}
                     </dl>
                 </div>
-                <Map
-                    className={styles.map}
-                    latitude={latitude}
-                    longitude={longitude}
-                    zoom={zoom}
-                    markerText={markerText}
-                />
+                {hasCoordinates && <Map
+                        className={styles.map}
+                        latitude={latitude}
+                        longitude={longitude}
+                        zoom={zoom}
+                        markerText={markerText}
+                    />}
             </div>
         </section>
     );

@@ -53,6 +53,7 @@ export default function EditorWorkspace({
     parts,
     loadStatus,
     theme,
+    contacts,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -155,7 +156,7 @@ export default function EditorWorkspace({
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} />
+                                    <Page content={[item]} parts={parts} contacts={contacts} />
                                 </SiteRoot>
                             </div>
                         )}

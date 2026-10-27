@@ -1,0 +1,119 @@
+.mobileHeading {
+    display: none;
+}
+
+.settings {
+    display: grid;
+    grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.navigation {
+    position: sticky;
+    top: calc(var(--admin-header-offset) + var(--space-2));
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+}
+
+.navigation button {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    min-width: 0;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font: inherit;
+    text-align: left;
+    background: transparent;
+    cursor: pointer;
+}
+
+.navigation button:hover,
+.navigation button.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+.navigation button span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page {
+    min-width: 0;
+}
+
+.page > h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.backdrop {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    .mobileHeading {
+        display: flex;
+        margin-bottom: var(--space-3);
+    }
+
+    .settings {
+        display: block;
+        margin: 0;
+    }
+
+    .navigation {
+        position: fixed;
+        z-index: 31;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        width: min(86vw, 320px);
+        padding: var(--space-4);
+        overflow-y: auto;
+        border: 0;
+        border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+        transform: translateX(-105%);
+        transition: transform .2s ease;
+    }
+
+    .settingsOpen .navigation {
+        transform: translateX(0);
+    }
+
+    .backdrop {
+        position: fixed;
+        z-index: 30;
+        inset: 0;
+        display: block;
+        border: 0;
+        background: rgb(0 0 0 / 45%);
+        cursor: pointer;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .navigation { transition: none; }
+}

@@ -59,15 +59,12 @@ function SocialLink({ name, link }) {
  * @param {string} props.captionTitle - Заголовок плашки
  * @param {string} props.description - Текст плашки
  * @param {string} props.photo - Фотография
- * @param {{name: string, link: string}[]} props.socials - Социальные сети
  *
  * @kroy eyebrow widget=input
  * @kroy title widget=textarea
  * @kroy captionTitle widget=input
  * @kroy description widget=textarea
  * @kroy photo widget=image
- * @kroy socials.name label=Название maxLength=30
- * @kroy socials.link label=Ссылка widget=url
  */
 export default function Hero({
     eyebrow = '',

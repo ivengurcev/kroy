@@ -14,6 +14,7 @@ export default function Editor() {
     const [saveStatus, setSaveStatus] = useState('idle');
     const [isDirty, setIsDirty] = useState(false);
     const [theme, setTheme] = useState();
+    const [contacts, setContacts] = useState();
     const revision = useRef(0);
 
     useEffect(() => {
@@ -70,7 +71,10 @@ export default function Editor() {
                 if (!response.ok) throw new Error('Не удалось загрузить тему сайта.');
                 return response.json();
             })
-            .then(({ theme: nextTheme }) => setTheme(nextTheme))
+            .then(({ theme: nextTheme, contacts: nextContacts }) => {
+                setTheme(nextTheme);
+                setContacts(nextContacts);
+            })
             .catch((error) => {
                 if (error.name !== 'AbortError') setTheme(undefined);
             });
@@ -194,6 +198,7 @@ export default function Editor() {
             saveStatus={saveStatus}
             isDirty={isDirty}
             theme={theme}
+            contacts={contacts}
             onAddPart={addPart}
             onRemovePart={removePart}
             onMovePart={movePart}

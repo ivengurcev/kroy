@@ -3,6 +3,7 @@ import SiteApp, { normalizePathname } from '../layout/SiteApp.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
 import { pages } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';
+import { contacts } from '../dist/kroy/site-contacts.mjs';
 import '../layout/site.css';
 
 const root = document.getElementById('root');
@@ -18,5 +19,6 @@ hydrateRoot(
         path={normalizePathname(location.pathname)}
         parts={parts}
         theme={theme}
+        contacts={contacts}
     />
 );
