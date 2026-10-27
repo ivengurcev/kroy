@@ -4,6 +4,7 @@ import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import TokenControl from '../components/ui/TokenControls.jsx';
 import SocialLinksEditor from '../components/admin/SocialLinksEditor.jsx';
+import CatalogEditor from '../components/admin/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/admin/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 
@@ -159,42 +160,47 @@ function SeoPlaceholder() {
 export default function SitePage() {
     const initialSection = typeof window === 'undefined'
         ? 'appearance'
-        : new URL(window.location.href).searchParams.get('section') || 'appearance';
+        : window.location.pathname === '/admin/site/catalog'
+            ? 'catalog'
+            : new URL(window.location.href).searchParams.get('section') || 'appearance';
     const [section, setSection] = useState(SITE_SETTINGS_SECTIONS.some(({ id }) => id === initialSection) ? initialSection : 'appearance');
-    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
+    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
         Promise.all([
             fetch('/api/site/theme', { signal: controller.signal }),
             fetch('/api/site/settings', { signal: controller.signal }),
-        ]).then(async ([themeResponse, siteResponse]) => {
-            if (!themeResponse.ok || !siteResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
-            return Promise.all([themeResponse.json(), siteResponse.json()]);
-        }).then(([themeResult, siteResult]) => {
+            fetch('/api/site/catalog', { signal: controller.signal }),
+        ]).then(async ([themeResponse, siteResponse, catalogResponse]) => {
+            if (!themeResponse.ok || !siteResponse.ok || !catalogResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
+            return Promise.all([themeResponse.json(), siteResponse.json(), catalogResponse.json()]);
+        }).then(([themeResult, siteResult, catalogResult]) => {
             const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
-            setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
+            setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setSavedCatalog(catalogResult); setCatalog(catalogResult); setStatus('success');
         }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
         return () => controller.abort();
     }, []);
     useEffect(() => {
-        function syncSection() { const next = new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id }) => id === next)) setSection(next); }
+        function syncSection() { const next = window.location.pathname === '/admin/site/catalog' ? 'catalog' : new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id }) => id === next)) setSection(next); }
         window.addEventListener('popstate', syncSection);
         return () => window.removeEventListener('popstate', syncSection);
     }, []);
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
-    const dirty = themeDirty || contactsDirty;
+    const catalogDirty = Boolean(catalog && savedCatalog && JSON.stringify(catalog) !== JSON.stringify(savedCatalog));
+    const dirty = themeDirty || contactsDirty || catalogDirty;
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function updateDraft(change) { setDraft((current) => ({ ...current, ...change })); }
     function updateContacts(change) { setContacts((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
-    function changeSection(nextSection) { if (nextSection === section) return; if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return; window.history.pushState({}, '', `/admin/site?section=${nextSection}`); setSection(nextSection); }
+    function changeSection(nextSection) { if (nextSection === section) return; if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return; window.history.pushState({}, '', nextSection === 'catalog' ? '/admin/site/catalog' : `/admin/site?section=${nextSection}`); setSection(nextSection); }
     async function save() {
         if (saveStatus === 'saving' || !dirty) return;
         const requestTheme = themeDirty ? cloneSettings(draft) : null;
         const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
+        const requestCatalog = catalogDirty ? catalog : null;
         const themeFingerprint = requestTheme && JSON.stringify(requestTheme);
         const contactsFingerprint = requestContacts && JSON.stringify(requestContacts);
         setSaveStatus('saving'); setError('');
@@ -211,6 +217,12 @@ export default function SitePage() {
                 if (!response.ok) throw new Error(result.error || 'Не удалось сохранить контакты.');
                 setSavedContacts(result); setContacts((current) => JSON.stringify(current) === contactsFingerprint ? result : current);
             }
+            if (requestCatalog) {
+                const response = await fetch('/api/site/catalog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestCatalog) });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить каталог.');
+                setSavedCatalog(result); setCatalog((current) => JSON.stringify(current) === JSON.stringify(requestCatalog) ? result : current);
+            }
             setSaveStatus('success');
         } catch (saveError) { setError(saveError.message); setSaveStatus('error'); }
     }
@@ -219,6 +231,7 @@ export default function SitePage() {
     return <SiteSettingsLayout section={section} title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save} onSectionChange={changeSection}>
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} />}
+        {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={setCatalog} />}
         {section === 'seo' && <SeoPlaceholder />}
         {section === 'appearance' && draft && selectedTheme && <div className={styles.content}>
             <Card className={styles.panel}>

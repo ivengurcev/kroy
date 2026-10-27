@@ -6,6 +6,7 @@ import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../db/siteContacts.mjs';
+import { getCatalog } from '../db/catalog.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 
@@ -163,6 +164,11 @@ try {
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-contacts.mjs'),
         `export const contacts = ${JSON.stringify(normalizeSiteContacts(site.contact_settings))};\n`
+    );
+    const catalog = await getCatalog(site.id, { includeHidden: false });
+    await writeFile(
+        join(ROOT, 'dist', 'kroy', 'site-catalog.mjs'),
+        `export const catalog = ${JSON.stringify(catalog)};\n`
     );
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],

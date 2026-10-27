@@ -13,6 +13,7 @@ import restorePage from './api/restorePage.mjs';
 import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
 import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
+import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
 
 await createApp({
     auth,
@@ -39,6 +40,12 @@ await createApp({
             isPrivate: true,
             title: 'Корзина Oysite',
             component: './pages/TrashPage.jsx',
+        },
+        {
+            path: '/admin/site/catalog',
+            isPrivate: true,
+            title: 'Каталог Oysite',
+            component: './pages/SitePage.jsx',
         },
         {
             path: '/admin/site',
@@ -136,6 +143,16 @@ await createApp({
             '/site/contact',
             { method: 'PATCH', private: true },
             patchSiteContactSettings,
+        ],
+        [
+            '/site/catalog',
+            { method: 'GET', private: true },
+            getSiteCatalog,
+        ],
+        [
+            '/site/catalog',
+            { method: 'PATCH', private: true },
+            patchSiteCatalog,
         ],
         [
             '/site/preview',

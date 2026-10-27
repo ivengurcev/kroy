@@ -56,6 +56,8 @@ function parseType(type) {
             return { type: 'number' };
         case 'boolean':
             return { type: 'checkbox' };
+        case 'string[]':
+            return { type: 'catalog-products' };
     }
 
     // {name: string, link: string}[] → list

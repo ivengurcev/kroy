@@ -13,6 +13,7 @@ export function defaultValue(schema) {
             return schema.options?.[0] ?? '';
 
         case 'list':
+        case 'catalog-products':
             return [];
 
         default:

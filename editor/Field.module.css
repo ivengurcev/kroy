@@ -34,3 +34,10 @@
     align-items: center;
     color: var(--color-text-secondary);
 }
+
+.catalogOptions,
+.catalogSelected { display: grid; gap: var(--space-2); }
+.catalogOptions { max-height: 220px; padding: var(--space-2); overflow: auto; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.catalogSelected > div { display: flex; gap: var(--space-1); align-items: center; justify-content: space-between; min-width: 0; }
+.catalogSelected > div > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalogSelected button { flex: 0 0 30px; width: 30px; min-width: 30px; min-height: 30px; padding: 0; }

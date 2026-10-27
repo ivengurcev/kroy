@@ -3,10 +3,27 @@ import ListField from './ListField.jsx';
 import ImageField from './ImageField.jsx';
 import styles from './Field.module.css';
 import TokenControl from '../components/ui/TokenControls.jsx';
+import Button from '../components/ui/Button.jsx';
+import Icon from '../components/ui/Icon.jsx';
 
-export default function Field({ name, schema, value, onChange }) {
+function CatalogProductField({ value, onChange, catalog }) {
+    const selected = Array.isArray(value) ? value : [];
+    const products = catalog?.products?.filter((product) => product.status === 'published') ?? [];
+    function toggle(id) { onChange(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]); }
+    function move(index, direction) { const target = index + direction; if (target < 0 || target >= selected.length) return; const next = [...selected]; [next[index], next[target]] = [next[target], next[index]]; onChange(next); }
+    return <div className={styles.field}><span>Товары</span><div className={styles.catalogOptions}>{products.map((product) => <label key={product.id}><input type="checkbox" checked={selected.includes(product.id)} onChange={() => toggle(product.id)} /> {product.name}</label>)}</div><div className={styles.catalogSelected}>{selected.map((id, index) => <div key={id}><span>{products.find((product) => product.id === id)?.name || id}</span><Button variant="compact" title="Выше" disabled={!index} onClick={() => move(index, -1)}><Icon name="up" /></Button><Button variant="compact" title="Ниже" disabled={index === selected.length - 1} onClick={() => move(index, 1)}><Icon name="down" /></Button></div>)}</div></div>;
+}
+
+function CatalogCategoryField({ value, onChange, catalog }) {
+    return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
+}
+
+export default function Field({ name, schema, value, onChange, catalog }) {
     const label = schema.label ?? name;
     const maxLength = schema.validators?.maxLength;
+
+    if (schema.type === 'catalog-products') return <CatalogProductField value={value} onChange={onChange} catalog={catalog} />;
+    if (schema.type === 'catalog-category') return <CatalogCategoryField value={value} onChange={onChange} catalog={catalog} />;
 
     if (schema.type === 'list') {
         return (

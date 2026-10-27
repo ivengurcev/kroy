@@ -12,6 +12,7 @@ export default function AdminShell({
     isDirty,
     theme,
     contacts,
+    catalog,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -37,6 +38,7 @@ export default function AdminShell({
                     loadStatus={loadStatus}
                     theme={theme}
                     contacts={contacts}
+                    catalog={catalog}
                     onAddPart={onAddPart}
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}

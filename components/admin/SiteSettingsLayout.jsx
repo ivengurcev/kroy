@@ -8,6 +8,7 @@ export const SITE_SETTINGS_SECTIONS = [
     { id: 'overview', label: 'Главное', icon: 'home' },
     { id: 'appearance', label: 'Внешний вид', icon: 'sun' },
     { id: 'contacts', label: 'Контактная информация', icon: 'phone' },
+    { id: 'catalog', label: 'Каталог', icon: 'pages' },
     { id: 'seo', label: 'SEO', icon: 'seo' },
 ];
 

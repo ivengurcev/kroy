@@ -76,6 +76,39 @@ CREATE TABLE public.pages (
 
 
 --
+-- Name: product_categories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.product_categories (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    name text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: products; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.products (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    category_id uuid,
+    name text NOT NULL,
+    description text DEFAULT ''::text NOT NULL,
+    media_id uuid,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    payment_url text DEFAULT ''::text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    status text DEFAULT 'published'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT products_status_check CHECK ((status = ANY (ARRAY['published'::text, 'hidden'::text])))
+);
+
+
+--
 -- Name: redirects; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -196,6 +229,30 @@ ALTER TABLE ONLY public.pages
 
 
 --
+-- Name: product_categories product_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_categories
+    ADD CONSTRAINT product_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: product_categories product_categories_site_id_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_categories
+    ADD CONSTRAINT product_categories_site_id_id_key UNIQUE (site_id, id);
+
+
+--
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: redirects redirects_site_id_from_path_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -244,6 +301,20 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: product_categories_site_order_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX product_categories_site_order_idx ON public.product_categories USING btree (site_id, sort_order, id);
+
+
+--
+-- Name: products_site_category_order_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX products_site_category_order_idx ON public.products USING btree (site_id, category_id, sort_order, id);
+
+
+--
 -- Name: site_memberships_user_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -279,6 +350,38 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.pages
     ADD CONSTRAINT pages_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
+
+
+--
+-- Name: product_categories product_categories_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_categories
+    ADD CONSTRAINT product_categories_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
+-- Name: products products_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.product_categories(id) ON DELETE SET NULL;
+
+
+--
+-- Name: products products_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- Name: products products_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
 
 
 --
@@ -332,4 +435,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610210001'),
     ('202610250001'),
     ('202610270001'),
-    ('202610270002');
+    ('202610270002'),
+    ('202610280001');

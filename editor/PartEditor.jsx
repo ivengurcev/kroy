@@ -6,6 +6,7 @@ export default function PartEditor({
     title,
     props,
     fields,
+    catalog,
     onPropChange,
 }) {
     return (
@@ -18,6 +19,7 @@ export default function PartEditor({
                     name={name}
                     schema={schema}
                     value={props[name]}
+                    catalog={catalog}
                     onChange={(value) => onPropChange(name, value)}
                 />
             ))}

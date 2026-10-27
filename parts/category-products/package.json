@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/category-products",
+    "main": "CategoryProducts.jsx"
+}

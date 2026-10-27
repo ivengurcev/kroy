@@ -4,6 +4,7 @@ import { parts } from '../dist/kroy/site-parts.mjs';
 import { pages } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';
 import { contacts } from '../dist/kroy/site-contacts.mjs';
+import { catalog } from '../dist/kroy/site-catalog.mjs';
 import '../layout/site.css';
 
 const root = document.getElementById('root');
@@ -20,5 +21,6 @@ hydrateRoot(
         parts={parts}
         theme={theme}
         contacts={contacts}
+        catalog={catalog}
     />
 );
