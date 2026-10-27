@@ -1,5 +1,5 @@
 .layout {
-    --admin-header-offset: 74px;
+    --admin-header-offset: 0px;
     --admin-part-sticky-offset: calc(var(--admin-header-offset) + var(--space-2));
 
     width: 100%;
@@ -68,7 +68,6 @@
 }
 
 @media (max-width: 1100px) {
-    .layout { --admin-header-offset: 68px; }
     .header { padding-inline: var(--space-5); }
     .content { padding-inline: var(--space-5); }
 }
@@ -84,7 +83,6 @@
 }
 
 @media (max-width: 600px) {
-    .layout { --admin-header-offset: 56px; }
     .sectionBar { align-items: stretch; }
     .sectionBar h1 { width: 100%; }
     .actions { width: 100%; }
