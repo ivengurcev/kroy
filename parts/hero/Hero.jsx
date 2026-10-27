@@ -50,6 +50,9 @@ function SocialLink({ name, link }) {
 }
 
 /**
+ * @kroy-title Первый экран
+ * @kroy-category Основное
+ *
  * @param {object} props
  * @param {string} props.eyebrow - Надпись над заголовком
  * @param {string} props.title - Главный заголовок

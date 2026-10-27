@@ -29,6 +29,9 @@ function Category({ category }) {
 }
 
 /**
+ * @kroy-title Услуги
+ * @kroy-category Контент
+ *
  * @param {object} props
  * @param {string} props.title - Заголовок секции
  * @param {string} props.eyebrow - Надпись над заголовком

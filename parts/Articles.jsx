@@ -1,4 +1,7 @@
 /**
+ * @kroy-title Статьи
+ * @kroy-category Контент
+ *
  * @param {object} props
  * @param {string} props.phone - Телефон
  *

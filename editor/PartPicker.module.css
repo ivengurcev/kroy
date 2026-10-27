@@ -19,7 +19,10 @@
 .search { width: 100%; height: var(--control-height-sm); padding: 0 var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); font: inherit; background: var(--color-surface); }
 .search:focus { border-color: var(--color-primary); outline: 3px solid rgb(12 129 122 / 12%); }
 .list { display: grid; gap: var(--space-2); min-height: 0; overflow: auto; }
+.category { display: grid; gap: var(--space-1); }
+.category h3 { margin: var(--space-2) 0 0; color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.category:first-child h3 { margin-top: 0; }
 .part { display: grid; justify-items: start; min-width: 0; padding-block: var(--space-2); text-align: left; white-space: normal; }
-.part span { font-weight: var(--font-weight-bold); text-transform: capitalize; }
+.part span { font-weight: var(--font-weight-bold); }
 .part small { overflow: hidden; max-width: 100%; color: var(--color-text-muted); text-overflow: ellipsis; white-space: nowrap; }
 .empty { margin: var(--space-4) 0; color: var(--color-text-muted); text-align: center; }

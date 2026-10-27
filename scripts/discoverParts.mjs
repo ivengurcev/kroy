@@ -19,6 +19,11 @@ const partName = (path) => `@kroy/${asPosix(relative(PARTS_DIR, path))
     .join('/')}`;
 const PART_NAME_PATTERN = /^@kroy\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
 
+function fallbackTitle(name) {
+    const value = name.split('/').at(-1).replaceAll('-', ' ');
+    return `${value[0].toLocaleUpperCase()}${value.slice(1)}`;
+}
+
 async function readManifest(directory) {
     const path = join(directory, 'package.json');
     let source;
@@ -60,9 +65,15 @@ export async function discoverParts() {
             throw new Error(`Точка входа не является файлом: ${componentPath}`);
         }
 
-        const fields = parsePartDoc(await readFile(componentPath, 'utf8'));
+        const metadata = parsePartDoc(await readFile(componentPath, 'utf8'));
         names.set(name, componentPath);
-        parts.push({ name, componentPath, fields });
+        parts.push({
+            name,
+            componentPath,
+            title: metadata.title ?? fallbackTitle(name),
+            category: metadata.category ?? 'Другое',
+            fields: metadata.fields,
+        });
     }
 
     async function scan(directory) {
@@ -130,6 +141,8 @@ export async function generateParts() {
         entries.push(`    ${JSON.stringify(part.name)}: ${variable},`);
 
         metadata[part.name] = {
+            title: part.title,
+            category: part.category,
             fields: part.fields,
         };
     }

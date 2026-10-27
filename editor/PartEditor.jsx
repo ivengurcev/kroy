@@ -3,14 +3,14 @@ import Field from './Field.jsx';
 import styles from './PartEditor.module.css';
 
 export default function PartEditor({
-    part,
+    title,
     props,
     fields,
     onPropChange,
 }) {
     return (
         <section className={styles.editor}>
-            <h3>{part}</h3>
+            <h3>{title}</h3>
 
             {Object.entries(fields).map(([name, schema]) => (
                 <Field

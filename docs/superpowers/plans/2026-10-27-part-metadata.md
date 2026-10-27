@@ -37,15 +37,15 @@
 - Produces: `parsePartDoc(source) -> { title?, category?, fields }`.
 - Produces: `parts.json[identifier] -> { title, category, fields }`.
 
-- [ ] **Step 1: Parse `@kroy-title` and `@kroy-category` from the existing JSDoc block**
+- [x] **Step 1: Parse `@kroy-title` and `@kroy-category` from the existing JSDoc block**
 
 Keep current field parsing untouched. Return title/category only when their tag descriptions contain a non-empty value.
 
-- [ ] **Step 2: Derive metadata fallbacks during part discovery**
+- [x] **Step 2: Derive metadata fallbacks during part discovery**
 
 Use the last `@kroy/*` segment, replacing hyphens with spaces, as `title`; use `Другое` as `category`; prefer explicit parser values.
 
-- [ ] **Step 3: Include title and category in generated `parts.json`**
+- [x] **Step 3: Include title and category in generated `parts.json`**
 
 Retain the existing `fields` shape so all editor form consumers remain compatible.
 
@@ -59,11 +59,11 @@ Retain the existing `fields` shape so all editor form consumers remain compatibl
 - Consumes: generated metadata entries `{ title, category, fields }` and legacy entries containing only `fields`.
 - Produces: `onSelect(identifier)` exactly as before.
 
-- [ ] **Step 1: Build filtered part entries from metadata and legacy fallbacks**
+- [x] **Step 1: Build filtered part entries from metadata and legacy fallbacks**
 
 Search case-insensitively across identifier, title, and category.
 
-- [ ] **Step 2: Render non-empty groups in category/name order**
+- [x] **Step 2: Render non-empty groups in category/name order**
 
 Use the human-readable title as the primary text and retain the technical ID as secondary text. Add compact group headings without changing dialog controls or selection behavior.
 
@@ -77,28 +77,26 @@ Use the human-readable title as the primary text and retain the technical ID as 
 - Consumes: `metadata[item.part].title` with fallback derived from `item.part`.
 - Produces: human-readable titles in persistent part headers and inline property forms.
 
-- [ ] **Step 1: Add one local fallback title helper in the editor workspace**
+- [x] **Step 1: Add one local fallback title helper in the editor workspace**
 
 Pass the resolved display title to `PartEditor`; keep all control IDs, component lookup, and content state based on `item.part`.
 
-- [ ] **Step 2: Render the resolved title in `PartEditor`**
+- [x] **Step 2: Render the resolved title in `PartEditor`**
 
 Remove the technical ID from the form heading; fields and change callbacks remain unchanged.
 
-### Task 4: Examples and documentation
+### Task 4: Part annotations and documentation
 
 **Files:**
-- Modify: `parts/hero/Hero.jsx`
-- Modify: `parts/services/Services.jsx`
-- Modify: `parts/contacts/Contacts.jsx`
+- Modify: every component discovered as a part under `parts/`
 - Modify: `README.md`
 - Modify: `docs/PARTS.md`
 
-- [ ] **Step 1: Add title/category tags to three existing parts**
+- [x] **Step 1: Add title/category tags to all existing parts**
 
-Use representative categories without introducing site-specific content values.
+Use concise, generic categories without introducing site-specific content values.
 
-- [ ] **Step 2: Document the two annotations and fallback behavior**
+- [x] **Step 2: Document the two annotations and fallback behavior**
 
 State that JSDoc remains the only source for metadata and fields; do not add package manifest field definitions.
 
@@ -107,13 +105,13 @@ State that JSDoc remains the only source for metadata and fields; do not add pac
 **Files:**
 - Modify: none
 
-- [ ] **Step 1: Check whitespace**
+- [x] **Step 1: Check whitespace**
 
 Run: `git diff --check`
 
 Expected: no output and exit code 0.
 
-- [ ] **Step 2: Build once**
+- [x] **Step 2: Build once**
 
 Run: `yarn vyaz:build`
 

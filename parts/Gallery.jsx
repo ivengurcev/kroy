@@ -1,4 +1,7 @@
 /**
+ * @kroy-title Галерея
+ * @kroy-category Контент
+ *
  * @param {object} props
  * @param {string} props.phone - Телефон
  *

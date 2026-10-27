@@ -5,8 +5,16 @@ import Icon from '../components/ui/Icon.jsx';
 import theme from '../styles/AdminTheme.module.css';
 import styles from './PartPicker.module.css';
 
-function partTitle(identifier) {
+function fallbackTitle(identifier) {
     return identifier.split('/').at(-1).replaceAll('-', ' ');
+}
+
+function partDetails(identifier, metadata) {
+    return {
+        identifier,
+        title: metadata?.title || fallbackTitle(identifier),
+        category: metadata?.category || 'Другое',
+    };
 }
 
 export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
@@ -17,13 +25,31 @@ export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
     const parts = useMemo(() => {
         const normalizedQuery = query.trim().toLocaleLowerCase();
 
-        return Object.keys(metadata).filter((identifier) => {
-            const title = partTitle(identifier);
-            return !normalizedQuery
-                || identifier.toLocaleLowerCase().includes(normalizedQuery)
-                || title.toLocaleLowerCase().includes(normalizedQuery);
-        });
+        return Object.entries(metadata)
+            .map(([identifier, partMetadata]) => partDetails(identifier, partMetadata))
+            .filter(({ identifier, title, category }) => {
+                return !normalizedQuery
+                    || identifier.toLocaleLowerCase().includes(normalizedQuery)
+                    || title.toLocaleLowerCase().includes(normalizedQuery)
+                    || category.toLocaleLowerCase().includes(normalizedQuery);
+            });
     }, [metadata, query]);
+    const categories = useMemo(() => {
+        const groups = new Map();
+
+        for (const part of parts) {
+            const category = groups.get(part.category) ?? [];
+            category.push(part);
+            groups.set(part.category, category);
+        }
+
+        return [...groups.entries()]
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([category, entries]) => ({
+                category,
+                entries: entries.sort((left, right) => left.title.localeCompare(right.title)),
+            }));
+    }, [parts]);
 
     useLayoutEffect(() => {
         function placePicker() {
@@ -99,11 +125,16 @@ export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
                 onChange={(event) => setQuery(event.target.value)}
             />
             <div className={styles.list}>
-                {parts.map((identifier) => (
-                    <Button className={styles.part} title={`Добавить запчасть ${identifier}`} key={identifier} onClick={() => onSelect(identifier)}>
-                        <span>{partTitle(identifier)}</span>
-                        <small>{identifier}</small>
-                    </Button>
+                {categories.map(({ category, entries }) => (
+                    <section className={styles.category} key={category}>
+                        <h3>{category}</h3>
+                        {entries.map(({ identifier, title }) => (
+                            <Button className={styles.part} title={`Добавить запчасть ${title}`} key={identifier} onClick={() => onSelect(identifier)}>
+                                <span>{title}</span>
+                                <small>{identifier}</small>
+                            </Button>
+                        ))}
+                    </section>
                 ))}
                 {parts.length === 0 && <p className={styles.empty}>Ничего не найдено.</p>}
             </div>

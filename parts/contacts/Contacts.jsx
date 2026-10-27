@@ -3,6 +3,9 @@ import Section from '../../layout/Section'
 
 
 /**
+ * @kroy-title Контакты
+ * @kroy-category Основное
+ *
  * @param {object} props
  * @param {string} props.phone - Телефон
  * @param {{name: string, link: string}[]} props.socials - Социальные сети

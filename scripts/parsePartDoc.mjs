@@ -172,10 +172,10 @@ function applyKroy(field, settings) {
 export function parsePartDoc(source) {
     const jsdoc = extractJsdoc(source);
 
-    if (!jsdoc) return {};
+    if (!jsdoc) return { fields: {} };
 
     const [block] = parse(jsdoc);
-    if (!block) return {};
+    if (!block) return { fields: {} };
 
     const fields = {};
 
@@ -208,5 +208,18 @@ export function parsePartDoc(source) {
         applyKroy(field, tag.description);
     }
 
-    return fields;
+    function metadataValue(tagName) {
+        const tag = block.tags.find((item) => item.tag === tagName);
+
+        return [tag?.name, tag?.description]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+    }
+
+    return {
+        title: metadataValue('kroy-title') || undefined,
+        category: metadataValue('kroy-category') || undefined,
+        fields,
+    };
 }

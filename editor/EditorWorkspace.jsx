@@ -42,6 +42,11 @@ function StickyPartHeader({ children }) {
     );
 }
 
+function partTitle(identifier, metadata) {
+    return metadata[identifier]?.title
+        || identifier.split('/').at(-1).replaceAll('-', ' ');
+}
+
 export default function EditorWorkspace({
     content,
     metadata,
@@ -122,7 +127,7 @@ export default function EditorWorkspace({
                         key={item.id}
                     >
                         <StickyPartHeader>
-                            <b className={styles.partTitle}>{item.part}</b>
+                            <b className={styles.partTitle}>{partTitle(item.part, metadata)}</b>
                             <PartControls
                                 className={styles.partControls}
                                 partId={item.id}
@@ -139,7 +144,7 @@ export default function EditorWorkspace({
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
                                     <PartEditor
-                                        part={item.part}
+                                        title={partTitle(item.part, metadata)}
                                         props={item.props}
                                         fields={metadata[item.part]?.fields ?? {}}
                                         onPropChange={(name, value) => onPropChange(item.id, name, value)}
