@@ -4,6 +4,7 @@ import deletePage from './api/deletePage.mjs';
 import getMedia from './api/getMedia.mjs';
 import getPage from './api/getPage.mjs';
 import getSitePreview from './api/getSitePreview.mjs';
+import { getSitePublishStatus, startSitePublish } from './api/sitePublish.mjs';
 import patchPage from './api/patchPage.mjs';
 import postPage from './api/postPage.mjs';
 import postMedia from './api/postMedia.mjs';
@@ -123,6 +124,16 @@ await createApp({
             '/site/preview',
             { method: 'GET', private: true },
             getSitePreview,
+        ],
+        [
+            '/site/publish',
+            { method: 'GET', private: true },
+            getSitePublishStatus,
+        ],
+        [
+            '/site/publish',
+            { method: 'POST', private: true },
+            startSitePublish,
         ],
         [
             '*',

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './AdminHeader.module.css';
 import OysiteLogo from './OysiteLogo.svg';
 import OysiteMark from './OysiteMark.svg';
@@ -21,7 +21,10 @@ export default function AdminHeader({
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
+    const [publication, setPublication] = useState({ status: 'idle' });
     const detailsButtonRef = useRef(null);
+    const publishRequestRef = useRef(false);
+    const publicationVersionRef = useRef(0);
     const pagesMode = mode === 'pages';
     const trashMode = mode === 'trash';
     const siteMode = mode === 'site';
@@ -39,6 +42,57 @@ export default function AdminHeader({
         ? 'Сохранить изменения страницы'
         : saveLabel;
     const detailsDisabled = loadStatus !== 'success' || !page.id;
+    const isPublishing = publication.status === 'building' || publication.status === 'publishing';
+    const publishLabel = publication.status === 'building'
+        ? 'Сборка…'
+        : publication.status === 'publishing'
+            ? 'Публикация…'
+            : 'Опубликовать';
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadPublicationStatus() {
+            const version = publicationVersionRef.current;
+
+            try {
+                const response = await fetch('/api/site/publish');
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Не удалось получить состояние публикации.');
+                if (!cancelled && version === publicationVersionRef.current) setPublication(result);
+            } catch (error) {
+                if (!cancelled && version === publicationVersionRef.current) setPublication({
+                    status: 'error',
+                    message: error.message || 'Не удалось получить состояние публикации.',
+                });
+            }
+        }
+
+        loadPublicationStatus();
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect(() => {
+        if (!isPublishing) return undefined;
+
+        const timer = window.setInterval(async () => {
+            const version = publicationVersionRef.current;
+
+            try {
+                const response = await fetch('/api/site/publish');
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.error || 'Не удалось получить состояние публикации.');
+                if (version === publicationVersionRef.current) setPublication(result);
+            } catch (error) {
+                if (version === publicationVersionRef.current) setPublication({
+                    status: 'error',
+                    message: error.message || 'Не удалось получить состояние публикации.',
+                });
+            }
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, [isPublishing]);
 
     function openPageMap(event) {
         if (
@@ -64,6 +118,34 @@ export default function AdminHeader({
     function openPreview(event) {
         if (isDirty && !window.confirm('В предпросмотре будут показаны только сохранённые изменения. Продолжить?')) {
             event.preventDefault();
+        }
+    }
+
+    async function publishSite() {
+        if (publishRequestRef.current || isPublishing) return;
+        if (
+            isDirty
+            && !window.confirm('В публикацию попадут только сохранённые изменения. Продолжить?')
+        ) {
+            return;
+        }
+
+        publishRequestRef.current = true;
+        publicationVersionRef.current += 1;
+        setPublication({ status: 'building', message: 'Запуск публикации…' });
+
+        try {
+            const response = await fetch('/api/site/publish', { method: 'POST' });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || 'Не удалось запустить публикацию.');
+            setPublication(result);
+        } catch (error) {
+            setPublication({
+                status: 'error',
+                message: error.message || 'Не удалось запустить публикацию.',
+            });
+        } finally {
+            publishRequestRef.current = false;
         }
     }
 
@@ -188,9 +270,16 @@ export default function AdminHeader({
                         </Button>
                     )}
 
-                    <Button className={`${styles.action} ${styles.publishAction}`} variant="outline" aria-label="Опубликовать" title="Опубликовать сайт" disabled>
+                    <Button
+                        className={`${styles.action} ${styles.publishAction}`}
+                        variant="outline"
+                        aria-label={publishLabel}
+                        title={isPublishing ? publishLabel : 'Опубликовать сайт'}
+                        disabled={isPublishing}
+                        onClick={publishSite}
+                    >
                         <Icon name="publish" />
-                        <span className={styles.actionLabel}>Опубликовать</span>
+                        <span className={styles.actionLabel}>{publishLabel}</span>
                     </Button>
                     <a
                         className={styles.action}
@@ -218,6 +307,16 @@ export default function AdminHeader({
 
                 {(editorMode || siteMode) && saveStatus === 'error' && (
                     <span className={styles.saveError} role="alert">Не удалось сохранить {siteMode ? 'оформление' : 'страницу'}.</span>
+                )}
+                {publication.status === 'success' && (
+                    <span className={styles.publishStatus} role="status">
+                        {publication.releaseId ? `Опубликован релиз ${publication.releaseId}.` : publication.message}
+                    </span>
+                )}
+                {publication.status === 'error' && (
+                    <span className={`${styles.publishStatus} ${styles.publishError}`} role="alert">
+                        {publication.message}
+                    </span>
                 )}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>
