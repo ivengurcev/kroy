@@ -1,0 +1,16 @@
+.map {
+    min-height: clamp(300px, 35cqw, 520px);
+    overflow: hidden;
+    border: 1px solid var(--site-color-border);
+    background: var(--site-color-surface-soft);
+}
+
+.marker {
+    width: 24px;
+    height: 24px;
+    border: 4px solid var(--site-color-surface);
+    border-radius: 50% 50% 50% 0;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--site-color-text) 28%, transparent);
+    background: var(--site-color-accent);
+    transform: rotate(-45deg);
+}

@@ -1,0 +1,87 @@
+.contactsContainer {
+    container-name: contacts;
+    container-type: inline-size;
+    color: var(--site-color-text);
+    background: var(--site-color-bg);
+}
+
+.contacts {
+    display: grid;
+    grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr);
+    gap: clamp(var(--site-space-12), 7cqw, 120px);
+    width: min(100%, var(--site-container-max));
+    margin-inline: auto;
+    padding: clamp(var(--site-space-16), 8cqw, 140px) var(--site-page-gutter);
+}
+
+.content {
+    align-self: center;
+    min-width: 0;
+}
+
+.title {
+    max-width: 520px;
+    margin: 0 0 var(--site-space-12);
+    font-family: var(--site-font-heading);
+    font-size: clamp(44px, 5cqw, 78px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+}
+
+.details {
+    display: grid;
+    gap: var(--site-space-6);
+    margin: 0;
+}
+
+.details div {
+    display: grid;
+    gap: var(--site-space-1);
+}
+
+.details dt {
+    color: var(--site-color-text-secondary);
+    font-size: calc(var(--site-font-size-base) * .8125);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.details dd {
+    margin: 0;
+    font-size: clamp(var(--site-font-size-base), 1.3cqw, calc(var(--site-font-size-base) * 1.25));
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+.details a {
+    color: inherit;
+    text-decoration-color: var(--site-color-accent);
+    text-underline-offset: .18em;
+}
+
+.details a:hover {
+    color: var(--site-color-accent-hover);
+}
+
+.details a:focus-visible {
+    outline: 2px solid var(--site-color-accent);
+    outline-offset: 4px;
+}
+
+.map {
+    min-width: 0;
+}
+
+@container contacts (max-width: 760px) {
+    .contacts {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--site-space-12);
+    }
+
+    .title {
+        margin-bottom: var(--site-space-8);
+        font-size: clamp(40px, 10cqw, 64px);
+    }
+}
