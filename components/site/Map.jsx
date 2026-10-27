@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import 'leaflet/dist/leaflet.css';
+import './leaflet.css';
 import styles from './Map.module.css';
 
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
