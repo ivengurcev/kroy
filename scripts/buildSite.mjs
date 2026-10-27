@@ -1,5 +1,5 @@
 import { dirname, join, resolve } from 'node:path';
-import { copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
@@ -31,6 +31,39 @@ const ASSET_LOADERS = {
     '.ttf': 'file',
     '.otf': 'file',
 };
+
+async function collectFiles(directory, extension, files = []) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) await collectFiles(path, extension, files);
+        else if (entry.name.endsWith(extension)) files.push(path);
+    }
+    return files;
+}
+
+async function validateStaticStyles(directory, assetBase) {
+    const cssPath = join(directory, 'assets', 'app.css');
+    const css = await readFile(cssPath, 'utf8');
+    if (!css.trim()) throw new Error('Клиентская таблица стилей app.css пуста.');
+
+    const selectors = new Set([...css.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((match) => match[1]));
+    const htmlFiles = await collectFiles(directory, '.html');
+    if (!htmlFiles.length) throw new Error('SSR не создал HTML-страницы сайта.');
+
+    for (const htmlPath of htmlFiles) {
+        const html = await readFile(htmlPath, 'utf8');
+        if (!html.includes(`href="${assetBase}/app.css"`)) {
+            throw new Error(`Страница ${htmlPath} не подключает assets/app.css.`);
+        }
+        const classes = [...html.matchAll(/class="([^"]*)"/g)]
+            .flatMap((match) => match[1].split(/\s+/))
+            .filter(Boolean);
+        const missing = classes.filter((className) => !selectors.has(className));
+        if (missing.length) {
+            throw new Error(`В ${htmlPath} отсутствуют CSS-классы: ${[...new Set(missing)].join(', ')}`);
+        }
+    }
+}
 const siteSlug = process.argv[2];
 let client;
 let temporaryDirectory;
@@ -175,6 +208,7 @@ try {
         outfile: rendererPath,
         bundle: true,
         minify: true,
+        minifyIdentifiers: false,
         packages: 'external',
         platform: 'node',
         format: 'esm',
@@ -200,6 +234,7 @@ try {
         minify: true,
         outfile: join(temporaryDirectory, 'assets', 'app.js'),
         bundle: true,
+        minifyIdentifiers: false,
         platform: 'browser',
         format: 'esm',
         jsx: 'automatic',
@@ -211,6 +246,7 @@ try {
         publicPath: ASSET_BASE,
         define: { 'process.env.NODE_ENV': '"production"' },
     });
+    await validateStaticStyles(temporaryDirectory, ASSET_BASE);
     await generateSiteRouting(
         site.slug,
         redirects,
