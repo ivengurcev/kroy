@@ -1,7 +1,6 @@
 import AdminHeader from './AdminHeader.jsx';
 import EditorWorkspace from '../../editor/EditorWorkspace.jsx';
-import styles from './AdminShell.module.css';
-import theme from '../../styles/AdminTheme.module.css';
+import AdminLayout from './AdminLayout.jsx';
 
 export default function AdminShell({
     page,
@@ -19,8 +18,7 @@ export default function AdminShell({
     onPageDetailsChange,
 }) {
     return (
-        <div className={`${theme.theme} ${styles.adminShell}`}>
-            <header className={styles.header}>
+        <AdminLayout header={(
                 <AdminHeader
                     page={page}
                     loadStatus={loadStatus}
@@ -29,8 +27,7 @@ export default function AdminShell({
                     onSave={onSave}
                     onPageDetailsChange={onPageDetailsChange}
                 />
-            </header>
-            <main className={styles.scrollArea}>
+            )}>
                 <EditorWorkspace
                     content={content}
                     metadata={metadata}
@@ -41,7 +38,6 @@ export default function AdminShell({
                     onMovePart={onMovePart}
                     onPropChange={onPropChange}
                 />
-            </main>
-        </div>
+        </AdminLayout>
     );
 }
