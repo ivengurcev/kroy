@@ -9,6 +9,7 @@
     display: grid;
     grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr);
     gap: clamp(var(--site-space-12), 7cqw, 120px);
+    min-width: 0;
     width: min(100%, var(--site-container-max));
     margin-inline: auto;
     padding: clamp(var(--site-space-16), 8cqw, 140px) var(--site-page-gutter);
@@ -16,6 +17,7 @@
 
 .heading {
     align-self: start;
+    min-width: 0;
 }
 
 .eyebrow {
@@ -44,6 +46,7 @@
 }
 
 .category {
+    min-width: 0;
     border-bottom: 1px solid var(--site-color-border);
 }
 
@@ -52,6 +55,7 @@
     gap: var(--site-space-6);
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
     padding: var(--site-space-8) 0;
     cursor: pointer;
     font-family: var(--site-font-heading);
@@ -92,6 +96,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--site-space-6);
+    min-width: 0;
     padding: var(--site-space-4) 0;
 }
 
@@ -102,7 +107,10 @@
 .serviceName,
 .note,
 .price {
+    min-width: 0;
+    max-width: 100%;
     margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .serviceName,

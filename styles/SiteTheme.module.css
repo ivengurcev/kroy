@@ -31,3 +31,10 @@
     line-height: var(--site-line-height);
     background: var(--site-color-bg);
 }
+
+.theme,
+.theme *,
+.theme *::before,
+.theme *::after {
+    box-sizing: border-box;
+}
