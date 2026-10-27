@@ -9,6 +9,7 @@ import { normalizeSiteContacts } from '../db/siteContacts.mjs';
 import { getCatalog } from '../db/catalog.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
+import createSiteCssModulesPlugin from './siteCssModulesPlugin.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
@@ -41,12 +42,33 @@ async function collectFiles(directory, extension, files = []) {
     return files;
 }
 
-async function validateStaticStyles(directory, assetBase) {
+async function validateStaticStyles(directory, assetBase, ssrMappings, clientMappings) {
     const cssPath = join(directory, 'assets', 'app.css');
     const css = await readFile(cssPath, 'utf8');
     if (!css.trim()) throw new Error('Клиентская таблица стилей app.css пуста.');
 
+    const ssrModules = Object.fromEntries(ssrMappings);
+    const clientModules = Object.fromEntries(clientMappings);
+    const modulePaths = new Set([...Object.keys(ssrModules), ...Object.keys(clientModules)]);
+    for (const modulePath of modulePaths) {
+        const ssrModule = ssrModules[modulePath];
+        const clientModule = clientModules[modulePath];
+        if (!ssrModule || !clientModule) {
+            throw new Error(`CSS Module ${modulePath} загружен только в одной сборке.`);
+        }
+        if (JSON.stringify(ssrModule) !== JSON.stringify(clientModule)) {
+            throw new Error(`CSS Module ${modulePath} имеет разные имена классов в SSR и клиенте.`);
+        }
+    }
+
+    const moduleClasses = new Set(
+        Object.values(ssrModules).flatMap((mapping) => Object.values(mapping))
+    );
     const selectors = new Set([...css.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((match) => match[1]));
+    const missingCss = [...moduleClasses].filter((className) => !selectors.has(className));
+    if (missingCss.length) {
+        throw new Error(`В app.css отсутствуют CSS Module классы: ${missingCss.join(', ')}`);
+    }
     const htmlFiles = await collectFiles(directory, '.html');
     if (!htmlFiles.length) throw new Error('SSR не создал HTML-страницы сайта.');
 
@@ -58,9 +80,11 @@ async function validateStaticStyles(directory, assetBase) {
         const classes = [...html.matchAll(/class="([^"]*)"/g)]
             .flatMap((match) => match[1].split(/\s+/))
             .filter(Boolean);
-        const missing = classes.filter((className) => !selectors.has(className));
+        const missing = classes.filter(
+            (className) => className.startsWith('kroy_') && !moduleClasses.has(className)
+        );
         if (missing.length) {
-            throw new Error(`В ${htmlPath} отсутствуют CSS-классы: ${[...new Set(missing)].join(', ')}`);
+            throw new Error(`В ${htmlPath} используются неизвестные CSS Module классы: ${[...new Set(missing)].join(', ')}`);
         }
     }
 }
@@ -203,21 +227,21 @@ try {
         join(ROOT, 'dist', 'kroy', 'site-catalog.mjs'),
         `export const catalog = ${JSON.stringify(catalog)};\n`
     );
+    const ssrCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: false });
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],
         outfile: rendererPath,
         bundle: true,
         minify: true,
-        minifyIdentifiers: false,
         packages: 'external',
         platform: 'node',
         format: 'esm',
         jsx: 'automatic',
         loader: {
             '.css': 'empty',
-            '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
+        plugins: [ssrCssModules.plugin],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
     });
@@ -229,24 +253,29 @@ try {
     await renderSite(site, pages, temporaryDirectory, ASSET_BASE);
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
     await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
+    const clientCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: true });
     await build({
         entryPoints: [CLIENT_ENTRY_PATH],
         minify: true,
         outfile: join(temporaryDirectory, 'assets', 'app.js'),
         bundle: true,
-        minifyIdentifiers: false,
         platform: 'browser',
         format: 'esm',
         jsx: 'automatic',
         loader: {
-            '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
+        plugins: [clientCssModules.plugin],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
         define: { 'process.env.NODE_ENV': '"production"' },
     });
-    await validateStaticStyles(temporaryDirectory, ASSET_BASE);
+    await validateStaticStyles(
+        temporaryDirectory,
+        ASSET_BASE,
+        ssrCssModules.mappings,
+        clientCssModules.mappings
+    );
     await generateSiteRouting(
         site.slug,
         redirects,
