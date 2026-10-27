@@ -18,7 +18,7 @@
 
 .content {
     min-width: 0;
-    padding: var(--space-1) var(--space-8) var(--space-8);
+    padding: var(--space-2) var(--space-8) var(--space-8);
 }
 
 .sectionBar {
