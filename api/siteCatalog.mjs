@@ -16,7 +16,7 @@ export async function patchSiteCatalog(c) {
     try {
         return c.json(await setCatalog(site.id, normalizeCatalog(body)));
     } catch (error) {
-        if (/Цена|ссылка Prodamus|HTTPS|Изображение/.test(error.message)) return c.json({ error: error.message }, 400);
+        if (/Название|Цена|ссылка Prodamus|HTTPS|Изображение/.test(error.message)) return c.json({ error: error.message }, 400);
         console.error('Failed to save site catalog', error);
         return c.json({ error: 'Internal server error' }, 500);
     }

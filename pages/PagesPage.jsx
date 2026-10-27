@@ -5,6 +5,7 @@ import AdminPageShell from '../components/admin/AdminPageShell.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import compactStyles from '../components/ui/CompactForm.module.css';
 
 export default function PagesPage() {
     const [pages, setPages] = useState([]);
@@ -129,11 +130,11 @@ export default function PagesPage() {
                 <div className={styles.pageActions}>{actions}</div>
                 {showForm && (
                     <Card as="form" className={styles.createForm} onSubmit={createPage}>
-                        <label>
+                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                             <span>Название</span>
                             <input ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} />
                         </label>
-                        <label>
+                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                             <span>Путь</span>
                             <input value={path} onChange={(event) => setPath(event.target.value)} />
                         </label>

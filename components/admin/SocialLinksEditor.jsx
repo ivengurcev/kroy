@@ -8,6 +8,7 @@ import {
     socialType,
 } from '../../socialLinks.mjs';
 import styles from './SocialLinksEditor.module.css';
+import compactStyles from '../ui/CompactForm.module.css';
 
 function emptyItem() {
     return { type: 'telegram', value: '', name: socialLabel('telegram'), link: '' };
@@ -122,26 +123,26 @@ export default function SocialLinksEditor({ value, onChange }) {
                             </div>}
 
                             {isExpanded && <div className={styles.form} id={editorId}>
-                                <label className={styles.formField}>
+                                <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                                     <span>Тип</span>
                                     <select value={type} onChange={(event) => changeType(index, event.target.value)}>
                                         {SOCIAL_TYPES.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
                                     </select>
                                 </label>
-                                {isNickname && <label className={styles.formField}>
+                                {isNickname && <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                                     <span>Никнейм</span>
                                     <input value={item.value ?? ''} placeholder="@username или полная ссылка" onChange={(event) => changeValue(index, event.target.value)} />
                                 </label>}
-                                {type === 'max' && <label className={styles.formField}>
+                                {type === 'max' && <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                                     <span>Ссылка из приложения</span>
                                     <input type="url" value={item.value ?? ''} placeholder="https://max.ru/..." onChange={(event) => changeValue(index, event.target.value)} />
                                 </label>}
                                 {type === 'other' && <>
-                                    <label className={styles.formField}>
+                                    <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                                         <span>Название</span>
                                         <input value={item.name ?? ''} onChange={(event) => update(index, { name: event.target.value })} />
                                     </label>
-                                    <label className={styles.formField}>
+                                    <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                                         <span>Ссылка (HTTPS)</span>
                                         <input type="url" value={item.value ?? item.link ?? ''} placeholder="https://example.com" onChange={(event) => changeValue(index, event.target.value)} />
                                     </label>

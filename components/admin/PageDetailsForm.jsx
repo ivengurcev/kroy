@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import styles from './PageDetailsForm.module.css';
+import compactStyles from '../ui/CompactForm.module.css';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -119,7 +120,7 @@ export default function PageDetailsForm({
 
     return (
         <form className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
-            <label className={joinClasses(styles.field, pathClassName)}>
+            <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
                 <span>Путь</span>
                 <input
                     ref={pathInputRef}
@@ -128,7 +129,7 @@ export default function PageDetailsForm({
                     onChange={(event) => setPath(event.target.value)}
                 />
             </label>
-            <label className={joinClasses(styles.field, titleClassName)}>
+            <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, titleClassName)}>
                 <span>Название</span>
                 <input
                     ref={titleInputRef}

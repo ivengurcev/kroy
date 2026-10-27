@@ -6,6 +6,12 @@ function text(value, max) {
     return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
+function requiredText(value, label, max) {
+    const result = text(value, max);
+    if (!result) throw new Error(`${label} не может быть пустым.`);
+    return result;
+}
+
 function uuid(value) {
     return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
         ? value
@@ -31,15 +37,15 @@ function paymentUrl(value) {
 export function normalizeCatalog(value = {}) {
     const source = value && typeof value === 'object' ? value : {};
     const categories = Array.isArray(source.categories) ? source.categories.slice(0, 500).map((item, index) => ({
-        id: uuid(item?.id), name: text(item?.name, 200), sortOrder: Number.isInteger(item?.sortOrder) ? item.sortOrder : index,
-    })).filter((item) => item.name) : [];
+        id: uuid(item?.id), name: requiredText(item?.name, 'Название категории', 200), sortOrder: Number.isInteger(item?.sortOrder) ? item.sortOrder : index,
+    })) : [];
     const categoryIds = new Set(categories.map((item) => item.id).filter(Boolean));
     const products = Array.isArray(source.products) ? source.products.slice(0, 5000).map((item, index) => ({
         id: uuid(item?.id), categoryId: item?.categoryId && categoryIds.has(item.categoryId) ? item.categoryId : null,
-        name: text(item?.name, 200), description: text(item?.description, 2000), mediaId: uuid(item?.mediaId),
+        name: requiredText(item?.name, 'Название товара/услуги', 200), description: text(item?.description, 2000), mediaId: uuid(item?.mediaId),
         price: price(item?.price), paymentUrl: paymentUrl(item?.paymentUrl), sortOrder: Number.isInteger(item?.sortOrder) ? item.sortOrder : index,
         status: item?.status === 'hidden' ? 'hidden' : 'published',
-    })).filter((item) => item.name) : [];
+    })) : [];
     return { categories, products };
 }
 

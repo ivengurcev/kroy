@@ -5,6 +5,7 @@ import styles from './Field.module.css';
 import TokenControl from '../components/ui/TokenControls.jsx';
 import Button from '../components/ui/Button.jsx';
 import Icon from '../components/ui/Icon.jsx';
+import compactStyles from '../components/ui/CompactForm.module.css';
 
 function CatalogProductField({ value, onChange, catalog }) {
     const selected = Array.isArray(value) ? value : [];
@@ -115,8 +116,10 @@ export default function Field({ name, schema, value, onChange, catalog }) {
         }
     }
 
+    const fieldLayout = schema.type === 'textarea' ? compactStyles.long : compactStyles.compact;
+
     return (
-        <label className={styles.field}>
+        <label className={`${styles.field} ${compactStyles.field} ${fieldLayout}`}>
             {label}
             {control}
         </label>

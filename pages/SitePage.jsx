@@ -7,6 +7,7 @@ import SocialLinksEditor from '../components/admin/SocialLinksEditor.jsx';
 import CatalogEditor from '../components/admin/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/admin/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
+import compactStyles from '../components/ui/CompactForm.module.css';
 
 const MODE_OPTIONS = [
     { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -115,24 +116,24 @@ function ContactSettings({ value, onChange }) {
     return (
         <Card className={styles.contactPanel}>
             <div className={styles.formGrid}>
-                <label className={styles.formField}>
+                <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Адрес</span>
                     <textarea rows="3" value={contacts.address ?? ''} onChange={(event) => update('address', event.target.value)} />
                 </label>
-                <label className={styles.formField}>
+                <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Режим работы</span>
                     <textarea rows="3" value={contacts.hours ?? ''} onChange={(event) => update('hours', event.target.value)} />
                 </label>
-                <label className={styles.formField}>
+                <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Телефон</span>
                     <input type="tel" value={contacts.phone ?? ''} onChange={(event) => update('phone', event.target.value)} />
                 </label>
                 <div className={styles.coordinateGrid}>
-                    <label className={styles.formField}>
+                    <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Широта</span>
                         <input type="number" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
-                    <label className={styles.formField}>
+                    <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Долгота</span>
                         <input type="number" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
