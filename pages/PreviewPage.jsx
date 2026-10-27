@@ -27,26 +27,10 @@ function previewUrlForPath(path) {
     return `/admin/preview?path=${encodeURIComponent(path)}`;
 }
 
-function useSystemPalette(mode) {
-    const [systemPalette, setSystemPalette] = useState('light');
-
-    useEffect(() => {
-        if (mode !== 'system') return undefined;
-        const media = window.matchMedia('(prefers-color-scheme: dark)');
-        const update = () => setSystemPalette(media.matches ? 'dark' : 'light');
-        update();
-        media.addEventListener('change', update);
-        return () => media.removeEventListener('change', update);
-    }, [mode]);
-
-    return mode === 'system' ? systemPalette : mode;
-}
-
 export default function PreviewPage() {
     const [snapshot, setSnapshot] = useState(null);
     const [status, setStatus] = useState('loading');
     const path = useMemo(getInitialPath, []);
-    const palette = useSystemPalette(snapshot?.theme.mode);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -66,10 +50,6 @@ export default function PreviewPage() {
         return () => controller.abort();
     }, [path]);
 
-    const tokens = snapshot && palette
-        ? { ...snapshot.theme[palette], colorScheme: palette }
-        : undefined;
-
     return <div className={styles.preview}>
         <div className={`${adminTheme.theme} ${styles.badge}`} role="status">
             Предпросмотр · сохранённая версия
@@ -80,10 +60,10 @@ export default function PreviewPage() {
             pages={snapshot.pages}
             path={path}
             parts={parts}
+            theme={snapshot.theme}
             pathFromUrl={pathFromPreviewUrl}
             urlForPath={previewUrlForPath}
             notFound={<main className={styles.notFound}><h1>404</h1><p>Страница не найдена.</p></main>}
-            tokens={tokens}
         />}
     </div>;
 }

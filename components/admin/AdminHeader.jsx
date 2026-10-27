@@ -22,6 +22,7 @@ export default function AdminHeader({
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
+    const [publicationNoticeVisible, setPublicationNoticeVisible] = useState(false);
     const detailsButtonRef = useRef(null);
     const publishRequestRef = useRef(false);
     const publicationVersionRef = useRef(0);
@@ -43,6 +44,7 @@ export default function AdminHeader({
         : saveLabel;
     const detailsDisabled = loadStatus !== 'success' || !page.id;
     const isPublishing = publication.status === 'building' || publication.status === 'publishing';
+    const hasPublicationResult = publication.status === 'success' || publication.status === 'error';
     const publishLabel = publication.status === 'building'
         ? 'Сборка…'
         : publication.status === 'publishing'
@@ -93,6 +95,22 @@ export default function AdminHeader({
 
         return () => window.clearInterval(timer);
     }, [isPublishing]);
+
+    useEffect(() => {
+        if (isPublishing) {
+            setPublicationNoticeVisible(true);
+            return undefined;
+        }
+
+        if (!hasPublicationResult) {
+            setPublicationNoticeVisible(false);
+            return undefined;
+        }
+
+        setPublicationNoticeVisible(true);
+        const timer = window.setTimeout(() => setPublicationNoticeVisible(false), 5000);
+        return () => window.clearTimeout(timer);
+    }, [hasPublicationResult, isPublishing, publication.status, publication.message, publication.releaseId]);
 
     function openPageMap(event) {
         if (
@@ -308,14 +326,14 @@ export default function AdminHeader({
                 {(editorMode || siteMode) && saveStatus === 'error' && (
                     <span className={styles.saveError} role="alert">Не удалось сохранить {siteMode ? 'оформление' : 'страницу'}.</span>
                 )}
-                {publication.status === 'success' && (
-                    <span className={styles.publishStatus} role="status">
-                        {publication.releaseId ? `Опубликован релиз ${publication.releaseId}.` : publication.message}
-                    </span>
-                )}
-                {publication.status === 'error' && (
-                    <span className={`${styles.publishStatus} ${styles.publishError}`} role="alert">
-                        {publication.message}
+                {(isPublishing || publicationNoticeVisible) && (
+                    <span
+                        className={`${styles.publishStatus} ${publication.status === 'error' ? styles.publishError : ''}`}
+                        role={publication.status === 'error' ? 'alert' : 'status'}
+                    >
+                        {publication.status === 'success'
+                            ? (publication.releaseId ? `Опубликован релиз ${publication.releaseId}.` : publication.message)
+                            : publication.message}
                     </span>
                 )}
                 {logoutError && (

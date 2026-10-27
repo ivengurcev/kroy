@@ -5,6 +5,7 @@ import { isValidPagePath } from '../api/pageFields.mjs';
 import SiteApp from '../layout/SiteApp.jsx';
 import { parts } from '../dist/kroy/site-parts.mjs';
 import { pages as pageRegistry } from '../dist/kroy/site-pages.mjs';
+import { theme } from '../dist/kroy/site-theme.mjs';
 
 const DIST_DIR = resolve('dist');
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -50,6 +51,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                             pages={pageRegistry}
                             path={page.path}
                             parts={parts}
+                            theme={theme}
                         />
                     </div>
                     <script type="module" src={`${assetBase}/app.js`} />

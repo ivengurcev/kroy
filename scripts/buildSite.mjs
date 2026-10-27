@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
+import { getThemeTokens } from '../themes/themeRegistry.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 
@@ -11,6 +12,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
 const DEFAULT_FAVICON_PATH = join(ROOT, 'design', 'oysite-brand-kit', 'icons', 'favicon.svg');
 const SITE_PAGES_PATH = join(ROOT, 'dist', 'kroy', 'site-pages.mjs');
+const SITE_THEME_PATH = join(ROOT, 'dist', 'kroy', 'site-theme.mjs');
 const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
 const ASSET_BASE = '/_kroy/releases/__KROY_RELEASE__/assets';
 const SITE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -51,7 +53,9 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            'SELECT id, slug, name FROM sites WHERE slug = $1',
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides
+             FROM sites
+             WHERE slug = $1`,
             [siteSlug]
         );
         site = siteResult.rows[0];
@@ -145,6 +149,15 @@ try {
     await writeFile(
         SITE_PAGES_PATH,
         `export const pages = ${JSON.stringify(pageRegistry)};\n`
+    );
+    const theme = {
+        mode: site.theme_mode,
+        light: getThemeTokens(site.theme_id, 'light', site.theme_overrides),
+        dark: getThemeTokens(site.theme_id, 'dark', site.theme_overrides),
+    };
+    await writeFile(
+        SITE_THEME_PATH,
+        `export const theme = ${JSON.stringify(theme)};\n`
     );
     await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],

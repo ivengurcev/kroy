@@ -40,6 +40,7 @@ export default function SiteApp({
     urlForPath = defaultUrlForPath,
     notFound,
     tokens,
+    theme,
 }) {
     const [currentPath, setCurrentPath] = useState(path);
     const page = pages[currentPath];
@@ -115,7 +116,7 @@ export default function SiteApp({
     }, [notFound, pages, pathFromUrl, urlForPath]);
 
     return (
-        <SiteRoot tokens={tokens}>
+        <SiteRoot tokens={tokens} theme={theme}>
             {page
                 ? <Page key={page.path} content={page.content} parts={parts} />
                 : notFound}
