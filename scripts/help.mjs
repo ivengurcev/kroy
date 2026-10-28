@@ -6,6 +6,7 @@ console.log(`Kroy — команды проекта
   yarn dev:down                      Остановить Compose без удаления данных
   yarn dev:logs                      Следить за логами Compose
   yarn dev:status                    Показать состояние сервисов
+  yarn dev:run <script> [...args]    Выполнить Yarn-скрипт внутри app
   yarn dev:restart app               Перезапустить только app, nginx или db
   yarn dev:rebuild app               Пересобрать только app, nginx или db
   yarn vyaz:build                    Собрать административное приложение Vyaz (production)

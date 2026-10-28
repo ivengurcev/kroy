@@ -9,6 +9,9 @@ const commands = {
     down: ['down'],
     logs: ['logs', '--follow'],
     status: ['ps'],
+    run: service
+        ? ['exec', 'app', 'yarn', service, ...extra]
+        : null,
     restart: service && services.has(service) && extra.length === 0
         ? ['restart', service]
         : null,
@@ -19,7 +22,9 @@ const commands = {
 
 const args = commands[action];
 if (!args) {
-    console.error(action === 'restart' || action === 'rebuild'
+    console.error(action === 'run'
+        ? 'Использование: yarn dev:run <script> [...args]'
+        : action === 'restart' || action === 'rebuild'
         ? `Использование: yarn dev:${action} app|nginx|db`
         : 'Неизвестная команда Compose');
     process.exit(1);

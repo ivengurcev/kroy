@@ -28,6 +28,7 @@
     "dev:down": "node scripts/devCompose.mjs down",
     "dev:logs": "node scripts/devCompose.mjs logs",
     "dev:status": "node scripts/devCompose.mjs status",
+    "dev:run": "node scripts/devCompose.mjs run",
     "dev:restart": "node scripts/devCompose.mjs restart",
     "dev:rebuild": "node scripts/devCompose.mjs rebuild",
     "site:create": "yarn node --env-file-if-exists=.env scripts/createSite.mjs",

@@ -18,9 +18,9 @@ Kroy. Системные PostgreSQL и Nginx не используются и н
 первый релиз из другого терминала:
 
 ```bash
-docker compose -f infra/compose.yaml exec app yarn db:seed
-docker compose -f infra/compose.yaml exec app yarn user:create admin@example.org --superadmin
-docker compose -f infra/compose.yaml exec app yarn site:publish demo
+yarn dev:run db:seed
+yarn dev:run user:create admin@example.org --superadmin
+yarn dev:run site:publish demo
 ```
 
 `db:seed` и `user:create` интерактивны. При следующих запусках миграции
@@ -35,8 +35,19 @@ yarn dev:bg              # запуск в фоне
 yarn dev:down            # удалить контейнеры и сеть, сохранить данные
 yarn dev:logs            # следить за логами
 yarn dev:status          # показать состояние сервисов
+yarn dev:run <script> [...args] # выполнить Yarn-скрипт внутри app
 yarn dev:restart app     # также: nginx или db
 yarn dev:rebuild app     # пересобрать и пересоздать только выбранный сервис
+```
+
+Команды Kroy для development выполняются через контейнер `app` и сохраняют
+интерактивный терминал и код завершения:
+
+```bash
+yarn dev:run user:create admin@example.org --superadmin
+yarn dev:run site:publish demo
+yarn dev:run db:status
+yarn dev:run site:rollback demo 20261028143003031
 ```
 
 Не используйте `docker compose down --volumes`, если нужно сохранить
@@ -54,8 +65,8 @@ API и `yarn deploy site <slug>`. Общий PostgreSQL advisory lock не по�
 восстановление прежней конфигурации при ошибке. Откат выполняется так:
 
 ```bash
-docker compose -f infra/compose.yaml exec app yarn site:releases demo
-docker compose -f infra/compose.yaml exec app yarn site:rollback demo <release-id>
+yarn dev:run site:releases demo
+yarn dev:run site:rollback demo <release-id>
 ```
 
 ## Диагностика Nginx
