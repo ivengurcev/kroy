@@ -30,7 +30,7 @@ services:
       HOME: /tmp/kroy-home
       NODE_ENV: development
       DATABASE_URL: postgres://kroy:kroy-local@db:5432/kroy?sslmode=disable
-      AUTH_SECRET: "${AUTH_SECRET:-kroy-compose-development-secret}"
+      AUTH_SECRET: "${KROY_DEV_AUTH_SECRET:-kroy-compose-development-secret}"
       NGINX_CONFIG_DIR: /app/dist/kroy/nginx-dev
       NGINX_SITES_ROOT: /app/dist/sites
       NGINX_UPSTREAM: app:3000

@@ -99,20 +99,23 @@ export function renderNginxConfig(siteSlug, domains, options = {}) {
 
 function renderMainConfig(outputDir, options = {}) {
     const listen = options.listen || process.env.NGINX_LISTEN || '127.0.0.1:8080';
+    const development = options.development ?? process.env.NODE_ENV === 'development';
     const gzipEnabled = options.gzipEnabled ?? (
         process.env.KROY_NGINX_GZIP !== '0' && process.env.NODE_ENV !== 'development'
     );
     const runtime = (name) => quote(join(outputDir, name));
+    const errorLog = development ? 'stderr' : `${runtime('logs/error.log')} notice`;
+    const accessLog = development ? '/dev/stdout' : 'off';
     return [
         HEADER,
         'worker_processes 1;',
         `pid ${runtime('nginx.pid')};`,
-        `error_log ${runtime('logs/error.log')} notice;`,
+        `error_log ${errorLog};`,
         'events {',
         '    worker_connections 1024;',
         '}',
         'http {',
-        '    access_log off;',
+        `    access_log ${accessLog};`,
         `    include ${runtime('mime.types')};`,
         '    default_type application/octet-stream;',
         '    sendfile on;',

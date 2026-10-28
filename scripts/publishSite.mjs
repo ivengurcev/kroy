@@ -2,9 +2,9 @@ import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db/client.mjs';
+import { acquireSitePublicationLock, releaseSitePublicationLock } from './sitePublicationLock.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const LOCK_NAME = 'kroy:site-publication';
 const siteSlug = process.argv[2];
 let activeChild;
 let terminationSignal;
@@ -48,12 +48,7 @@ try {
         throw new Error('Укажите корректный slug сайта: yarn site:publish <slug>');
     }
 
-    client = await pool.connect();
-    const { rows: [{ acquired }] } = await client.query(
-        'SELECT pg_try_advisory_lock(hashtext($1)) AS acquired',
-        [LOCK_NAME],
-    );
-    if (!acquired) throw new Error('Уже выполняется другая публикация. Попробуйте позже.');
+    client = await acquireSitePublicationLock();
     locked = true;
 
     await runScript('scripts/buildSite.mjs');
@@ -66,7 +61,8 @@ try {
     process.exitCode = terminationSignal === 'SIGINT' ? 130 : terminationSignal ? 143 : 1;
 } finally {
     if (locked) {
-        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [LOCK_NAME]).catch(() => {});
+        await releaseSitePublicationLock(client);
+        client = undefined;
     }
     client?.release();
     await pool.end();

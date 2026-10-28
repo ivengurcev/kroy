@@ -52,7 +52,7 @@ yarn kroy:help
 
 | Назначение | Команды |
 |---|---|
-| Разработка | `yarn dev`, `yarn dev:bg`, `yarn dev:down`, `yarn dev:app` |
+| Разработка | `yarn dev`, `yarn dev:bg`, `yarn dev:down`, `yarn dev:logs`, `yarn dev:status` |
 | База данных | `yarn db`, `yarn db:seed`, `yarn db:status` |
 | Сайты | `yarn site:create <slug> <hostname> [name]`, `yarn site:list`, `yarn site:info <slug>` |
 | Домены | `yarn site:domain:add <slug> <hostname>`, `yarn site:domain:remove <slug> <hostname>` |
@@ -62,10 +62,10 @@ yarn kroy:help
 
 Быстрые сценарии:
 
-- Изменить запчасть: `yarn vyaz:build`; для публичного сайта дополнительно
-  `yarn site:build <slug>`.
+- Development запускается только через Compose; команды базы, сборки и публикации
+  выполняются внутри `app` через `docker compose -f infra/compose.yaml exec app`.
 - Открыть редактор: `yarn dev` → `http://demo.localhost:8080/admin`.
-- Посмотреть публичный сайт: `yarn site:publish <slug>`.
+- Посмотреть публичный сайт: `docker compose -f infra/compose.yaml exec app yarn site:publish <slug>`.
 - Опубликовать изменения: `yarn deploy site <slug>`.
 - Выполнить команду на VPS: `yarn remote <script> [...args]`.
 - Откатить релиз: `yarn site:releases <slug>` →
@@ -104,8 +104,8 @@ yarn dev
 Compose запускает отдельные PostgreSQL 16, Kroy/Vyaz и Nginx. С хоста доступен
 только `http://demo.localhost:8080`; приложение, база и управляющий API Nginx
 остаются внутри сети Compose. Первый запуск, команды, перенос существующей БД и
-диагностика описаны в [infra/README.md](infra/README.md). Для запуска прежнего
-watch-сервера непосредственно на хосте используйте `yarn dev:app`.
+диагностика описаны в [infra/README.md](infra/README.md). Kroy/Vyaz, PostgreSQL
+и Nginx в development работают только внутри Compose.
 
 Заполнить локальную БД и собрать оба тестовых сайта:
 
@@ -257,9 +257,14 @@ curl --resolve vet.example.test:8080:127.0.0.1 http://vet.example.test:8080/
 
 Публичные пути используют только нижний регистр, цифры и дефисы в непустых сегментах: `/`, `/services`, `/about/team`, `/our-services`. Проценты, URL-кодировки, пробелы, точки и метасимволы не допускаются, чтобы PostgreSQL, браузер, файловая система и Nginx однозначно трактовали адрес. Первые сегменты `admin`, `api`, `public`, `static` и `uploads` зарезервированы для приложения.
 
-## Локальная база данных
+## Production и standalone-команды
 
-Создайте локальный файл окружения и запустите PostgreSQL:
+Прямые команды `yarn build`, `yarn serve`, `yarn site:publish` и команды работы
+с БД предназначены для production/standalone-окружения. Они используют
+`DATABASE_URL` из `.env`; development использует только команды `docker compose
+... exec app` из [infra/README.md](infra/README.md).
+
+Для standalone-окружения создайте локальный файл окружения и PostgreSQL:
 
 ```bash
 cp .env.example .env
@@ -276,7 +281,9 @@ yarn db:rollback
 yarn db:seed
 ```
 
-`db:rollback` и `db:seed` перед выполнением запрашивают подтверждение в интерактивном терминале. Параметры подключения задаются в `DATABASE_URL`. Пользователь PostgreSQL и база создаются средствами системного PostgreSQL; Docker Compose для проекта не требуется.
+`db:rollback` и `db:seed` перед выполнением запрашивают подтверждение в
+интерактивном терминале. Параметры подключения задаются в `DATABASE_URL`.
+Docker Compose для production не требуется.
 
 ## Вход в административную панель
 

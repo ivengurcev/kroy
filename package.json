@@ -30,7 +30,6 @@
     "dev:status": "node scripts/devCompose.mjs status",
     "dev:restart": "node scripts/devCompose.mjs restart",
     "dev:rebuild": "node scripts/devCompose.mjs rebuild",
-    "dev:app": "yarn node scripts/dev.mjs",
     "site:create": "yarn node --env-file-if-exists=.env scripts/createSite.mjs",
     "site:domain:add": "yarn node --env-file-if-exists=.env scripts/addSiteDomain.mjs",
     "site:domain:remove": "yarn node --env-file-if-exists=.env scripts/removeSiteDomain.mjs",

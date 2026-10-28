@@ -46,7 +46,9 @@ let stopping = false;
 function stop(signal) {
     if (stopping) return;
     stopping = true;
-    child.kill(signal);
+    // Ctrl+C already reaches Compose through the shared terminal process group.
+    // Forward other signals sent directly to this supervisor.
+    if (signal !== 'SIGINT') child.kill(signal);
 }
 
 process.once('SIGINT', () => stop('SIGINT'));
@@ -57,5 +59,5 @@ child.once('error', (error) => {
 });
 child.once('exit', (code, signal) => {
     if (signal && !stopping) process.kill(process.pid, signal);
-    else process.exitCode = code ?? (signal ? 1 : 0);
+    else process.exitCode = code ?? (signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 0);
 });

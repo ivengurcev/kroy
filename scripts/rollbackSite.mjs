@@ -5,6 +5,7 @@ import { pool } from '../db/client.mjs';
 import nginx from '../infra/nginx/index.mjs';
 import generateNginxConfig from './generateNginxConfig.mjs';
 import getActiveRelease from './getActiveRelease.mjs';
+import { acquireSitePublicationLock, releaseSitePublicationLock } from './sitePublicationLock.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
@@ -42,6 +43,8 @@ try {
         throw new Error('Укажите корректный release-id');
     }
 
+    client = await acquireSitePublicationLock();
+
     const releaseDirectory = join(SITES_DIR, siteSlug, releaseId);
     const routingPath = join(releaseDirectory, 'routing.json');
     await readFile(routingPath);
@@ -49,7 +52,6 @@ try {
     if (await getActiveRelease(siteSlug) === releaseId) {
         console.log(`Релиз ${releaseId} уже активен`);
     } else {
-        client = await pool.connect();
         const siteResult = await client.query(
             `SELECT s.id, array_agg(d.hostname ORDER BY d.hostname) AS domains
              FROM sites s
@@ -63,9 +65,6 @@ try {
         if (!site) {
             throw new Error(`Сайт или его домены не найдены: ${siteSlug}`);
         }
-
-        client.release();
-        client = undefined;
 
         const configPath = NGINX_CONFIG;
         const fragmentPath = join(NGINX_DIR, 'sites', `${siteSlug}.conf`);
@@ -95,6 +94,6 @@ try {
     console.error(`Не удалось выполнить откат: ${error.message}`);
     process.exitCode = 1;
 } finally {
-    client?.release();
+    await releaseSitePublicationLock(client);
     await pool.end();
 }

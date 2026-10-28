@@ -57,7 +57,7 @@
 - Modify: `package.json`, `.env.example`
 
 **Interfaces:**
-- Produces: `dev`, `dev:bg`, `dev:down`, `dev:logs`, `dev:status`, `dev:restart`, `dev:rebuild`, and `dev:app` commands.
+- Produces: `dev`, `dev:bg`, `dev:down`, `dev:logs`, `dev:status`, `dev:restart`, and `dev:rebuild` commands.
 - Produces: internal `POST /validate` and `POST /reload` on the Nginx service only.
 
 - [ ] Define one internal network, a PostgreSQL named volume, required bind mounts, healthchecks, and only the loopback Nginx port.

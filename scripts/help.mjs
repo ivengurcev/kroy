@@ -8,9 +8,8 @@ console.log(`Kroy — команды проекта
   yarn dev:status                    Показать состояние сервисов
   yarn dev:restart app               Перезапустить только app, nginx или db
   yarn dev:rebuild app               Пересобрать только app, nginx или db
-  yarn dev:app                       Запустить watch-сервер Vyaz без Compose
-  yarn vyaz:build                    Собрать административное приложение Vyaz
-  yarn vyaz:serve                    Запустить Vyaz на порту 3000
+  yarn vyaz:build                    Собрать административное приложение Vyaz (production)
+  yarn vyaz:serve                    Запустить Vyaz на порту 3000 (production)
   yarn parts:generate                Обновить реестр запчастей из JSDoc
 
 База данных
@@ -48,7 +47,7 @@ console.log(`Kroy — команды проекта
 Быстрые сценарии
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>
   Хочу открыть редактор              yarn dev → http://demo.localhost:8080/admin
-  Хочу посмотреть публичный сайт     yarn site:publish <slug>
+  Хочу посмотреть публичный сайт     docker compose -f infra/compose.yaml exec app yarn site:publish <slug>
   Хочу опубликовать изменения        yarn deploy site <slug>
   Хочу выполнить команду на VPS      yarn remote <script> [...args]
   Хочу откатить релиз                yarn site:releases <slug> → yarn site:rollback <slug> <release-id>

@@ -37,7 +37,6 @@ yarn dev:logs            # следить за логами
 yarn dev:status          # показать состояние сервисов
 yarn dev:restart app     # также: nginx или db
 yarn dev:rebuild app     # пересобрать и пересоздать только выбранный сервис
-yarn dev:app             # старый watch-сервер Vyaz на хосте, без Compose
 ```
 
 Не используйте `docker compose down --volumes`, если нужно сохранить
@@ -47,8 +46,8 @@ yarn dev:app             # старый watch-сервер Vyaz на хосте,
 
 `yarn site:build <slug>` только готовит staging. `yarn site:publish <slug>`
 выполняет полную сборку и публикацию; эту же команду вызывает административный
-API и `yarn deploy site <slug>`. PostgreSQL advisory lock не позволяет CLI и
-API публиковать одновременно.
+API и `yarn deploy site <slug>`. Общий PostgreSQL advisory lock не позволяет
+одновременно выполнять publish и rollback.
 
 Алгоритм одинаков в development и production: staging, неизменяемый release-id,
 версионирование ресурсов, переключение Nginx, пять сохранённых релизов и
@@ -75,8 +74,8 @@ docker compose -f infra/compose.yaml exec -T nginx \
   nginx -t -c /app/dist/kroy/nginx-dev/nginx.conf
 ```
 
-Полезны также `yarn dev:status`, `yarn dev:logs` и логи
-`dist/kroy/nginx-dev/logs/error.log`. Публикация вызывает reload процесса Nginx, а
+Полезны также `yarn dev:status` и `yarn dev:logs`: development error/access log
+Nginx выводятся в stderr/stdout Compose. Публикация вызывает reload процесса Nginx, а
 не перезапуск контейнера.
 
 ## Перенос существующей локальной PostgreSQL
