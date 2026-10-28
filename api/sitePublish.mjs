@@ -51,7 +51,7 @@ async function getCurrentSite(c) {
     return site ?? null;
 }
 
-function runPackageScript(script, slug) {
+function runPackageScript(script, slug, onOutput) {
     return new Promise((resolvePromise, reject) => {
         const child = spawn(
             process.execPath,
@@ -62,9 +62,11 @@ function runPackageScript(script, slug) {
 
         child.stdout.on('data', (chunk) => {
             output = appendOutput(output, chunk);
+            onOutput?.(output);
         });
         child.stderr.on('data', (chunk) => {
             output = appendOutput(output, chunk);
+            onOutput?.(output);
         });
         child.on('error', reject);
         child.on('close', (code) => {
@@ -79,12 +81,11 @@ function runPackageScript(script, slug) {
 
 async function runPublication(site, job) {
     try {
-        await runPackageScript('site:build', site.slug);
-
-        job.status = 'publishing';
-        job.message = 'Публикация сайта…';
-
-        const output = await runPackageScript('site:publish', site.slug);
+        const output = await runPackageScript('site:publish', site.slug, (currentOutput) => {
+            if (!currentOutput.includes('Сборка завершена.')) return;
+            job.status = 'publishing';
+            job.message = 'Публикация сайта…';
+        });
         job.status = 'success';
         job.message = 'Сайт опубликован.';
         job.releaseId = output.match(/Опубликован релиз (\d{17})/)?.[1];

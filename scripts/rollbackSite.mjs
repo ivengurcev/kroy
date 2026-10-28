@@ -1,9 +1,8 @@
-import { execFile } from 'node:child_process';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 import { pool } from '../db/client.mjs';
+import nginx from '../infra/nginx/index.mjs';
 import generateNginxConfig from './generateNginxConfig.mjs';
 import getActiveRelease from './getActiveRelease.mjs';
 
@@ -11,7 +10,6 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');
 const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX_CONFIG_DIR) : join(ROOT, 'dist', 'kroy', 'nginx');
 const NGINX_CONFIG = join(NGINX_DIR, 'nginx.conf');
-const execFileAsync = promisify(execFile);
 const siteSlug = process.argv[2];
 const releaseId = process.argv[3];
 
@@ -32,15 +30,6 @@ async function restoreFile(path, content) {
 
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, content);
-}
-
-async function reloadNginx() {
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', NGINX_CONFIG], { cwd: ROOT });
-}
-
-async function validateNginx() {
-    const args = ['-t', '-c', NGINX_CONFIG];
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', args, { cwd: ROOT });
 }
 
 let client;
@@ -90,13 +79,13 @@ try {
                 siteRoot: `${siteSlug}/${releaseId}`,
                 releaseId,
             });
-            await validateNginx();
-            await reloadNginx();
+            await nginx.validate();
+            await nginx.reload();
         } catch (error) {
             await restoreFile(fragmentPath, previousFragment);
             await restoreFile(configPath, previousConfig);
-            await validateNginx().catch(() => {});
-            await reloadNginx().catch(() => {});
+            await nginx.validate().catch(() => {});
+            await nginx.reload().catch(() => {});
             throw error;
         }
 

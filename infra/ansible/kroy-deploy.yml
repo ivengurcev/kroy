@@ -7,7 +7,7 @@
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
     kroy_yarn_version: 4.18.1
-    kroy_local_root: "{{ playbook_dir }}/.."
+    kroy_local_root: "{{ playbook_dir }}/../.."
   tasks:
     - name: Check Node.js version on the VPS
       ansible.builtin.command: node --version
@@ -20,7 +20,7 @@
         that:
           - kroy_remote_node_version.rc == 0
           - (kroy_remote_node_version.stdout | trim) == 'v24.19.0'
-        fail_msg: "Node.js v24.19.0 is required on the VPS. Run ansible/kroy-bootstrap.yml first."
+        fail_msg: "Node.js v24.19.0 is required on the VPS. Run infra/ansible/kroy-bootstrap.yml first."
 
     - name: Install Kroy dependencies locally
       ansible.builtin.command:
@@ -85,7 +85,7 @@
           - "--exclude=/node_modules/"
           - "--exclude=.cache/"
           - "--exclude=*.log"
-          - "--exclude=ansible/"
+          - "--exclude=infra/ansible/"
       notify:
         - Restart Kroy app
       register: kroy_sync_result

@@ -85,7 +85,7 @@
 
     - name: Install Oysite logo for placeholder
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../design/oysite-brand-kit/logo/oysite-logo.svg"
+        src: "{{ playbook_dir }}/../../design/oysite-brand-kit/logo/oysite-logo.svg"
         dest: /var/www/oysite/logo.svg
         owner: root
         group: root
@@ -93,7 +93,7 @@
 
     - name: Install Oysite favicon for placeholder
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../design/oysite-brand-kit/icons/favicon.svg"
+        src: "{{ playbook_dir }}/../../design/oysite-brand-kit/icons/favicon.svg"
         dest: /var/www/oysite/favicon.svg
         owner: root
         group: root

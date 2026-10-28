@@ -1,0 +1,78 @@
+name: kroy-dev
+
+services:
+  db:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: kroy
+      POSTGRES_USER: kroy
+      POSTGRES_PASSWORD: kroy-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kroy -d kroy"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: "no"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - kroy
+
+  app:
+    build:
+      context: ..
+      dockerfile: infra/docker/app.Dockerfile
+    user: "${KROY_UID:-1000}:${KROY_GID:-1000}"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOME: /tmp/kroy-home
+      NODE_ENV: development
+      DATABASE_URL: postgres://kroy:kroy-local@db:5432/kroy?sslmode=disable
+      AUTH_SECRET: "${AUTH_SECRET:-kroy-compose-development-secret}"
+      NGINX_CONFIG_DIR: /app/dist/kroy/nginx-dev
+      NGINX_SITES_ROOT: /app/dist/sites
+      NGINX_UPSTREAM: app:3000
+      NGINX_LISTEN: 0.0.0.0:8080
+      KROY_NGINX_CONTROL_URL: http://nginx:3001
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(() => process.exit(0), () => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    restart: "no"
+    volumes:
+      - ..:/app
+      - ../dist/sites:/app/dist/sites
+      - ../dist/kroy/nginx-dev:/app/dist/kroy/nginx-dev
+      - ../data/media:/app/data/media
+    networks:
+      - kroy
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: infra/docker/nginx.Dockerfile
+    depends_on:
+      app:
+        condition: service_healthy
+    user: "${KROY_UID:-1000}:${KROY_GID:-1000}"
+    environment:
+      NGINX_CONFIG: /app/dist/kroy/nginx-dev/nginx.conf
+      NGINX_CONTROL_PORT: 3001
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: "no"
+    volumes:
+      - ../dist/sites:/app/dist/sites:ro
+      - ../dist/kroy/nginx-dev:/app/dist/kroy/nginx-dev
+    networks:
+      - kroy
+
+volumes:
+  postgres-data:
+
+networks:
+  kroy:
+    driver: bridge

@@ -11,8 +11,8 @@ const watcher = spawn(process.execPath, ['scripts/watchParts.mjs'], {
     stdio: 'inherit',
 });
 const vyaz = spawn(
-    'yarn',
-    ['node', '--env-file=.env', 'server.mjs', '--build-public', '--build-ssr', '--serve', '--watch', '--sourcemap'],
+    process.execPath,
+    ['--env-file-if-exists=.env', 'server.mjs', '--build-public', '--build-ssr', '--serve', '--watch', '--sourcemap'],
     { cwd: ROOT, stdio: 'inherit', env: { ...process.env, NODE_ENV: 'development' } }
 );
 

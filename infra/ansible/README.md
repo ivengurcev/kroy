@@ -31,7 +31,7 @@ TLS-сертификаты намеренно не настраиваются.
 отдельный playbook после настройки DNS-записи `_acme-challenge.oysite.ru`:
 
 ```bash
-ansible-playbook -i inventory ansible/kroy-https.yml \
+ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-https.yml \
   -e acme_dns_credentials_path="$HOME/.config/kroy/acme-dns.json"
 ```
 
@@ -48,7 +48,7 @@ Certbot использует существующий аккаунт Let's Encry
 SSH-доступ и `rsync`. Установите коллекции:
 
 ```bash
-ansible-galaxy collection install -r ansible/requirements.yml
+ansible-galaxy collection install -r infra/ansible/requirements.yml
 ```
 
 Bootstrap не изменяет конфигурации Nginx и PostgreSQL и не затрагивает другие
@@ -66,7 +66,7 @@ Bootstrap не изменяет конфигурации Nginx и PostgreSQL и 
 Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
 
 ```bash
-ansible-playbook -i inventory ansible/kroy-bootstrap.yml \
+ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-bootstrap.yml \
   -e kroy_root=/srv/kroy \
   -e kroy_user=kroy
 ```
@@ -81,7 +81,7 @@ yarn deploy app
 Эквивалентный прямой вызов Ansible:
 
 ```bash
-ansible-playbook -i inventory ansible/kroy-deploy.yml \
+ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-deploy.yml \
   -e kroy_root=/srv/kroy \
   -e kroy_user=kroy \
   -e 'kroy_domains=["example.oysite.ru"]'
@@ -90,7 +90,7 @@ ansible-playbook -i inventory ansible/kroy-deploy.yml \
 Затем один раз настройте отдельный Kroy Nginx и системный reverse proxy:
 
 ```bash
-ansible-playbook -i inventory ansible/kroy-nginx.yml \
+ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-nginx.yml \
   -e kroy_root=/srv/kroy \
   -e kroy_user=kroy
 ```
@@ -107,14 +107,14 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 локально перед rsync. `kroy-provision.yml` сохранён как совместимая точка входа
 и просто вызывает bootstrap.
 
-Перед deploy на локальной машине выполняются `yarn set version 4.18.1 --yarn-path`,
-настройка `enableGlobalCache: false`, затем `yarn install --immutable` и
-`yarn vyaz:build`. В rsync передаются `.pnp.cjs`, `.pnp.loader.mjs`,
+Перед deploy на локальной машине выполняются `yarn install --immutable` и
+`yarn vyaz:build`. Версия Yarn и `enableGlobalCache: false` уже зафиксированы
+в репозитории. В rsync передаются `.pnp.cjs`, `.pnp.loader.mjs`,
 `.yarn/cache`, `.yarn/unplugged`, `.yarn/releases` и конфигурация Yarn, а также
 сборка `dist`. Перед синхронизацией их наличие проверяется. Данные передаются
 напрямую от пользователя SSH-подключения. Исключаются `.git`
 (в том числе внутри субмодулей), `.env`, `dist/sites`, конфигурации
-`dist/kroy/nginx`, `data/`, локальные `node_modules`, логи и `ansible/`.
+`dist/kroy/nginx`, `data/`, локальные `node_modules`, логи и `infra/ansible/`.
 `--delete` и `--chown` не используются: серверные данные и конфигурации
 сохраняются. На VPS `yarn install` и `vyaz:build` не запускаются; миграции
 используют переданный release Yarn через `/usr/bin/node` и зависимости без
@@ -138,7 +138,7 @@ systemctl is-enabled kroy-app kroy-nginx
 yarn deploy site demo
 ```
 
-Команда использует `KROY_REMOTE_HOST`. На VPS защищённый запускатель сначала
-выполняет `site:build`, затем `site:publish` от пользователя `kroy`; при ошибке
-сборки публикация не запускается. Sudo разрешён только для запускателя и только
-без запроса пароля.
+Команда использует `KROY_REMOTE_HOST`. На VPS защищённый запускатель выполняет
+единый `site:publish` от пользователя `kroy`; команда сама собирает и публикует
+сайт, а при ошибке сборки переключение релиза не начинается. Sudo разрешён
+только для запускателя и только без запроса пароля.

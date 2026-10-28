@@ -124,6 +124,9 @@ function renderMainConfig(outputDir, options = {}) {
         '    real_ip_recursive off;',
         `    client_body_temp_path ${runtime('tmp/client_body')};`,
         `    proxy_temp_path ${runtime('tmp/proxy')};`,
+        `    fastcgi_temp_path ${runtime('tmp/fastcgi')};`,
+        `    uwsgi_temp_path ${runtime('tmp/uwsgi')};`,
+        `    scgi_temp_path ${runtime('tmp/scgi')};`,
         '    map $http_x_forwarded_proto $kroy_forwarded_proto {',
         '        default $http_x_forwarded_proto;',
         '        "" $scheme;',
@@ -141,6 +144,9 @@ export async function ensureNginxConfig(options = {}) {
     await mkdir(join(outputDir, 'logs'), { recursive: true });
     await mkdir(join(outputDir, 'tmp', 'client_body'), { recursive: true });
     await mkdir(join(outputDir, 'tmp', 'proxy'), { recursive: true });
+    await mkdir(join(outputDir, 'tmp', 'fastcgi'), { recursive: true });
+    await mkdir(join(outputDir, 'tmp', 'uwsgi'), { recursive: true });
+    await mkdir(join(outputDir, 'tmp', 'scgi'), { recursive: true });
     await mkdir(join(outputDir, 'sites'), { recursive: true });
     await writeFile(join(outputDir, 'mime.types'), `${MIME_TYPES}\n`);
     const temporaryConfigPath = `${configPath}.tmp`;

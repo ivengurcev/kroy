@@ -1,6 +1,14 @@
 console.log(`Kroy — команды проекта
 
 Разработка
+  yarn dev                           Запустить PostgreSQL, Kroy и Nginx в Compose
+  yarn dev:bg                        Запустить Compose в фоне
+  yarn dev:down                      Остановить Compose без удаления данных
+  yarn dev:logs                      Следить за логами Compose
+  yarn dev:status                    Показать состояние сервисов
+  yarn dev:restart app               Перезапустить только app, nginx или db
+  yarn dev:rebuild app               Пересобрать только app, nginx или db
+  yarn dev:app                       Запустить watch-сервер Vyaz без Compose
   yarn vyaz:build                    Собрать административное приложение Vyaz
   yarn vyaz:serve                    Запустить Vyaz на порту 3000
   yarn parts:generate                Обновить реестр запчастей из JSDoc
@@ -24,7 +32,7 @@ console.log(`Kroy — команды проекта
 
 Публикация
   yarn site:build demo               Подготовить статическую версию сайта
-  yarn site:publish demo             Опубликовать подготовленную версию
+  yarn site:publish demo             Собрать и опубликовать новую версию
   yarn site:releases demo            Показать сохранённые релизы сайта
   yarn site:rollback demo <release-id>
                                      Переключить сайт на сохранённый релиз
@@ -39,8 +47,8 @@ console.log(`Kroy — команды проекта
 
 Быстрые сценарии
   Изменил запчасть                   yarn vyaz:build; для сайта: yarn site:build <slug>
-  Хочу открыть редактор              yarn db → yarn vyaz:build → yarn vyaz:serve
-  Хочу посмотреть публичный сайт     yarn preview → yarn site:build <slug> → yarn site:publish <slug>
+  Хочу открыть редактор              yarn dev → http://demo.localhost:8080/admin
+  Хочу посмотреть публичный сайт     yarn site:publish <slug>
   Хочу опубликовать изменения        yarn deploy site <slug>
   Хочу выполнить команду на VPS      yarn remote <script> [...args]
   Хочу откатить релиз                yarn site:releases <slug> → yarn site:rollback <slug> <release-id>

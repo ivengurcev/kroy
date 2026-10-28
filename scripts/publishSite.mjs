@@ -1,204 +1,73 @@
-import { execFile } from 'node:child_process';
-import {
-    cp,
-    mkdir,
-    readFile,
-    readdir,
-    rename,
-    rm,
-    writeFile,
-} from 'node:fs/promises';
-import { dirname, extname, join, resolve } from 'node:path';
+import { spawn } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 import { pool } from '../db/client.mjs';
-import generateNginxConfig from './generateNginxConfig.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const STAGING_DIR = join(ROOT, 'dist', 'kroy', 'staging');
-const SITES_DIR = join(ROOT, 'dist', 'sites');
-const NGINX_DIR = process.env.NGINX_CONFIG_DIR ? resolve(ROOT, process.env.NGINX_CONFIG_DIR) : join(ROOT, 'dist', 'kroy', 'nginx');
-const NGINX_CONFIG = join(NGINX_DIR, 'nginx.conf');
-const RELEASE_PATTERN = /^\d{17}$/;
-const RELEASE_MARKER = '__KROY_RELEASE__';
-const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css']);
-const execFileAsync = promisify(execFile);
+const LOCK_NAME = 'kroy:site-publication';
 const siteSlug = process.argv[2];
-const ALREADY_PUBLISHED = 'ALREADY_PUBLISHED';
+let activeChild;
+let terminationSignal;
 
-async function readOptional(path) {
-    try {
-        return await readFile(path);
-    } catch (error) {
-        if (error.code === 'ENOENT') return undefined;
-        throw error;
-    }
-}
-
-async function restoreFile(path, content) {
-    if (content === undefined) {
-        await rm(path, { force: true });
-        return;
+function runScript(script) {
+    if (terminationSignal) {
+        return Promise.reject(new Error(`${script} не запущен: получен ${terminationSignal}`));
     }
 
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, content);
+    return new Promise((resolvePromise, reject) => {
+        const child = spawn(
+            process.execPath,
+            ['--env-file-if-exists=.env', script, siteSlug],
+            { cwd: ROOT, stdio: 'inherit' },
+        );
+        activeChild = child;
+        child.once('error', reject);
+        child.once('exit', (code, signal) => {
+            activeChild = undefined;
+            if (code === 0) resolvePromise();
+            else reject(Object.assign(new Error(signal
+                ? `${script} остановлен сигналом ${signal}`
+                : `${script} завершился с кодом ${code ?? 1}`), { childFailed: true }));
+        });
+    });
 }
 
-async function versionAssets(directory, releaseId) {
-    let replacements = 0;
-
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-        const path = join(directory, entry.name);
-
-        if (entry.isDirectory()) {
-            replacements += await versionAssets(path, releaseId);
-        } else if (TEXT_EXTENSIONS.has(extname(entry.name))) {
-            const source = await readFile(path, 'utf8');
-            const output = source.replaceAll(RELEASE_MARKER, releaseId);
-
-            if (output !== source) {
-                await writeFile(path, output);
-                replacements += 1;
-            }
-        }
-    }
-
-    return replacements;
+function stop(signal) {
+    terminationSignal ??= signal;
+    activeChild?.kill(signal);
 }
 
-async function reloadNginx() {
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', ['-s', 'reload', '-c', NGINX_CONFIG], { cwd: ROOT });
-}
-
-async function validateNginx() {
-    const args = ['-t', '-c', NGINX_CONFIG];
-    await execFileAsync(process.env.NGINX_BIN || 'nginx', args, { cwd: ROOT });
-}
+process.once('SIGINT', () => stop('SIGINT'));
+process.once('SIGTERM', () => stop('SIGTERM'));
 
 let client;
-let temporaryDirectory;
-let releaseDirectory;
-let publishedMarkerPath;
-let published = false;
+let locked = false;
 
 try {
     if (!siteSlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(siteSlug)) {
         throw new Error('Укажите корректный slug сайта: yarn site:publish <slug>');
     }
 
-    const stagingDirectory = join(STAGING_DIR, siteSlug);
-    const routingPath = join(stagingDirectory, 'routing.json');
-    publishedMarkerPath = join(stagingDirectory, '.published');
-    await readFile(routingPath);
-
-    if (await readOptional(publishedMarkerPath)) {
-        const error = new Error(`Подготовленная версия ${siteSlug} уже опубликована`);
-        error.code = ALREADY_PUBLISHED;
-        throw error;
-    }
-
     client = await pool.connect();
-    const siteResult = await client.query(
-        `SELECT s.id, array_agg(d.hostname ORDER BY d.hostname) AS domains
-         FROM sites s
-         JOIN domains d ON d.site_id = s.id
-         WHERE s.slug = $1
-         GROUP BY s.id`,
-        [siteSlug]
+    const { rows: [{ acquired }] } = await client.query(
+        'SELECT pg_try_advisory_lock(hashtext($1)) AS acquired',
+        [LOCK_NAME],
     );
-    const site = siteResult.rows[0];
+    if (!acquired) throw new Error('Уже выполняется другая публикация. Попробуйте позже.');
+    locked = true;
 
-    if (!site) {
-        throw new Error(`Сайт или его домены не найдены: ${siteSlug}`);
-    }
-
-    client.release();
-    client = undefined;
-
-    const releaseId = new Date().toISOString().replace(/[-:.TZ]/g, '');
-    const siteDirectory = join(SITES_DIR, siteSlug);
-    releaseDirectory = join(siteDirectory, releaseId);
-    temporaryDirectory = `${releaseDirectory}.tmp`;
-
-    await mkdir(siteDirectory, { recursive: true });
-    await cp(stagingDirectory, temporaryDirectory, {
-        recursive: true,
-        errorOnExist: true,
-        force: false,
-    });
-
-    if (await versionAssets(temporaryDirectory, releaseId) === 0) {
-        throw new Error('Подготовленная версия устарела; повторите site:build');
-    }
-
-    await rename(temporaryDirectory, releaseDirectory);
-    temporaryDirectory = undefined;
-
-    const configPath = NGINX_CONFIG;
-    const fragmentPath = join(NGINX_DIR, 'sites', `${siteSlug}.conf`);
-    const previousConfig = await readOptional(configPath);
-    const previousFragment = await readOptional(fragmentPath);
-
-    try {
-        await generateNginxConfig(siteSlug, site.domains, {
-            outputDir: NGINX_DIR,
-            routingPath: join(releaseDirectory, 'routing.json'),
-            siteRoot: `${siteSlug}/${releaseId}`,
-            releaseId,
-        });
-        await validateNginx();
-        await reloadNginx();
-        await writeFile(publishedMarkerPath, `${releaseId}\n`);
-    } catch (error) {
-        await restoreFile(fragmentPath, previousFragment);
-        await restoreFile(configPath, previousConfig);
-        await validateNginx().catch(() => {});
-        await reloadNginx().catch(() => {});
-        throw error;
-    }
-
-    published = true;
-    const releases = (await readdir(siteDirectory, { withFileTypes: true }))
-        .filter((entry) => entry.isDirectory() && RELEASE_PATTERN.test(entry.name))
-        .map((entry) => entry.name)
-        .sort()
-        .reverse();
-    const retainedReleases = new Set([
-        releaseId,
-        ...releases.filter((release) => release !== releaseId).slice(0, 4),
-    ]);
-
-    try {
-        for (const oldRelease of releases) {
-            if (retainedReleases.has(oldRelease)) continue;
-            await rm(join(siteDirectory, oldRelease), {
-                recursive: true,
-                force: true,
-            });
-        }
-    } catch (error) {
-        console.warn(`Релиз опубликован, но очистка не завершена: ${error.message}`);
-    }
-
-    console.log(`Опубликован релиз ${releaseId}: ${releaseDirectory}`);
+    await runScript('scripts/buildSite.mjs');
+    console.log('Сборка завершена. Публикация сайта…');
+    await runScript('scripts/publishPreparedSite.mjs');
 } catch (error) {
-    if (error.code === ALREADY_PUBLISHED) {
-        console.log(error.message);
-    } else {
-        if (!published && releaseDirectory) {
-            await rm(releaseDirectory, { recursive: true, force: true });
-        }
-        if (!published && publishedMarkerPath) {
-            await rm(publishedMarkerPath, { force: true });
-        }
-        if (temporaryDirectory) {
-            await rm(temporaryDirectory, { recursive: true, force: true });
-        }
+    if (!terminationSignal && !error.childFailed) {
         console.error(`Не удалось опубликовать сайт: ${error.message}`);
-        process.exitCode = 1;
     }
+    process.exitCode = terminationSignal === 'SIGINT' ? 130 : terminationSignal ? 143 : 1;
 } finally {
+    if (locked) {
+        await client.query('SELECT pg_advisory_unlock(hashtext($1))', [LOCK_NAME]).catch(() => {});
+    }
     client?.release();
     await pool.end();
 }

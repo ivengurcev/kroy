@@ -52,7 +52,7 @@ yarn kroy:help
 
 | Назначение | Команды |
 |---|---|
-| Разработка | `yarn vyaz:build`, `yarn vyaz:serve`, `yarn parts:generate` |
+| Разработка | `yarn dev`, `yarn dev:bg`, `yarn dev:down`, `yarn dev:app` |
 | База данных | `yarn db`, `yarn db:seed`, `yarn db:status` |
 | Сайты | `yarn site:create <slug> <hostname> [name]`, `yarn site:list`, `yarn site:info <slug>` |
 | Домены | `yarn site:domain:add <slug> <hostname>`, `yarn site:domain:remove <slug> <hostname>` |
@@ -64,9 +64,8 @@ yarn kroy:help
 
 - Изменить запчасть: `yarn vyaz:build`; для публичного сайта дополнительно
   `yarn site:build <slug>`.
-- Открыть редактор: `yarn db` → `yarn vyaz:build` → `yarn vyaz:serve`.
-- Посмотреть публичный сайт: `yarn preview` → `yarn site:build <slug>` →
-  `yarn site:publish <slug>`.
+- Открыть редактор: `yarn dev` → `http://demo.localhost:8080/admin`.
+- Посмотреть публичный сайт: `yarn site:publish <slug>`.
 - Опубликовать изменения: `yarn deploy site <slug>`.
 - Выполнить команду на VPS: `yarn remote <script> [...args]`.
 - Откатить релиз: `yarn site:releases <slug>` →
@@ -96,39 +95,46 @@ export default function Services({ title }) {
 
 Идентификаторы имеют вид `@kroy/<kebab-case>`. Имена, выведенные из путей, нормализуются автоматически. Явное `name` из `package.json` имеет приоритет и должно соответствовать тому же формату.
 
-## Запуск
+## Запуск development
 
 ```bash
-yarn install
-yarn vyaz:build
-yarn vyaz:serve
+yarn dev
 ```
 
-После запуска Vyaz напрямую доступен на порту `3000`. При запущенном preview список страниц демонстрационного сайта открывается через единую точку входа `http://demo.localhost:8080/admin/pages`. Маршрут `/admin` по-прежнему открывает редактор главной страницы.
+Compose запускает отдельные PostgreSQL 16, Kroy/Vyaz и Nginx. С хоста доступен
+только `http://demo.localhost:8080`; приложение, база и управляющий API Nginx
+остаются внутри сети Compose. Первый запуск, команды, перенос существующей БД и
+диагностика описаны в [infra/README.md](infra/README.md). Для запуска прежнего
+watch-сервера непосредственно на хосте используйте `yarn dev:app`.
 
 Заполнить локальную БД и собрать оба тестовых сайта:
 
 ```bash
-yarn db:seed
-yarn site:build demo
-yarn site:build test
+docker compose -f infra/compose.yaml exec app yarn db:seed
+docker compose -f infra/compose.yaml exec app yarn site:build demo
+docker compose -f infra/compose.yaml exec app yarn site:build test
 ```
 
 `yarn demo` остаётся коротким алиасом сборки `demo`. Команда подготавливает полную версию в `dist/kroy/staging/<slug>/`, включая HTML, ресурсы и `routing.json`, но пока не публикует её в `dist/sites/` и не изменяет конфигурацию Nginx. Предыдущая подготовленная версия сохраняется до успешного завершения новой сборки.
 
-Опубликовать подготовленную версию:
+Собрать и опубликовать новую версию:
 
 ```bash
-yarn site:publish demo
+docker compose -f infra/compose.yaml exec app yarn site:publish demo
 ```
 
-Публикация создаёт неизменяемый каталог `dist/sites/<slug>/<release-id>/`, переключает Nginx на него вместе с правилами `301/410` и сохраняет пять последних успешных релизов сайта. Ресурсы каждого релиза доступны по версионированным URL `/_kroy/releases/<release-id>/assets/`. При ошибке прежний релиз остаётся активным. Повторный вызов без нового `site:build` ничего не переключает и не создаёт новый релиз.
+`site:publish` сначала заново готовит staging, затем создаёт неизменяемый каталог
+`dist/sites/<slug>/<release-id>/`, переключает Nginx вместе с правилами `301/410`
+и сохраняет пять последних успешных релизов сайта. Ресурсы доступны по
+версионированным URL `/_kroy/releases/<release-id>/assets/`. При ошибке прежний
+релиз остаётся активным. Одновременные публикации из CLI и API блокируются в
+PostgreSQL.
 
 Посмотреть сохранённые релизы и переключиться на один из них:
 
 ```bash
-yarn site:releases demo
-yarn site:rollback demo 20261017010101439
+docker compose -f infra/compose.yaml exec app yarn site:releases demo
+docker compose -f infra/compose.yaml exec app yarn site:rollback demo 20261017010101439
 ```
 
 Список отмечает активный релиз по опубликованному Nginx-фрагменту. Откат не копирует и не удаляет релизы, не меняет staging и повторно не переключает уже активную версию.
@@ -161,7 +167,10 @@ yarn deploy app
 yarn deploy site enduro-koltushi
 ```
 
-`deploy app` использует `ansible/kroy-deploy.yml` и inventory, читающий `KROY_REMOTE_HOST`. `deploy site` сначала выполняет `site:build`, затем `site:publish` на VPS; при ошибке сборки публикация не запускается. Команды `db:rollback` и `db:seed` запрашивают явное подтверждение.
+`deploy app` использует `infra/ansible/kroy-deploy.yml` и
+`infra/ansible/inventory`, читающий `KROY_REMOTE_HOST`. `deploy site` выполняет
+единый `site:publish` на VPS; при ошибке сборки переключение релиза не
+начинается. Команды `db:rollback` и `db:seed` запрашивают явное подтверждение.
 
 Создать новый сайт с пустой главной страницей и собрать его:
 
@@ -219,7 +228,11 @@ Nginx от текущего пользователя и слушает `127.0.0.
 для локальной проверки не нужен. При необходимости задайте `NGINX_CONFIG_DIR`,
 `NGINX_SITES_ROOT` и `NGINX_UPSTREAM` в `.env`.
 
-Сайты доступны на доменах из таблицы `domains`. `site:build` только подготавливает версию, а `site:publish` переключает Kroy Nginx на новый релиз и выполняет проверку/перезагрузку только его конфигурации. Порт, upstream и корень сайтов задаются переменными `NGINX_LISTEN`, `NGINX_UPSTREAM` и `NGINX_SITES_ROOT`; Kroy не вызывает `sudo`.
+Сайты доступны на доменах из таблицы `domains`. `site:build` только
+подготавливает версию, а `site:publish` выполняет сборку, переключает Kroy Nginx
+на новый релиз и проверяет/перезагружает только его конфигурацию. Порт, upstream
+и корень сайтов задаются переменными `NGINX_LISTEN`, `NGINX_UPSTREAM` и
+`NGINX_SITES_ROOT`; Kroy не вызывает `sudo`.
 
 Для применения уже опубликованной конфигурации:
 
@@ -237,7 +250,7 @@ curl --resolve vet.example.test:8080:127.0.0.1 http://vet.example.test:8080/
 
 Это только локальная проверка сборки: Kroy не настраивает публичный DNS, HTTPS или production-публикацию. Эти механизмы предстоит реализовать отдельно.
 
-Для VPS используйте `ansible/kroy-nginx.yml`: он настраивает systemd-сервис
+Для VPS используйте `infra/ansible/kroy-nginx.yml`: он настраивает systemd-сервис
 отдельного Nginx Kroy и небольшой reverse-proxy-файл системного Nginx для
 `*.oysite.ru`. Основной конфиг системного Nginx, Matrix и TLS playbook не
 перезаписывает; установка самого Nginx не выполняется.

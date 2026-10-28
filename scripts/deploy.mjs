@@ -14,16 +14,12 @@ if (target === 'app' && args.length === 0) {
     getRemoteHost();
     process.exitCode = await run(
         'ansible-playbook',
-        ['-i', join(ROOT, 'inventory'), join(ROOT, 'ansible', 'kroy-deploy.yml')],
+        ['-i', join(ROOT, 'infra', 'ansible', 'inventory'), join(ROOT, 'infra', 'ansible', 'kroy-deploy.yml')],
         { cwd: ROOT },
     );
 } else if (target === 'site' && args.length === 1 && SITE_SLUG_PATTERN.test(args[0])) {
     const host = getRemoteHost();
-    let code = await runRemoteScript(host, 'site:build', args);
-    if (code === 0) {
-        code = await runRemoteScript(host, 'site:publish', args);
-    }
-    process.exitCode = code;
+    process.exitCode = await runRemoteScript(host, 'site:publish', args);
 } else {
     usage();
     process.exitCode = 1;
