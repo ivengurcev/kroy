@@ -1,18 +1,36 @@
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { promisify } from 'node:util';
 
-const execFileAsync = promisify(execFile);
 const config = process.env.NGINX_CONFIG || '/app/dist/kroy/nginx/nginx.conf';
 const port = Number.parseInt(process.env.NGINX_CONTROL_PORT || '3001', 10);
 
+function runNginx(args) {
+    return new Promise((resolve, reject) => {
+        const child = spawn('nginx', args, { stdio: 'inherit' });
+        child.once('error', reject);
+        child.once('close', (code, signal) => {
+            if (code === 0) {
+                resolve();
+                return;
+            }
+
+            const error = new Error(signal
+                ? `nginx остановлен сигналом ${signal}`
+                : `nginx завершился с кодом ${code ?? 1}`);
+            error.code = code ?? 1;
+            error.signal = signal;
+            reject(error);
+        });
+    });
+}
+
 async function validate() {
-    await execFileAsync('nginx', ['-t', '-c', config]);
+    await runNginx(['-t', '-c', config]);
 }
 
 async function reload() {
     await validate();
-    await execFileAsync('nginx', ['-s', 'reload', '-c', config]);
+    await runNginx(['-s', 'reload', '-c', config]);
 }
 
 const actions = new Map([
