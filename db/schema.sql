@@ -120,6 +120,28 @@ CREATE TABLE public.redirects (
 
 
 --
+-- Name: reviews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reviews (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    author_name text NOT NULL,
+    author_subtitle text,
+    text text NOT NULL,
+    media_id uuid,
+    status text DEFAULT 'pending'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    moderated_at timestamp with time zone,
+    CONSTRAINT reviews_author_name_check CHECK (((char_length(author_name) >= 1) AND (char_length(author_name) <= 200))),
+    CONSTRAINT reviews_author_subtitle_check CHECK (((author_subtitle IS NULL) OR ((char_length(author_subtitle) >= 1) AND (char_length(author_subtitle) <= 300)))),
+    CONSTRAINT reviews_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'published'::text, 'rejected'::text]))),
+    CONSTRAINT reviews_text_check CHECK (((char_length(text) >= 1) AND (char_length(text) <= 5000)))
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -261,6 +283,14 @@ ALTER TABLE ONLY public.redirects
 
 
 --
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -312,6 +342,13 @@ CREATE INDEX product_categories_site_order_idx ON public.product_categories USIN
 --
 
 CREATE INDEX products_site_category_order_idx ON public.products USING btree (site_id, category_id, sort_order, id);
+
+
+--
+-- Name: reviews_site_status_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_site_status_created_idx ON public.reviews USING btree (site_id, status, created_at DESC, id);
 
 
 --
@@ -401,6 +438,22 @@ ALTER TABLE ONLY public.redirects
 
 
 --
+-- Name: reviews reviews_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_media_id_fkey FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews reviews_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
 -- Name: site_memberships site_memberships_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -436,4 +489,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610250001'),
     ('202610270001'),
     ('202610270002'),
-    ('202610280001');
+    ('202610280001'),
+    ('202610290001');

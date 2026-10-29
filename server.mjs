@@ -14,6 +14,7 @@ import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
 import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
+import { getSiteReviews, patchSiteReview, postReview } from './api/reviews.mjs';
 
 await createApp({
     auth,
@@ -74,6 +75,11 @@ await createApp({
         },
     ],
     api: [
+        [
+            '/reviews',
+            { method: 'POST' },
+            postReview,
+        ],
         [
             '/media',
             { method: 'POST', private: true },
@@ -153,6 +159,16 @@ await createApp({
             '/site/catalog',
             { method: 'PATCH', private: true },
             patchSiteCatalog,
+        ],
+        [
+            '/site/reviews',
+            { method: 'GET', private: true },
+            getSiteReviews,
+        ],
+        [
+            '/site/reviews/:id',
+            { method: 'PATCH', private: true },
+            patchSiteReview,
         ],
         [
             '/site/preview',
