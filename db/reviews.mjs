@@ -35,7 +35,7 @@ export async function getReviews(siteId, status = null) {
                 review_date::text AS review_date, created_at, updated_at, moderated_at
          FROM reviews
          WHERE site_id = $1 AND ($2::text IS NULL OR status = $2)
-         ORDER BY created_at DESC, id`,
+         ORDER BY review_date DESC, created_at DESC, id`,
         [siteId, status],
     );
     return rows.map(mapReview);

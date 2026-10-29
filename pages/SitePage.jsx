@@ -164,7 +164,7 @@ export default function SitePage() {
         : window.location.pathname === '/admin/site/catalog'
             ? 'catalog'
             : new URL(window.location.href).searchParams.get('section') || 'appearance';
-    const [section, setSection] = useState(SITE_SETTINGS_SECTIONS.some(({ id }) => id === initialSection) ? initialSection : 'appearance');
+    const [section, setSection] = useState(SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === initialSection && !path) ? initialSection : 'appearance');
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -182,7 +182,7 @@ export default function SitePage() {
         return () => controller.abort();
     }, []);
     useEffect(() => {
-        function syncSection() { const next = window.location.pathname === '/admin/site/catalog' ? 'catalog' : new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id }) => id === next)) setSection(next); }
+        function syncSection() { const next = window.location.pathname === '/admin/site/catalog' ? 'catalog' : new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path)) setSection(next); }
         window.addEventListener('popstate', syncSection);
         return () => window.removeEventListener('popstate', syncSection);
     }, []);
