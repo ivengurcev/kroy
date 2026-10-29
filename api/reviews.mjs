@@ -1,9 +1,15 @@
 import { isIP } from 'node:net';
+import { rm } from 'node:fs/promises';
+import { pool } from '../db/client.mjs';
 import { createReview, deleteReview, getReviews, updateReview } from '../db/reviews.mjs';
+import processImage from '../media/processImage.mjs';
+import { MAX_MEDIA_SIZE, storeMedia } from '../media/storage.mjs';
 import getCurrentSite from './siteContext.mjs';
 import isUuid from './isUuid.mjs';
 
 const MAX_BODY_SIZE = 16 * 1024;
+const MAX_MULTIPART_SIZE = MAX_MEDIA_SIZE + 1024 * 1024;
+const PUBLIC_IMAGE_WIDTH = 800;
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const MAX_RATE_LIMIT_KEYS = 10000;
@@ -50,6 +56,48 @@ async function readJson(c) {
     } catch {
         throw new Error('INVALID_BODY');
     }
+}
+
+async function readMultipart(c) {
+    const contentType = c.req.header('Content-Type') ?? '';
+    const contentLength = Number(c.req.header('Content-Length'));
+    if (!contentType.toLowerCase().startsWith('multipart/form-data;')
+        || !Number.isInteger(contentLength)
+        || contentLength <= 0
+        || contentLength > MAX_MULTIPART_SIZE) {
+        throw new Error(contentLength > MAX_MULTIPART_SIZE ? 'BODY_TOO_LARGE' : 'INVALID_BODY');
+    }
+
+    let form;
+    try {
+        form = await c.req.raw.formData();
+    } catch {
+        throw new Error('INVALID_BODY');
+    }
+
+    const field = (name) => {
+        const value = form.get(name);
+        return typeof value === 'string' ? value : undefined;
+    };
+    const photo = form.get('photo');
+    if (photo !== null && (
+        typeof photo.arrayBuffer !== 'function'
+        || !Number.isInteger(photo.size)
+        || photo.size <= 0
+        || photo.size > MAX_MEDIA_SIZE
+    )) {
+        throw new Error('INVALID_BODY');
+    }
+
+    return {
+        body: {
+            authorName: field('authorName'),
+            authorSubtitle: field('authorSubtitle'),
+            text: field('text'),
+            website: field('website'),
+        },
+        photo,
+    };
 }
 
 function normalizeRequiredText(value, maxLength) {
@@ -120,14 +168,30 @@ function normalizeAdminReview(body, { partial = false } = {}) {
     return review;
 }
 
+function normalizedIp(value) {
+    if (typeof value !== 'string') return null;
+    const ip = value.trim().replace(/^::ffff:/i, '');
+    return isIP(ip) ? ip : null;
+}
+
+function isTrustedProxy(ip) {
+    if (!ip) return false;
+    if (ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:')) return true;
+    if (isIP(ip) !== 4) return false;
+    const [first, second] = ip.split('.').map(Number);
+    return first === 127
+        || first === 10
+        || first === 192 && second === 168
+        || first === 172 && second >= 16 && second <= 31;
+}
+
 function clientIp(c) {
-    const realIp = c.req.header('X-Real-IP')?.trim();
-    if (isIP(realIp)) return realIp;
-    const forwarded = c.req.header('X-Forwarded-For');
-    const forwardedIp = forwarded?.split(',').at(-1).trim();
-    if (isIP(forwardedIp)) return forwardedIp;
-    const remoteIp = c.env?.incoming?.socket?.remoteAddress;
-    return isIP(remoteIp) ? remoteIp : 'unknown';
+    const remoteIp = normalizedIp(c.env?.incoming?.socket?.remoteAddress);
+    if (isTrustedProxy(remoteIp)) {
+        const realIp = normalizedIp(c.req.header('X-Real-IP'));
+        if (realIp) return realIp;
+    }
+    return remoteIp ?? 'unknown';
 }
 
 function retryAfter(key, now = Date.now()) {
@@ -145,23 +209,67 @@ function retryAfter(key, now = Date.now()) {
 }
 
 export async function postReview(c) {
-    let body;
-    try {
-        body = await readJson(c);
-    } catch (error) {
-        return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
-    }
-
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         const wait = retryAfter(`${site.id}:${clientIp(c)}`);
         if (wait) return c.json({ error: 'Too many requests' }, 429, { 'Retry-After': String(wait) });
+
+        const multipart = (c.req.header('Content-Type') ?? '').toLowerCase().startsWith('multipart/form-data;');
+        let body;
+        let photo;
+        try {
+            if (multipart) {
+                ({ body, photo } = await readMultipart(c));
+            } else {
+                body = await readJson(c);
+            }
+        } catch (error) {
+            return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
+        }
+
         if (typeof body?.website === 'string' && body.website.trim()) return c.json({ status: 'pending' }, 201);
 
         const review = normalizePublicReview(body);
         if (!review) return c.json({ error: 'Invalid review' }, 400);
-        if (!(await createReview(site.id, review))) return c.json({ error: 'Invalid media' }, 400);
+        if (!photo) {
+            if (!(await createReview(site.id, review))) return c.json({ error: 'Invalid media' }, 400);
+            return c.json({ status: 'pending' }, 201);
+        }
+
+        let output;
+        try {
+            output = await processImage(Buffer.from(await photo.arrayBuffer()), {
+                maxWidth: PUBLIC_IMAGE_WIDTH,
+                square: true,
+            });
+        } catch {
+            return c.json({ error: 'Invalid image' }, 400);
+        }
+
+        let client;
+        let filePath;
+        let keepFile = false;
+        try {
+            client = await pool.connect();
+            await client.query('BEGIN');
+            const media = await storeMedia(client, site.id, output);
+            filePath = media.filePath;
+            const created = await createReview(site.id, { ...review, mediaId: media.id }, client);
+            if (!created) throw new Error('Invalid media');
+            await client.query('COMMIT');
+            keepFile = true;
+        } catch (error) {
+            await client?.query('ROLLBACK').catch(() => {});
+            throw error;
+        } finally {
+            if (filePath && !keepFile) {
+                await rm(filePath, { force: true }).catch((error) => {
+                    console.error('Failed to remove incomplete review media', error);
+                });
+            }
+            client?.release();
+        }
         return c.json({ status: 'pending' }, 201);
     } catch (error) {
         console.error('Failed to create review', error);

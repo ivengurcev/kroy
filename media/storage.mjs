@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import isUuid from '../api/isUuid.mjs';
@@ -49,4 +51,27 @@ export function getMediaPath(siteId, filename) {
     if (!isUuid(siteId) || !match || !isUuid(match[1])) return null;
 
     return resolve(MEDIA_ROOT, siteId, filename);
+}
+
+export async function storeMedia(client, siteId, output) {
+    const id = randomUUID();
+    const filename = `${id}.webp`;
+    const filePath = getMediaPath(siteId, filename);
+
+    if (!filePath) throw new Error('Invalid generated media path');
+
+    try {
+        await mkdir(dirname(filePath), { recursive: true });
+        await writeFile(filePath, output, { flag: 'wx' });
+        await client.query(
+            `INSERT INTO media (id, site_id, filename, mime_type, size)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [id, siteId, filename, 'image/webp', output.length]
+        );
+    } catch (error) {
+        await rm(filePath, { force: true }).catch(() => {});
+        throw error;
+    }
+
+    return { id, url: `/api/media/${id}`, filePath };
 }

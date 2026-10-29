@@ -15,8 +15,8 @@ function mapReview(row) {
     };
 }
 
-export async function createReview(siteId, { authorName, authorSubtitle, text, mediaId, reviewDate = null, status = 'pending' }) {
-    const { rows } = await pool.query(
+export async function createReview(siteId, { authorName, authorSubtitle, text, mediaId, reviewDate = null, status = 'pending' }, client = pool) {
+    const { rows } = await client.query(
         `INSERT INTO reviews (site_id, author_name, author_subtitle, text, media_id, review_date, status, moderated_at)
          SELECT $1, $2, $3, $4, $5::uuid, COALESCE($6::date, CURRENT_DATE), $7,
                 CASE WHEN $7 = 'pending' THEN NULL ELSE now() END

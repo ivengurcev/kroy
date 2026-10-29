@@ -34,6 +34,7 @@
         color-mix(in srgb, var(--site-color-bg) 78%, transparent) 6%,
         transparent 31%
     );
+    left:-1px;
     content: '';
 }
 

@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import ReviewForm from './ReviewForm.jsx';
 import styles from './reviews.module.css';
+
+const AUTOPLAY_DELAY = 6000;
 
 /**
  * @kroy-title Отзывы
@@ -10,23 +13,26 @@ import styles from './reviews.module.css';
  * @param {'auto'|'manual'} props.mode - Режим подбора
  * @param {number} props.limit - Максимальное количество отзывов
  * @param {string[]} props.reviewIds - Выбранные отзывы
+ * @param {boolean} props.showSubmitButton - Показывать кнопку "Оставить отзыв"
+ * @param {boolean} props.showAllReviewsButton - Показывать кнопку "Все отзывы"
  *
  * @kroy title widget=input
  * @kroy mode widget=select
  * @kroy limit widget=number
  * @kroy reviewIds widget=review-list
+ * @kroy showSubmitButton widget=checkbox
+ * @kroy showAllReviewsButton widget=checkbox
  */
-export default function Reviews({ title = 'Отзывы', reviews = [] }) {
+export default function Reviews({ title = 'Отзывы', reviews = [], showSubmitButton = false, showAllReviewsButton = false }) {
     const [index, setIndex] = useState(0);
     const [paused, setPaused] = useState(false);
-    const [hovered, setHovered] = useState(false);
-    const [focused, setFocused] = useState(false);
     const [hidden, setHidden] = useState(false);
+    const [formOpen, setFormOpen] = useState(false);
     const touch = useRef(null);
     const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const canPlay = reviews.length > 1 && !paused && !hovered && !focused && !hidden && !reduced;
-    const progressRunning = !paused && !hovered && !focused && !hidden;
-    const goTo = (next) => setIndex((current) => (next + reviews.length) % reviews.length);
+    const canPlay = reviews.length > 1 && !paused && !hidden && !reduced;
+    const progressRunning = !paused && !hidden;
+    const goBy = (offset) => setIndex((current) => (current + offset + reviews.length) % reviews.length);
 
     useEffect(() => { setIndex((current) => Math.min(current, Math.max(0, reviews.length - 1))); }, [reviews.length]);
     useEffect(() => {
@@ -36,15 +42,17 @@ export default function Reviews({ title = 'Отзывы', reviews = [] }) {
     }, []);
     useEffect(() => {
         if (!canPlay) return undefined;
-        const timer = window.setInterval(() => goTo(index + 1), 6000);
-        return () => window.clearInterval(timer);
-    }, [canPlay, index]);
+        const timer = window.setTimeout(() => {
+            setIndex((current) => (current + 1) % reviews.length);
+        }, AUTOPLAY_DELAY);
+        return () => window.clearTimeout(timer);
+    }, [canPlay, index, reviews.length]);
 
     if (!reviews.length) return null;
-    return <section className={styles.section}><div className={styles.inner} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }} onTouchStart={(event) => { touch.current = event.touches[0]?.clientX; }} onTouchEnd={(event) => { const start = touch.current; const end = event.changedTouches[0]?.clientX; if (start !== null && end !== undefined && Math.abs(start - end) > 40) goTo(start > end ? index + 1 : index - 1); touch.current = null; }}>
+    return <section className={styles.section}><div className={styles.inner} onTouchStart={(event) => { touch.current = event.touches[0]?.clientX; }} onTouchEnd={(event) => { const start = touch.current; const end = event.changedTouches[0]?.clientX; if (start !== null && end !== undefined && Math.abs(start - end) > 40) goBy(start > end ? 1 : -1); touch.current = null; }}>
         {title && <h2 className={styles.title}>{title}</h2>}
-        <div className={styles.viewport}><div className={styles.track} style={{ transform: `translateX(-${index * 100}%)` }}>{reviews.map((review) => <article className={`${styles.slide} ${review.mediaUrl ? '' : styles.withoutPhoto}`} key={review.id}><div className={styles.copy}><blockquote className={styles.quote}>{review.text}</blockquote><footer className={styles.author}><strong className={styles.authorName}>{review.authorName}</strong>{review.authorSubtitle && <span className={styles.authorSubtitle}>{review.authorSubtitle}</span>}<time className={styles.date} dateTime={review.reviewDate}>{review.reviewDate?.split('-').reverse().join('.')}</time></footer></div>{review.mediaUrl && <img className={styles.photo} src={review.mediaUrl} alt="" />}</article>)}</div></div>
-        {reviews.length > 1 && <div className={styles.controls}><div className={styles.status}><span className={styles.counter}>{String(index + 1).padStart(2, '0')} <span className={styles.counterDivider}>/</span> {String(reviews.length).padStart(2, '0')}</span><span className={`${styles.progress} ${progressRunning ? styles.progressRunning : ''}`} aria-hidden="true"><span className={styles.progressFill} key={index} /></span><button className={styles.pauseButton} type="button" onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Возобновить автопрокрутку' : 'Остановить автопрокрутку'} aria-pressed={paused}>{paused ? 'Продолжить' : 'Пауза'}</button></div><div className={styles.arrows}><button className={styles.arrowButton} type="button" onClick={() => goTo(index - 1)} aria-label="Предыдущий отзыв">←</button><button className={styles.arrowButton} type="button" onClick={() => goTo(index + 1)} aria-label="Следующий отзыв">→</button></div></div>}
-        <div className={styles.links}><a className={styles.allReviewsLink} href="/reviews">Все отзывы</a><a className={styles.reviewButton} href="/reviews#form">Оставить отзыв</a></div>
+        <div className={`${styles.slider} ${reviews.length > 1 ? styles.withNavigation : ''}`}>{reviews.length > 1 && <button className={`${styles.arrowButton} ${styles.previousButton}`} type="button" onClick={() => goBy(-1)} aria-label="Предыдущий отзыв"><svg className={styles.arrowIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg></button>}<div className={styles.viewport}><div className={styles.track} style={{ transform: `translateX(-${index * 100}%)` }}>{reviews.map((review) => <article className={`${styles.slide} ${review.mediaUrl ? '' : styles.withoutPhoto}`} key={review.id}><div className={styles.copy}><blockquote className={styles.quote}>{review.text}</blockquote><footer className={styles.author}><strong className={styles.authorName}>{review.authorName}</strong>{review.authorSubtitle && <span className={styles.authorSubtitle}>{review.authorSubtitle}</span>}<time className={styles.date} dateTime={review.reviewDate}>{review.reviewDate?.split('-').reverse().join('.')}</time></footer></div>{review.mediaUrl && <img className={styles.photo} src={review.mediaUrl} alt="" />}</article>)}</div></div>{reviews.length > 1 && <button className={`${styles.arrowButton} ${styles.nextButton}`} type="button" onClick={() => goBy(1)} aria-label="Следующий отзыв"><svg className={styles.arrowIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9.5 5 7 7-7 7" /></svg></button>}</div>
+        {(reviews.length > 1 || showSubmitButton) && <div className={styles.controls}>{reviews.length > 1 && <div className={styles.status}><span className={styles.counter}>{String(index + 1).padStart(2, '0')} <span className={styles.counterDivider}>/</span> {String(reviews.length).padStart(2, '0')}</span><span className={`${styles.progress} ${progressRunning ? styles.progressRunning : ''}`} style={{ '--review-autoplay-duration': `${AUTOPLAY_DELAY}ms` }} aria-hidden="true"><span className={styles.progressFill} key={index} /></span><button className={styles.pauseButton} type="button" onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Возобновить автопрокрутку' : 'Остановить автопрокрутку'} aria-pressed={paused}>{paused ? 'Продолжить' : 'Пауза'}</button></div>}{showSubmitButton && <div className={styles.links}><button className={styles.reviewButton} type="button" onClick={() => setFormOpen(true)}>Оставить отзыв</button></div>}</div>}
+        <ReviewForm open={formOpen} onClose={() => setFormOpen(false)} />
     </div></section>;
 }
