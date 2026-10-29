@@ -1,0 +1,47 @@
+{
+  "id": "korallovyy-balans",
+  "name": "Коралловый баланс",
+  "description": "Авторская тема Kroy «Коралловый баланс».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F0F9F9",
+      "--site-color-text": "#7C4535",
+      "--site-color-text-secondary": "#BDAAA3",
+      "--site-color-accent": "#CB7156",
+      "--site-color-accent-secondary": "#37988B",
+      "--site-color-section-bg": "#D1ECEB",
+      "--site-color-accent-hover": "#AD6049",
+      "--site-color-border": "#7C45352E",
+      "--site-color-surface": "#FCFEFE",
+      "--site-color-surface-soft": "#D1ECEB",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#563024",
+      "--site-color-text": "#9DD7D5",
+      "--site-color-text-secondary": "#7F918B",
+      "--site-color-accent": "#E27D60",
+      "--site-color-accent-secondary": "#41B3A3",
+      "--site-color-section-bg": "#93513E",
+      "--site-color-accent-hover": "#E38468",
+      "--site-color-border": "#9DD7D538",
+      "--site-color-surface": "#5C3D32",
+      "--site-color-surface-soft": "#93513E",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

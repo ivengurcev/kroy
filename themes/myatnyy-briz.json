@@ -1,0 +1,47 @@
+{
+  "id": "myatnyy-briz",
+  "name": "Мятный бриз",
+  "description": "Авторская тема Kroy «Мятный бриз».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFEFB",
+      "--site-color-text": "#05386B",
+      "--site-color-text-secondary": "#90A7BC",
+      "--site-color-accent": "#45A470",
+      "--site-color-accent-secondary": "#05386B",
+      "--site-color-section-bg": "#F8FBF4",
+      "--site-color-accent-hover": "#3B8B5F",
+      "--site-color-border": "#05386B2E",
+      "--site-color-surface": "#FFFFFE",
+      "--site-color-surface-soft": "#F8FBF4",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#021529",
+      "--site-color-text": "#EDF5E1",
+      "--site-color-text-secondary": "#8A9794",
+      "--site-color-accent": "#5CDB95",
+      "--site-color-accent-secondary": "#446A90",
+      "--site-color-section-bg": "#032446",
+      "--site-color-accent-hover": "#5CDB95",
+      "--site-color-border": "#EDF5E138",
+      "--site-color-surface": "#152738",
+      "--site-color-surface-soft": "#032446",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

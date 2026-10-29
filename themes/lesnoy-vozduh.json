@@ -1,0 +1,47 @@
+{
+  "id": "lesnoy-vozduh",
+  "name": "Лесной воздух",
+  "description": "Авторская тема Kroy «Лесной воздух».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFEFF",
+      "--site-color-text": "#275A72",
+      "--site-color-text-secondary": "#9FB6C1",
+      "--site-color-accent": "#31708E",
+      "--site-color-accent-secondary": "#5085A5",
+      "--site-color-section-bg": "#FCFDFD",
+      "--site-color-accent-hover": "#31708E",
+      "--site-color-border": "#275A722E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#FCFDFD",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#132B36",
+      "--site-color-text": "#F7F9FB",
+      "--site-color-text-secondary": "#97A2A8",
+      "--site-color-accent": "#467E99",
+      "--site-color-accent-secondary": "#5085A5",
+      "--site-color-section-bg": "#20495C",
+      "--site-color-accent-hover": "#6291A8",
+      "--site-color-border": "#F7F9FB38",
+      "--site-color-surface": "#253B46",
+      "--site-color-surface-soft": "#20495C",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

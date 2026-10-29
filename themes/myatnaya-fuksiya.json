@@ -1,0 +1,47 @@
+{
+  "id": "myatnaya-fuksiya",
+  "name": "Мятная фуксия",
+  "description": "Авторская тема Kroy «Мятная фуксия».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#E3FFF7",
+      "--site-color-text": "#933256",
+      "--site-color-text-secondary": "#C0A5B0",
+      "--site-color-accent": "#0D9971",
+      "--site-color-accent-secondary": "#0EA27A",
+      "--site-color-section-bg": "#A6FFE6",
+      "--site-color-accent-hover": "#0C8A66",
+      "--site-color-border": "#9332562E",
+      "--site-color-surface": "#F9FFFD",
+      "--site-color-surface-soft": "#A6FFE6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#4A192B",
+      "--site-color-text": "#16FFBD",
+      "--site-color-text-secondary": "#2C9E80",
+      "--site-color-accent": "#16FFBD",
+      "--site-color-accent-secondary": "#12CA98",
+      "--site-color-section-bg": "#7F2B4A",
+      "--site-color-accent-hover": "#16FFBD",
+      "--site-color-border": "#16FFBD38",
+      "--site-color-surface": "#462B37",
+      "--site-color-surface-soft": "#7F2B4A",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

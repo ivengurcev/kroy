@@ -1,0 +1,47 @@
+{
+  "id": "olivkovyy-minimalizm",
+  "name": "Оливковый минимализм",
+  "description": "Авторская тема Kroy «Оливковый минимализм».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F9F7F0",
+      "--site-color-text": "#19191B",
+      "--site-color-text-secondary": "#969592",
+      "--site-color-accent": "#479761",
+      "--site-color-accent-secondary": "#9B8D61",
+      "--site-color-section-bg": "#ECE6CF",
+      "--site-color-accent-hover": "#408857",
+      "--site-color-border": "#19191B2E",
+      "--site-color-surface": "#FEFDFC",
+      "--site-color-surface-soft": "#ECE6CF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0A0A0A",
+      "--site-color-text": "#CEBC81",
+      "--site-color-text-secondary": "#7C714F",
+      "--site-color-accent": "#479761",
+      "--site-color-accent-secondary": "#CEBC81",
+      "--site-color-section-bg": "#101012",
+      "--site-color-accent-hover": "#479761",
+      "--site-color-border": "#CEBC8138",
+      "--site-color-surface": "#1A1814",
+      "--site-color-surface-soft": "#101012",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

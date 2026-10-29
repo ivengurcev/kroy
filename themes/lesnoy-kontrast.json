@@ -1,0 +1,47 @@
+{
+  "id": "lesnoy-kontrast",
+  "name": "Лесной контраст",
+  "description": "Авторская тема Kroy «Лесной контраст».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F1F8E6",
+      "--site-color-text": "#222629",
+      "--site-color-text-secondary": "#969C93",
+      "--site-color-accent": "#6C9B28",
+      "--site-color-accent-secondary": "#618930",
+      "--site-color-section-bg": "#D1E8B1",
+      "--site-color-accent-hover": "#5C8422",
+      "--site-color-border": "#2226292E",
+      "--site-color-surface": "#FCFDFA",
+      "--site-color-surface-soft": "#D1E8B1",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0D0E10",
+      "--site-color-text": "#87C232",
+      "--site-color-text-secondary": "#547624",
+      "--site-color-accent": "#87C232",
+      "--site-color-accent-secondary": "#618930",
+      "--site-color-section-bg": "#16191B",
+      "--site-color-accent-hover": "#87C232",
+      "--site-color-border": "#87C23238",
+      "--site-color-surface": "#171C13",
+      "--site-color-surface-soft": "#16191B",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

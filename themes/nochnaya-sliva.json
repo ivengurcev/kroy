@@ -1,0 +1,47 @@
+{
+  "id": "nochnaya-sliva",
+  "name": "Ночная слива",
+  "description": "Авторская тема Kroy «Ночная слива».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F4ECEF",
+      "--site-color-text": "#141114",
+      "--site-color-text-secondary": "#918C8F",
+      "--site-color-accent": "#33206E",
+      "--site-color-accent-secondary": "#A6607C",
+      "--site-color-section-bg": "#DDC3CD",
+      "--site-color-accent-hover": "#33206E",
+      "--site-color-border": "#1411142E",
+      "--site-color-surface": "#FDFBFB",
+      "--site-color-surface-soft": "#DDC3CD",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#080608",
+      "--site-color-text": "#C190A3",
+      "--site-color-text-secondary": "#735662",
+      "--site-color-accent": "#665892",
+      "--site-color-accent-secondary": "#A6607C",
+      "--site-color-section-bg": "#0D0B0D",
+      "--site-color-accent-hover": "#75699D",
+      "--site-color-border": "#C190A338",
+      "--site-color-surface": "#171114",
+      "--site-color-surface-soft": "#0D0B0D",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "peschanyy-gorizont",
+  "name": "Песчаный горизонт",
+  "description": "Авторская тема Kroy «Песчаный горизонт».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FFFDF8",
+      "--site-color-text": "#5C582A",
+      "--site-color-text-secondary": "#B7B49D",
+      "--site-color-accent": "#6095B4",
+      "--site-color-accent-secondary": "#AE8A6B",
+      "--site-color-section-bg": "#FDF9E7",
+      "--site-color-accent-hover": "#527F99",
+      "--site-color-border": "#5C582A2E",
+      "--site-color-surface": "#FFFFFD",
+      "--site-color-surface-soft": "#FDF9E7",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#363319",
+      "--site-color-text": "#FBEEC1",
+      "--site-color-text-secondary": "#A89F7A",
+      "--site-color-accent": "#659DBD",
+      "--site-color-accent-secondary": "#DAAD86",
+      "--site-color-section-bg": "#5C582A",
+      "--site-color-accent-hover": "#659DBD",
+      "--site-color-border": "#FBEEC138",
+      "--site-color-surface": "#464226",
+      "--site-color-surface-soft": "#5C582A",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

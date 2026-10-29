@@ -1,0 +1,47 @@
+{
+  "id": "apelsinovyy-laym",
+  "name": "Апельсиновый лайм",
+  "description": "Авторская тема Kroy «Апельсиновый лайм».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FFFCE1",
+      "--site-color-text": "#272727",
+      "--site-color-text-secondary": "#A09E8F",
+      "--site-color-accent": "#998901",
+      "--site-color-accent-secondary": "#F2602D",
+      "--site-color-section-bg": "#FFF59E",
+      "--site-color-accent-hover": "#8A7B01",
+      "--site-color-border": "#2727272E",
+      "--site-color-surface": "#FFFEF8",
+      "--site-color-surface-soft": "#FFF59E",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0F0F0F",
+      "--site-color-text": "#FFE401",
+      "--site-color-text-secondary": "#9A8B07",
+      "--site-color-accent": "#FFE401",
+      "--site-color-accent-secondary": "#FF652F",
+      "--site-color-section-bg": "#191919",
+      "--site-color-accent-hover": "#FFE401",
+      "--site-color-border": "#FFE40138",
+      "--site-color-surface": "#22200E",
+      "--site-color-surface-soft": "#191919",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

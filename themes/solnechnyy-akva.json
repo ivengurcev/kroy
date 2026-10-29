@@ -1,0 +1,47 @@
+{
+  "id": "solnechnyy-akva",
+  "name": "Солнечный аква",
+  "description": "Авторская тема Kroy «Солнечный аква».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FAFFFF",
+      "--site-color-text": "#303C6C",
+      "--site-color-text-secondary": "#A1A9BE",
+      "--site-color-accent": "#CF805C",
+      "--site-color-accent-secondary": "#978B64",
+      "--site-color-section-bg": "#EEFEFF",
+      "--site-color-accent-hover": "#B06D4E",
+      "--site-color-border": "#303C6C2E",
+      "--site-color-surface": "#FEFFFF",
+      "--site-color-surface-soft": "#EEFEFF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#121729",
+      "--site-color-text": "#D2FDFF",
+      "--site-color-text-secondary": "#819CA5",
+      "--site-color-accent": "#F4976C",
+      "--site-color-accent-secondary": "#FBE8A6",
+      "--site-color-section-bg": "#1F2746",
+      "--site-color-accent-hover": "#F4976C",
+      "--site-color-border": "#D2FDFF38",
+      "--site-color-surface": "#21293A",
+      "--site-color-surface-soft": "#1F2746",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

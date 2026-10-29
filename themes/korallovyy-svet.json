@@ -1,0 +1,47 @@
+{
+  "id": "korallovyy-svet",
+  "name": "Коралловый свет",
+  "description": "Авторская тема Kroy «Коралловый свет».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFDFD",
+      "--site-color-text": "#335975",
+      "--site-color-text-secondary": "#A4B5C1",
+      "--site-color-accent": "#9E8933",
+      "--site-color-accent-secondary": "#579ACA",
+      "--site-color-section-bg": "#F8F8F8",
+      "--site-color-accent-hover": "#8E7B2E",
+      "--site-color-border": "#3359752E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#F8F8F8",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#233E51",
+      "--site-color-text": "#ECECEC",
+      "--site-color-text-secondary": "#98A3AB",
+      "--site-color-accent": "#F3D24F",
+      "--site-color-accent-secondary": "#5CA2D5",
+      "--site-color-section-bg": "#3C698A",
+      "--site-color-accent-hover": "#F3D24F",
+      "--site-color-border": "#ECECEC38",
+      "--site-color-surface": "#334C5D",
+      "--site-color-surface-soft": "#3C698A",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

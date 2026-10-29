@@ -1,0 +1,47 @@
+{
+  "id": "bordovyy-barhat",
+  "name": "Бордовый бархат",
+  "description": "Авторская тема Kroy «Бордовый бархат».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F5F5F5",
+      "--site-color-text": "#2E1114",
+      "--site-color-text-secondary": "#9D9192",
+      "--site-color-accent": "#501B1D",
+      "--site-color-accent-secondary": "#2E1114",
+      "--site-color-section-bg": "#E0E0E0",
+      "--site-color-accent-hover": "#501B1D",
+      "--site-color-border": "#2E11142E",
+      "--site-color-surface": "#FDFDFD",
+      "--site-color-surface-soft": "#E0E0E0",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#110608",
+      "--site-color-text": "#ADADAD",
+      "--site-color-text-secondary": "#6B6768",
+      "--site-color-accent": "#7C5456",
+      "--site-color-accent-secondary": "#6D585B",
+      "--site-color-section-bg": "#1E0B0D",
+      "--site-color-accent-hover": "#906E6F",
+      "--site-color-border": "#ADADAD38",
+      "--site-color-surface": "#1D1315",
+      "--site-color-surface-soft": "#1E0B0D",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

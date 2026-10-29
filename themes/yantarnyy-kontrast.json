@@ -1,0 +1,47 @@
+{
+  "id": "yantarnyy-kontrast",
+  "name": "Янтарный контраст",
+  "description": "Авторская тема Kroy «Янтарный контраст».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFCF7",
+      "--site-color-text": "#3D5299",
+      "--site-color-text-secondary": "#A9B1CE",
+      "--site-color-accent": "#F13C20",
+      "--site-color-accent-secondary": "#B7821D",
+      "--site-color-section-bg": "#F9F4E5",
+      "--site-color-accent-hover": "#E5391E",
+      "--site-color-border": "#3D52992E",
+      "--site-color-surface": "#FFFEFD",
+      "--site-color-surface-soft": "#F9F4E5",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#18213D",
+      "--site-color-text": "#EFE2BA",
+      "--site-color-text-secondary": "#959186",
+      "--site-color-accent": "#F13C20",
+      "--site-color-accent-secondary": "#D79922",
+      "--site-color-section-bg": "#2A3869",
+      "--site-color-accent-hover": "#F13C20",
+      "--site-color-border": "#EFE2BA38",
+      "--site-color-surface": "#293047",
+      "--site-color-surface-soft": "#2A3869",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

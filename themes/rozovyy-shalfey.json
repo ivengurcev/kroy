@@ -1,0 +1,47 @@
+{
+  "id": "rozovyy-shalfey",
+  "name": "Розовый шалфей",
+  "description": "Авторская тема Kroy «Розовый шалфей».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F8F9F9",
+      "--site-color-text": "#5F4E44",
+      "--site-color-text-secondary": "#B5AEA9",
+      "--site-color-accent": "#DB6B77",
+      "--site-color-accent-secondary": "#7B9352",
+      "--site-color-section-bg": "#E8EBED",
+      "--site-color-accent-hover": "#BA5B65",
+      "--site-color-border": "#5F4E442E",
+      "--site-color-surface": "#FDFEFE",
+      "--site-color-surface-soft": "#E8EBED",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#302822",
+      "--site-color-text": "#C2CAD0",
+      "--site-color-text-secondary": "#858687",
+      "--site-color-accent": "#E7717D",
+      "--site-color-accent-secondary": "#AFD275",
+      "--site-color-section-bg": "#52443B",
+      "--site-color-accent-hover": "#E7717D",
+      "--site-color-border": "#C2CAD038",
+      "--site-color-surface": "#3C3530",
+      "--site-color-surface-soft": "#52443B",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

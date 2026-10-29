@@ -1,0 +1,47 @@
+{
+  "id": "zelenyy-modern",
+  "name": "Зелёный модерн",
+  "description": "Авторская тема Kroy «Зелёный модерн».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFDFD",
+      "--site-color-text": "#182628",
+      "--site-color-text-secondary": "#989E9F",
+      "--site-color-accent": "#4C998A",
+      "--site-color-accent-secondary": "#4A9E81",
+      "--site-color-section-bg": "#FAFAFA",
+      "--site-color-accent-hover": "#418275",
+      "--site-color-border": "#1826282E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#FAFAFA",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#090E0F",
+      "--site-color-text": "#F2F2F2",
+      "--site-color-text-secondary": "#909293",
+      "--site-color-accent": "#65CCB8",
+      "--site-color-accent-secondary": "#57BA98",
+      "--site-color-section-bg": "#10191A",
+      "--site-color-accent-hover": "#65CCB8",
+      "--site-color-border": "#F2F2F238",
+      "--site-color-surface": "#1C2021",
+      "--site-color-surface-soft": "#10191A",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

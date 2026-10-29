@@ -1,0 +1,47 @@
+{
+  "id": "kobaltovyy-persik",
+  "name": "Кобальтовый персик",
+  "description": "Авторская тема Kroy «Кобальтовый персик».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFCF4",
+      "--site-color-text": "#24315E",
+      "--site-color-text-secondary": "#9EA3B2",
+      "--site-color-accent": "#EB6767",
+      "--site-color-accent-secondary": "#948C60",
+      "--site-color-section-bg": "#FCF7DB",
+      "--site-color-accent-hover": "#C85858",
+      "--site-color-border": "#24315E2E",
+      "--site-color-surface": "#FFFEFD",
+      "--site-color-surface-soft": "#FCF7DB",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0E1324",
+      "--site-color-text": "#F7E9A0",
+      "--site-color-text-secondary": "#958F6C",
+      "--site-color-accent": "#F76C6C",
+      "--site-color-accent-secondary": "#F7E9A0",
+      "--site-color-section-bg": "#17203D",
+      "--site-color-accent-hover": "#F76C6C",
+      "--site-color-border": "#F7E9A038",
+      "--site-color-surface": "#21242E",
+      "--site-color-surface-soft": "#17203D",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

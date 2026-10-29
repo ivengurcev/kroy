@@ -1,0 +1,47 @@
+{
+  "id": "citrusovyy-les",
+  "name": "Цитрусовый лес",
+  "description": "Авторская тема Kroy «Цитрусовый лес».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FAF9E3",
+      "--site-color-text": "#1F2605",
+      "--site-color-text-secondary": "#9A9C81",
+      "--site-color-accent": "#96900F",
+      "--site-color-accent-secondary": "#94951B",
+      "--site-color-section-bg": "#EFECA6",
+      "--site-color-accent-hover": "#807A0D",
+      "--site-color-border": "#1F26052E",
+      "--site-color-surface": "#FEFEF9",
+      "--site-color-surface-soft": "#EFECA6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0C0E02",
+      "--site-color-text": "#D6CE15",
+      "--site-color-text-secondary": "#817D0D",
+      "--site-color-accent": "#D6CE15",
+      "--site-color-accent-secondary": "#A4A61E",
+      "--site-color-section-bg": "#141903",
+      "--site-color-accent-hover": "#D6CE15",
+      "--site-color-border": "#D6CE1538",
+      "--site-color-surface": "#1C1D04",
+      "--site-color-surface-soft": "#141903",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

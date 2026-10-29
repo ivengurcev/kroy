@@ -1,0 +1,47 @@
+{
+  "id": "delovoy-okean",
+  "name": "Деловой океан",
+  "description": "Авторская тема Kroy «Деловой океан».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#E6ECEC",
+      "--site-color-text": "#022140",
+      "--site-color-text-secondary": "#8293A0",
+      "--site-color-accent": "#265077",
+      "--site-color-accent-secondary": "#022140",
+      "--site-color-section-bg": "#AFC2C1",
+      "--site-color-accent-hover": "#265077",
+      "--site-color-border": "#0221402E",
+      "--site-color-surface": "#FAFBFB",
+      "--site-color-surface-soft": "#AFC2C1",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#010D18",
+      "--site-color-text": "#8CA7A6",
+      "--site-color-text-secondary": "#52666A",
+      "--site-color-accent": "#3C6285",
+      "--site-color-accent-secondary": "#4E6479",
+      "--site-color-section-bg": "#01152A",
+      "--site-color-accent-hover": "#597A97",
+      "--site-color-border": "#8CA7A638",
+      "--site-color-surface": "#0C1923",
+      "--site-color-surface-soft": "#01152A",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

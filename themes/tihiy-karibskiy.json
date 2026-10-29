@@ -1,0 +1,47 @@
+{
+  "id": "tihiy-karibskiy",
+  "name": "Тихий карибский",
+  "description": "Авторская тема Kroy «Тихий карибский».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FFFEF8",
+      "--site-color-text": "#02616A",
+      "--site-color-text-secondary": "#90B9BA",
+      "--site-color-accent": "#A49254",
+      "--site-color-accent-secondary": "#026670",
+      "--site-color-section-bg": "#FFFDEA",
+      "--site-color-accent-hover": "#8B7C47",
+      "--site-color-border": "#02616A2E",
+      "--site-color-surface": "#FFFFFD",
+      "--site-color-surface-soft": "#FFFDEA",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#01272B",
+      "--site-color-text": "#FEF9C7",
+      "--site-color-text-secondary": "#94A185",
+      "--site-color-accent": "#FCE181",
+      "--site-color-accent-secondary": "#287D85",
+      "--site-color-section-bg": "#014249",
+      "--site-color-accent-hover": "#FCE181",
+      "--site-color-border": "#FEF9C738",
+      "--site-color-surface": "#153837",
+      "--site-color-surface-soft": "#014249",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

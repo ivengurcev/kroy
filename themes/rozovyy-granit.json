@@ -1,0 +1,47 @@
+{
+  "id": "rozovyy-granit",
+  "name": "Розовый гранит",
+  "description": "Авторская тема Kroy «Розовый гранит».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F3F5F7",
+      "--site-color-text": "#314455",
+      "--site-color-text-secondary": "#9EA7B0",
+      "--site-color-accent": "#C96567",
+      "--site-color-accent-secondary": "#9E5A63",
+      "--site-color-section-bg": "#D7DFE6",
+      "--site-color-accent-hover": "#B55B5D",
+      "--site-color-border": "#3144552E",
+      "--site-color-surface": "#FCFDFD",
+      "--site-color-surface-soft": "#D7DFE6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#131A20",
+      "--site-color-text": "#97AABD",
+      "--site-color-text-secondary": "#606E7B",
+      "--site-color-accent": "#C96567",
+      "--site-color-accent-secondary": "#9E5A63",
+      "--site-color-section-bg": "#202C37",
+      "--site-color-accent-hover": "#C96567",
+      "--site-color-border": "#97AABD38",
+      "--site-color-surface": "#1E262D",
+      "--site-color-surface-soft": "#202C37",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

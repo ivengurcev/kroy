@@ -1,0 +1,47 @@
+{
+  "id": "glubokaya-biryuza",
+  "name": "Глубокая бирюза",
+  "description": "Авторская тема Kroy «Глубокая бирюза».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FBEFF2",
+      "--site-color-text": "#2E151B",
+      "--site-color-text-secondary": "#A18F93",
+      "--site-color-accent": "#C46F84",
+      "--site-color-accent-secondary": "#376E6F",
+      "--site-color-section-bg": "#F1CDD6",
+      "--site-color-accent-hover": "#A75E70",
+      "--site-color-border": "#2E151B2E",
+      "--site-color-surface": "#FEFBFC",
+      "--site-color-surface-soft": "#F1CDD6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#11080A",
+      "--site-color-text": "#DC8298",
+      "--site-color-text-secondary": "#874F5C",
+      "--site-color-accent": "#DA7B93",
+      "--site-color-accent-secondary": "#376E6F",
+      "--site-color-section-bg": "#1E0E12",
+      "--site-color-accent-hover": "#DA7B93",
+      "--site-color-border": "#DC829838",
+      "--site-color-surface": "#211215",
+      "--site-color-surface-soft": "#1E0E12",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

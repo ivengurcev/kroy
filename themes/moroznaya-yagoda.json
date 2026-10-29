@@ -1,0 +1,47 @@
+{
+  "id": "moroznaya-yagoda",
+  "name": "Морозная ягода",
+  "description": "Авторская тема Kroy «Морозная ягода».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FCFCFA",
+      "--site-color-text": "#973043",
+      "--site-color-text-secondary": "#D0A2A9",
+      "--site-color-accent": "#3B8BE8",
+      "--site-color-accent-secondary": "#B2384F",
+      "--site-color-section-bg": "#F6F4EF",
+      "--site-color-accent-hover": "#357DD1",
+      "--site-color-border": "#9730432E",
+      "--site-color-surface": "#FEFEFE",
+      "--site-color-surface-soft": "#F6F4EF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#44151E",
+      "--site-color-text": "#E7E3D4",
+      "--site-color-text-secondary": "#A38C88",
+      "--site-color-accent": "#3B8BE8",
+      "--site-color-accent-secondary": "#BA4C61",
+      "--site-color-section-bg": "#742433",
+      "--site-color-accent-hover": "#3B8BE8",
+      "--site-color-border": "#E7E3D438",
+      "--site-color-surface": "#51252D",
+      "--site-color-surface-soft": "#742433",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

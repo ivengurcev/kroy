@@ -1,0 +1,47 @@
+{
+  "id": "limonnyy-grafit",
+  "name": "Лимонный графит",
+  "description": "Авторская тема Kroy «Лимонный графит».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFDE5",
+      "--site-color-text": "#46344E",
+      "--site-color-text-secondary": "#ADA5A3",
+      "--site-color-accent": "#968E17",
+      "--site-color-accent-secondary": "#98786F",
+      "--site-color-section-bg": "#FDF8AD",
+      "--site-color-accent-hover": "#807914",
+      "--site-color-border": "#46344E2E",
+      "--site-color-surface": "#FFFFF9",
+      "--site-color-surface-soft": "#FDF8AD",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#1B141E",
+      "--site-color-text": "#FAED26",
+      "--site-color-text-secondary": "#9C9223",
+      "--site-color-accent": "#FAED26",
+      "--site-color-accent-secondary": "#98786F",
+      "--site-color-section-bg": "#2E2233",
+      "--site-color-accent-hover": "#FAED26",
+      "--site-color-border": "#FAED2638",
+      "--site-color-surface": "#2D251F",
+      "--site-color-surface-soft": "#2E2233",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

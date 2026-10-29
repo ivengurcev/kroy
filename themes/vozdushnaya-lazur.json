@@ -1,0 +1,47 @@
+{
+  "id": "vozdushnaya-lazur",
+  "name": "Воздушная лазурь",
+  "description": "Авторская тема Kroy «Воздушная лазурь».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F8F8FC",
+      "--site-color-text": "#5F4392",
+      "--site-color-text-secondary": "#B5A8CD",
+      "--site-color-accent": "#5680E9",
+      "--site-color-accent-secondary": "#4894BB",
+      "--site-color-section-bg": "#E7EAF5",
+      "--site-color-accent-hover": "#4D73D2",
+      "--site-color-border": "#5F43922E",
+      "--site-color-surface": "#FDFDFE",
+      "--site-color-surface-soft": "#E7EAF5",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#34244F",
+      "--site-color-text": "#C1C8E4",
+      "--site-color-text-secondary": "#8683A5",
+      "--site-color-accent": "#5680E9",
+      "--site-color-accent-secondary": "#5AB9EA",
+      "--site-color-section-bg": "#583E87",
+      "--site-color-accent-hover": "#5E86EA",
+      "--site-color-border": "#C1C8E438",
+      "--site-color-surface": "#3F315B",
+      "--site-color-surface-soft": "#583E87",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "zemlyanoy-eklektizm",
+  "name": "Земляной эклектизм",
+  "description": "Авторская тема Kroy «Земляной эклектизм».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F0F6F9",
+      "--site-color-text": "#474853",
+      "--site-color-text-secondary": "#A6A9B0",
+      "--site-color-accent": "#844D36",
+      "--site-color-accent-secondary": "#6B8FA7",
+      "--site-color-section-bg": "#D1E2EE",
+      "--site-color-accent-hover": "#844D36",
+      "--site-color-border": "#4748532E",
+      "--site-color-surface": "#FCFDFE",
+      "--site-color-surface-soft": "#D1E2EE",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#1B1B20",
+      "--site-color-text": "#86B3D1",
+      "--site-color-text-secondary": "#597387",
+      "--site-color-accent": "#905F4A",
+      "--site-color-accent-secondary": "#86B3D1",
+      "--site-color-section-bg": "#2E2F36",
+      "--site-color-accent-hover": "#A17765",
+      "--site-color-border": "#86B3D138",
+      "--site-color-surface": "#24272E",
+      "--site-color-surface-soft": "#2E2F36",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

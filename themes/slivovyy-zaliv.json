@@ -1,0 +1,47 @@
+{
+  "id": "slivovyy-zaliv",
+  "name": "Сливовый залив",
+  "description": "Авторская тема Kroy «Сливовый залив».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#E1EFF4",
+      "--site-color-text": "#592530",
+      "--site-color-text-secondary": "#A5969E",
+      "--site-color-accent": "#0877A1",
+      "--site-color-accent-secondary": "#78244C",
+      "--site-color-section-bg": "#A1CBDB",
+      "--site-color-accent-hover": "#0877A1",
+      "--site-color-border": "#5925302E",
+      "--site-color-surface": "#F8FBFD",
+      "--site-color-surface-soft": "#A1CBDB",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#220E12",
+      "--site-color-text": "#6BADC7",
+      "--site-color-text-secondary": "#4C6A7B",
+      "--site-color-accent": "#0877A1",
+      "--site-color-accent-secondary": "#935070",
+      "--site-color-section-bg": "#3A181F",
+      "--site-color-accent-hover": "#147EA6",
+      "--site-color-border": "#6BADC738",
+      "--site-color-surface": "#281B20",
+      "--site-color-surface-soft": "#3A181F",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

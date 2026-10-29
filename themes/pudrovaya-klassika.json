@@ -1,0 +1,47 @@
+{
+  "id": "pudrovaya-klassika",
+  "name": "Пудровая классика",
+  "description": "Авторская тема Kroy «Пудровая классика».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFCFB",
+      "--site-color-text": "#123D6A",
+      "--site-color-text-secondary": "#96A8BB",
+      "--site-color-accent": "#AC3B61",
+      "--site-color-accent-secondary": "#123D6A",
+      "--site-color-section-bg": "#F9F4F2",
+      "--site-color-accent-hover": "#AC3B61",
+      "--site-color-border": "#123D6A2E",
+      "--site-color-surface": "#FFFEFE",
+      "--site-color-surface-soft": "#F9F4F2",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#071728",
+      "--site-color-text": "#EEE2DC",
+      "--site-color-text-secondary": "#8D8D90",
+      "--site-color-accent": "#AC3B61",
+      "--site-color-accent-secondary": "#4D6E8F",
+      "--site-color-section-bg": "#0C2845",
+      "--site-color-accent-hover": "#B85879",
+      "--site-color-border": "#EEE2DC38",
+      "--site-color-surface": "#192736",
+      "--site-color-surface-soft": "#0C2845",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

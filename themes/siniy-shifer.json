@@ -1,0 +1,47 @@
+{
+  "id": "siniy-shifer",
+  "name": "Синий шифер",
+  "description": "Авторская тема Kroy «Синий шифер».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F5F5F7",
+      "--site-color-text": "#25274D",
+      "--site-color-text-secondary": "#999AAC",
+      "--site-color-accent": "#2C94C0",
+      "--site-color-accent-secondary": "#29648A",
+      "--site-color-section-bg": "#DFDFE6",
+      "--site-color-accent-hover": "#257EA3",
+      "--site-color-border": "#25274D2E",
+      "--site-color-surface": "#FDFDFD",
+      "--site-color-surface-soft": "#DFDFE6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0E0F1D",
+      "--site-color-text": "#AAABBE",
+      "--site-color-text-secondary": "#68697A",
+      "--site-color-accent": "#2E9CCA",
+      "--site-color-accent-secondary": "#346C90",
+      "--site-color-section-bg": "#181932",
+      "--site-color-accent-hover": "#2E9CCA",
+      "--site-color-border": "#AAABBE38",
+      "--site-color-surface": "#1A1B2A",
+      "--site-color-surface-soft": "#181932",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

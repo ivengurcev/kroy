@@ -1,0 +1,47 @@
+{
+  "id": "granatovyy-grafit",
+  "name": "Гранатовый графит",
+  "description": "Авторская тема Kroy «Гранатовый графит».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F8E1E8",
+      "--site-color-text": "#1A1A1C",
+      "--site-color-text-secondary": "#96898E",
+      "--site-color-accent": "#C3073F",
+      "--site-color-accent-secondary": "#950740",
+      "--site-color-section-bg": "#E8A1B6",
+      "--site-color-accent-hover": "#C3073F",
+      "--site-color-border": "#1A1A1C2E",
+      "--site-color-surface": "#FDF8FA",
+      "--site-color-surface-soft": "#E8A1B6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0A0A0B",
+      "--site-color-text": "#E1839F",
+      "--site-color-text-secondary": "#875061",
+      "--site-color-accent": "#C3073F",
+      "--site-color-accent-secondary": "#AA3966",
+      "--site-color-section-bg": "#111112",
+      "--site-color-accent-hover": "#CF3965",
+      "--site-color-border": "#E1839F38",
+      "--site-color-surface": "#1B1417",
+      "--site-color-surface-soft": "#111112",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

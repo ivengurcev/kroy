@@ -1,0 +1,47 @@
+{
+  "id": "ploskaya-akvarel",
+  "name": "Плоская акварель",
+  "description": "Авторская тема Kroy «Плоская акварель».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FFFFFF",
+      "--site-color-text": "#005F55",
+      "--site-color-text-secondary": "#8FB9B4",
+      "--site-color-accent": "#00887A",
+      "--site-color-accent-secondary": "#6B95DE",
+      "--site-color-section-bg": "#FFFFFF",
+      "--site-color-accent-hover": "#00887A",
+      "--site-color-border": "#005F552E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#FFFFFF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#00342E",
+      "--site-color-text": "#FFFFFF",
+      "--site-color-text-secondary": "#94AAA7",
+      "--site-color-accent": "#00887A",
+      "--site-color-accent-secondary": "#77A6F7",
+      "--site-color-section-bg": "#00584F",
+      "--site-color-accent-hover": "#33A095",
+      "--site-color-border": "#FFFFFF38",
+      "--site-color-surface": "#14443F",
+      "--site-color-surface-soft": "#00584F",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

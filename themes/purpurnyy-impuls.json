@@ -1,0 +1,47 @@
+{
+  "id": "purpurnyy-impuls",
+  "name": "Пурпурный импульс",
+  "description": "Авторская тема Kroy «Пурпурный импульс».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEEAEE",
+      "--site-color-text": "#242582",
+      "--site-color-text-secondary": "#9E93BE",
+      "--site-color-accent": "#EA486C",
+      "--site-color-accent-secondary": "#2F2FA2",
+      "--site-color-section-bg": "#FCBBC9",
+      "--site-color-accent-hover": "#C73D5C",
+      "--site-color-border": "#2425822E",
+      "--site-color-surface": "#FFFAFB",
+      "--site-color-surface-soft": "#FCBBC9",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0E0E31",
+      "--site-color-text": "#F87995",
+      "--site-color-text-secondary": "#964C6B",
+      "--site-color-accent": "#F64C72",
+      "--site-color-accent-secondary": "#5959B5",
+      "--site-color-section-bg": "#171855",
+      "--site-color-accent-hover": "#F64C72",
+      "--site-color-border": "#F8799538",
+      "--site-color-surface": "#211739",
+      "--site-color-surface-soft": "#171855",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

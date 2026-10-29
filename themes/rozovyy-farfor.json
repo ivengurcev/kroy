@@ -1,0 +1,47 @@
+{
+  "id": "rozovyy-farfor",
+  "name": "Розовый фарфор",
+  "description": "Авторская тема Kroy «Розовый фарфор».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FDFDFE",
+      "--site-color-text": "#962C63",
+      "--site-color-text-secondary": "#D0A1BA",
+      "--site-color-accent": "#E64398",
+      "--site-color-accent-secondary": "#D96791",
+      "--site-color-section-bg": "#F9F7FB",
+      "--site-color-accent-hover": "#DB4090",
+      "--site-color-border": "#962C632E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#F9F7FB",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#57193A",
+      "--site-color-text": "#F0EBF4",
+      "--site-color-text-secondary": "#B093A6",
+      "--site-color-accent": "#E64398",
+      "--site-color-accent-secondary": "#F172A1",
+      "--site-color-section-bg": "#962C63",
+      "--site-color-accent-hover": "#EA5FA7",
+      "--site-color-border": "#F0EBF438",
+      "--site-color-surface": "#632A49",
+      "--site-color-surface-soft": "#962C63",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "chistaya-biryuza",
+  "name": "Чистая бирюза",
+  "description": "Авторская тема Kroy «Чистая бирюза».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FFFFFF",
+      "--site-color-text": "#17242A",
+      "--site-color-text-secondary": "#999FA1",
+      "--site-color-accent": "#349E98",
+      "--site-color-accent-secondary": "#2B7A78",
+      "--site-color-section-bg": "#FFFFFF",
+      "--site-color-accent-hover": "#2C8681",
+      "--site-color-border": "#17242A2E",
+      "--site-color-surface": "#FFFFFF",
+      "--site-color-surface-soft": "#FFFFFF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#090E10",
+      "--site-color-text": "#FEFFFF",
+      "--site-color-text-secondary": "#979A9B",
+      "--site-color-accent": "#3AAFA9",
+      "--site-color-accent-secondary": "#2B7A78",
+      "--site-color-section-bg": "#0F171B",
+      "--site-color-accent-hover": "#3AAFA9",
+      "--site-color-border": "#FEFFFF38",
+      "--site-color-surface": "#1D2123",
+      "--site-color-surface-soft": "#0F171B",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

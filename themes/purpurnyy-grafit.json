@@ -1,0 +1,47 @@
+{
+  "id": "purpurnyy-grafit",
+  "name": "Пурпурный графит",
+  "description": "Авторская тема Kroy «Пурпурный графит».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F9FAFB",
+      "--site-color-text": "#2D283E",
+      "--site-color-text-secondary": "#9F9EA8",
+      "--site-color-accent": "#812BB2",
+      "--site-color-accent-secondary": "#564F70",
+      "--site-color-section-bg": "#EDF0F4",
+      "--site-color-accent-hover": "#812BB2",
+      "--site-color-border": "#2D283E2E",
+      "--site-color-surface": "#FEFEFE",
+      "--site-color-surface-soft": "#EDF0F4",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#110F18",
+      "--site-color-text": "#D0D7E1",
+      "--site-color-text-secondary": "#80838D",
+      "--site-color-accent": "#8E40BA",
+      "--site-color-accent-secondary": "#67617E",
+      "--site-color-section-bg": "#1D1A28",
+      "--site-color-accent-hover": "#9F5DC4",
+      "--site-color-border": "#D0D7E138",
+      "--site-color-surface": "#201F28",
+      "--site-color-surface-soft": "#1D1A28",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

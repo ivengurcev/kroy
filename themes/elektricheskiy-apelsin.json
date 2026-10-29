@@ -1,0 +1,47 @@
+{
+  "id": "elektricheskiy-apelsin",
+  "name": "Электрический апельсин",
+  "description": "Авторская тема Kroy «Электрический апельсин».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#E2FCFB",
+      "--site-color-text": "#00519E",
+      "--site-color-text-secondary": "#7FB1D2",
+      "--site-color-accent": "#C67E02",
+      "--site-color-accent-secondary": "#0074E1",
+      "--site-color-section-bg": "#A4F6F2",
+      "--site-color-accent-hover": "#A86B02",
+      "--site-color-border": "#00519E2E",
+      "--site-color-surface": "#F9FEFE",
+      "--site-color-surface-soft": "#A4F6F2",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#002C56",
+      "--site-color-text": "#10E7DC",
+      "--site-color-text-secondary": "#0998A4",
+      "--site-color-accent": "#F79E02",
+      "--site-color-accent-secondary": "#0074E1",
+      "--site-color-section-bg": "#004B92",
+      "--site-color-accent-hover": "#F79E02",
+      "--site-color-border": "#10E7DC38",
+      "--site-color-surface": "#013B61",
+      "--site-color-surface-soft": "#004B92",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

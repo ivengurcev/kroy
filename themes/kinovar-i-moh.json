@@ -1,0 +1,47 @@
+{
+  "id": "kinovar-i-moh",
+  "name": "Киноварь и мох",
+  "description": "Авторская тема Kroy «Киноварь и мох».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#EDF3EE",
+      "--site-color-text": "#932E23",
+      "--site-color-text-secondary": "#C59C95",
+      "--site-color-accent": "#C7493A",
+      "--site-color-accent-secondary": "#A33327",
+      "--site-color-section-bg": "#C6D7CB",
+      "--site-color-accent-hover": "#C7493A",
+      "--site-color-border": "#932E232E",
+      "--site-color-surface": "#FBFCFB",
+      "--site-color-surface-soft": "#C6D7CB",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#3E130F",
+      "--site-color-text": "#95B69E",
+      "--site-color-text-secondary": "#707262",
+      "--site-color-accent": "#C7493A",
+      "--site-color-accent-secondary": "#B15247",
+      "--site-color-section-bg": "#6A2119",
+      "--site-color-accent-hover": "#CF6458",
+      "--site-color-border": "#95B69E38",
+      "--site-color-surface": "#45201A",
+      "--site-color-surface-soft": "#6A2119",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

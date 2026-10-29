@@ -1,0 +1,47 @@
+{
+  "id": "morskaya-bronza",
+  "name": "Морская бронза",
+  "description": "Авторская тема Kroy «Морская бронза».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F9FCFC",
+      "--site-color-text": "#2C3532",
+      "--site-color-text-secondary": "#9FA4A3",
+      "--site-color-accent": "#A68465",
+      "--site-color-accent-secondary": "#116466",
+      "--site-color-section-bg": "#EEF6F4",
+      "--site-color-accent-hover": "#95775B",
+      "--site-color-border": "#2C35322E",
+      "--site-color-surface": "#FEFEFE",
+      "--site-color-surface-soft": "#EEF6F4",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#111413",
+      "--site-color-text": "#D1E8E2",
+      "--site-color-text-secondary": "#808F8B",
+      "--site-color-accent": "#FFCB9B",
+      "--site-color-accent-secondary": "#1D6C6E",
+      "--site-color-section-bg": "#1D2221",
+      "--site-color-accent-hover": "#FFCB9B",
+      "--site-color-border": "#D1E8E238",
+      "--site-color-surface": "#202524",
+      "--site-color-surface-soft": "#1D2221",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

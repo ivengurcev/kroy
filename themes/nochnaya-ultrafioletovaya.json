@@ -1,0 +1,47 @@
+{
+  "id": "nochnaya-ultrafioletovaya",
+  "name": "Ночная ультрафиолетовая",
+  "description": "Авторская тема Kroy «Ночная ультрафиолетовая».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#E7E0FA",
+      "--site-color-text": "#0C0032",
+      "--site-color-text-secondary": "#877DA2",
+      "--site-color-accent": "#3500D4",
+      "--site-color-accent-secondary": "#230090",
+      "--site-color-section-bg": "#B29EEF",
+      "--site-color-accent-hover": "#3500D4",
+      "--site-color-border": "#0C00322E",
+      "--site-color-surface": "#FAF8FE",
+      "--site-color-surface-soft": "#B29EEF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#050013",
+      "--site-color-text": "#A48CEC",
+      "--site-color-text-secondary": "#615191",
+      "--site-color-accent": "#6840DF",
+      "--site-color-accent-secondary": "#654DB1",
+      "--site-color-section-bg": "#080021",
+      "--site-color-accent-hover": "#7753E2",
+      "--site-color-border": "#A48CEC38",
+      "--site-color-surface": "#120B24",
+      "--site-color-surface-soft": "#080021",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

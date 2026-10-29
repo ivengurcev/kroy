@@ -1,0 +1,47 @@
+{
+  "id": "golubaya-klassika",
+  "name": "Голубая классика",
+  "description": "Авторская тема Kroy «Голубая классика».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F3F9FA",
+      "--site-color-text": "#515457",
+      "--site-color-text-secondary": "#ACB0B2",
+      "--site-color-accent": "#4D6D9A",
+      "--site-color-accent-secondary": "#6A9094",
+      "--site-color-section-bg": "#D8ECEE",
+      "--site-color-accent-hover": "#4D6D9A",
+      "--site-color-border": "#5154572E",
+      "--site-color-surface": "#FCFEFE",
+      "--site-color-surface-soft": "#D8ECEE",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#242627",
+      "--site-color-text": "#98CED3",
+      "--site-color-text-secondary": "#67878B",
+      "--site-color-accent": "#56749F",
+      "--site-color-accent-secondary": "#98CED3",
+      "--site-color-section-bg": "#3E4042",
+      "--site-color-accent-hover": "#6F89AD",
+      "--site-color-border": "#98CED338",
+      "--site-color-surface": "#2D3335",
+      "--site-color-surface-soft": "#3E4042",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "stalnaya-dymka",
+  "name": "Стальная дымка",
+  "description": "Авторская тема Kroy «Стальная дымка».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F6F4F2",
+      "--site-color-text": "#4F4E52",
+      "--site-color-text-secondary": "#ADABAC",
+      "--site-color-accent": "#557A95",
+      "--site-color-accent-secondary": "#6D8EA5",
+      "--site-color-section-bg": "#E1DCD7",
+      "--site-color-accent-hover": "#557A95",
+      "--site-color-border": "#4F4E522E",
+      "--site-color-surface": "#FDFDFC",
+      "--site-color-surface-soft": "#E1DCD7",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#232325",
+      "--site-color-text": "#B9ABA1",
+      "--site-color-text-secondary": "#7A726D",
+      "--site-color-accent": "#557A95",
+      "--site-color-accent-secondary": "#7395AE",
+      "--site-color-section-bg": "#3C3C3F",
+      "--site-color-accent-hover": "#6687A0",
+      "--site-color-border": "#B9ABA138",
+      "--site-color-surface": "#2F2E2F",
+      "--site-color-surface-soft": "#3C3C3F",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

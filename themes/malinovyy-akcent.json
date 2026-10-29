@@ -1,0 +1,47 @@
+{
+  "id": "malinovyy-akcent",
+  "name": "Малиновый акцент",
+  "description": "Авторская тема Kroy «Малиновый акцент».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FCFCFB",
+      "--site-color-text": "#5D001D",
+      "--site-color-text-secondary": "#B68D99",
+      "--site-color-accent": "#EE4C7C",
+      "--site-color-accent-secondary": "#9A1750",
+      "--site-color-section-bg": "#F4F4F2",
+      "--site-color-accent-hover": "#D64470",
+      "--site-color-border": "#5D001D2E",
+      "--site-color-surface": "#FEFEFE",
+      "--site-color-surface-soft": "#F4F4F2",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#23000B",
+      "--site-color-text": "#E3E2DE",
+      "--site-color-text-secondary": "#928385",
+      "--site-color-accent": "#EE4C7C",
+      "--site-color-accent-secondary": "#A93A6A",
+      "--site-color-section-bg": "#3C0013",
+      "--site-color-accent-hover": "#EE4C7C",
+      "--site-color-border": "#E3E2DE38",
+      "--site-color-surface": "#32121C",
+      "--site-color-surface-soft": "#3C0013",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

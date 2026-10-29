@@ -1,0 +1,47 @@
+{
+  "id": "siniy-terrakot",
+  "name": "Синий терракот",
+  "description": "Авторская тема Kroy «Синий терракот».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFBFB",
+      "--site-color-text": "#502018",
+      "--site-color-text-secondary": "#B19B97",
+      "--site-color-accent": "#4285F4",
+      "--site-color-accent-secondary": "#BC463A",
+      "--site-color-section-bg": "#FAF3F2",
+      "--site-color-accent-hover": "#3B78DC",
+      "--site-color-border": "#5020182E",
+      "--site-color-surface": "#FFFEFE",
+      "--site-color-surface-soft": "#FAF3F2",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#1E0C09",
+      "--site-color-text": "#F3E0DC",
+      "--site-color-text-secondary": "#9A8783",
+      "--site-color-accent": "#4285F4",
+      "--site-color-accent-secondary": "#BC463A",
+      "--site-color-section-bg": "#341510",
+      "--site-color-accent-hover": "#4285F4",
+      "--site-color-border": "#F3E0DC38",
+      "--site-color-surface": "#2F1D1A",
+      "--site-color-surface-soft": "#341510",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

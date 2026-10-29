@@ -1,0 +1,47 @@
+{
+  "id": "chernichnaya-yagoda",
+  "name": "Черничная ягода",
+  "description": "Авторская тема Kroy «Черничная ягода».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F4F6F6",
+      "--site-color-text": "#2A1B3C",
+      "--site-color-text-secondary": "#9B96A4",
+      "--site-color-accent": "#D93F87",
+      "--site-color-accent-secondary": "#44318D",
+      "--site-color-section-bg": "#DCE2E3",
+      "--site-color-accent-hover": "#CE3C80",
+      "--site-color-border": "#2A1B3C2E",
+      "--site-color-surface": "#FDFDFD",
+      "--site-color-surface-soft": "#DCE2E3",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#100A17",
+      "--site-color-text": "#A4B3B6",
+      "--site-color-text-secondary": "#666C73",
+      "--site-color-accent": "#D93F87",
+      "--site-color-accent-secondary": "#695AA4",
+      "--site-color-section-bg": "#1B1227",
+      "--site-color-accent-hover": "#D93F87",
+      "--site-color-border": "#A4B3B638",
+      "--site-color-surface": "#1C1824",
+      "--site-color-surface-soft": "#1B1227",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

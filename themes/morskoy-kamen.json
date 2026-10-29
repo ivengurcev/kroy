@@ -1,0 +1,47 @@
+{
+  "id": "morskoy-kamen",
+  "name": "Морской камень",
+  "description": "Авторская тема Kroy «Морской камень».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F1F7F7",
+      "--site-color-text": "#112D31",
+      "--site-color-text-secondary": "#8E9EA0",
+      "--site-color-accent": "#678E8C",
+      "--site-color-accent-secondary": "#254E58",
+      "--site-color-section-bg": "#D2E6E5",
+      "--site-color-accent-hover": "#587977",
+      "--site-color-border": "#112D312E",
+      "--site-color-surface": "#FCFDFD",
+      "--site-color-surface-soft": "#D2E6E5",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#061113",
+      "--site-color-text": "#89BDBB",
+      "--site-color-text-secondary": "#527574",
+      "--site-color-accent": "#89BDBB",
+      "--site-color-accent-secondary": "#466971",
+      "--site-color-section-bg": "#0B1D20",
+      "--site-color-accent-hover": "#89BDBB",
+      "--site-color-border": "#89BDBB38",
+      "--site-color-surface": "#101F20",
+      "--site-color-surface-soft": "#0B1D20",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "laymovyy-pop",
+  "name": "Лаймовый поп",
+  "description": "Авторская тема Kroy «Лаймовый поп».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFCF9",
+      "--site-color-text": "#7D3897",
+      "--site-color-text-secondary": "#C5A6CE",
+      "--site-color-accent": "#A48503",
+      "--site-color-accent-secondary": "#10A39D",
+      "--site-color-section-bg": "#FBF6EC",
+      "--site-color-accent-hover": "#947803",
+      "--site-color-border": "#7D38972E",
+      "--site-color-surface": "#FFFEFE",
+      "--site-color-surface-soft": "#FBF6EC",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#3F1C4C",
+      "--site-color-text": "#F5E6CC",
+      "--site-color-text-secondary": "#A99196",
+      "--site-color-accent": "#FCCD04",
+      "--site-color-accent-secondary": "#17E9E0",
+      "--site-color-section-bg": "#6C3083",
+      "--site-color-accent-hover": "#FCCD04",
+      "--site-color-border": "#F5E6CC38",
+      "--site-color-surface": "#4E2C56",
+      "--site-color-surface-soft": "#6C3083",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

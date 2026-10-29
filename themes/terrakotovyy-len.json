@@ -1,0 +1,47 @@
+{
+  "id": "terrakotovyy-len",
+  "name": "Терракотовый лён",
+  "description": "Авторская тема Kroy «Терракотовый лён».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FCFCFB",
+      "--site-color-text": "#8B3630",
+      "--site-color-text-secondary": "#CAA5A2",
+      "--site-color-accent": "#E85A50",
+      "--site-color-accent-secondary": "#D17368",
+      "--site-color-section-bg": "#F7F6F2",
+      "--site-color-accent-hover": "#D15148",
+      "--site-color-border": "#8B36302E",
+      "--site-color-surface": "#FEFEFE",
+      "--site-color-surface-soft": "#F7F6F2",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#58221E",
+      "--site-color-text": "#EAE8DC",
+      "--site-color-text-secondary": "#AD958C",
+      "--site-color-accent": "#E85A50",
+      "--site-color-accent-secondary": "#E88073",
+      "--site-color-section-bg": "#973B34",
+      "--site-color-accent-hover": "#EA6B62",
+      "--site-color-border": "#EAE8DC38",
+      "--site-color-surface": "#64322D",
+      "--site-color-surface-soft": "#973B34",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

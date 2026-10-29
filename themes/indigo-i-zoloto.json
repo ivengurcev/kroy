@@ -1,0 +1,47 @@
+{
+  "id": "indigo-i-zoloto",
+  "name": "Индиго и золото",
+  "description": "Авторская тема Kroy «Индиго и золото».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#FEFCF8",
+      "--site-color-text": "#08105B",
+      "--site-color-text-secondary": "#9294B3",
+      "--site-color-accent": "#11A46F",
+      "--site-color-accent-secondary": "#0D19A3",
+      "--site-color-section-bg": "#FBF5E8",
+      "--site-color-accent-hover": "#0E8B5E",
+      "--site-color-border": "#08105B2E",
+      "--site-color-surface": "#FFFEFD",
+      "--site-color-surface-soft": "#FBF5E8",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#030623",
+      "--site-color-text": "#F4E4C2",
+      "--site-color-text-secondary": "#8F877F",
+      "--site-color-accent": "#16DB94",
+      "--site-color-accent-secondary": "#4A53BA",
+      "--site-color-section-bg": "#050A3B",
+      "--site-color-accent-hover": "#16DB94",
+      "--site-color-border": "#F4E4C238",
+      "--site-color-surface": "#161830",
+      "--site-color-surface-soft": "#050A3B",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

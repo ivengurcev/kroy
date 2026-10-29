@@ -1,0 +1,47 @@
+{
+  "id": "biryuzovyy-drayv",
+  "name": "Бирюзовый драйв",
+  "description": "Авторская тема Kroy «Бирюзовый драйв».",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#F9FEFF",
+      "--site-color-text": "#972929",
+      "--site-color-text-secondary": "#CEA0A1",
+      "--site-color-accent": "#FC4445",
+      "--site-color-accent-secondary": "#299B96",
+      "--site-color-section-bg": "#EBFDFF",
+      "--site-color-accent-hover": "#E33D3E",
+      "--site-color-border": "#9729292E",
+      "--site-color-surface": "#FEFFFF",
+      "--site-color-surface-soft": "#EBFDFF",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#601A1A",
+      "--site-color-text": "#CAFAFE",
+      "--site-color-text-secondary": "#9D9C9E",
+      "--site-color-accent": "#FC4445",
+      "--site-color-accent-secondary": "#3FEEE6",
+      "--site-color-section-bg": "#A42C2D",
+      "--site-color-accent-hover": "#FC5758",
+      "--site-color-border": "#CAFAFE38",
+      "--site-color-surface": "#682C2C",
+      "--site-color-surface-soft": "#A42C2D",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}
