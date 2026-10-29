@@ -1,0 +1,766 @@
+{
+  "source": "https://visme.co/blog/ru/цветовая-схема-веб-сайт/",
+  "notes": "HEX values are verified against image swatches; some printed labels are erroneous or unreadable. The colorsInferredFromImage indices indicate close pixel approximations.",
+  "palettes": [
+    {
+      "id": 1,
+      "name": "Красочный и сбалансированный",
+      "colors": [
+        "#E27D60",
+        "#85CDCA",
+        "#E8A87C",
+        "#C38D9E",
+        "#41B3A3"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website.jpg",
+      "colorsInferredFromImage": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Яркие акценты",
+      "colors": [
+        "#242582",
+        "#563D67",
+        "#F64C72",
+        "#99738E",
+        "#2F2FA2"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website2.jpg",
+      "colorsInferredFromImage": [
+        2
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Естественный и землистый",
+      "colors": [
+        "#8D8741",
+        "#659DBD",
+        "#DAAD86",
+        "#BC986A",
+        "#FBEEC1"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website3.png"
+    },
+    {
+      "id": 4,
+      "name": "Прохладный и свежий",
+      "colors": [
+        "#05386B",
+        "#379683",
+        "#5CDB95",
+        "#8EE4AF",
+        "#EDF5E1"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website4.jpg"
+    },
+    {
+      "id": 5,
+      "name": "Дерзкий и яркий",
+      "colors": [
+        "#FC4445",
+        "#3FEEE6",
+        "#55BCC9",
+        "#97CAEF",
+        "#CAFAFE"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website5.jpg",
+      "colorsInferredFromImage": [
+        5
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Киноварь и русский зеленый",
+      "colors": [
+        "#C7493A",
+        "#A33327",
+        "#689775",
+        "#907163",
+        "#AD8174"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website6.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Стильный и утонченный",
+      "colors": [
+        "#5D5C61",
+        "#938E94",
+        "#7395AE",
+        "#557A95",
+        "#B1A296"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website7.jpg",
+      "colorsInferredFromImage": [
+        2
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Фиолетовые оттенки и полутона",
+      "colors": [
+        "#2E1114",
+        "#501B1D",
+        "#64485C",
+        "#83677B",
+        "#ADADAD"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website8.jpg"
+    },
+    {
+      "id": 9,
+      "name": "Глубокие пурпурные и синие оттенки",
+      "colors": [
+        "#0C0032",
+        "#1A0061",
+        "#230090",
+        "#3500D4",
+        "#282828"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website9.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Современный и смелый",
+      "colors": [
+        "#1A1A1C",
+        "#4E4E50",
+        "#6F2232",
+        "#950740",
+        "#C3073F"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website10.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Оживленный и манящий",
+      "colors": [
+        "#E7717D",
+        "#C2CAD0",
+        "#C2B9B0",
+        "#7E685A",
+        "#AFD275"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website11.jpg",
+      "colorsInferredFromImage": [
+        3
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Поразительный и простой",
+      "colors": [
+        "#0B0C10",
+        "#1F2833",
+        "#C5C6C7",
+        "#66FCF4",
+        "#45A29E"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website12.jpg"
+    },
+    {
+      "id": 13,
+      "name": "Красный и энергичный",
+      "colors": [
+        "#5D001D",
+        "#E3E2DE",
+        "#E3AFBC",
+        "#9A1750",
+        "#EE4C7C"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website13.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Вычурный и креативный",
+      "colors": [
+        "#D79922",
+        "#EFE2BA",
+        "#F13C20",
+        "#4056A1",
+        "#C5CBE3"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website14.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Элегантный, но простой",
+      "colors": [
+        "#EDC8B8",
+        "#EEE2DC",
+        "#BAB2B5",
+        "#123D6A",
+        "#AC3B61"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website15.jpg",
+      "colorsInferredFromImage": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Изящный и футуристичный",
+      "colors": [
+        "#2C3532",
+        "#116466",
+        "#D9B08C",
+        "#FFCB9B",
+        "#D1E8E2"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website16.jpg",
+      "colorsInferredFromImage": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Новаторский и дерзкий",
+      "colors": [
+        "#272727",
+        "#747474",
+        "#FF652F",
+        "#FFE401",
+        "#14A76C"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website17.jpg",
+      "colorsInferredFromImage": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Текстурированный и динамичный",
+      "colors": [
+        "#2F4454",
+        "#2E151B",
+        "#DA7B93",
+        "#376E6F",
+        "#103334"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website18.jpg",
+      "colorsInferredFromImage": [
+        2
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Минималистичный, но теплый",
+      "colors": [
+        "#EAE8DC",
+        "#D8C3A4",
+        "#8E8D89",
+        "#E88073",
+        "#E85A50"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website19.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Яркий и резкий",
+      "colors": [
+        "#D93F87",
+        "#2A1B3C",
+        "#44318D",
+        "#8265A7",
+        "#A4B3B6"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website20.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        4
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Чистый и энергичный",
+      "colors": [
+        "#5680E9",
+        "#84CEE8",
+        "#5AB9EA",
+        "#C1C8E4",
+        "#8860D0"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website21.jpg",
+      "colorsInferredFromImage": [
+        5
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Корпоративный и традиционный",
+      "colors": [
+        "#89BDBB",
+        "#254E58",
+        "#112D31",
+        "#4E4A41",
+        "#6E6658"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website22.jpg",
+      "colorsInferredFromImage": [
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Синий и освежающий",
+      "colors": [
+        "#25274D",
+        "#464866",
+        "#AAABBE",
+        "#2E9CCA",
+        "#29648A"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website23.jpg"
+    },
+    {
+      "id": 24,
+      "name": "Чистый и современный",
+      "colors": [
+        "#17242A",
+        "#2B7A78",
+        "#3AAFA9",
+        "#DEF2F1",
+        "#FEFFFF"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website24.jpg",
+      "colorsInferredFromImage": [
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Яркий и элегантный",
+      "colors": [
+        "#F7E9A0",
+        "#F76C6C",
+        "#A8D0E6",
+        "#374785",
+        "#24315E"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website25.jpg",
+      "colorsInferredFromImage": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Молодой и веселый",
+      "colors": [
+        "#A64AC9",
+        "#FCCD04",
+        "#FFB48F",
+        "#F5E6CC",
+        "#17E9E0"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website26.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Великолепный контраст",
+      "colors": [
+        "#618930",
+        "#87C232",
+        "#222629",
+        "#474A4F",
+        "#6A6E71"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website27.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Эффектные акценты",
+      "colors": [
+        "#FAED26",
+        "#46344E",
+        "#5A5560",
+        "#9D8D8F",
+        "#98786F"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website28.jpg"
+    },
+    {
+      "id": 29,
+      "name": "Современность во всей красе",
+      "colors": [
+        "#182628",
+        "#65CCB8",
+        "#57BA98",
+        "#3B945E",
+        "#F2F2F2"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website29.jpg",
+      "colorsInferredFromImage": [
+        5
+      ]
+    },
+    {
+      "id": 30,
+      "name": "Близость к природе",
+      "colors": [
+        "#687864",
+        "#31708E",
+        "#5085A5",
+        "#8FC1E3",
+        "#F7F9FB"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website30.jpg"
+    },
+    {
+      "id": 31,
+      "name": "Ярко-розовый и пастельные оттенки",
+      "colors": [
+        "#A1C2D1",
+        "#B39BC8",
+        "#F0EBF4",
+        "#F172A1",
+        "#E64398"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website31.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Уникальное сочетание",
+      "colors": [
+        "#592530",
+        "#78244C",
+        "#895064",
+        "#0877A1",
+        "#2D4159"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website32.jpg",
+      "colorsInferredFromImage": [
+        5
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Яркие цитрусовые оттенки",
+      "colors": [
+        "#1F2605",
+        "#1F6421",
+        "#53900F",
+        "#A4A61E",
+        "#D6CE15"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website33.jpg",
+      "colorsInferredFromImage": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Яркий синий и оранжевый",
+      "colors": [
+        "#10E7DC",
+        "#0074E1",
+        "#1B9CE5",
+        "#6CDAEE",
+        "#F79E02"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website34.jpg",
+      "colorsInferredFromImage": [
+        2,
+        5
+      ]
+    },
+    {
+      "id": 35,
+      "name": "Яркий синий и оранжевый",
+      "colors": [
+        "#4285F4",
+        "#502018",
+        "#BC463A",
+        "#D4A59A",
+        "#F3E0DC"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website35.jpg",
+      "colorsInferredFromImage": [
+        3
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Дерзкий и уникальный",
+      "colors": [
+        "#08105B",
+        "#0D19A3",
+        "#16DB94",
+        "#F4E4C2",
+        "#E3C57F"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website36.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Жизнерадостный и энергичный",
+      "colors": [
+        "#FBE8A6",
+        "#F4976C",
+        "#303C6C",
+        "#B4DFE5",
+        "#D2FDFF"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website37.jpg",
+      "colorsInferredFromImage": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 38,
+      "name": "Снежно, но тепло",
+      "colors": [
+        "#B2384F",
+        "#3B8BE8",
+        "#E7E3D4",
+        "#C4DBF6",
+        "#8590AA"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website38.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Насыщенный и красочный",
+      "colors": [
+        "#F68887",
+        "#F3D24F",
+        "#ECECEC",
+        "#91CCF4",
+        "#5CA2D5"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website39.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 40,
+      "name": "Современный и минималистичный",
+      "colors": [
+        "#19191B",
+        "#479761",
+        "#CEBC81",
+        "#A16E83",
+        "#B19F9E"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website40.jpg",
+      "colorsInferredFromImage": [
+        1
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Смелый и отважный",
+      "colors": [
+        "#314455",
+        "#644E5B",
+        "#9E5A63",
+        "#C96567",
+        "#97AABD"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website41.jpg"
+    },
+    {
+      "id": 42,
+      "name": "Цвета плоского дизайна",
+      "colors": [
+        "#00887A",
+        "#FFCCBC",
+        "#FFFFFF",
+        "#D3E3FC",
+        "#77A6F7"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website42.jpg"
+    },
+    {
+      "id": 43,
+      "name": "Эклектичный и безмятежный",
+      "colors": [
+        "#844D36",
+        "#474853",
+        "#86B3D1",
+        "#AAA09F",
+        "#8E8268"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website43.jpg",
+      "colorsInferredFromImage": [
+        4
+      ]
+    },
+    {
+      "id": 44,
+      "name": "Стильный и традиционный",
+      "colors": [
+        "#5F6366",
+        "#4D6D9A",
+        "#9AA5C3",
+        "#98CED3",
+        "#EDB5BF"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website44.jpg",
+      "colorsInferredFromImage": [
+        3
+      ]
+    },
+    {
+      "id": 45,
+      "name": "Яркие акценты",
+      "colors": [
+        "#812BB2",
+        "#2D283E",
+        "#564F70",
+        "#4C495C",
+        "#D0D7E1"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website45.jpg",
+      "colorsInferredFromImage": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "id": 46,
+      "name": "Корпоративный и серьезный",
+      "colors": [
+        "#265077",
+        "#022140",
+        "#494B68",
+        "#1E4258",
+        "#2D5F5D"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website46.jpg"
+    },
+    {
+      "id": 47,
+      "name": "Гламурный и модный образ",
+      "colors": [
+        "#806543",
+        "#33206E",
+        "#141114",
+        "#542F34",
+        "#A6607C"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website47.jpg"
+    },
+    {
+      "id": 48,
+      "name": "Привлекательный и изящный",
+      "colors": [
+        "#501F3A",
+        "#CB2D6F",
+        "#CCCCCC",
+        "#149F98",
+        "#0F292F"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website48.jpg",
+      "colorsInferredFromImage": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 49,
+      "name": "Громкий и прямолинейный",
+      "colors": [
+        "#C44272",
+        "#F070A4",
+        "#16FFBD",
+        "#12CA98",
+        "#439F76"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website49.jpg",
+      "colorsInferredFromImage": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": 50,
+      "name": "Оживленный, но спокойный",
+      "colors": [
+        "#026670",
+        "#9FEDD7",
+        "#FEF9C7",
+        "#FCE181",
+        "#EDEAE5"
+      ],
+      "sourceImage": "https://visme.co/blog/wp-content/uploads/2016/09/website50.jpg",
+      "colorsInferredFromImage": [
+        2
+      ]
+    }
+  ]
+}

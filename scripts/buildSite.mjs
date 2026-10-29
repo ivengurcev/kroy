@@ -234,13 +234,6 @@ try {
         ...review,
         mediaUrl: mediaFilename ? `${ASSET_BASE}/reviews/${mediaFilename}` : null,
     }));
-    await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
-    for (const review of publishedReviews) {
-        if (!review.mediaFilename) continue;
-        const source = getMediaPath(site.id, review.mediaFilename);
-        if (!source) throw new Error(`Некорректное изображение отзыва: ${review.mediaId}`);
-        await copyFile(source, join(temporaryDirectory, 'assets', 'reviews', review.mediaFilename));
-    }
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-reviews.mjs'),
         `export const reviews = ${JSON.stringify(reviews)};\n`
@@ -270,6 +263,13 @@ try {
 
     await renderSite(site, pages, temporaryDirectory, ASSET_BASE);
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
+    await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
+    for (const review of publishedReviews) {
+        if (!review.mediaFilename) continue;
+        const source = getMediaPath(site.id, review.mediaFilename);
+        if (!source) throw new Error(`Некорректное изображение отзыва: ${review.mediaId}`);
+        await copyFile(source, join(temporaryDirectory, 'assets', 'reviews', review.mediaFilename));
+    }
     await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
     const clientCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: true });
     await build({
