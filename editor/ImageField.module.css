@@ -19,3 +19,31 @@
 .input { display: none; }
 .field button { justify-self: start; }
 .error { min-height: 18px; color: var(--color-error-text); }
+
+.dialog {
+    width: min(600px, calc(100vw - 32px));
+    max-width: 100%;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    margin: auto;
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+}
+
+.dialog::backdrop { background: rgb(32 51 48 / 48%); }
+.dialogHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.dialogHeader h2 { margin: 0; font-size: var(--font-size-lg); }
+.cropStage { position: relative; width: min(100%, 520px); margin-inline: auto; overflow: hidden; touch-action: none; background: #101615; cursor: grab; }
+.cropStage:active { cursor: grabbing; }
+.cropImage { position: absolute; top: 50%; left: 50%; max-width: none; user-select: none; pointer-events: none; transform-origin: center; }
+.zoom { display: grid; gap: var(--space-2); margin-top: var(--space-4); color: var(--color-text-secondary); }
+.zoom input { width: 100%; }
+.dialogActions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-5); }
+
+@media (max-width: 480px) {
+    .dialog { padding: var(--space-4); }
+}

@@ -43,6 +43,8 @@ export default function Field({ name, schema, value, onChange, catalog }) {
             <ImageField
                 label={label}
                 value={value}
+                aspectRatio={schema.aspectRatio}
+                maxWidth={schema.maxWidth}
                 onChange={onChange}
             />
         );

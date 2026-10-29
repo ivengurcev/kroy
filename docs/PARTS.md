@@ -66,6 +66,8 @@ export default function Services({ title = '' }) {
 | `@kroy field widget=url` | `input` с типом URL |
 | `@kroy field maxLength=30` | ограничение длины |
 | `@kroy field format=ru` | метаданные формата |
+| `@kroy field widget=image aspectRatio=4:3` | кадрирование изображения в заданных пропорциях |
+| `@kroy field widget=image maxWidth=1200` | максимальная ширина обработанного изображения |
 
 Настройки допускают вложенный путь (`socials.link`) и применяются к каждому объекту массива. Они не меняют форму данных, получаемых React-компонентом.
 

@@ -1,15 +1,29 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import sharp from 'sharp';
 import { pool } from '../db/client.mjs';
 import {
-    detectImageFormat,
+    DEFAULT_MEDIA_WIDTH,
     getMediaPath,
+    MAX_MEDIA_PIXELS,
     MAX_MEDIA_SIZE,
+    MAX_MEDIA_WIDTH,
+    MAX_UPLOAD_SIZE,
 } from '../media/storage.mjs';
 import getHostname from './getHostname.mjs';
 
-const MAX_MULTIPART_SIZE = MAX_MEDIA_SIZE + 1024 * 1024;
+const MAX_MULTIPART_SIZE = MAX_UPLOAD_SIZE + 1024 * 1024;
+
+sharp.cache({ memory: 64, files: 0, items: 100 });
+sharp.concurrency(1);
+
+function requestedWidth(value) {
+    const width = Number(value);
+    return Number.isInteger(width) && width > 0
+        ? Math.min(width, MAX_MEDIA_WIDTH)
+        : DEFAULT_MEDIA_WIDTH;
+}
 
 export default async function postMedia(c) {
     const contentType = c.req.header('Content-Type') ?? '';
@@ -36,7 +50,7 @@ export default async function postMedia(c) {
         || typeof file.arrayBuffer !== 'function'
         || !Number.isInteger(file.size)
         || file.size <= 0
-        || file.size > MAX_MEDIA_SIZE
+        || file.size > MAX_UPLOAD_SIZE
     ) {
         return c.json({ error: 'Invalid image' }, 400);
     }
@@ -49,9 +63,39 @@ export default async function postMedia(c) {
         return c.json({ error: 'Invalid image' }, 400);
     }
 
-    const format = detectImageFormat(bytes);
+    let metadata;
+    let output;
 
-    if (!format) return c.json({ error: 'Invalid image' }, 400);
+    try {
+        const image = sharp(bytes, {
+            limitInputPixels: MAX_MEDIA_PIXELS,
+            sequentialRead: true,
+        });
+        metadata = await image.metadata();
+
+        if (
+            !['jpeg', 'png', 'webp'].includes(metadata.format)
+            || !Number.isInteger(metadata.width)
+            || !Number.isInteger(metadata.height)
+            || metadata.width <= 0
+            || metadata.height <= 0
+            || metadata.width * metadata.height > MAX_MEDIA_PIXELS
+        ) {
+            return c.json({ error: 'Invalid image' }, 400);
+        }
+
+        output = await image
+            .rotate()
+            .resize({ width: requestedWidth(form.get('maxWidth')), withoutEnlargement: true })
+            .webp({ quality: 82 })
+            .toBuffer();
+    } catch {
+        return c.json({ error: 'Invalid image' }, 400);
+    }
+
+    if (output.length <= 0 || output.length > MAX_MEDIA_SIZE) {
+        return c.json({ error: 'Invalid image' }, 400);
+    }
 
     const hostname = getHostname(c);
 
@@ -79,19 +123,19 @@ export default async function postMedia(c) {
         }
 
         const id = randomUUID();
-        const filename = `${id}.${format.extension}`;
+        const filename = `${id}.webp`;
         const siteId = sites[0].id;
         filePath = getMediaPath(siteId, filename);
 
         if (!filePath) throw new Error('Invalid generated media path');
 
         await mkdir(dirname(filePath), { recursive: true });
-        await writeFile(filePath, bytes, { flag: 'wx' });
+        await writeFile(filePath, output, { flag: 'wx' });
 
         await client.query(
             `INSERT INTO media (id, site_id, filename, mime_type, size)
              VALUES ($1, $2, $3, $4, $5)`,
-            [id, siteId, filename, format.mimeType, bytes.length]
+            [id, siteId, filename, 'image/webp', output.length]
         );
 
         await client.query('COMMIT');

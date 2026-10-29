@@ -3,6 +3,10 @@ import { fileURLToPath } from 'node:url';
 import isUuid from '../api/isUuid.mjs';
 
 export const MAX_MEDIA_SIZE = 10 * 1024 * 1024;
+export const MAX_UPLOAD_SIZE = 50 * 1024 * 1024;
+export const MAX_MEDIA_PIXELS = 40_000_000;
+export const DEFAULT_MEDIA_WIDTH = 1600;
+export const MAX_MEDIA_WIDTH = 4096;
 export const MEDIA_ROOT = resolve(
     dirname(fileURLToPath(import.meta.url)),
     '..',

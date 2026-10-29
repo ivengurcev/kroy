@@ -165,6 +165,28 @@ function applyKroy(field, settings) {
                 field.format = value;
                 break;
 
+            case 'aspectRatio': {
+                const match = value.match(/^(\d+):(\d+)$/);
+
+                if (!match || Number(match[1]) <= 0 || Number(match[2]) <= 0) {
+                    throw new Error(`Некорректное aspectRatio: ${value}`);
+                }
+
+                field.aspectRatio = value;
+                break;
+            }
+
+            case 'maxWidth': {
+                const width = Number(value);
+
+                if (!Number.isInteger(width) || width <= 0) {
+                    throw new Error(`Некорректный maxWidth: ${value}`);
+                }
+
+                field.maxWidth = width;
+                break;
+            }
+
             default:
                 throw new Error(`Неизвестная настройка @kroy: ${key}`);
         }
