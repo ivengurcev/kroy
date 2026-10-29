@@ -36,10 +36,11 @@ export default async function postMedia(c) {
         return c.json({ error: 'Invalid image' }, 400);
     }
 
+    let form;
     let file;
 
     try {
-        const form = await c.req.raw.formData();
+        form = await c.req.raw.formData();
         file = form.get('file');
     } catch {
         return c.json({ error: 'Invalid image' }, 400);
