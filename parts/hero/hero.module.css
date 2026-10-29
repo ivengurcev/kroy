@@ -172,8 +172,8 @@
     .caption { position: static; order: 4; width: auto; aspect-ratio: auto; margin: 0 var(--site-page-gutter) var(--site-space-8); padding: var(--site-space-4); }
     .captionTitle { font-size: 19px; }
     .description { font-size: calc(var(--site-font-size-base) * .8125); }
-    .socials { position: static; order: 3; width: 100%; padding: var(--site-space-4) var(--site-page-gutter); flex-wrap: wrap; gap: var(--site-space-3); align-items: stretch; justify-content: flex-start; }
-    .social { flex: 1 1 180px; gap: var(--site-space-2); min-width: min(100%, 180px); padding: var(--site-space-1) 0; font-size: 13px; white-space: normal; }
+    .socials { position: static; order: 3; width: 100%; padding: var(--site-space-4) var(--site-page-gutter); flex-wrap: wrap; gap: var(--site-space-3); align-items: stretch; justify-content: center; }
+    .social { flex: 1 1 0; min-width: 0; gap: var(--site-space-2); padding: var(--site-space-1) 0; font-size: 13px; white-space: normal; overflow-wrap: anywhere; justify-content: center; }
     .social + .social { padding-left: 0; border-left: 0; }
     .socialIcon { width: 38px; height: 38px; }
     .socialIcon svg { width: 20px; height: 20px; }
@@ -192,6 +192,7 @@
 }
 
 @container hero (max-width: 350px) {
-    .socials { flex-wrap: wrap; justify-content: flex-start; gap: var(--site-space-1) var(--site-space-3); }
+    .socials { flex-wrap: wrap; justify-content: center; gap: var(--site-space-1) var(--site-space-3); }
+    .social { flex: 1 1 140px; }
     .social + .social { padding-left: 0; border-left: 0; }
 }

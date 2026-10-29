@@ -1,5 +1,6 @@
 .linksContainer {
     container-type: inline-size;
+    container-name: links;
     color: var(--site-color-text);
     background: var(--site-color-section-bg, var(--site-color-surface-soft));
 }
@@ -45,6 +46,11 @@
 .list a:focus-visible {
     outline: 2px solid var(--site-color-accent);
     outline-offset: 4px;
+}
+
+@container links (max-width: 700px) {
+    .list { justify-content: center; }
+    .list a { max-width: 100%; overflow-wrap: anywhere; }
 }
 
 .list svg {
