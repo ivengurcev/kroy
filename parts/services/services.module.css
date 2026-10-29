@@ -94,7 +94,7 @@
 
 .service {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) max-content;
     gap: var(--site-space-6);
     min-width: 0;
     padding: var(--site-space-4) 0;
@@ -144,10 +144,10 @@
     }
 
     .price {
-        max-width: 40%;
+        max-width: none;
         text-align: right;
-        white-space: normal;
-        overflow-wrap: anywhere;
+        white-space: nowrap;
+        overflow-wrap: normal;
     }
 }
 
@@ -160,6 +160,7 @@
     .price {
         max-width: none;
         text-align: left;
-        white-space: normal;
+        white-space: nowrap;
+        overflow-wrap: normal;
     }
 }
