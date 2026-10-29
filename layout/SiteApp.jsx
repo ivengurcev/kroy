@@ -43,6 +43,7 @@ export default function SiteApp({
     theme,
     contacts,
     catalog,
+    reviews,
 }) {
     const [currentPath, setCurrentPath] = useState(path);
     const page = pages[currentPath];
@@ -120,7 +121,7 @@ export default function SiteApp({
     return (
         <SiteRoot tokens={tokens} theme={theme}>
             {page
-                ? <Page key={page.path} content={page.content} parts={parts} contacts={contacts} catalog={catalog} />
+                ? <Page key={page.path} content={page.content} parts={parts} contacts={contacts} catalog={catalog} reviews={reviews} />
                 : notFound}
         </SiteRoot>
     );

@@ -14,6 +14,7 @@ export function defaultValue(schema) {
 
         case 'list':
         case 'catalog-products':
+        case 'review-list':
             return [];
 
         default:

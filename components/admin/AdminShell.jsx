@@ -13,6 +13,7 @@ export default function AdminShell({
     theme,
     contacts,
     catalog,
+    reviews,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -39,6 +40,7 @@ export default function AdminShell({
                     theme={theme}
                     contacts={contacts}
                     catalog={catalog}
+                    reviews={reviews}
                     onAddPart={onAddPart}
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}

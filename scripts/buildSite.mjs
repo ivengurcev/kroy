@@ -7,6 +7,8 @@ import { pool } from '../db/client.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../db/siteContacts.mjs';
 import { getCatalog } from '../db/catalog.mjs';
+import { getPublishedReviews } from '../db/reviews.mjs';
+import { getMediaPath } from '../media/storage.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 import createSiteCssModulesPlugin from './siteCssModulesPlugin.mjs';
@@ -226,6 +228,22 @@ try {
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-catalog.mjs'),
         `export const catalog = ${JSON.stringify(catalog)};\n`
+    );
+    const publishedReviews = await getPublishedReviews(site.id);
+    const reviews = publishedReviews.map(({ mediaFilename, ...review }) => ({
+        ...review,
+        mediaUrl: mediaFilename ? `${ASSET_BASE}/reviews/${mediaFilename}` : null,
+    }));
+    await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
+    for (const review of publishedReviews) {
+        if (!review.mediaFilename) continue;
+        const source = getMediaPath(site.id, review.mediaFilename);
+        if (!source) throw new Error(`Некорректное изображение отзыва: ${review.mediaId}`);
+        await copyFile(source, join(temporaryDirectory, 'assets', 'reviews', review.mediaFilename));
+    }
+    await writeFile(
+        join(ROOT, 'dist', 'kroy', 'site-reviews.mjs'),
+        `export const reviews = ${JSON.stringify(reviews)};\n`
     );
     const ssrCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: false });
     await build({

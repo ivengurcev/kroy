@@ -5,6 +5,7 @@ import { pages } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';
 import { contacts } from '../dist/kroy/site-contacts.mjs';
 import { catalog } from '../dist/kroy/site-catalog.mjs';
+import { reviews } from '../dist/kroy/site-reviews.mjs';
 import '../layout/site.css';
 
 const root = document.getElementById('root');
@@ -22,5 +23,6 @@ hydrateRoot(
         theme={theme}
         contacts={contacts}
         catalog={catalog}
+        reviews={reviews}
     />
 );

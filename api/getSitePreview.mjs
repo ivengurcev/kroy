@@ -4,6 +4,7 @@ import { getThemeTokens } from '../themes/themeRegistry.mjs';
 import getCurrentSite from './siteContext.mjs';
 import { getSiteContacts } from '../db/siteContacts.mjs';
 import { getCatalog } from '../db/catalog.mjs';
+import { getPublishedReviews } from '../db/reviews.mjs';
 
 export default async function getSitePreview(c) {
     try {
@@ -40,6 +41,7 @@ export default async function getSitePreview(c) {
             },
             contacts: await getSiteContacts(site.id),
             catalog: await getCatalog(site.id, { includeHidden: false }),
+            reviews: await getPublishedReviews(site.id),
         });
     } catch (error) {
         console.error('Failed to load site preview', error);

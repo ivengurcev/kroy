@@ -19,12 +19,21 @@ function CatalogCategoryField({ value, onChange, catalog }) {
     return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
 }
 
-export default function Field({ name, schema, value, onChange, catalog }) {
+function ReviewField({ value, onChange, reviews }) {
+    const selected = Array.isArray(value) ? value : [];
+    const available = reviews ?? [];
+    function toggle(id) { onChange(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]); }
+    function move(index, direction) { const target = index + direction; if (target < 0 || target >= selected.length) return; const next = [...selected]; [next[index], next[target]] = [next[target], next[index]]; onChange(next); }
+    return <div className={styles.field}><span>Отзывы</span><div className={styles.catalogOptions}>{available.map((review) => <label key={review.id}><input type="checkbox" checked={selected.includes(review.id)} onChange={() => toggle(review.id)} /> {review.authorName}</label>)}</div><div className={styles.catalogSelected}>{selected.map((id, index) => <div key={id}><span>{available.find((review) => review.id === id)?.authorName || id}</span><Button variant="compact" title="Выше" disabled={!index} onClick={() => move(index, -1)}><Icon name="up" /></Button><Button variant="compact" title="Ниже" disabled={index === selected.length - 1} onClick={() => move(index, 1)}><Icon name="down" /></Button></div>)}</div></div>;
+}
+
+export default function Field({ name, schema, value, onChange, catalog, reviews }) {
     const label = schema.label ?? name;
     const maxLength = schema.validators?.maxLength;
 
     if (schema.type === 'catalog-products') return <CatalogProductField value={value} onChange={onChange} catalog={catalog} />;
     if (schema.type === 'catalog-category') return <CatalogCategoryField value={value} onChange={onChange} catalog={catalog} />;
+    if (schema.type === 'review-list') return <ReviewField value={value} onChange={onChange} reviews={reviews} />;
 
     if (schema.type === 'list') {
         return (

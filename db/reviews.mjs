@@ -41,6 +41,27 @@ export async function getReviews(siteId, status = null) {
     return rows.map(mapReview);
 }
 
+export async function getPublishedReviews(siteId) {
+    const { rows } = await pool.query(
+        `SELECT r.id, r.author_name, r.author_subtitle, r.text, r.media_id, r.review_date::text AS review_date, m.filename
+         FROM reviews r
+         LEFT JOIN media m ON m.id = r.media_id AND m.site_id = r.site_id
+         WHERE r.site_id = $1 AND r.status = 'published'
+         ORDER BY r.review_date DESC, r.created_at DESC, r.id`,
+        [siteId],
+    );
+    return rows.map((row) => ({
+        id: row.id,
+        authorName: row.author_name,
+        authorSubtitle: row.author_subtitle,
+        text: row.text,
+        mediaId: row.media_id,
+        mediaUrl: row.media_id ? `/api/media/${row.media_id}` : null,
+        mediaFilename: row.filename,
+        reviewDate: row.review_date,
+    }));
+}
+
 export async function updateReview(siteId, id, changes) {
     const columns = {
         authorName: 'author_name',

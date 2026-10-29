@@ -55,6 +55,7 @@ export default function EditorWorkspace({
     theme,
     contacts,
     catalog,
+    reviews,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -151,6 +152,7 @@ export default function EditorWorkspace({
                                         props={item.props}
                                         fields={metadata[item.part]?.fields ?? {}}
                                         catalog={catalog}
+                                        reviews={reviews}
                                         onPropChange={(name, value) => onPropChange(item.id, name, value)}
                                     />
                                 </div>
@@ -158,7 +160,7 @@ export default function EditorWorkspace({
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} contacts={contacts} catalog={catalog} />
+                                    <Page content={[item]} parts={parts} contacts={contacts} catalog={catalog} reviews={reviews} />
                                 </SiteRoot>
                             </div>
                         )}

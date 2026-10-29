@@ -1,5 +1,5 @@
 
-function publicProps(part, props, contacts, catalog) {
+function publicProps(part, props, contacts, catalog, reviews) {
     if (part === '@kroy/product-selection' && catalog) {
         return { ...props, products: props.productIds?.map((id) => catalog.products.find((product) => product.id === id)).filter(Boolean) ?? [] };
     }
@@ -7,6 +7,12 @@ function publicProps(part, props, contacts, catalog) {
         return { ...props, products: catalog.products.filter((product) => props.categoryId === '__all__'
             || props.categoryId === '__uncategorized__' && !product.categoryId
             || product.categoryId === props.categoryId) };
+    }
+    if (part === '@kroy/reviews' && reviews) {
+        const selected = props.mode === 'manual'
+            ? (props.reviewIds ?? []).map((id) => reviews.find((review) => review.id === id)).filter(Boolean)
+            : reviews.slice(0, Number(props.limit) > 0 ? Number(props.limit) : undefined);
+        return { ...props, reviews: selected };
     }
     if (!contacts) return props;
 
@@ -21,7 +27,7 @@ function publicProps(part, props, contacts, catalog) {
     return props;
 }
 
-export default function Page({ content, parts, contacts, catalog }) {
+export default function Page({ content, parts, contacts, catalog, reviews }) {
     return content.map(({ id, part, props }, index) => {
         const Component = parts[part];
 
@@ -29,6 +35,6 @@ export default function Page({ content, parts, contacts, catalog }) {
             throw new Error(`Запчасть не найдена: ${part}`);
         }
 
-        return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog)} />;
+        return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews)} />;
     });
 }
