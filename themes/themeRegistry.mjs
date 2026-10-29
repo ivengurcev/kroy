@@ -5,7 +5,13 @@ import { fileURLToPath } from 'node:url';
 const THEMES_DIR = dirname(fileURLToPath(import.meta.url));
 const THEME_FILE_PATTERN = /^[a-z][a-z0-9-]*\.json$/;
 const TOKEN_PATTERN = /^--site-[a-z0-9-]+$/;
-const PALETTE_TOKENS = ['--site-color-bg', '--site-color-text', '--site-color-accent'];
+const PALETTE_TOKENS = [
+    '--site-color-bg',
+    '--site-color-text',
+    '--site-color-accent',
+    '--site-color-accent-secondary',
+    '--site-color-section-bg',
+];
 const SHARED_STATUS_TOKENS = {
     '--site-color-danger': '#b42318',
     '--site-color-info': '#2563eb',
@@ -73,7 +79,13 @@ function sharedDefaults(theme) {
 }
 
 function paletteDefaults(theme, palette) {
-    return Object.fromEntries(PALETTE_TOKENS.map((token) => [token, theme.tokens[palette][token]]));
+    const values = theme.tokens[palette];
+    return Object.fromEntries(PALETTE_TOKENS.map((token) => [
+        token,
+        values[token]
+            ?? (token === '--site-color-accent-secondary' ? values['--site-color-accent'] : undefined)
+            ?? (token === '--site-color-section-bg' ? values['--site-color-surface-soft'] ?? values['--site-color-bg'] : undefined),
+    ]));
 }
 
 function allowedTokens(theme, palette) {

@@ -1,7 +1,7 @@
 .linksContainer {
     container-type: inline-size;
     color: var(--site-color-text);
-    background: var(--site-color-surface-soft);
+    background: var(--site-color-section-bg, var(--site-color-surface-soft));
 }
 
 .links {
@@ -39,7 +39,7 @@
 
 .list a:hover {
     color: var(--site-color-accent-hover);
-    border-color: var(--site-color-accent);
+    border-color: var(--site-color-accent-secondary, var(--site-color-accent));
 }
 
 .list a:focus-visible {

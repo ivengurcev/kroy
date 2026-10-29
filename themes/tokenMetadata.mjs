@@ -7,6 +7,8 @@ const explicitMetadata = {
     '--site-color-text': { label: 'Основной текст', type: 'color' },
     '--site-color-text-secondary': { label: 'Вторичный текст', type: 'color' },
     '--site-color-accent': { label: 'Акцент', type: 'color' },
+    '--site-color-accent-secondary': { label: 'Дополнительный акцент', type: 'color' },
+    '--site-color-section-bg': { label: 'Фон секций', type: 'color' },
     '--site-color-accent-hover': { label: 'Акцент при наведении', type: 'color' },
     '--site-color-border': { label: 'Граница', type: 'color' },
     '--site-color-surface': { label: 'Поверхность', type: 'color' },

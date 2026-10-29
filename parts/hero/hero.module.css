@@ -113,8 +113,8 @@
     width: 51px;
     height: 51px;
     border-radius: 50%;
-    color: var(--site-color-accent);
-    background: var(--site-color-surface-soft);
+    color: var(--site-color-accent-secondary, var(--site-color-accent));
+    background: color-mix(in srgb, var(--site-color-accent-secondary, var(--site-color-accent)) 14%, var(--site-color-bg));
 }
 
 .socialIcon svg { width: 24px; height: 24px; }
@@ -130,7 +130,8 @@
     width: clamp(210px, 17.5cqw, 270px);
     aspect-ratio: 1;
     padding: var(--site-space-4);
-    background: color-mix(in srgb, var(--site-color-surface) 77%, transparent);
+    border-top: 3px solid var(--site-color-accent-secondary, var(--site-color-accent));
+    background: color-mix(in srgb, var(--site-color-section-bg, var(--site-color-surface-soft)) 77%, transparent);
     backdrop-filter: blur(9px);
 }
 

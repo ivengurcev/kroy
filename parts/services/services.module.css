@@ -2,7 +2,7 @@
     container-name: services;
     container-type: inline-size;
     color: var(--site-color-text);
-    background: var(--site-color-bg);
+    background: var(--site-color-section-bg, var(--site-color-bg));
 }
 
 .services {
@@ -70,7 +70,7 @@
 
 .category summary::after {
     flex: 0 0 auto;
-    color: var(--site-color-accent);
+    color: var(--site-color-accent-secondary, var(--site-color-accent));
     font-family: var(--site-font-body);
     font-size: .8em;
     font-weight: 300;

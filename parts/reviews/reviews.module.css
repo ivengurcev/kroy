@@ -1,4 +1,4 @@
-.section { padding: clamp(56px, 9vw, 128px) 0; background: var(--site-color-surface-soft); }
+.section { padding: clamp(56px, 9vw, 128px) 0; background: var(--site-color-section-bg, var(--site-color-surface-soft)); }
 .inner { width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2)); margin: 0 auto; }
 .title { margin: 0 0 clamp(24px, 4vw, 48px); color: var(--site-color-text); font: 400 clamp(calc(var(--site-font-size-base) * 1.6), 3vw, calc(var(--site-font-size-base) * 2.2))/1.12 var(--site-font-heading); }
 .slider { position: relative; }
@@ -19,14 +19,14 @@
 .counter { flex: 0 0 auto; color: var(--site-color-text); font: 500 calc(var(--site-font-size-base) * .85)/1 var(--site-font-body); letter-spacing: .08em; }
 .counterDivider { color: var(--site-color-text-secondary); }
 .progress { display: block; width: clamp(80px, 12vw, 180px); height: 1px; overflow: hidden; background: var(--site-color-border); }
-.progressFill { display: block; width: 100%; height: 100%; background: var(--site-color-accent); transform: scaleX(0); transform-origin: left; }
+.progressFill { display: block; width: 100%; height: 100%; background: var(--site-color-accent-secondary, var(--site-color-accent)); transform: scaleX(0); transform-origin: left; }
 .progressRunning .progressFill { animation: review-progress var(--review-autoplay-duration) linear forwards; }
 .pauseButton { padding: 4px 0; border: 0; color: var(--site-color-text-secondary); font: 500 calc(var(--site-font-size-base) * .75)/1 var(--site-font-body); background: transparent; cursor: pointer; }
 .arrowButton { position: absolute; top: 50%; z-index: 1; display: grid; width: clamp(44px, calc(var(--site-font-size-base) * 2.875), 48px); height: clamp(44px, calc(var(--site-font-size-base) * 2.875), 48px); padding: 0; place-items: center; border: 1px solid var(--site-color-border); border-radius: 50%; color: var(--site-color-text); background: color-mix(in srgb, var(--site-color-surface) 84%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--site-color-text) 10%, transparent); cursor: pointer; transform: translateY(-50%); transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
 .previousButton { left: 0; }
 .nextButton { right: 0; }
 .arrowIcon { width: clamp(22px, calc(var(--site-font-size-base) * 1.4375), 24px); height: clamp(22px, calc(var(--site-font-size-base) * 1.4375), 24px); }
-.arrowButton:hover { color: var(--site-color-accent); border-color: var(--site-color-accent); background: var(--site-color-surface); }
+.arrowButton:hover { color: var(--site-color-accent-secondary, var(--site-color-accent)); border-color: var(--site-color-accent-secondary, var(--site-color-accent)); background: var(--site-color-surface); }
 .arrowButton:active { color: var(--site-color-accent-hover); background: var(--site-color-surface-soft); transform: translateY(-50%) scale(.96); }
 .links { display: flex; gap: var(--site-space-6); align-items: center; justify-content: flex-end; margin-left: auto; }
 .reviewButton { padding: var(--site-space-3) var(--site-space-6); border: 0; border-radius: var(--site-radius-base); color: var(--site-color-bg); font: 600 calc(var(--site-font-size-base) * .9)/1.2 var(--site-font-body); background: var(--site-color-accent); cursor: pointer; transition: background-color 160ms ease; }

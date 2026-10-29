@@ -41,16 +41,16 @@ h2, p { margin: 0; }
 .thumbnailCompact { flex-basis: 96px; width: 96px; height: 56px; }
 .thumbnailPane { display: grid; grid-template-rows: 8px 1fr; min-width: 0; background: var(--thumb-light-bg); }
 .thumbnailDark { background: var(--thumb-dark-bg); }
-.thumbnailTop { background: linear-gradient(90deg, var(--thumb-light-accent) 0 35%, var(--thumb-light-soft) 35% 70%, var(--thumb-light-surface) 70%); }
-.thumbnailDark .thumbnailTop { background: linear-gradient(90deg, var(--thumb-dark-accent) 0 35%, var(--thumb-dark-soft) 35% 70%, var(--thumb-dark-surface) 70%); }
+.thumbnailTop { background: linear-gradient(90deg, var(--thumb-light-accent) 0 30%, var(--thumb-light-secondary) 30% 60%, var(--thumb-light-soft) 60%); }
+.thumbnailDark .thumbnailTop { background: linear-gradient(90deg, var(--thumb-dark-accent) 0 30%, var(--thumb-dark-secondary) 30% 60%, var(--thumb-dark-soft) 60%); }
 .thumbnailBody { display: grid; gap: 4px; align-content: center; padding: var(--thumb-space); background: var(--thumb-light-surface); }
 .thumbnailDark .thumbnailBody { background: var(--thumb-dark-surface); }
 .thumbnailTitle { color: var(--thumb-light-text); font-size: 14px; font-weight: 700; }
 .thumbnailDark .thumbnailTitle { color: var(--thumb-dark-text); }
 .thumbnailLine, .thumbnailLineShort { display: block; height: 3px; border-radius: 2px; background: var(--thumb-light-accent); }
 .thumbnailDark .thumbnailLine { background: var(--thumb-dark-accent); }
-.thumbnailLineShort { width: 62%; background: var(--thumb-light-soft); }
-.thumbnailDark .thumbnailLineShort { background: var(--thumb-dark-soft); }
+.thumbnailLineShort { width: 62%; background: var(--thumb-light-secondary); }
+.thumbnailDark .thumbnailLineShort { background: var(--thumb-dark-secondary); }
 
 .modeSwitch {
     display: inline-flex;
