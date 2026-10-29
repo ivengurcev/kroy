@@ -1,0 +1,43 @@
+{
+  "id": "forest-blue",
+  "name": "Лесная синь",
+  "description": "Природная зелёно-синяя палитра с глубокими оттенками леса.",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#f3faf6",
+      "--site-color-text": "#12251e",
+      "--site-color-text-secondary": "#496258",
+      "--site-color-accent": "#167c62",
+      "--site-color-accent-hover": "#0d604b",
+      "--site-color-border": "#12251e2e",
+      "--site-color-surface": "#ffffff",
+      "--site-color-surface-soft": "#dcefe6",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#0d1c19",
+      "--site-color-text": "#ecfff6",
+      "--site-color-text-secondary": "#b4d0c3",
+      "--site-color-accent": "#61c6b0",
+      "--site-color-accent-hover": "#8cddca",
+      "--site-color-border": "#ecfff638",
+      "--site-color-surface": "#142a24",
+      "--site-color-surface-soft": "#1d4035",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

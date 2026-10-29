@@ -1,0 +1,43 @@
+{
+  "id": "misty",
+  "name": "Туманная",
+  "description": "Спокойная светлая палитра из туманных серых, льняных и слоновой кости оттенков.",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#f7f8f8",
+      "--site-color-text": "#252a2d",
+      "--site-color-text-secondary": "#626b70",
+      "--site-color-accent": "#65747b",
+      "--site-color-accent-hover": "#4d5b61",
+      "--site-color-border": "#252a2d2e",
+      "--site-color-surface": "#ffffff",
+      "--site-color-surface-soft": "#ecefed",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#1d2224",
+      "--site-color-text": "#f2f5f4",
+      "--site-color-text-secondary": "#c1c9c9",
+      "--site-color-accent": "#b9d0ce",
+      "--site-color-accent-hover": "#d4e3e1",
+      "--site-color-border": "#f2f5f438",
+      "--site-color-surface": "#282f31",
+      "--site-color-surface-soft": "#354043",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

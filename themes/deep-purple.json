@@ -1,0 +1,43 @@
+{
+  "id": "deep-purple",
+  "name": "Глубокий пурпур",
+  "description": "Драматичная пурпурная палитра с мягким светлым и насыщенным тёмным режимом.",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#faf7ff",
+      "--site-color-text": "#261334",
+      "--site-color-text-secondary": "#644b70",
+      "--site-color-accent": "#6d28d9",
+      "--site-color-accent-hover": "#5b21b6",
+      "--site-color-border": "#2613342e",
+      "--site-color-surface": "#ffffff",
+      "--site-color-surface-soft": "#eee4ff",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#160d24",
+      "--site-color-text": "#f8efff",
+      "--site-color-text-secondary": "#d2bfe3",
+      "--site-color-accent": "#c084fc",
+      "--site-color-accent-hover": "#d8b4fe",
+      "--site-color-border": "#f8efff38",
+      "--site-color-surface": "#211432",
+      "--site-color-surface-soft": "#302047",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Georgia, \"Times New Roman\", serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}

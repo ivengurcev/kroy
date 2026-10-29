@@ -1,0 +1,43 @@
+{
+  "id": "neon",
+  "name": "Неон",
+  "description": "Энергичная сине-бирюзовая палитра с ярким акцентом.",
+  "tokens": {
+    "light": {
+      "--site-color-bg": "#f2fbff",
+      "--site-color-text": "#071c2b",
+      "--site-color-text-secondary": "#3d5b6b",
+      "--site-color-accent": "#0086c9",
+      "--site-color-accent-hover": "#006da8",
+      "--site-color-border": "#071c2b2e",
+      "--site-color-surface": "#ffffff",
+      "--site-color-surface-soft": "#d9f3ff",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Arial, Helvetica, sans-serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    },
+    "dark": {
+      "--site-color-bg": "#07131f",
+      "--site-color-text": "#effbff",
+      "--site-color-text-secondary": "#a9d3e4",
+      "--site-color-accent": "#21d4fd",
+      "--site-color-accent-hover": "#70e5ff",
+      "--site-color-border": "#effbff38",
+      "--site-color-surface": "#0e2333",
+      "--site-color-surface-soft": "#153b52",
+      "--site-font-body": "Arial, Helvetica, sans-serif",
+      "--site-font-heading": "Arial, Helvetica, sans-serif",
+      "--site-font-size-base": "16px",
+      "--site-line-height": "1.5",
+      "--site-container-max": "1760px",
+      "--site-page-gutter": "clamp(20px, 5vw, 90px)",
+      "--site-radius-base": "16px",
+      "--site-space-base": "4px"
+    }
+  }
+}
