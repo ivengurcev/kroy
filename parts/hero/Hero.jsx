@@ -65,7 +65,7 @@ function SocialLink({ name, link, type }) {
  * @kroy title widget=textarea
  * @kroy captionTitle widget=input
  * @kroy description widget=textarea
- * @kroy photo widget=image
+ * @kroy photo widget=image aspectRatio=3:4 maxWidth=1600
  */
 export default function Hero({
     eyebrow = '',
