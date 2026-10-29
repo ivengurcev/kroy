@@ -129,7 +129,7 @@
     white-space: nowrap;
 }
 
-@container services (max-width: 760px) {
+@container services (max-width: 800px) {
     .services {
         grid-template-columns: minmax(0, 1fr);
         gap: var(--site-space-12);
@@ -142,6 +142,13 @@
     .category summary {
         font-size: clamp(26px, 6.5cqw, 36px);
     }
+
+    .price {
+        max-width: 40%;
+        text-align: right;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 }
 
 @container services (max-width: 430px) {
@@ -151,6 +158,8 @@
     }
 
     .price {
+        max-width: none;
+        text-align: left;
         white-space: normal;
     }
 }

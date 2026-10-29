@@ -95,7 +95,7 @@ export default function Hero({
         <section className={styles.heroContainer}>
             <div className={styles.hero}>
                 <div
-                    className={styles.photo}
+                    className={`${styles.photo} ${photo ? '' : styles.photoEmpty}`}
                     style={{ backgroundImage: photo ? `url(${JSON.stringify(photo)})` : 'none' }}
                     aria-hidden="true"
                 />
