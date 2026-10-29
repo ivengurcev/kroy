@@ -1,5 +1,5 @@
 import { isIP } from 'node:net';
-import { createReview, getReviews, moderateReview } from '../db/reviews.mjs';
+import { createReview, deleteReview, getReviews, updateReview } from '../db/reviews.mjs';
 import getCurrentSite from './siteContext.mjs';
 import isUuid from './isUuid.mjs';
 
@@ -8,8 +8,8 @@ const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const MAX_RATE_LIMIT_KEYS = 10000;
 const PUBLIC_FIELDS = new Set(['authorName', 'authorSubtitle', 'text', 'mediaId', 'website']);
+const ADMIN_FIELDS = new Set(['authorName', 'authorSubtitle', 'text', 'mediaId', 'reviewDate', 'status']);
 const REVIEW_STATUSES = new Set(['pending', 'published', 'rejected']);
-const MODERATION_STATUSES = new Set(['published', 'rejected']);
 const submissions = new Map();
 
 function isPlainObject(value) {
@@ -80,6 +80,46 @@ function normalizePublicReview(body) {
     return { authorName, authorSubtitle, text, mediaId };
 }
 
+function normalizeReviewDate(value) {
+    if (typeof value !== 'string' || !/^(?!0000)\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    const date = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value ? value : null;
+}
+
+function normalizeAdminReview(body, { partial = false } = {}) {
+    if (!isPlainObject(body) || Object.keys(body).length === 0
+        || Object.keys(body).some((key) => !ADMIN_FIELDS.has(key))) return null;
+    if (!partial && (!Object.hasOwn(body, 'authorName') || !Object.hasOwn(body, 'text'))) return null;
+
+    const review = {};
+    if (Object.hasOwn(body, 'authorName')) {
+        review.authorName = normalizeRequiredText(body.authorName, 200);
+        if (!review.authorName) return null;
+    }
+    if (Object.hasOwn(body, 'authorSubtitle')) {
+        review.authorSubtitle = normalizeOptionalText(body.authorSubtitle, 300);
+        if (review.authorSubtitle === undefined) return null;
+    }
+    if (Object.hasOwn(body, 'text')) {
+        review.text = normalizeRequiredText(body.text, 5000);
+        if (!review.text) return null;
+    }
+    if (Object.hasOwn(body, 'mediaId')) {
+        const rawMediaId = typeof body.mediaId === 'string' ? body.mediaId.trim() : body.mediaId;
+        review.mediaId = rawMediaId === null || rawMediaId === '' ? null : rawMediaId;
+        if (review.mediaId !== null && (typeof review.mediaId !== 'string' || !isUuid(review.mediaId))) return null;
+    }
+    if (Object.hasOwn(body, 'reviewDate')) {
+        review.reviewDate = normalizeReviewDate(body.reviewDate);
+        if (!review.reviewDate) return null;
+    }
+    if (Object.hasOwn(body, 'status')) {
+        if (!REVIEW_STATUSES.has(body.status)) return null;
+        review.status = body.status;
+    }
+    return review;
+}
+
 function clientIp(c) {
     const realIp = c.req.header('X-Real-IP')?.trim();
     if (isIP(realIp)) return realIp;
@@ -142,6 +182,27 @@ export async function getSiteReviews(c) {
     }
 }
 
+export async function postSiteReview(c) {
+    let body;
+    try {
+        body = await readJson(c);
+    } catch (error) {
+        return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
+    }
+    const review = normalizeAdminReview(body);
+    if (!review) return c.json({ error: 'Invalid review' }, 400);
+
+    try {
+        const site = await getCurrentSite(c);
+        if (!site) return c.json({ error: 'Site not found' }, 404);
+        const created = await createReview(site.id, review);
+        return created ? c.json(created, 201) : c.json({ error: 'Invalid media' }, 400);
+    } catch (error) {
+        console.error('Failed to create site review', error);
+        return c.json({ error: 'Internal server error' }, 500);
+    }
+}
+
 export async function patchSiteReview(c) {
     const id = c.req.param('id');
     if (!isUuid(id)) return c.json({ error: 'Invalid UUID' }, 400);
@@ -152,17 +213,33 @@ export async function patchSiteReview(c) {
     } catch (error) {
         return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
     }
-    if (!isPlainObject(body) || Object.keys(body).length !== 1 || !MODERATION_STATUSES.has(body.status)) {
-        return c.json({ error: 'Invalid status' }, 400);
-    }
+    const changes = normalizeAdminReview(body, { partial: true });
+    if (!changes) return c.json({ error: 'Invalid review' }, 400);
 
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        const review = await moderateReview(site.id, id, body.status);
+        const review = await updateReview(site.id, id, changes);
+        if (review === undefined) return c.json({ error: 'Invalid media' }, 400);
         return review ? c.json(review) : c.json({ error: 'Review not found' }, 404);
     } catch (error) {
-        console.error('Failed to moderate review', error);
+        console.error('Failed to update review', error);
+        return c.json({ error: 'Internal server error' }, 500);
+    }
+}
+
+export async function deleteSiteReview(c) {
+    const id = c.req.param('id');
+    if (!isUuid(id)) return c.json({ error: 'Invalid UUID' }, 400);
+
+    try {
+        const site = await getCurrentSite(c);
+        if (!site) return c.json({ error: 'Site not found' }, 404);
+        return await deleteReview(site.id, id)
+            ? c.body(null, 204)
+            : c.json({ error: 'Review not found' }, 404);
+    } catch (error) {
+        console.error('Failed to delete review', error);
         return c.json({ error: 'Internal server error' }, 500);
     }
 }

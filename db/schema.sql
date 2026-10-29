@@ -131,6 +131,7 @@ CREATE TABLE public.reviews (
     text text NOT NULL,
     media_id uuid,
     status text DEFAULT 'pending'::text NOT NULL,
+    review_date date DEFAULT CURRENT_DATE NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     moderated_at timestamp with time zone,
@@ -490,4 +491,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610270001'),
     ('202610270002'),
     ('202610280001'),
-    ('202610290001');
+    ('202610290001'),
+    ('202610290002');
