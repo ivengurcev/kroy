@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styles from './services.module.css';
+import Section from '../../layout/Section.jsx';
 
 function Category({ category }) {
     const [isOpen, setIsOpen] = useState(true);
@@ -53,7 +54,7 @@ export default function Services({
     const visibleCategories = Array.isArray(categories) ? categories : [];
 
     return (
-        <section className={styles.servicesContainer}>
+        <Section className={styles.servicesContainer}>
             <div className={styles.services}>
                 <header className={styles.heading}>
                     {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
@@ -66,6 +67,6 @@ export default function Services({
                     ))}
                 </div>
             </div>
-        </section>
+        </Section>
     );
 }

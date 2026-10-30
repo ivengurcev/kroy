@@ -1,4 +1,5 @@
 import Map from '../../components/site/Map.jsx';
+import Section from '../../layout/Section.jsx';
 import styles from './contacts.module.css';
 
 function telephoneHref(phone) {
@@ -35,7 +36,7 @@ export default function Contacts({
         && Number.isFinite(Number(longitude));
 
     return (
-        <section className={styles.contactsContainer}>
+        <Section className={styles.contactsContainer}>
             <div className={styles.contacts}>
                 <div className={styles.content}>
                     {title && <h2 className={styles.title}>{title}</h2>}
@@ -53,6 +54,6 @@ export default function Contacts({
                         markerText={markerText}
                     />}
             </div>
-        </section>
+        </Section>
     );
 }

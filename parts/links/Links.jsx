@@ -1,4 +1,5 @@
 import styles from './links.module.css';
+import Section from '../../layout/Section.jsx';
 import { socialType } from '../../socialLinks.mjs';
 
 function LinkIcon({ type }) {
@@ -30,13 +31,13 @@ export default function Links({ title = '', socials = [] }) {
         : [];
 
     return (
-        <section className={styles.linksContainer}>
+        <Section className={styles.linksContainer}>
             <div className={styles.links}>
                 {title && <h2 className={styles.title}>{title}</h2>}
                 {visibleLinks.length > 0 && <nav aria-label={title || 'Ссылки'} className={styles.list}>
                     {visibleLinks.map((social, index) => <a href={social.link.trim()} key={`${social.name}-${social.link}-${index}`} target="_blank" rel="noopener noreferrer"><span>{social.name.trim()}</span><LinkIcon type={socialType(social)} /></a>)}
                 </nav>}
             </div>
-        </section>
+        </Section>
     );
 }

@@ -1,4 +1,5 @@
 import ProductCards from '../../components/site/ProductCards.jsx';
+import Section from '../../layout/Section.jsx';
 import styles from './product-selection.module.css';
 
 /**
@@ -15,5 +16,5 @@ import styles from './product-selection.module.css';
 export default function ProductSelection({ title = '', productIds = [], products = [] }) {
     const selected = productIds.map((id) => products.find((product) => product.id === id)).filter(Boolean);
     if (!selected.length) return null;
-    return <section className={styles.section}><div className={styles.inner}>{title && <h2>{title}</h2>}<ProductCards products={selected} /></div></section>;
+    return <Section className={styles.section}><div className={styles.inner}>{title && <h2>{title}</h2>}<ProductCards products={selected} /></div></Section>;
 }

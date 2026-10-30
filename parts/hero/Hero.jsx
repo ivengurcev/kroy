@@ -1,5 +1,6 @@
 import styles from './hero.module.css';
 import { socialType } from '../../socialLinks.mjs';
+import Section from '../../layout/Section.jsx';
 
 function TelegramIcon() {
     return (
@@ -92,7 +93,7 @@ export default function Hero({
     const hasCaption = captionTitle || description;
 
     return (
-        <section className={styles.heroContainer}>
+        <Section className={styles.heroContainer} fullBleed>
             <div className={styles.hero}>
                 <div
                     className={`${styles.photo} ${photo ? '' : styles.photoEmpty}`}
@@ -121,6 +122,6 @@ export default function Hero({
                     )}
                 </div>
             </div>
-        </section>
+        </Section>
     );
 }

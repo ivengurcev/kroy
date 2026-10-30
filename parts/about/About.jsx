@@ -1,4 +1,5 @@
 import styles from './about.module.css';
+import Section from '../../layout/Section.jsx';
 
 /**
  * @kroy-title О себе
@@ -17,7 +18,7 @@ export default function About({ title = '', text = '' }) {
         : [];
 
     return (
-        <section className={styles.aboutContainer}>
+        <Section className={styles.aboutContainer}>
             <div className={styles.about}>
                 {title && <h2 className={styles.title}>{title}</h2>}
                 {paragraphs.length > 0 && (
@@ -26,6 +27,6 @@ export default function About({ title = '', text = '' }) {
                     </div>
                 )}
             </div>
-        </section>
+        </Section>
     );
 }
