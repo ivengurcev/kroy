@@ -7,14 +7,17 @@ function Category({ category }) {
     const items = Array.isArray(category?.items) ? category.items : [];
 
     return (
-        <details
-            className={styles.category}
-            open={isOpen}
-            onToggle={(event) => setIsOpen(event.currentTarget.open)}
-        >
-            <summary>{category?.title}</summary>
+        <div className={styles.category}>
+            <button
+                className={styles.categoryToggle}
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((value) => !value)}
+            >
+                {category?.title}
+            </button>
 
-            <div className={styles.categoryContent}>
+            <div className={`${styles.categoryContent} ${isOpen ? styles.categoryContentOpen : ''}`}>
                 <ul className={styles.items}>
                     {items.map((item, index) => (
                         <li className={styles.service} key={`${item?.name ?? ''}-${index}`}>
@@ -27,7 +30,7 @@ function Category({ category }) {
                     ))}
                 </ul>
             </div>
-        </details>
+        </div>
     );
 }
 
