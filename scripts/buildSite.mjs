@@ -1,7 +1,7 @@
 import { dirname, join, resolve } from 'node:path';
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { build } from 'esbuild';
+import { build, transform } from 'esbuild';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
@@ -11,7 +11,6 @@ import { getPublishedReviews } from '../db/reviews.mjs';
 import { getMediaPath } from '../media/storage.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
-import createSiteCssModulesPlugin from './siteCssModulesPlugin.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
@@ -44,33 +43,44 @@ async function collectFiles(directory, extension, files = []) {
     return files;
 }
 
-async function validateStaticStyles(directory, assetBase, ssrMappings, clientMappings) {
+function getCssModulePaths(metafile) {
+    return Object.keys(metafile.inputs)
+        .filter((path) => path.endsWith('.module.css'))
+        .sort();
+}
+
+function getCssSelectors(css) {
+    const selectors = css
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/url\([^)]*\)/g, '')
+        .replace(/"(?:\\.|[^"\\])*"/g, '')
+        .replace(/'(?:\\.|[^'\\])*'/g, '');
+    return new Set([...selectors.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((match) => match[1]));
+}
+
+async function validateStaticStyles(directory, assetBase, ssrCss, ssrMetafile, clientMetafile) {
     const cssPath = join(directory, 'assets', 'app.css');
     const css = await readFile(cssPath, 'utf8');
     if (!css.trim()) throw new Error('Клиентская таблица стилей app.css пуста.');
-
-    const ssrModules = Object.fromEntries(ssrMappings);
-    const clientModules = Object.fromEntries(clientMappings);
-    const modulePaths = new Set([...Object.keys(ssrModules), ...Object.keys(clientModules)]);
-    for (const modulePath of modulePaths) {
-        const ssrModule = ssrModules[modulePath];
-        const clientModule = clientModules[modulePath];
-        if (!ssrModule || !clientModule) {
-            throw new Error(`CSS Module ${modulePath} загружен только в одной сборке.`);
-        }
-        if (JSON.stringify(ssrModule) !== JSON.stringify(clientModule)) {
-            throw new Error(`CSS Module ${modulePath} имеет разные имена классов в SSR и клиенте.`);
-        }
+    if (css.includes(':global(')) {
+        throw new Error('В app.css остались необработанные селекторы :global().');
     }
 
-    const moduleClasses = new Set(
-        Object.values(ssrModules).flatMap((mapping) => Object.values(mapping))
+    const ssrModules = getCssModulePaths(ssrMetafile);
+    const clientModules = getCssModulePaths(clientMetafile);
+    if (JSON.stringify(ssrModules) !== JSON.stringify(clientModules)) {
+        throw new Error('SSR и клиент загрузили разные наборы CSS Modules.');
+    }
+
+    const selectors = getCssSelectors(css);
+    const missingSsrSelectors = [...getCssSelectors(ssrCss)].filter(
+        (className) => !selectors.has(className)
     );
-    const selectors = new Set([...css.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((match) => match[1]));
-    const missingCss = [...moduleClasses].filter((className) => !selectors.has(className));
-    if (missingCss.length) {
-        throw new Error(`В app.css отсутствуют CSS Module классы: ${missingCss.join(', ')}`);
+    if (missingSsrSelectors.length) {
+        throw new Error(`В app.css отсутствуют SSR-селекторы: ${missingSsrSelectors.join(', ')}`);
     }
+
+    const clientJs = await readFile(join(directory, 'assets', 'app.js'), 'utf8');
     const htmlFiles = await collectFiles(directory, '.html');
     if (!htmlFiles.length) throw new Error('SSR не создал HTML-страницы сайта.');
 
@@ -82,12 +92,21 @@ async function validateStaticStyles(directory, assetBase, ssrMappings, clientMap
         const classes = [...html.matchAll(/class="([^"]*)"/g)]
             .flatMap((match) => match[1].split(/\s+/))
             .filter(Boolean);
-        const missing = classes.filter(
-            (className) => className.startsWith('kroy_') && !moduleClasses.has(className)
-        );
-        if (missing.length) {
-            throw new Error(`В ${htmlPath} используются неизвестные CSS Module классы: ${[...new Set(missing)].join(', ')}`);
+        const missingCss = classes.filter((className) => !selectors.has(className));
+        if (missingCss.length) {
+            throw new Error(`В app.css отсутствуют классы из ${htmlPath}: ${[...new Set(missingCss)].join(', ')}`);
         }
+        const missingClient = classes.filter((className) => !clientJs.includes(className));
+        if (missingClient.length) {
+            throw new Error(`В app.js отсутствуют классы из ${htmlPath}: ${[...new Set(missingClient)].join(', ')}`);
+        }
+    }
+
+    const rendererFiles = (await readdir(directory)).filter(
+        (name) => name.startsWith('.site-renderer')
+    );
+    if (rendererFiles.length) {
+        throw new Error(`В сборке остались временные SSR-файлы: ${rendererFiles.join(', ')}`);
     }
 }
 const siteSlug = process.argv[2];
@@ -238,24 +257,32 @@ try {
         join(ROOT, 'dist', 'kroy', 'site-reviews.mjs'),
         `export const reviews = ${JSON.stringify(reviews)};\n`
     );
-    const ssrCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: false });
-    await build({
+    const ssrBuild = await build({
         entryPoints: [join(ROOT, 'scripts', 'renderSite.jsx')],
         outfile: rendererPath,
         bundle: true,
-        minify: true,
+        minifySyntax: true,
+        minifyWhitespace: true,
+        minifyIdentifiers: false,
         packages: 'external',
         platform: 'node',
         format: 'esm',
         jsx: 'automatic',
         loader: {
-            '.css': 'empty',
+            '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
-        plugins: [ssrCssModules.plugin],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
+        metafile: true,
     });
+    const ssrCssOutputs = Object.keys(ssrBuild.metafile.outputs).filter(
+        (path) => path.endsWith('.css')
+    );
+    if (ssrCssOutputs.length !== 1) {
+        throw new Error(`SSR создал неожиданное количество CSS-файлов: ${ssrCssOutputs.length}`);
+    }
+    const ssrCss = await readFile(resolve(ROOT, ssrCssOutputs[0]), 'utf8');
 
     const { default: renderSite } = await import(
         `${pathToFileURL(rendererPath).href}?${Date.now()}`
@@ -271,28 +298,44 @@ try {
         await copyFile(source, join(temporaryDirectory, 'assets', 'reviews', review.mediaFilename));
     }
     await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
-    const clientCssModules = createSiteCssModulesPlugin({ root: ROOT, emitCss: true });
-    await build({
+    const appJsPath = join(temporaryDirectory, 'assets', 'app.js');
+    const clientBuild = await build({
         entryPoints: [CLIENT_ENTRY_PATH],
-        minify: true,
-        outfile: join(temporaryDirectory, 'assets', 'app.js'),
+        minifySyntax: true,
+        minifyWhitespace: true,
+        minifyIdentifiers: false,
+        outfile: appJsPath,
         bundle: true,
         platform: 'browser',
         format: 'esm',
         jsx: 'automatic',
         loader: {
+            '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
-        plugins: [clientCssModules.plugin],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
         define: { 'process.env.NODE_ENV': '"production"' },
+        metafile: true,
     });
+    const appJs = await readFile(appJsPath, 'utf8');
+    const transformed = await transform(appJs, {
+        loader: 'js',
+        format: 'esm',
+        minifySyntax: true,
+        minifyWhitespace: true,
+        minifyIdentifiers: true,
+    });
+    if (transformed.warnings.length) {
+        throw new Error(`Минификация app.js завершилась с предупреждениями: ${transformed.warnings.map(({ text }) => text).join('; ')}`);
+    }
+    await writeFile(appJsPath, transformed.code);
     await validateStaticStyles(
         temporaryDirectory,
         ASSET_BASE,
-        ssrCssModules.mappings,
-        clientCssModules.mappings
+        ssrCss,
+        ssrBuild.metafile,
+        clientBuild.metafile
     );
     await generateSiteRouting(
         site.slug,
