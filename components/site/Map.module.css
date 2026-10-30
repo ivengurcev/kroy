@@ -8,6 +8,24 @@
     background: var(--site-color-surface-soft);
 }
 
+.map :global(.leaflet-control-attribution a),
+.map :global(.leaflet-popup-content a) {
+    color: var(--site-color-accent);
+    text-decoration-color: currentColor;
+    text-underline-offset: .15em;
+}
+
+.map :global(.leaflet-control-attribution a:hover),
+.map :global(.leaflet-popup-content a:hover) {
+    color: var(--site-color-accent-hover);
+}
+
+.map :global(.leaflet-control-attribution a:focus-visible),
+.map :global(.leaflet-popup-content a:focus-visible) {
+    outline: 2px solid var(--site-color-accent);
+    outline-offset: 2px;
+}
+
 .marker {
     width: 24px;
     height: 24px;
