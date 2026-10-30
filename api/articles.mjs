@@ -10,6 +10,26 @@ function isPlainObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isEditorNode(value, { root = false } = {}) {
+    if (!isPlainObject(value) || typeof value.type !== 'string' || (root && value.type !== 'root')) return false;
+    if (value.type === 'text') return typeof value.text === 'string' && !Object.hasOwn(value, 'children');
+    if (!Object.hasOwn(value, 'children')) return value.type !== 'root';
+    return Array.isArray(value.children) && value.children.every((child) => isEditorNode(child));
+}
+
+export function isEditorState(value) {
+    return isPlainObject(value)
+        && isPlainObject(value.root)
+        && Array.isArray(value.root.children)
+        && isEditorNode(value.root, { root: true });
+}
+
+function hasEditorText(value) {
+    if (!isPlainObject(value)) return false;
+    if (value.type === 'text' && typeof value.text === 'string' && value.text.trim()) return true;
+    return Array.isArray(value.children) && value.children.some(hasEditorText);
+}
+
 function normalizeText(value, maxLength, { required = false } = {}) {
     if (typeof value !== 'string') return null;
     const text = value.trim();
@@ -24,7 +44,7 @@ function normalizeSlug(value) {
 }
 
 function normalizeContent(value) {
-    return value === null || isPlainObject(value) ? value : undefined;
+    return value === null || isEditorState(value) ? value : undefined;
 }
 
 export function normalizeArticleInput(body, { partial = false } = {}) {
@@ -69,7 +89,8 @@ export function normalizeArticleInput(body, { partial = false } = {}) {
 }
 
 export function isPublishableArticle(article) {
-    return article.status !== 'published' || article.content !== null;
+    return article.status !== 'published'
+        || isEditorState(article.content) && hasEditorText(article.content.root);
 }
 
 async function readBody(c) {
@@ -153,7 +174,12 @@ export async function patchSiteArticle(c) {
         }
 
         const updated = await updateArticle(site.id, id, changes);
-        return updated ? c.json(updated) : c.json({ error: 'Article not found' }, 404);
+        if (updated) return c.json(updated);
+        const latest = await getArticle(site.id, id);
+        if (latest && !isPublishableArticle({ ...latest, ...changes })) {
+            return c.json({ error: 'Published article requires content' }, 400);
+        }
+        return c.json({ error: 'Article not found' }, 404);
     } catch (error) {
         if (error.code === '23505') return c.json({ error: 'Article slug already exists' }, 409);
         console.error('Failed to update article', error);
