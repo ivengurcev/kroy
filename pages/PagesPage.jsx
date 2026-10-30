@@ -6,6 +6,8 @@ import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import compactStyles from '../components/ui/CompactForm.module.css';
+import { slugifyPageTitle } from '../api/pageFields.mjs';
+import { PAGE_DATA_SOURCES } from '../pageDataSources.mjs';
 
 export default function PagesPage() {
     const [pages, setPages] = useState([]);
@@ -13,10 +15,14 @@ export default function PagesPage() {
     const [showForm, setShowForm] = useState(false);
     const [title, setTitle] = useState('');
     const [path, setPath] = useState('');
+    const [type, setType] = useState('standard');
+    const [dataSource, setDataSource] = useState('articles');
+    const [pathEdited, setPathEdited] = useState(false);
     const [createStatus, setCreateStatus] = useState('idle');
     const [deletingPageId, setDeletingPageId] = useState(null);
     const [deleteErrorId, setDeleteErrorId] = useState(null);
     const titleInputRef = useRef(null);
+    const generatedPath = slugifyPageTitle(title) ? `/${slugifyPageTitle(title)}` : '';
 
     useEffect(() => {
         const controller = new AbortController();
@@ -56,7 +62,7 @@ export default function PagesPage() {
             const response = await fetch('/api/pages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, path }),
+                body: JSON.stringify({ title, path: pathEdited ? path : generatedPath, type, dataSource: type === 'list' ? dataSource : null }),
             });
 
             if (!response.ok) {
@@ -74,9 +80,33 @@ export default function PagesPage() {
     function updatePage(updatedPage) {
         setPages((previous) => previous.map((item) =>
             item.id === updatedPage.id
-                ? { ...item, title: updatedPage.title, path: updatedPage.path }
+                ? { ...item, ...updatedPage }
+                : item.id === updatedPage.detailTemplateId
+                    ? { ...item, path: updatedPage.detailTemplatePath }
                 : item
         ));
+    }
+
+    async function createDetailTemplate(page) {
+        if (page.detailTemplateId) {
+            if (page.detailTemplateDeletedAt) {
+                const response = await fetch(`/api/pages/${page.detailTemplateId}/restore`, { method: 'POST' });
+                if (!response.ok) { setDeleteErrorId(page.id); return; }
+            }
+            window.location.assign(`/admin/pages/${page.detailTemplateId}`);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/pages/${page.id}/detail-template`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: `${page.title} — Детальная страница`, routeParam: 'slug' }),
+            });
+            if (!response.ok) throw new Error();
+            const template = await response.json();
+            window.location.assign(`/admin/pages/${template.id}`);
+        } catch {
+            setDeleteErrorId(page.id);
+        }
     }
 
     async function deletePage(page) {
@@ -135,8 +165,21 @@ export default function PagesPage() {
                             <input ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} />
                         </label>
                         <label className={`${compactStyles.field} ${compactStyles.compact}`}>
+                            <span>Тип страницы</span>
+                            <select value={type} onChange={(event) => setType(event.target.value)}>
+                                <option value="standard">Обычная</option>
+                                <option value="list">Динамический список</option>
+                            </select>
+                        </label>
+                        {type === 'list' && <label className={`${compactStyles.field} ${compactStyles.compact}`}>
+                            <span>Источник данных</span>
+                            <select value={dataSource} onChange={(event) => setDataSource(event.target.value)}>
+                                {PAGE_DATA_SOURCES.map((source) => <option key={source.id} value={source.id}>{source.title}</option>)}
+                            </select>
+                        </label>}
+                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                             <span>Путь</span>
-                            <input value={path} onChange={(event) => setPath(event.target.value)} />
+                            <input value={pathEdited ? path : generatedPath} onChange={(event) => { setPath(event.target.value); setPathEdited(true); }} />
                         </label>
                         <div className={styles.formActions}>
                             <Button type="submit" variant="primary" title="Создать страницу" disabled={createStatus === 'submitting'}>
@@ -156,6 +199,7 @@ export default function PagesPage() {
                     actionErrorId={deleteErrorId}
                     onUpdate={updatePage}
                     onDelete={deletePage}
+                    onCreateDetailTemplate={createDetailTemplate}
                 />
             </div>
         </AdminPageShell>

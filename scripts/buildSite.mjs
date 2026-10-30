@@ -2,7 +2,7 @@ import { dirname, join, resolve } from 'node:path';
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, transform } from 'esbuild';
-import { isValidPagePath } from '../api/pageFields.mjs';
+import { isValidPagePath, isValidPageRoutePattern } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
 import { getThemeTokens } from '../themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../db/siteContacts.mjs';
@@ -158,7 +158,7 @@ try {
         }
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content
+            `SELECT id, site_id, path, title, content, page_type, route_param
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NULL
@@ -176,7 +176,7 @@ try {
             [site.id]
         );
         const deletedPagesResult = await client.query(
-            `SELECT path
+            `SELECT path, page_type
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NOT NULL
@@ -184,9 +184,15 @@ try {
             [site.id]
         );
 
-        pages = pagesResult.rows;
+        pages = pagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
+        const detailTemplates = pagesResult.rows.filter(({ page_type }) => page_type === 'detail');
         redirects = redirectsResult.rows;
-        deletedPages = deletedPagesResult.rows;
+        deletedPages = deletedPagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
+        if (detailTemplates.some(({ path, route_param }) =>
+            !isValidPageRoutePattern(path) || !path.endsWith(`/:${route_param}`)
+        )) {
+            throw new Error(`Сайт ${site.slug} содержит некорректный шаблон детального маршрута`);
+        }
 
         await client.query('COMMIT');
         transactionStarted = false;

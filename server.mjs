@@ -7,6 +7,7 @@ import getSitePreview from './api/getSitePreview.mjs';
 import { getSitePublishStatus, startSitePublish } from './api/sitePublish.mjs';
 import patchPage from './api/patchPage.mjs';
 import postPage from './api/postPage.mjs';
+import postDetailTemplate from './api/postDetailTemplate.mjs';
 import postMedia from './api/postMedia.mjs';
 import putPage from './api/putPage.mjs';
 import restorePage from './api/restorePage.mjs';
@@ -124,6 +125,11 @@ await createApp({
             '/pages',
             { method: 'POST', private: true },
             postPage,
+        ],
+        [
+            '/pages/:pageId/detail-template',
+            { method: 'POST', private: true },
+            postDetailTemplate,
         ],
         [
             '/pages/:pageId',

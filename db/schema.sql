@@ -71,7 +71,14 @@ CREATE TABLE public.pages (
     title text NOT NULL,
     content jsonb DEFAULT '[]'::jsonb NOT NULL,
     deleted_at timestamp with time zone,
-    CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text))
+    page_type text DEFAULT 'standard'::text NOT NULL,
+    data_source text,
+    detail_parent_id uuid,
+    route_param text,
+    CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
+    CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
+    CONSTRAINT pages_type_fields_check CHECK (((page_type = 'standard'::text) AND (data_source IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['articles'::text, 'products'::text, 'reviews'::text])) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))),
+    CONSTRAINT pages_detail_parent_fk FOREIGN KEY (site_id, detail_parent_id) REFERENCES public.pages(site_id, id)
 );
 
 
@@ -335,6 +342,12 @@ ALTER TABLE ONLY public.users
 -- Name: product_categories_site_order_idx; Type: INDEX; Schema: public; Owner: -
 --
 
+CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
+
+
+-- Name: product_categories_site_order_idx; Type: INDEX; Schema: public; Owner: -
+--
+
 CREATE INDEX product_categories_site_order_idx ON public.product_categories USING btree (site_id, sort_order, id);
 
 
@@ -492,4 +505,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610270002'),
     ('202610280001'),
     ('202610290001'),
-    ('202610290002');
+    ('202610290002'),
+    ('202610310001');

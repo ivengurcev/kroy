@@ -5,6 +5,8 @@ import {
   isValidPagePath,
   normalizePageTitle,
 } from "./pageFields.mjs";
+import findPageRouteConflict from "./pageRouteConflicts.mjs";
+import { isPageDataSource } from "../pageDataSources.mjs";
 
 export default async function postPage(c) {
   let body;
@@ -17,13 +19,17 @@ export default async function postPage(c) {
 
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const title = normalizePageTitle(body?.title);
+  const type = body?.type ?? "standard";
+  const dataSource = body?.dataSource ?? null;
 
   if (
-    keys.length !== 2
+    keys.some((key) => !["title", "path", "type", "dataSource"].includes(key))
     || !keys.includes("title")
     || !keys.includes("path")
     || !title
     || !isValidPagePath(body.path)
+    || !["standard", "list"].includes(type)
+    || (type === "list" ? !isPageDataSource(dataSource) : dataSource !== null)
   ) {
     return c.json({ error: "Invalid page" }, 400);
   }
@@ -53,24 +59,18 @@ export default async function postPage(c) {
     }
 
     const siteId = sites[0].id;
-    const { rowCount: redirectCount } = await client.query(
-      `SELECT 1
-       FROM redirects
-       WHERE site_id = $1
-         AND from_path = $2`,
-      [siteId, body.path],
-    );
+    const conflict = await findPageRouteConflict(client, siteId, body.path);
 
-    if (redirectCount > 0) {
+    if (conflict) {
       await client.query("ROLLBACK");
       return c.json({ error: "Page already exists" }, 409);
     }
 
     const { rows } = await client.query(
-      `INSERT INTO pages (site_id, title, path, content)
-       VALUES ($1, $2, $3, '[]'::jsonb)
-       RETURNING id, site_id, path, title, content`,
-      [siteId, title, body.path],
+      `INSERT INTO pages (site_id, title, path, content, page_type, data_source)
+       VALUES ($1, $2, $3, '[]'::jsonb, $4, $5)
+       RETURNING id, site_id, path, title, content, page_type AS type, data_source AS "dataSource"`,
+      [siteId, title, body.path, type, dataSource],
     );
 
     await client.query("COMMIT");

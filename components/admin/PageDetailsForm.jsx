@@ -31,12 +31,14 @@ export default function PageDetailsForm({
 }) {
     const [title, setTitle] = useState(page.title);
     const [path, setPath] = useState(page.path);
+    const [routeParam, setRouteParam] = useState(page.routeParam || 'slug');
     const [status, setStatus] = useState('idle');
     const [error, setError] = useState('');
     const pathInputRef = useRef(null);
     const titleInputRef = useRef(null);
     const isMainPage = page.path === '/';
-    const isDirty = title !== page.title || path !== page.path;
+    const isDetail = page.type === 'detail';
+    const isDirty = title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path);
     const isSubmitting = status === 'submitting';
     const saveButton = (
         <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!isDirty || isSubmitting}>
@@ -52,9 +54,10 @@ export default function PageDetailsForm({
     useEffect(() => {
         setTitle(page.title);
         setPath(page.path);
+        setRouteParam(page.routeParam || 'slug');
         setStatus('idle');
         setError('');
-    }, [page.id, page.title, page.path]);
+    }, [page.id, page.title, page.path, page.routeParam]);
 
     useEffect(() => {
         onDirtyChange?.(isDirty);
@@ -102,7 +105,7 @@ export default function PageDetailsForm({
             const response = await fetch(`/api/pages/${page.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(isMainPage ? { title } : { title, path }),
+                body: JSON.stringify(isDetail ? { title, routeParam } : isMainPage ? { title } : { title, path }),
             });
 
             if (!response.ok) {
@@ -121,12 +124,12 @@ export default function PageDetailsForm({
     return (
         <form className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
-                <span>Путь</span>
+                <span>{isDetail ? 'Параметр пути' : 'Путь'}</span>
                 <input
                     ref={pathInputRef}
-                    value={path}
+                    value={isDetail ? routeParam : path}
                     disabled={isMainPage || isSubmitting}
-                    onChange={(event) => setPath(event.target.value)}
+                    onChange={(event) => isDetail ? setRouteParam(event.target.value) : setPath(event.target.value)}
                 />
             </label>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, titleClassName)}>

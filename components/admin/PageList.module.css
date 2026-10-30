@@ -40,6 +40,8 @@
     border-bottom: 1px solid var(--color-border);
 }
 
+.listPageRow { --page-actions-width: 420px; }
+
 .rowContents {
     display: contents;
 }
@@ -107,6 +109,8 @@ a.title {
     gap: var(--space-2);
 }
 
+.listPageRow .actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
 .actions button {
     width: 100%;
     min-width: 0;
@@ -144,6 +148,8 @@ a.title {
     .row {
         padding: var(--space-3);
     }
+
+    .listPageRow { --page-actions-width: auto; }
 }
 
 @media (max-width: 420px) {

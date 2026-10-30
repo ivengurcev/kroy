@@ -15,6 +15,7 @@ export default function PageList({
     actionErrorId = null,
     onUpdate,
     onDelete,
+    onCreateDetailTemplate,
     onRestore,
 }) {
     const [editingPage, setEditingPage] = useState(null);
@@ -84,7 +85,7 @@ export default function PageList({
                             const isEditing = editingPage?.id === page.id;
 
                             return (
-                                <li className={styles.row} key={page.id}>
+                                <li className={`${styles.row} ${page.type === 'list' ? styles.listPageRow : ''}`} key={page.id}>
                                     {isEditing ? (
                                         <PageDetailsForm
                                             key={page.id}
@@ -110,6 +111,12 @@ export default function PageList({
                                             <div className={`${styles.actions} ${mode === 'trash' ? styles.singleAction : ''}`}>
                                                 {mode === 'active' ? (
                                                     <>
+                                                        {page.type === 'list' && <Button
+                                                            title={page.detailTemplateId ? 'Открыть шаблон детального просмотра' : 'Создать шаблон детального просмотра'}
+                                                            onClick={() => onCreateDetailTemplate(page)}
+                                                        >
+                                                            <Icon name="add" /> {page.detailTemplateId ? 'Шаблон' : 'Создать шаблон'}
+                                                        </Button>}
                                                         <Button
                                                             ref={(node) => {
                                                                 if (node) editButtons.current.set(page.id, node);

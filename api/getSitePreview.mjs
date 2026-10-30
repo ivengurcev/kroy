@@ -15,7 +15,7 @@ export default async function getSitePreview(c) {
              FROM sites s
              JOIN domains d ON d.site_id = s.id
              LEFT JOIN pages p ON p.site_id = s.id
-              AND p.deleted_at IS NULL
+              AND p.deleted_at IS NULL AND p.page_type <> 'detail'
              WHERE s.id = $1
              ORDER BY p.path`,
             [site.id],

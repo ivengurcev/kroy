@@ -19,16 +19,24 @@ export default async function getPage(c) {
       const deletedPages = deleted === "1";
       const { rows } = await pool.query(
         deletedPages
-          ? `SELECT p.id, p.path, p.title, p.deleted_at
+          ? `SELECT p.id, p.path, p.title, p.deleted_at,
+                    p.page_type AS type, p.data_source AS "dataSource",
+                    p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
              FROM domains d
              LEFT JOIN pages p ON p.site_id = d.site_id
               AND p.deleted_at IS NOT NULL
              WHERE d.hostname = $1
              ORDER BY p.deleted_at DESC, p.id`
-          : `SELECT p.id, p.path, p.title
+          : `SELECT p.id, p.path, p.title, p.page_type AS type,
+                    p.data_source AS "dataSource",
+                    p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam",
+                    detail.id AS "detailTemplateId", detail.path AS "detailTemplatePath",
+                    detail.deleted_at AS "detailTemplateDeletedAt"
              FROM domains d
              LEFT JOIN pages p ON p.site_id = d.site_id
               AND p.deleted_at IS NULL
+             LEFT JOIN pages detail ON detail.site_id = p.site_id
+              AND detail.detail_parent_id = p.id AND detail.page_type = 'detail'
              WHERE d.hostname = $1
              ORDER BY p.path, p.id`,
         [hostname],
@@ -71,7 +79,9 @@ export default async function getPage(c) {
 
   try {
     const { rows } = await pool.query(
-      `SELECT p.id, p.site_id, p.path, p.title, p.content
+      `SELECT p.id, p.site_id, p.path, p.title, p.content,
+              p.page_type AS type, p.data_source AS "dataSource",
+              p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
        FROM pages p
        JOIN domains d ON d.site_id = p.site_id
        WHERE ${condition}
