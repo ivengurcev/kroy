@@ -1,6 +1,7 @@
 import styles from './hero.module.css';
 import { socialType } from '../../socialLinks.mjs';
 import Section from '../../layout/Section.jsx';
+import MaxIcon from '../../components/site/max-icon.svg';
 
 function TelegramIcon() {
     return (
@@ -34,7 +35,7 @@ function socialIcon(type) {
         case 'telegram':
             return <TelegramIcon />;
         case 'max':
-            return <span className={styles.maxMark}>MAX</span>;
+            return <MaxIcon />;
         case 'instagram':
             return <InstagramIcon />;
         default:
