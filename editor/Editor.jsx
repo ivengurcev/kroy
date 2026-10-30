@@ -8,6 +8,7 @@ import widgetMetadata from '../dist/kroy/widgets.json';
 
 import AdminShell from '../components/admin/AdminShell.jsx';
 import { createPart, createView } from './partModel.js';
+import { toEditorPage } from './pageDetails.mjs';
 
 export default function Editor() {
     const [content, setContent] = useState([]);
@@ -47,7 +48,7 @@ export default function Editor() {
                 );
 
                 setContent(loadedContent);
-                setPage({ id: page.id, title: page.title, path: page.path });
+                setPage(toEditorPage(page));
                 if (page.path === '/' && window.location.pathname !== '/admin') {
                     window.history.replaceState({}, '', '/admin');
                 }
@@ -221,11 +222,7 @@ export default function Editor() {
     }
 
     function updatePageDetails(updatedPage) {
-        setPage({
-            id: updatedPage.id,
-            title: updatedPage.title,
-            path: updatedPage.path,
-        });
+        setPage(toEditorPage(updatedPage));
     }
 
     return (

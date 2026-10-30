@@ -5,6 +5,7 @@ import SiteApp, { normalizePathname } from '../layout/SiteApp.jsx';
 import adminTheme from '../styles/AdminTheme.module.css';
 import '../layout/site.css';
 import styles from './PreviewPage.module.css';
+import { isDetailTemplatePath } from './previewPaths.mjs';
 
 function normalizePreviewPath(value) {
     if (typeof value !== 'string' || !value.startsWith('/') || value.includes('?') || value.includes('#')) {
@@ -43,7 +44,9 @@ export default function PreviewPage() {
             .then((data) => {
                 setSnapshot(data);
                 setStatus('success');
-                document.title = data.pages[path]?.title ?? 'Страница не найдена';
+                document.title = isDetailTemplatePath(path, data.detailTemplates)
+                    ? 'Предпросмотр недоступен'
+                    : data.pages[path]?.title ?? 'Страница не найдена';
             })
             .catch((error) => {
                 if (error.name !== 'AbortError') setStatus('error');
@@ -57,7 +60,12 @@ export default function PreviewPage() {
         </div>
         {status === 'loading' && <p className={styles.message}>Загрузка предпросмотра…</p>}
         {status === 'error' && <p className={styles.message} role="alert">Не удалось загрузить предпросмотр.</p>}
-        {status === 'success' && <SiteApp
+        {status === 'success' && isDetailTemplatePath(path, snapshot.detailTemplates)
+            ? <main className={`${styles.notFound} ${styles.previewUnavailable}`} role="status">
+                <h1>Предпросмотр недоступен</h1>
+                <p>Шаблоны детальных страниц пока не поддерживаются в предпросмотре.</p>
+            </main>
+            : status === 'success' && <SiteApp
             pages={snapshot.pages}
             path={path}
             parts={parts}

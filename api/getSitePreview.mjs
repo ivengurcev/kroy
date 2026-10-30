@@ -31,9 +31,16 @@ export default async function getSitePreview(c) {
                 .filter(({ path }) => path !== null)
                 .map(({ path, title, content }) => [path, { path, title, content }]),
         );
+        const { rows: detailTemplates } = await pool.query(
+            `SELECT path
+             FROM pages
+             WHERE site_id = $1 AND page_type = 'detail' AND deleted_at IS NULL`,
+            [site.id],
+        );
 
         return c.json({
             pages,
+            detailTemplates,
             theme: {
                 mode: settings.themeMode,
                 light: getThemeTokens(settings.themeId, 'light', settings.overrides),
