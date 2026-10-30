@@ -14,17 +14,19 @@ function Category({ category }) {
         >
             <summary>{category?.title}</summary>
 
-            <ul className={styles.items}>
-                {items.map((item, index) => (
-                    <li className={styles.service} key={`${item?.name ?? ''}-${index}`}>
-                        <div>
-                            <p className={styles.serviceName}>{item?.name}</p>
-                            {item?.note && <p className={styles.note}>{item.note}</p>}
-                        </div>
-                        {item?.price && <p className={styles.price}>{item.price}</p>}
-                    </li>
-                ))}
-            </ul>
+            <div className={styles.categoryContent}>
+                <ul className={styles.items}>
+                    {items.map((item, index) => (
+                        <li className={styles.service} key={`${item?.name ?? ''}-${index}`}>
+                            <div>
+                                <p className={styles.serviceName}>{item?.name}</p>
+                                {item?.note && <p className={styles.note}>{item.note}</p>}
+                            </div>
+                            {item?.price && <p className={styles.price}>{item.price}</p>}
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </details>
     );
 }

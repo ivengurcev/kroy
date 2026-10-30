@@ -1,7 +1,7 @@
 import styles from './links.module.css';
 import Section from '../../layout/Section.jsx';
 import { socialType } from '../../socialLinks.mjs';
-import MaxIcon from '../../components/site/max-icon.svg';
+import MaxIcon from '../../components/site/MaxIcon.jsx';
 
 function LinkIcon({ type }) {
     if (type === 'max') return <MaxIcon />;

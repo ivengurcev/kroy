@@ -86,6 +86,23 @@
     outline-offset: 5px;
 }
 
+.categoryContent {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 280ms cubic-bezier(.22, .61, .36, 1), opacity 280ms ease;
+}
+
+.category[open] .categoryContent {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.categoryContent > .items {
+    min-height: 0;
+    overflow: hidden;
+}
+
 .items {
     margin: 0;
     padding: 0 0 var(--site-space-8);
@@ -163,4 +180,8 @@
         white-space: nowrap;
         overflow-wrap: normal;
     }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .categoryContent { transition: none; }
 }

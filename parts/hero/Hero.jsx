@@ -1,7 +1,7 @@
 import styles from './hero.module.css';
 import { socialType } from '../../socialLinks.mjs';
 import Section from '../../layout/Section.jsx';
-import MaxIcon from '../../components/site/max-icon.svg';
+import MaxIcon from '../../components/site/MaxIcon.jsx';
 
 function TelegramIcon() {
     return (
