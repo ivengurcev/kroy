@@ -13,17 +13,13 @@ import styles from './reviewCards.module.css';
  *
  * @kroy columns widget=number min=1 max=4
  */
-export default function ReviewCards({
-    title = 'Отзывы',
-    reviews = [],
-    showSubmitButton = false,
-    columns = 3,
-}) {
+export default function ReviewCards({ data = {}, options = {} }) {
     const [formOpen, setFormOpen] = useState(false);
-    const numericColumns = Number(columns);
+    const numericColumns = Number(options.columns);
     const columnCount = Number.isFinite(numericColumns)
         ? Math.min(4, Math.max(1, Math.round(numericColumns)))
         : 3;
+    const { title = 'Отзывы', reviews = [], showSubmitButton = false } = data;
 
     if (!reviews.length && !showSubmitButton) return null;
 

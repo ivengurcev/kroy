@@ -5,6 +5,7 @@ import { generateParts } from './discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PARTS_DIR = resolve(ROOT, 'parts');
+const WIDGETS_DIR = resolve(ROOT, 'widgets');
 let timer;
 let running = false;
 let queued = false;
@@ -33,11 +34,13 @@ async function regenerate() {
 if (process.env.KROY_WATCH_ONLY !== '1') {
     await regenerate();
 }
-const watcher = watch(PARTS_DIR, { recursive: true }, () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => void regenerate(), 100);
-});
+const watchers = [PARTS_DIR, WIDGETS_DIR].map((directory) =>
+    watch(directory, { recursive: true }, () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => void regenerate(), 100);
+    })
+);
 
-console.log(`Наблюдение за ${PARTS_DIR}`);
-process.once('SIGINT', () => watcher.close());
-process.once('SIGTERM', () => watcher.close());
+console.log(`Наблюдение за ${PARTS_DIR} и ${WIDGETS_DIR}`);
+process.once('SIGINT', () => watchers.forEach((watcher) => watcher.close()));
+process.once('SIGTERM', () => watchers.forEach((watcher) => watcher.close()));
