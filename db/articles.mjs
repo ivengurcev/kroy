@@ -30,19 +30,19 @@ export async function getArticles(siteId) {
     return rows.map(mapArticle);
 }
 
-export async function getArticle(siteId, id) {
-    const { rows: [row] } = await pool.query(
+export async function getArticle(siteId, id, client = pool, { forUpdate = false } = {}) {
+    const { rows: [row] } = await client.query(
         `SELECT ${ARTICLE_COLUMNS}
          FROM articles
-         WHERE site_id = $1 AND id = $2`,
+         WHERE site_id = $1 AND id = $2${forUpdate ? ' FOR UPDATE' : ''}`,
         [siteId, id],
     );
     return row ? mapArticle(row) : null;
 }
 
-export async function hasSiteMedia(siteId, mediaId) {
+export async function hasSiteMedia(siteId, mediaId, client = pool) {
     if (mediaId === null) return true;
-    const { rowCount } = await pool.query(
+    const { rowCount } = await client.query(
         'SELECT 1 FROM media WHERE id = $1 AND site_id = $2',
         [mediaId, siteId],
     );
@@ -71,7 +71,7 @@ export async function createArticle(siteId, {
     return row ? mapArticle(row) : null;
 }
 
-export async function updateArticle(siteId, id, changes) {
+export async function updateArticle(siteId, id, changes, client = pool) {
     const values = [siteId, id];
     const assignments = [];
     let statusParameter;
@@ -109,7 +109,7 @@ export async function updateArticle(siteId, id, changes) {
         : '';
     const nextStatus = statusParameter ?? 'status';
     const nextContent = contentParameter ? `${contentParameter}::jsonb` : 'content';
-    const { rows: [row] } = await pool.query(
+    const { rows: [row] } = await client.query(
         `UPDATE articles
          SET ${assignments.join(', ')}
          WHERE id = $2 AND site_id = $1

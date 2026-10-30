@@ -1,4 +1,5 @@
 import { createArticle, deleteArticle, getArticle, getArticles, hasSiteMedia, updateArticle } from '../db/articles.mjs';
+import { pool } from '../db/client.mjs';
 import getCurrentSite from './siteContext.mjs';
 import isUuid from './isUuid.mjs';
 
@@ -162,24 +163,40 @@ export async function patchSiteArticle(c) {
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        const current = await getArticle(site.id, id);
-        if (!current) return c.json({ error: 'Article not found' }, 404);
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const current = await getArticle(site.id, id, client, { forUpdate: true });
+            if (!current) {
+                await client.query('ROLLBACK');
+                return c.json({ error: 'Article not found' }, 404);
+            }
 
-        const next = { ...current, ...changes };
-        if (!isPublishableArticle(next)) return c.json({ error: 'Published article requires content' }, 400);
-        if (changes.coverMediaId !== undefined
-            && changes.coverMediaId !== null
-            && !(await hasSiteMedia(site.id, changes.coverMediaId))) {
-            return c.json({ error: 'Invalid cover media' }, 400);
-        }
+            const next = { ...current, ...changes };
+            if (!isPublishableArticle(next)) {
+                await client.query('ROLLBACK');
+                return c.json({ error: 'Published article requires content' }, 400);
+            }
+            if (changes.coverMediaId !== undefined
+                && changes.coverMediaId !== null
+                && !(await hasSiteMedia(site.id, changes.coverMediaId, client))) {
+                await client.query('ROLLBACK');
+                return c.json({ error: 'Invalid cover media' }, 400);
+            }
 
-        const updated = await updateArticle(site.id, id, changes);
-        if (updated) return c.json(updated);
-        const latest = await getArticle(site.id, id);
-        if (latest && !isPublishableArticle({ ...latest, ...changes })) {
-            return c.json({ error: 'Published article requires content' }, 400);
+            const updated = await updateArticle(site.id, id, changes, client);
+            if (!updated) {
+                await client.query('ROLLBACK');
+                return c.json({ error: 'Article not found' }, 404);
+            }
+            await client.query('COMMIT');
+            return c.json(updated);
+        } catch (error) {
+            await client.query('ROLLBACK').catch(() => {});
+            throw error;
+        } finally {
+            client.release();
         }
-        return c.json({ error: 'Article not found' }, 404);
     } catch (error) {
         if (error.code === '23505') return c.json({ error: 'Article slug already exists' }, 409);
         console.error('Failed to update article', error);
