@@ -1,5 +1,5 @@
 .section { background: var(--site-color-section-bg, var(--site-color-surface-soft)); }
-.inner { width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2)); margin: 0 auto; padding-block: clamp(56px, 9vw, 128px); }
+.inner { width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2)); margin: 0 auto; }
 .title { margin: 0 0 clamp(24px, 4vw, 48px); color: var(--site-color-text); font: 400 clamp(calc(var(--site-font-size-base) * 1.6), 3vw, calc(var(--site-font-size-base) * 2.2))/1.12 var(--site-font-heading); }
 .slider { position: relative; }
 .withNavigation { padding-inline: clamp(52px, 5vw, 84px); }

@@ -11,7 +11,7 @@
     gap: clamp(var(--site-space-12), 7cqw, 120px);
     width: min(100%, var(--site-container-max));
     margin-inline: auto;
-    padding: clamp(var(--site-space-16), 8cqw, 140px) var(--site-page-gutter);
+    padding-inline: var(--site-page-gutter);
 }
 
 .content {
