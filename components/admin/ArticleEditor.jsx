@@ -136,7 +136,6 @@ function ToolbarPlugin() {
 export default function ArticleEditor({ value, onChange, disabled = false }) {
     const [mounted, setMounted] = useState(false);
     const initialState = useRef(value ?? EMPTY_EDITOR_STATE);
-    const initialChange = useRef(true);
 
     useEffect(() => setMounted(true), []);
 
@@ -168,10 +167,6 @@ export default function ArticleEditor({ value, onChange, disabled = false }) {
                 <LinkPlugin />
                 <OnChangePlugin
                     onChange={(editorState) => {
-                        if (initialChange.current) {
-                            initialChange.current = false;
-                            return;
-                        }
                         onChange(editorState.toJSON());
                     }}
                     ignoreSelectionChange

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
 import Icon from '../components/ui/Icon.jsx';
@@ -51,6 +51,8 @@ export default function SiteArticleEditorPage() {
     const [error, setError] = useState('');
     const [formError, setFormError] = useState('');
     const [saveStatus, setSaveStatus] = useState('idle');
+    const revision = useRef(0);
+    const skipLoadId = useRef(null);
 
     useEffect(() => {
         const match = window.location.pathname.match(/^\/admin\/site\/articles(?:\/([^/]+))?/);
@@ -60,6 +62,10 @@ export default function SiteArticleEditorPage() {
 
     useEffect(() => {
         if (articleId === undefined) return undefined;
+        if (articleId && articleId === skipLoadId.current) {
+            skipLoadId.current = null;
+            return undefined;
+        }
         if (!articleId) {
             const next = emptyArticle();
             setArticle(next);
@@ -69,6 +75,7 @@ export default function SiteArticleEditorPage() {
         }
 
         const controller = new AbortController();
+        const loadRevision = revision.current;
         setStatus('loading');
         setError('');
         fetch(`/api/site/articles/${articleId}`, { signal: controller.signal })
@@ -77,6 +84,7 @@ export default function SiteArticleEditorPage() {
                 return response.json();
             })
             .then((result) => {
+                if (revision.current !== loadRevision) return;
                 setArticle(result);
                 setSavedArticle(result);
                 setStatus('success');
@@ -109,9 +117,10 @@ export default function SiteArticleEditorPage() {
     }
 
     function updateField(name, value) {
+        revision.current += 1;
         setArticle((current) => ({ ...current, [name]: value }));
         setFormError('');
-        setSaveStatus('idle');
+        setSaveStatus((current) => current === 'saving' ? current : 'idle');
     }
 
     async function saveArticle(event, requestedStatus = null) {
@@ -123,6 +132,7 @@ export default function SiteArticleEditorPage() {
             return;
         }
 
+        const savedRevision = revision.current;
         setSaveStatus('saving');
         setFormError('');
         const body = { ...article, status: nextStatus };
@@ -138,10 +148,15 @@ export default function SiteArticleEditorPage() {
             });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось сохранить статью'));
             const result = await response.json();
-            setArticle(result);
             setSavedArticle(result);
-            setSaveStatus('success');
+            if (revision.current === savedRevision) {
+                setArticle(result);
+                setSaveStatus('success');
+            } else {
+                setSaveStatus('idle');
+            }
             if (!articleId && result.id) {
+                skipLoadId.current = result.id;
                 window.history.replaceState({}, '', `/admin/site/articles/${result.id}`);
                 setArticleId(result.id);
             }
