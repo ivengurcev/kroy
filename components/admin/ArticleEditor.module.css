@@ -1,0 +1,76 @@
+.editor {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.disabled { opacity: .7; pointer-events: none; }
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-canvas);
+}
+
+.toolbarGroup {
+    display: inline-flex;
+    gap: var(--space-1);
+    align-items: center;
+    padding-right: var(--space-2);
+    border-right: 1px solid var(--color-border-subtle);
+}
+
+.toolbarGroup:last-child { padding-right: 0; border-right: 0; }
+.toolbarButton { min-width: 36px; padding-inline: var(--space-2); }
+
+.contentEditable {
+    min-height: 360px;
+    padding: var(--space-5);
+    outline: 0;
+    color: var(--color-text);
+    font-size: var(--font-size-md);
+    line-height: 1.65;
+}
+
+.placeholder,
+.placeholderText {
+    color: var(--color-text-secondary);
+}
+
+.placeholder {
+    min-height: 360px;
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.placeholderText {
+    position: absolute;
+    padding: var(--space-5);
+    pointer-events: none;
+}
+
+.paragraph { margin: 0 0 var(--space-3); }
+.heading2 { margin: var(--space-5) 0 var(--space-3); font-size: 1.5em; line-height: 1.2; }
+.heading3 { margin: var(--space-4) 0 var(--space-2); font-size: 1.2em; line-height: 1.25; }
+.unorderedList,
+.orderedList { margin: 0 0 var(--space-3); padding-left: var(--space-6); }
+.listItem { margin-block: var(--space-1); }
+.link { color: var(--color-primary); text-decoration: underline; }
+.bold { font-weight: 700; }
+.italic { font-style: italic; }
+.underline { text-decoration: underline; }
+
+@media (max-width: 600px) {
+    .toolbar { align-items: stretch; }
+    .toolbarGroup { flex-wrap: wrap; padding-right: 0; border-right: 0; }
+    .contentEditable,
+    .placeholder { min-height: 280px; padding: var(--space-4); }
+    .placeholderText { padding: var(--space-4); }
+}

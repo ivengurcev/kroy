@@ -24,8 +24,15 @@ function context(hostname, id, body) {
     };
 }
 
-test('concurrent publish and content clearing preserve the publication invariant', async () => {
-    assert.equal(process.env.PGDATABASE, 'kroy_articles_test', 'Run only against the isolated articles test database');
+test('concurrent publish and content clearing preserve the publication invariant', async (t) => {
+    if (process.env.RUN_ARTICLES_INTEGRATION_TESTS !== '1') {
+        t.skip('Set RUN_ARTICLES_INTEGRATION_TESTS=1 to run database integration tests');
+        return;
+    }
+    assert.ok(process.env.ARTICLES_TEST_DATABASE, 'Set ARTICLES_TEST_DATABASE to the isolated database name');
+    const { rows: [{ current_database: currentDatabase }] } = await pool.query('SELECT current_database()');
+    assert.equal(currentDatabase, process.env.ARTICLES_TEST_DATABASE);
+
     const suffix = randomUUID();
     const hostname = `articles-${suffix}.example`;
     const site = (await pool.query(

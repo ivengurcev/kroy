@@ -10,6 +10,7 @@ export const SITE_SETTINGS_SECTIONS = [
     { id: 'contacts', label: 'Контактная информация', icon: 'phone' },
     { id: 'catalog', label: 'Каталог', icon: 'pages' },
     { id: 'reviews', label: 'Отзывы', icon: 'pages', path: '/admin/site/reviews' },
+    { id: 'articles', label: 'Статьи', icon: 'pages', path: '/admin/site/articles' },
     { id: 'seo', label: 'SEO', icon: 'seo' },
 ];
 
@@ -51,6 +52,7 @@ export default function SiteSettingsLayout({
     function selectSection(nextSection) {
         const item = SITE_SETTINGS_SECTIONS.find(({ id }) => id === nextSection);
         if (item?.path) {
+            if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return;
             if (nextSection !== section) window.location.assign(item.path);
         } else {
             onSectionChange(nextSection);

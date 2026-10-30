@@ -57,8 +57,15 @@
     "vyaz:serve": "yarn node --env-file-if-exists=.env server.mjs --serve"
   },
   "dependencies": {
+    "@lexical/history": "^0.53.0",
+    "@lexical/link": "^0.53.0",
+    "@lexical/list": "^0.53.0",
+    "@lexical/react": "^0.53.0",
+    "@lexical/rich-text": "^0.53.0",
+    "@lexical/selection": "^0.53.0",
     "@vyaz/core": "portal:./vyaz",
     "leaflet": "1.9.4",
+    "lexical": "^0.53.0",
     "pg": "^8.23.1",
     "prop-types": "^15.8.1",
     "react": "^19",

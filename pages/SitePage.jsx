@@ -196,7 +196,16 @@ export default function SitePage() {
     function updateContacts(change) { setContacts((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
-    function changeSection(nextSection) { if (nextSection === section) return; if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return; window.history.pushState({}, '', nextSection === 'catalog' ? '/admin/site/catalog' : `/admin/site?section=${nextSection}`); setSection(nextSection); }
+    function changeSection(nextSection) {
+        if (nextSection === section) return;
+        if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return;
+        const target = SITE_SETTINGS_SECTIONS.find((item) => item.id === nextSection);
+        if (target?.path) window.location.assign(target.path);
+        else {
+            window.history.pushState({}, '', `/admin/site?section=${nextSection}`);
+            setSection(nextSection);
+        }
+    }
     async function save() {
         if (saveStatus === 'saving' || !dirty) return;
         const requestTheme = themeDirty ? cloneSettings(draft) : null;

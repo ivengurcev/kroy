@@ -56,6 +56,24 @@ await createApp({
             component: './pages/SiteReviewsPage.jsx',
         },
         {
+            path: '/admin/site/articles/new',
+            isPrivate: true,
+            title: 'Новая статья Oysite',
+            component: './pages/SiteArticleEditorPage.jsx',
+        },
+        {
+            path: '/admin/site/articles/:id',
+            isPrivate: true,
+            title: 'Редактор статьи Oysite',
+            component: './pages/SiteArticleEditorPage.jsx',
+        },
+        {
+            path: '/admin/site/articles',
+            isPrivate: true,
+            title: 'Статьи Oysite',
+            component: './pages/SiteArticlesPage.jsx',
+        },
+        {
             path: '/admin/site',
             isPrivate: true,
             title: 'Оформление сайта Oysite',

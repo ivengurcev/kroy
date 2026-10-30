@@ -1,0 +1,23 @@
+.form { display: grid; gap: var(--space-4); max-width: 1000px; margin: 0 auto; padding: var(--space-5); }
+.heading { display: flex; gap: var(--space-4); align-items: start; justify-content: space-between; }
+.heading h2, .heading p { margin: 0; }
+.heading h2 { font-size: var(--font-size-lg); }
+.heading p { margin-top: var(--space-1); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.form input, .form textarea, .form select { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
+.form textarea { resize: vertical; }
+.coverField { align-items: start; }
+.coverField > button { justify-self: start; }
+.editorField { display: grid; gap: var(--space-2); }
+.editorLabel { color: var(--color-text-secondary); }
+.formError { margin: 0; color: var(--color-error-text); }
+.actions { display: flex; gap: var(--space-2); align-items: center; }
+.actionSpacer { flex: 1; }
+
+@media (max-width: 600px) {
+    .form { padding: var(--space-4); }
+    .heading { align-items: stretch; flex-direction: column; }
+    .heading button { align-self: flex-start; }
+    .actions { flex-wrap: wrap; }
+    .actionSpacer { display: none; }
+    .actions > button { flex: 1 1 auto; }
+}
