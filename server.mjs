@@ -15,6 +15,7 @@ import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './api/reviews.mjs';
+import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './api/articles.mjs';
 
 await createApp({
     auth,
@@ -185,6 +186,31 @@ await createApp({
             '/site/reviews/:id',
             { method: 'DELETE', private: true },
             deleteSiteReview,
+        ],
+        [
+            '/site/articles',
+            { method: 'GET', private: true },
+            getSiteArticles,
+        ],
+        [
+            '/site/articles',
+            { method: 'POST', private: true },
+            postSiteArticle,
+        ],
+        [
+            '/site/articles/:id',
+            { method: 'GET', private: true },
+            getSiteArticle,
+        ],
+        [
+            '/site/articles/:id',
+            { method: 'PATCH', private: true },
+            patchSiteArticle,
+        ],
+        [
+            '/site/articles/:id',
+            { method: 'DELETE', private: true },
+            deleteSiteArticle,
         ],
         [
             '/site/preview',
