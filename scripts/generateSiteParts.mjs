@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverParts } from './discoverParts.mjs';
+import { discoverParts, discoverWidgets } from './discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
@@ -11,11 +11,18 @@ export default async function generateSiteParts(pages, siteSlug) {
     const names = [...new Set(
         pages.flatMap(({ content }) => content.map(({ part }) => part))
     )];
-    const availableParts = new Map(
-        (await discoverParts()).map((part) => [part.name, part])
-    );
+    const widgetNames = [...new Set(
+        pages.flatMap(({ content }) => content.map(({ view }) => view?.name).filter(Boolean))
+    )];
+    const [discoveredParts, discoveredWidgets] = await Promise.all([
+        discoverParts(),
+        discoverWidgets(),
+    ]);
+    const availableParts = new Map(discoveredParts.map((part) => [part.name, part]));
+    const availableWidgets = new Map(discoveredWidgets.map((widget) => [widget.name, widget]));
     const imports = [];
-    const entries = [];
+    const partEntries = [];
+    const widgetEntries = [];
 
     for (const [index, name] of names.entries()) {
         const part = availableParts.get(name);
@@ -34,7 +41,38 @@ export default async function generateSiteParts(pages, siteSlug) {
         }
 
         imports.push(`import ${variable} from ${JSON.stringify(importPath)};`);
-        entries.push(`    ${JSON.stringify(name)}: ${variable},`);
+        partEntries.push(`    ${JSON.stringify(name)}: ${variable},`);
+    }
+
+    for (const page of pages) {
+        for (const { part: partName, view } of page.content) {
+            if (!view) continue;
+
+            const part = availableParts.get(partName);
+            const widget = availableWidgets.get(view.name);
+
+            if (!widget) {
+                throw new Error(`Виджет сайта ${siteSlug} не найден: ${view.name}`);
+            }
+            if (!part?.contract || part.contract !== widget.contract) {
+                throw new Error(`Виджет ${view.name} несовместим с запчастью ${partName} сайта ${siteSlug}`);
+            }
+        }
+    }
+
+    for (const [index, name] of widgetNames.entries()) {
+        const widget = availableWidgets.get(name);
+        const variable = `Widget${index}`;
+        let importPath = relative(OUTPUT_DIR, widget.componentPath)
+            .split(sep)
+            .join('/');
+
+        if (!importPath.startsWith('.')) {
+            importPath = `./${importPath}`;
+        }
+
+        imports.push(`import ${variable} from ${JSON.stringify(importPath)};`);
+        widgetEntries.push(`    ${JSON.stringify(name)}: ${variable},`);
     }
 
     const moduleSource = [
@@ -42,7 +80,11 @@ export default async function generateSiteParts(pages, siteSlug) {
         ...imports,
         '',
         'export const parts = {',
-        ...entries,
+        ...partEntries,
+        '};',
+        '',
+        'export const widgets = {',
+        ...widgetEntries,
         '};',
         '',
     ].join('\n');

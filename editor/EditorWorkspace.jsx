@@ -51,6 +51,8 @@ export default function EditorWorkspace({
     content,
     metadata,
     parts,
+    widgets,
+    widgetMetadata,
     loadStatus,
     theme,
     contacts,
@@ -60,6 +62,8 @@ export default function EditorWorkspace({
     onRemovePart,
     onMovePart,
     onPropChange,
+    onViewChange,
+    onViewPropChange,
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
@@ -151,16 +155,21 @@ export default function EditorWorkspace({
                                         title={partTitle(item.part, metadata)}
                                         props={item.props}
                                         fields={metadata[item.part]?.fields ?? {}}
+                                        partContract={metadata[item.part]?.contract}
+                                        view={item.view}
+                                        widgetMetadata={widgetMetadata}
                                         catalog={catalog}
                                         reviews={reviews}
                                         onPropChange={(name, value) => onPropChange(item.id, name, value)}
+                                        onViewChange={(name) => onViewChange(item.id, name)}
+                                        onViewPropChange={(name, value) => onViewPropChange(item.id, name, value)}
                                     />
                                 </div>
                             </div>
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} contacts={contacts} catalog={catalog} reviews={reviews} />
+                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} />
                                 </SiteRoot>
                             </div>
                         )}

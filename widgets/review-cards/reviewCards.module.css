@@ -1,0 +1,113 @@
+.section {
+    container-name: review-cards;
+    container-type: inline-size;
+    background: var(--site-color-section-bg, var(--site-color-surface-soft));
+}
+
+.inner {
+    width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
+    margin: 0 auto;
+}
+
+.title {
+    max-width: 620px;
+    margin: 0 0 clamp(24px, 4cqw, 48px);
+    color: var(--site-color-text);
+    font-family: var(--site-font-heading);
+    font-size: clamp(46px, 5cqw, 78px);
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(var(--review-card-columns), minmax(0, 1fr));
+    gap: var(--site-space-6);
+}
+
+.card {
+    display: grid;
+    gap: var(--site-space-4);
+    align-content: start;
+    padding: var(--site-space-6);
+    border: 1px solid var(--site-color-border);
+    border-radius: var(--site-radius-lg);
+    background: var(--site-color-surface);
+}
+
+.photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--site-radius-base);
+}
+
+.quote {
+    margin: 0;
+    color: var(--site-color-text);
+    font: 400 calc(var(--site-font-size-base) * 1.05)/1.5 var(--site-font-heading);
+}
+
+.author {
+    display: grid;
+    gap: 4px;
+    color: var(--site-color-text-secondary);
+    font: 400 calc(var(--site-font-size-base) * .9)/1.4 var(--site-font-body);
+}
+
+.author strong {
+    color: var(--site-color-text);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--site-space-6);
+}
+
+.reviewButton {
+    min-height: 44px;
+    padding: var(--site-space-3) var(--site-space-6);
+    border: 0;
+    border-radius: var(--site-radius-base);
+    color: var(--site-color-bg);
+    font: 600 calc(var(--site-font-size-base) * .9)/1.2 var(--site-font-body);
+    background: var(--site-color-accent);
+    cursor: pointer;
+}
+
+.reviewButton:hover {
+    background: var(--site-color-accent-hover);
+}
+
+.reviewButton:focus-visible {
+    outline: 2px solid var(--site-color-accent);
+    outline-offset: 3px;
+}
+
+@container review-cards (max-width: 900px) {
+    .grid[data-columns='3'],
+    .grid[data-columns='4'] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container review-cards (max-width: 560px) {
+    .title {
+        font-size: clamp(42px, 10cqw, 64px);
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: var(--site-space-4);
+    }
+
+    .reviewButton {
+        width: 100%;
+    }
+}

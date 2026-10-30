@@ -1,4 +1,5 @@
 import partCatalog from "../dist/kroy/parts.json" with { type: "json" };
+import widgetCatalog from "../dist/kroy/widgets.json" with { type: "json" };
 import { pool } from "../db/client.mjs";
 import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
@@ -18,13 +19,28 @@ function isValidContent(content) {
 
     const keys = Object.keys(item);
 
-    return keys.length === 2
+    const hasView = keys.includes("view");
+    const view = item.view;
+    const validView = !hasView || (
+      isPlainObject(view)
+      && Object.keys(view).length === 2
+      && Object.hasOwn(view, "name")
+      && Object.hasOwn(view, "props")
+      && typeof view.name === "string"
+      && Object.hasOwn(widgetCatalog, view.name)
+      && isPlainObject(view.props)
+      && partCatalog[item.part]?.contract
+      && partCatalog[item.part].contract === widgetCatalog[view.name].contract
+    );
+
+    return (keys.length === 2 || keys.length === 3 && hasView)
       && keys.includes("part")
       && keys.includes("props")
       && typeof item.part === "string"
       && item.part.trim().length > 0
       && Object.hasOwn(partCatalog, item.part)
-      && isPlainObject(item.props);
+      && isPlainObject(item.props)
+      && validView;
   });
 }
 

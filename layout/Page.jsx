@@ -27,14 +27,18 @@ function publicProps(part, props, contacts, catalog, reviews) {
     return props;
 }
 
-export default function Page({ content, parts, contacts, catalog, reviews }) {
-    return content.map(({ id, part, props }, index) => {
-        const Component = parts[part];
+export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews }) {
+    return content.map(({ id, part, props, view }, index) => {
+        const Component = view ? widgets[view.name] : parts[part];
 
         if (!Component) {
-            throw new Error(`Запчасть не найдена: ${part}`);
+            throw new Error(view
+                ? `Виджет не найден: ${view.name}`
+                : `Запчасть не найдена: ${part}`);
         }
 
-        return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews)} />;
+        const preparedProps = publicProps(part, props, contacts, catalog, reviews);
+
+        return <Component key={id ?? index} {...preparedProps} {...view?.props} />;
     });
 }

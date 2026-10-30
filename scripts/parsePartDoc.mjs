@@ -187,9 +187,42 @@ function applyKroy(field, settings) {
                 break;
             }
 
+            case 'min':
+            case 'max': {
+                if (field.type !== 'number') {
+                    throw new Error(`${key} поддерживается только для числового поля`);
+                }
+
+                const limit = Number(value);
+
+                if (!Number.isFinite(limit)) {
+                    throw new Error(`Некорректный ${key}: ${value}`);
+                }
+
+                field[key] = limit;
+                break;
+            }
+
             default:
                 throw new Error(`Неизвестная настройка @kroy: ${key}`);
         }
+    }
+
+    if (
+        field.min !== undefined
+        && field.max !== undefined
+        && field.min > field.max
+    ) {
+        throw new Error(`Минимум ${field.min} больше максимума ${field.max}`);
+    }
+    if (
+        field.default !== undefined
+        && (
+            field.min !== undefined && field.default < field.min
+            || field.max !== undefined && field.default > field.max
+        )
+    ) {
+        throw new Error(`Значение по умолчанию ${field.default} вне допустимого диапазона`);
     }
 }
 
@@ -216,6 +249,16 @@ export function parsePartDoc(source) {
 
         const field = parseType(tag.type);
 
+        if (tag.default !== undefined && field.type === 'number') {
+            const defaultValue = Number(tag.default);
+
+            if (!Number.isFinite(defaultValue)) {
+                throw new Error(`Некорректное значение по умолчанию: ${tag.default}`);
+            }
+
+            field.default = defaultValue;
+        }
+
         if (tag.description) {
             field.label = tag.description.replace(/^-\s*/, '');
         }
@@ -241,9 +284,17 @@ export function parsePartDoc(source) {
             .trim();
     }
 
+    const contractTag = block.tags.find((item) => item.tag === 'kroy-contract');
+    const contract = metadataValue('kroy-contract');
+
+    if (contractTag && !contract) {
+        throw new Error('Пустой @kroy-contract');
+    }
+
     return {
         title: metadataValue('kroy-title') || undefined,
         category: metadataValue('kroy-category') || undefined,
+        contract: contract || undefined,
         fields,
     };
 }

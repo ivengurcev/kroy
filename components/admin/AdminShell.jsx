@@ -7,6 +7,8 @@ export default function AdminShell({
     content,
     metadata,
     parts,
+    widgets,
+    widgetMetadata,
     loadStatus,
     saveStatus,
     isDirty,
@@ -18,6 +20,8 @@ export default function AdminShell({
     onRemovePart,
     onMovePart,
     onPropChange,
+    onViewChange,
+    onViewPropChange,
     onSave,
     onPageDetailsChange,
 }) {
@@ -36,6 +40,8 @@ export default function AdminShell({
                     content={content}
                     metadata={metadata}
                     parts={parts}
+                    widgets={widgets}
+                    widgetMetadata={widgetMetadata}
                     loadStatus={loadStatus}
                     theme={theme}
                     contacts={contacts}
@@ -45,6 +51,8 @@ export default function AdminShell({
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}
                     onPropChange={onPropChange}
+                    onViewChange={onViewChange}
+                    onViewPropChange={onViewPropChange}
                 />
         </AdminLayout>
     );

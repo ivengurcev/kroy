@@ -36,6 +36,7 @@ export default function SiteApp({
     pages,
     path,
     parts,
+    widgets,
     pathFromUrl = defaultPathFromUrl,
     urlForPath = defaultUrlForPath,
     notFound,
@@ -121,7 +122,7 @@ export default function SiteApp({
     return (
         <SiteRoot tokens={tokens} theme={theme}>
             {page
-                ? <Page key={page.path} content={page.content} parts={parts} contacts={contacts} catalog={catalog} reviews={reviews} />
+                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} />
                 : notFound}
         </SiteRoot>
     );

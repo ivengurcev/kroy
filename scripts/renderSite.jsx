@@ -3,7 +3,7 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { renderToString } from 'react-dom/server';
 import { isValidPagePath } from '../api/pageFields.mjs';
 import SiteApp from '../layout/SiteApp.jsx';
-import { parts } from '../dist/kroy/site-parts.mjs';
+import { parts, widgets } from '../dist/kroy/site-parts.mjs';
 import { pages as pageRegistry } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';
 import { contacts } from '../dist/kroy/site-contacts.mjs';
@@ -55,6 +55,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                             pages={pageRegistry}
                             path={page.path}
                             parts={parts}
+                            widgets={widgets}
                             theme={theme}
                             contacts={contacts}
                             catalog={catalog}

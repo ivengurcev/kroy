@@ -8,6 +8,7 @@ const AUTOPLAY_DELAY = 6000;
 /**
  * @kroy-title Отзывы
  * @kroy-category Контент
+ * @kroy-contract reviews
  *
  * @param {object} props
  * @param {string} props.title - Заголовок секции

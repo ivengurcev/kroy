@@ -2,6 +2,8 @@
 let sequence = 0;
 
 export function defaultValue(schema) {
+    if (schema.default !== undefined) return schema.default;
+
     switch (schema.type) {
         case 'number':
             return 0;
@@ -31,11 +33,21 @@ export function defaultProps(fields = {}) {
     );
 }
 
-export function createPart(part, fields = {}, props = {}) {
+export function createView(name, fields = {}, props = {}) {
+    return {
+        name,
+        props: {
+            ...defaultProps(fields),
+            ...props,
+        },
+    };
+}
+
+export function createPart(part, fields = {}, props = {}, view) {
     const id = globalThis.crypto?.randomUUID?.()
         ?? `part-${Date.now()}-${++sequence}`;
 
-    return {
+    const item = {
         id,
         part,
         props: {
@@ -43,4 +55,10 @@ export function createPart(part, fields = {}, props = {}) {
             ...props,
         },
     };
+
+    if (view) {
+        item.view = createView(view.name, {}, view.props);
+    }
+
+    return item;
 }

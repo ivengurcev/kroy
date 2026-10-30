@@ -6,6 +6,7 @@ import { parsePartDoc } from './parsePartDoc.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PARTS_DIR = join(ROOT, 'parts');
+const WIDGETS_DIR = join(ROOT, 'widgets');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 
 const asPosix = (path) => path.split(sep).join('/');
@@ -13,11 +14,11 @@ const toKebabCase = (value) => value
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .toLowerCase();
-const partName = (path) => `@kroy/${asPosix(relative(PARTS_DIR, path))
+const componentName = (root, path) => `@kroy/${asPosix(relative(root, path))
     .split('/')
     .map(toKebabCase)
     .join('/')}`;
-const PART_NAME_PATTERN = /^@kroy\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
+const COMPONENT_NAME_PATTERN = /^@kroy\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
 
 function fallbackTitle(name) {
     const value = name.split('/').at(-1).replaceAll('-', ' ');
@@ -46,14 +47,14 @@ async function readManifest(directory) {
     }
 }
 
-export async function discoverParts() {
-    const parts = [];
+async function discoverComponents(root, { optional = false } = {}) {
+    const components = [];
     const names = new Map();
 
     async function register(name, componentPath) {
-        if (typeof name !== 'string' || !PART_NAME_PATTERN.test(name)) {
+        if (typeof name !== 'string' || !COMPONENT_NAME_PATTERN.test(name)) {
             throw new Error(
-                `Некорректное имя запчасти ${JSON.stringify(name)}: ожидается @kroy/<kebab-case>`
+                `Некорректное имя компонента ${JSON.stringify(name)}: ожидается @kroy/<kebab-case>`
             );
         }
         if (names.has(name)) {
@@ -67,11 +68,12 @@ export async function discoverParts() {
 
         const metadata = parsePartDoc(await readFile(componentPath, 'utf8'));
         names.set(name, componentPath);
-        parts.push({
+        components.push({
             name,
             componentPath,
             title: metadata.title ?? fallbackTitle(name),
             category: metadata.category ?? 'Другое',
+            contract: metadata.contract,
             fields: metadata.fields,
         });
     }
@@ -94,83 +96,99 @@ export async function discoverParts() {
                     const local = relative(path, componentPath);
 
                     if (
-                        local === '..' ||
-                        local.startsWith(`..${sep}`) ||
-                        isAbsolute(local)
+                        local === '..'
+                        || local.startsWith(`..${sep}`)
+                        || isAbsolute(local)
                     ) {
-                        throw new Error(`main выходит за пределы запчасти: ${path}`);
+                        throw new Error(`main выходит за пределы компонента: ${path}`);
                     }
 
-                    await register(manifest.name ?? partName(path), componentPath);
-
-                    // package.json обозначает одну запчасть:
-                    // внутрь директории не спускаемся.
+                    await register(manifest.name ?? componentName(root, path), componentPath);
                 } else {
                     await scan(path);
                 }
             } else if (entry.isFile() && extname(entry.name) === '.jsx') {
-                await register(partName(path.slice(0, -'.jsx'.length)), path);
+                await register(componentName(root, path.slice(0, -'.jsx'.length)), path);
             }
         }
     }
 
-    await scan(PARTS_DIR);
+    try {
+        await scan(root);
+    } catch (error) {
+        if (!optional || error.code !== 'ENOENT' || error.path !== root) throw error;
+    }
 
-    return parts.sort((a, b) => a.name.localeCompare(b.name));
+    return components.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function generateParts() {
-    const parts = await discoverParts();
+export function discoverParts() {
+    return discoverComponents(PARTS_DIR);
+}
 
-    await mkdir(OUTPUT_DIR, { recursive: true });
+export function discoverWidgets() {
+    return discoverComponents(WIDGETS_DIR, { optional: true });
+}
 
+function registryFiles(components, exportName) {
     const imports = [];
     const entries = [];
     const metadata = {};
 
-    for (const [index, part] of parts.entries()) {
-        const variable = `Part${index}`;
-
-        let importPath = asPosix(relative(OUTPUT_DIR, part.componentPath));
+    for (const [index, component] of components.entries()) {
+        const variable = `${exportName === 'parts' ? 'Part' : 'Widget'}${index}`;
+        let importPath = asPosix(relative(OUTPUT_DIR, component.componentPath));
 
         if (!importPath.startsWith('.')) {
             importPath = `./${importPath}`;
         }
 
         imports.push(`import ${variable} from ${JSON.stringify(importPath)};`);
-        entries.push(`    ${JSON.stringify(part.name)}: ${variable},`);
-
-        metadata[part.name] = {
-            title: part.title,
-            category: part.category,
-            fields: part.fields,
+        entries.push(`    ${JSON.stringify(component.name)}: ${variable},`);
+        metadata[component.name] = {
+            title: component.title,
+            category: component.category,
+            contract: component.contract,
+            fields: component.fields,
         };
     }
 
-    const moduleSource = [
-        '// Generated automatically. Do not edit.',
-        ...imports,
-        '',
-        'export const parts = {',
-        ...entries,
-        '};',
-        '',
-    ].join('\n');
+    return {
+        moduleSource: [
+            '// Generated automatically. Do not edit.',
+            ...imports,
+            '',
+            `export const ${exportName} = {`,
+            ...entries,
+            '};',
+            '',
+        ].join('\n'),
+        metadata,
+    };
+}
 
+export async function generateParts() {
+    const [parts, widgets] = await Promise.all([
+        discoverParts(),
+        discoverWidgets(),
+    ]);
+    const partFiles = registryFiles(parts, 'parts');
+    const widgetFiles = registryFiles(widgets, 'widgets');
+
+    await mkdir(OUTPUT_DIR, { recursive: true });
     await Promise.all([
-        writeFile(join(OUTPUT_DIR, 'parts.mjs'), moduleSource),
-        writeFile(
-            join(OUTPUT_DIR, 'parts.json'),
-            JSON.stringify(metadata, null, 2) + '\n'
-        ),
+        writeFile(join(OUTPUT_DIR, 'parts.mjs'), partFiles.moduleSource),
+        writeFile(join(OUTPUT_DIR, 'parts.json'), JSON.stringify(partFiles.metadata, null, 2) + '\n'),
+        writeFile(join(OUTPUT_DIR, 'widgets.mjs'), widgetFiles.moduleSource),
+        writeFile(join(OUTPUT_DIR, 'widgets.json'), JSON.stringify(widgetFiles.metadata, null, 2) + '\n'),
     ]);
 
     return parts;
 }
 
 if (
-    process.argv[1] &&
-    resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+    process.argv[1]
+    && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
     const parts = await generateParts();
 

@@ -75,7 +75,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews 
     let control;
 
     if (['color', 'font', 'dimension', 'number'].includes(schema.type)) {
-        control = <TokenControl type={schema.type} value={value} label={label} units={schema.units} numeric={schema.type === 'number'} onChange={onChange} />;
+        control = <TokenControl type={schema.type} value={value} label={label} units={schema.units} numeric={schema.type === 'number'} min={schema.min} max={schema.max} onChange={onChange} />;
     } else {
         switch (schema.type) {
             case 'input': {

@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 
 import { parts } from '../dist/kroy/parts.mjs';
 import metadata from '../dist/kroy/parts.json';
+import { widgets } from '../dist/kroy/widgets.mjs';
+import widgetMetadata from '../dist/kroy/widgets.json';
 
 import AdminShell from '../components/admin/AdminShell.jsx';
-import { createPart } from './partModel.js';
+import { createPart, createView } from './partModel.js';
 
 export default function Editor() {
     const [content, setContent] = useState([]);
@@ -40,8 +42,8 @@ export default function Editor() {
 
                 const page = await response.json();
 
-                const loadedContent = page.content.map(({ part, props }) =>
-                    createPart(part, metadata[part]?.fields, props)
+                const loadedContent = page.content.map(({ part, props, view }) =>
+                    createPart(part, metadata[part]?.fields, props, view)
                 );
 
                 setContent(loadedContent);
@@ -86,7 +88,9 @@ export default function Editor() {
         return () => controller.abort();
     }, []);
 
-    const pageContent = content.map(({ part, props }) => ({ part, props }));
+    const pageContent = content.map(({ part, props, view }) => view
+        ? { part, props, view: { name: view.name, props: view.props } }
+        : { part, props });
 
     function markDirty() {
         revision.current += 1;
@@ -184,6 +188,38 @@ export default function Editor() {
         );
     }
 
+    function changeView(id, name) {
+        markDirty();
+        setContent((previous) => previous.map((item) => {
+            if (item.id !== id) return item;
+            if (!name) {
+                const { view, ...part } = item;
+                return part;
+            }
+
+            return {
+                ...item,
+                view: createView(name, widgetMetadata[name]?.fields),
+            };
+        }));
+    }
+
+    function updateViewProp(id, name, value) {
+        markDirty();
+        setContent((previous) => previous.map((item) => item.id === id
+            ? {
+                ...item,
+                view: {
+                    ...item.view,
+                    props: {
+                        ...item.view.props,
+                        [name]: value,
+                    },
+                },
+            }
+            : item));
+    }
+
     function updatePageDetails(updatedPage) {
         setPage({
             id: updatedPage.id,
@@ -198,6 +234,8 @@ export default function Editor() {
             content={content}
             metadata={metadata}
             parts={parts}
+            widgets={widgets}
+            widgetMetadata={widgetMetadata}
             loadStatus={loadStatus}
             saveStatus={saveStatus}
             isDirty={isDirty}
@@ -209,6 +247,8 @@ export default function Editor() {
             onRemovePart={removePart}
             onMovePart={movePart}
             onPropChange={updateProp}
+            onViewChange={changeView}
+            onViewPropChange={updateViewProp}
             onSave={savePage}
             onPageDetailsChange={updatePageDetails}
         />

@@ -54,7 +54,7 @@ export function ColorControl({ value, disabled = false, label, onChange }) {
     </div>;
 }
 
-export function DimensionControl({ value, type = 'dimension', units = ['px'], numeric = false, disabled = false, label, onChange }) {
+export function DimensionControl({ value, type = 'dimension', units = ['px'], numeric = false, min, max, disabled = false, label, onChange }) {
     const [draft, setDraft] = useState(value ?? '');
     const [focused, setFocused] = useState(false);
     const parsed = parseDimension(value);
@@ -71,7 +71,7 @@ export function DimensionControl({ value, type = 'dimension', units = ['px'], nu
         if (next) { const result = `${next.number}${unit}`; setDraft(result); onChange(result); }
     }
     return <div className={styles.control}>
-        <input className={styles.input} type="number" step={type === 'number' ? '0.05' : '1'} value={focused ? (parseDimension(draft)?.number ?? '') : current.number} disabled={disabled} title={label} onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); setDraft(value ?? ''); }} onChange={(event) => commitNumber(event.target.value)} />
+        <input className={styles.input} type="number" step={type === 'number' ? '0.05' : '1'} min={min} max={max} value={focused ? (parseDimension(draft)?.number ?? '') : current.number} disabled={disabled} title={label} onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); setDraft(value ?? ''); }} onChange={(event) => commitNumber(event.target.value)} />
         {type === 'dimension' && <select className={styles.input} value={current.unit} disabled={disabled} title="Единица измерения" onChange={(event) => commitUnit(event.target.value)}>{units.map((unit) => <option value={unit} key={unit}>{unit}</option>)}</select>}
     </div>;
 }
@@ -93,9 +93,9 @@ export function FontControl({ value, disabled = false, label, onChange, options 
     </div></div>;
 }
 
-export default function TokenControl({ type, value, disabled, label, units, numeric = false, onChange }) {
+export default function TokenControl({ type, value, disabled, label, units, numeric = false, min, max, onChange }) {
     if (type === 'color') return <ColorControl value={value} disabled={disabled} label={label} onChange={onChange} />;
     if (type === 'font') return <FontControl value={value} disabled={disabled} label={label} onChange={onChange} />;
-    if (type === 'dimension' || type === 'number') return <DimensionControl value={value} type={type} units={units} numeric={numeric} disabled={disabled} label={label} onChange={onChange} />;
+    if (type === 'dimension' || type === 'number') return <DimensionControl value={value} type={type} units={units} numeric={numeric} min={min} max={max} disabled={disabled} label={label} onChange={onChange} />;
     return <input className={styles.input} value={value ?? ''} disabled={disabled} title={label} onChange={(event) => onChange(event.target.value)} />;
 }

@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/review-cards",
+    "main": "ReviewCards.jsx"
+}
