@@ -11,6 +11,7 @@ import { getPublishedReviews } from '../db/reviews.mjs';
 import { getMediaPath } from '../media/storage.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
+import createSiteSvgPlugin from './siteSvgPlugin.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
@@ -272,6 +273,7 @@ try {
             '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
+        plugins: [createSiteSvgPlugin({ root: ROOT })],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
         metafile: true,
@@ -313,6 +315,7 @@ try {
             '.module.css': 'local-css',
             ...ASSET_LOADERS,
         },
+        plugins: [createSiteSvgPlugin({ root: ROOT })],
         assetNames: '[name]-[hash]',
         publicPath: ASSET_BASE,
         define: { 'process.env.NODE_ENV': '"production"' },

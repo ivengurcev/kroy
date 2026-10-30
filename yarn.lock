@@ -2802,6 +2802,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
+    "@svgr/core": "npm:^8.1.0"
+    "@svgr/plugin-jsx": "npm:^8.1.0"
     "@vyaz/core": "portal:./vyaz"
     "@yarnpkg/sdks": "npm:^3.3.1"
     comment-parser: "npm:^1.4.9"
