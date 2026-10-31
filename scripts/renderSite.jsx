@@ -9,6 +9,7 @@ import { theme } from '../dist/kroy/site-theme.mjs';
 import { contacts } from '../dist/kroy/site-contacts.mjs';
 import { catalog } from '../dist/kroy/site-catalog.mjs';
 import { reviews } from '../dist/kroy/site-reviews.mjs';
+import { serializePagePayload } from './sitePageData.mjs';
 
 const DIST_DIR = resolve('dist');
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -40,6 +41,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
     }
 
     const outputFiles = pages.map((page) => {
+        const pagePayload = page.record ? serializePagePayload(page) : null;
         const markup = renderToString(
             <html lang="ru">
                 <head>
@@ -54,6 +56,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                         <SiteApp
                             pages={pageRegistry}
                             path={page.path}
+                            initialPage={page.record ? page : undefined}
                             parts={parts}
                             widgets={widgets}
                             theme={theme}
@@ -62,6 +65,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                             reviews={reviews}
                         />
                     </div>
+                    {pagePayload && <script id="kroy-page-data" type="application/json" dangerouslySetInnerHTML={{ __html: pagePayload }} />}
                     <script type="module" src={`${assetBase}/app.js`} />
                 </body>
             </html>

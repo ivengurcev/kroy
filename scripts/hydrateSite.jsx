@@ -9,6 +9,8 @@ import { reviews } from '../dist/kroy/site-reviews.mjs';
 import '../layout/site.css';
 
 const root = document.getElementById('root');
+const pageData = document.getElementById('kroy-page-data');
+const initialPage = pageData ? JSON.parse(pageData.textContent) : undefined;
 
 if (!root) {
     throw new Error('Не найден корневой элемент публичной страницы');
@@ -19,6 +21,7 @@ hydrateRoot(
     <SiteApp
         pages={pages}
         path={normalizePathname(location.pathname)}
+        initialPage={initialPage}
         parts={parts}
         widgets={widgets}
         theme={theme}

@@ -4,6 +4,12 @@ import isUuid from './isUuid.mjs';
 import { createDetailPath, isValidRouteParameter, normalizePageTitle } from './pageFields.mjs';
 import findPageRouteConflict from './pageRouteConflicts.mjs';
 
+export function initialDetailContent(dataSource) {
+    return dataSource === 'articles'
+        ? [{ part: '@kroy/article', props: {}, view: { name: '@kroy/article-content', props: {} } }]
+        : [];
+}
+
 export default async function postDetailTemplate(c) {
     const listPageId = c.req.param('pageId');
 
@@ -51,7 +57,7 @@ export default async function postDetailTemplate(c) {
 
         const siteId = sites[0].id;
         const { rows: lists } = await client.query(
-            `SELECT id, path, title, page_type
+            `SELECT id, path, title, page_type, data_source
              FROM pages
              WHERE id = $1 AND site_id = $2 AND deleted_at IS NULL
              FOR UPDATE`,
@@ -85,11 +91,11 @@ export default async function postDetailTemplate(c) {
 
         const { rows } = await client.query(
             `INSERT INTO pages (site_id, title, path, content, page_type, detail_parent_id, route_param)
-             VALUES ($1, $2, $3, '[]'::jsonb, 'detail', $4, $5)
+             VALUES ($1, $2, $3, $4::jsonb, 'detail', $5, $6)
              RETURNING id, site_id, path, title, content, page_type AS type,
                        data_source AS "dataSource", detail_parent_id AS "detailParentId",
                        route_param AS "routeParam"`,
-            [siteId, title, path, listPageId, routeParam],
+            [siteId, title, path, JSON.stringify(initialDetailContent(list.data_source)), listPageId, routeParam],
         );
 
         await client.query('COMMIT');

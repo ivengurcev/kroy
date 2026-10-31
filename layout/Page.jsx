@@ -27,7 +27,7 @@ function publicProps(part, props, contacts, catalog, reviews) {
     return props;
 }
 
-export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews }) {
+export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews, context = { params: {} }, record = null }) {
     return content.map(({ id, part, props, view }, index) => {
         if (!view) {
             const Component = parts[part];
@@ -36,7 +36,7 @@ export default function Page({ content, parts, widgets = {}, contacts, catalog, 
                 throw new Error(`Запчасть не найдена: ${part}`);
             }
 
-            return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews)} />;
+            return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews)} context={context} record={record} />;
         }
 
         const Widget = widgets[view.name];
@@ -47,6 +47,6 @@ export default function Page({ content, parts, widgets = {}, contacts, catalog, 
 
         const preparedProps = publicProps(part, props, contacts, catalog, reviews);
 
-        return <Widget key={id ?? index} data={preparedProps} options={view.props} />;
+        return <Widget key={id ?? index} data={preparedProps} options={view.props} context={context} record={record} />;
     });
 }

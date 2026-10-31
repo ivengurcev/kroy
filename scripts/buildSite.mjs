@@ -12,6 +12,8 @@ import { getMediaPath } from '../media/storage.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 import createSiteSvgPlugin from './siteSvgPlugin.mjs';
+import { assertArticlePathsAvailable, createArticlePages } from './createArticlePages.mjs';
+import { createClientPageRegistry } from './sitePageData.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
@@ -121,6 +123,9 @@ try {
 
     let site;
     let pages;
+    let allDetailTemplates;
+    let detailTemplates;
+    let publishedArticles;
     let redirects;
     let deletedPages;
     let transactionStarted = false;
@@ -165,6 +170,31 @@ try {
              ORDER BY path`,
             [site.id]
         );
+        const detailTemplatesResult = await client.query(
+            `SELECT detail.id, detail.path, detail.route_param, detail.content
+             FROM pages detail
+             JOIN pages list
+               ON list.id = detail.detail_parent_id
+              AND list.site_id = detail.site_id
+             WHERE detail.site_id = $1
+               AND detail.page_type = 'detail'
+               AND detail.deleted_at IS NULL
+               AND list.page_type = 'list'
+               AND list.data_source = 'articles'
+               AND list.deleted_at IS NULL
+             ORDER BY detail.path`,
+            [site.id],
+        );
+        const articlesResult = detailTemplatesResult.rows.length
+            ? await client.query(
+                `SELECT a.slug, a.title, a.summary, a.content, m.filename AS cover_filename
+                 FROM articles a
+                 LEFT JOIN media m ON m.id = a.cover_media_id AND m.site_id = a.site_id
+                 WHERE a.site_id = $1 AND a.status = 'published'
+                 ORDER BY a.slug`,
+                [site.id],
+            )
+            : { rows: [] };
         const redirectsResult = await client.query(
             `SELECT r.from_path, p.path, p.deleted_at
              FROM redirects r
@@ -185,10 +215,12 @@ try {
         );
 
         pages = pagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
-        const detailTemplates = pagesResult.rows.filter(({ page_type }) => page_type === 'detail');
+        allDetailTemplates = pagesResult.rows.filter(({ page_type }) => page_type === 'detail');
+        detailTemplates = detailTemplatesResult.rows;
+        publishedArticles = articlesResult.rows;
         redirects = redirectsResult.rows;
         deletedPages = deletedPagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
-        if (detailTemplates.some(({ path, route_param }) =>
+        if (allDetailTemplates.some(({ path, route_param }) =>
             !isValidPageRoutePattern(path) || !path.endsWith(`/:${route_param}`)
         )) {
             throw new Error(`Сайт ${site.slug} содержит некорректный шаблон детального маршрута`);
@@ -222,6 +254,20 @@ try {
         throw new Error(`Некорректный slug сайта: ${site.slug}`);
     }
 
+    const articleRecords = publishedArticles.map(({ cover_filename: coverFilename, ...article }) => ({
+        ...article,
+        coverUrl: coverFilename ? `${ASSET_BASE}/articles/${coverFilename}` : null,
+    }));
+    const articlePages = createArticlePages(detailTemplates, articleRecords);
+    const articleTemplateIds = new Set(detailTemplates.map(({ id }) => id));
+    assertArticlePathsAvailable(articlePages, [
+        ...pages.map(({ path }) => path),
+        ...redirects.map(({ from_path: path }) => path),
+        ...deletedPages.map(({ path }) => path),
+        ...allDetailTemplates.filter(({ id }) => !articleTemplateIds.has(id)).map(({ path }) => path),
+    ]);
+    const renderPages = [...pages, ...articlePages];
+
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
     const previousDirectory = join(STAGING_DIR, `${site.slug}.previous`);
@@ -229,10 +275,8 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
-    await generateSiteParts(pages, site.slug);
-    const pageRegistry = Object.fromEntries(
-        pages.map(({ path, title, content }) => [path, { path, title, content }])
-    );
+    await generateSiteParts(renderPages, site.slug);
+    const pageRegistry = createClientPageRegistry(renderPages);
     await writeFile(
         SITE_PAGES_PATH,
         `export const pages = ${JSON.stringify(pageRegistry)};\n`
@@ -296,7 +340,7 @@ try {
         `${pathToFileURL(rendererPath).href}?${Date.now()}`
     );
 
-    await renderSite(site, pages, temporaryDirectory, ASSET_BASE);
+    await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
     await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
     for (const review of publishedReviews) {
@@ -304,6 +348,13 @@ try {
         const source = getMediaPath(site.id, review.mediaFilename);
         if (!source) throw new Error(`Некорректное изображение отзыва: ${review.mediaId}`);
         await copyFile(source, join(temporaryDirectory, 'assets', 'reviews', review.mediaFilename));
+    }
+    await mkdir(join(temporaryDirectory, 'assets', 'articles'), { recursive: true });
+    const articleCoverFilenames = [...new Set(publishedArticles.map(({ cover_filename }) => cover_filename).filter(Boolean))];
+    for (const filename of articleCoverFilenames) {
+        const source = getMediaPath(site.id, filename);
+        if (!source) throw new Error(`Некорректное изображение статьи: ${filename}`);
+        await copyFile(source, join(temporaryDirectory, 'assets', 'articles', filename));
     }
     await copyFile(DEFAULT_FAVICON_PATH, join(temporaryDirectory, 'assets', 'favicon.svg'));
     const appJsPath = join(temporaryDirectory, 'assets', 'app.js');

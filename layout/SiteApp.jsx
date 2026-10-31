@@ -35,6 +35,7 @@ function defaultUrlForPath(path, url) {
 export default function SiteApp({
     pages,
     path,
+    initialPage,
     parts,
     widgets,
     pathFromUrl = defaultPathFromUrl,
@@ -47,7 +48,7 @@ export default function SiteApp({
     reviews,
 }) {
     const [currentPath, setCurrentPath] = useState(path);
-    const page = pages[currentPath];
+    const page = initialPage?.path === currentPath ? initialPage : pages[currentPath];
 
     useEffect(() => setCurrentPath(path), [path]);
 
@@ -122,7 +123,7 @@ export default function SiteApp({
     return (
         <SiteRoot tokens={tokens} theme={theme}>
             {page
-                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} />
+                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} context={page.context} record={page.record} />
                 : notFound}
         </SiteRoot>
     );
