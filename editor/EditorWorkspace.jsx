@@ -48,6 +48,7 @@ function partTitle(identifier, metadata) {
 }
 
 export default function EditorWorkspace({
+    page,
     content,
     metadata,
     parts,
@@ -58,6 +59,7 @@ export default function EditorWorkspace({
     contacts,
     catalog,
     reviews,
+    preview,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -67,6 +69,13 @@ export default function EditorWorkspace({
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
+    const record = page?.type === 'detail' ? preview?.record : null;
+    const context = { params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
+    const previewMessage = page?.type === 'detail' && {
+        loading: 'Загрузка статьи для предпросмотра…',
+        empty: 'Нет опубликованных статей для предпросмотра. Опубликуйте статью в настройках сайта.',
+        error: 'Не удалось загрузить статью для предпросмотра.',
+    }[preview?.status];
 
     const closePicker = useCallback((restoreFocus = true) => {
         setPicker((current) => {
@@ -128,6 +137,7 @@ export default function EditorWorkspace({
     return (
         <div className={styles.workspace}>
             <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
+                {previewMessage && <Card role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <div
@@ -169,7 +179,7 @@ export default function EditorWorkspace({
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} />
+                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} record={record} context={context} />
                                 </SiteRoot>
                             </div>
                         )}

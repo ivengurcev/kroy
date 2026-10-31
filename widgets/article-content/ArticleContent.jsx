@@ -5,6 +5,6 @@ import ArticleDisplay from '../../layout/ArticleDisplay.jsx';
  * @kroy-category Контент
  * @kroy-contract article
  */
-export default function ArticleContent({ record }) {
-    return <ArticleDisplay record={record} />;
+export default function ArticleContent({ data }) {
+    return <ArticleDisplay record={data?.title ? data : null} />;
 }

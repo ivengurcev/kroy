@@ -9,6 +9,7 @@ test('editor keeps detail template settings from a loaded page and PATCH respons
         path: '/cases/:caseSlug',
         type: 'detail',
         routeParam: 'caseSlug',
+        detailParentId: 'parent-id',
     });
     const patchedPage = toEditorPage({
         ...loadedPage,
@@ -23,6 +24,7 @@ test('editor keeps detail template settings from a loaded page and PATCH respons
         path: '/cases/:caseSlug',
         type: 'detail',
         routeParam: 'caseSlug',
+        detailParentId: 'parent-id',
     });
     assert.equal(patchedPage.type, 'detail');
     assert.equal(patchedPage.routeParam, 'caseId');

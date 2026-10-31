@@ -16,6 +16,7 @@ export default function AdminShell({
     contacts,
     catalog,
     reviews,
+    preview,
     onAddPart,
     onRemovePart,
     onMovePart,
@@ -37,6 +38,7 @@ export default function AdminShell({
                 />
             )}>
                 <EditorWorkspace
+                    page={page}
                     content={content}
                     metadata={metadata}
                     parts={parts}
@@ -47,6 +49,7 @@ export default function AdminShell({
                     contacts={contacts}
                     catalog={catalog}
                     reviews={reviews}
+                    preview={preview}
                     onAddPart={onAddPart}
                     onRemovePart={onRemovePart}
                     onMovePart={onMovePart}

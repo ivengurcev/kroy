@@ -1,5 +1,15 @@
 
-function publicProps(part, props, contacts, catalog, reviews) {
+function publicProps(part, props, contacts, catalog, reviews, record) {
+    if (part === '@kroy/article') {
+        return {
+            ...props,
+            slug: record?.slug ?? '',
+            title: record?.title ?? '',
+            summary: record?.summary ?? '',
+            content: record?.content ?? null,
+            coverUrl: record?.coverUrl ?? null,
+        };
+    }
     if (part === '@kroy/product-selection' && catalog) {
         return { ...props, products: props.productIds?.map((id) => catalog.products.find((product) => product.id === id)).filter(Boolean) ?? [] };
     }
@@ -36,7 +46,7 @@ export default function Page({ content, parts, widgets = {}, contacts, catalog, 
                 throw new Error(`Запчасть не найдена: ${part}`);
             }
 
-            return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews)} context={context} record={record} />;
+            return <Component key={id ?? index} {...publicProps(part, props, contacts, catalog, reviews, record)} context={context} record={record} />;
         }
 
         const Widget = widgets[view.name];
@@ -45,7 +55,7 @@ export default function Page({ content, parts, widgets = {}, contacts, catalog, 
             throw new Error(`Виджет не найден: ${view.name}`);
         }
 
-        const preparedProps = publicProps(part, props, contacts, catalog, reviews);
+        const preparedProps = publicProps(part, props, contacts, catalog, reviews, record);
 
         return <Widget key={id ?? index} data={preparedProps} options={view.props} context={context} record={record} />;
     });

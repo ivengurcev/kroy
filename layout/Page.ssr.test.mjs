@@ -64,3 +64,30 @@ test('defaults context and record for existing callers', () => {
 
     assert.equal(html, '<output>context|empty</output>');
 });
+
+test('preserves existing contacts, catalog and review preparation for parts and widgets', () => {
+    const contacts = { phone: '+70000000000', socials: [{ title: 'Link', url: '/link' }] };
+    const product = { id: 'product', categoryId: 'category', title: 'Product' };
+    const review = { id: 'review', text: 'Review' };
+    const cases = [
+        ['@kroy/hero', { title: 'Hero' }, { title: 'Hero', socials: contacts.socials }],
+        ['@kroy/contacts', {}, contacts],
+        ['@kroy/product-selection', { productIds: ['product', 'missing'] }, { productIds: ['product', 'missing'], products: [product] }],
+        ['@kroy/category-products', { categoryId: 'category' }, { categoryId: 'category', products: [product] }],
+        ['@kroy/reviews', { mode: 'manual', reviewIds: ['review'] }, { mode: 'manual', reviewIds: ['review'], reviews: [review] }],
+    ];
+    for (const [part, props, expected] of cases) {
+        for (const widget of [false, true]) {
+            let received;
+            function Part({ context, record, ...settings }) { received = settings; return null; }
+            function Widget({ data }) { received = data; return null; }
+            renderToStaticMarkup(createElement(Page, {
+                content: [{ part, props, ...(widget ? { view: { name: 'view', props: {} } } : {}) }],
+                parts: { [part]: Part }, widgets: { view: Widget }, contacts,
+                catalog: { products: [product] }, reviews: [review],
+                record: { title: 'Article must not replace other data' },
+            }));
+            assert.deepEqual(received, expected);
+        }
+    }
+});

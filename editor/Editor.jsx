@@ -9,6 +9,7 @@ import widgetMetadata from '../dist/kroy/widgets.json';
 import AdminShell from '../components/admin/AdminShell.jsx';
 import { createPart, createView } from './partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
+import { loadArticlePreview } from './articlePreview.mjs';
 
 export default function Editor() {
     const [content, setContent] = useState([]);
@@ -20,6 +21,7 @@ export default function Editor() {
     const [contacts, setContacts] = useState();
     const [catalog, setCatalog] = useState();
     const [reviews, setReviews] = useState();
+    const [preview, setPreview] = useState({ status: 'idle', record: null });
     const revision = useRef(0);
 
     useEffect(() => {
@@ -88,6 +90,24 @@ export default function Editor() {
 
         return () => controller.abort();
     }, []);
+
+    useEffect(() => {
+        if (page.type !== 'detail') {
+            setPreview({ status: 'idle', record: null });
+            return undefined;
+        }
+
+        const controller = new AbortController();
+        setPreview({ status: 'loading', record: null });
+        loadArticlePreview(page, controller.signal)
+            .then((sample) => {
+                if (!controller.signal.aborted) setPreview(sample);
+            })
+            .catch((error) => {
+                if (error.name !== 'AbortError') setPreview({ status: 'error', record: null });
+            });
+        return () => controller.abort();
+    }, [page.type, page.detailParentId]);
 
     const pageContent = content.map(({ part, props, view }) => view
         ? { part, props, view: { name: view.name, props: view.props } }
@@ -240,6 +260,7 @@ export default function Editor() {
             contacts={contacts}
             catalog={catalog}
             reviews={reviews}
+            preview={preview}
             onAddPart={addPart}
             onRemovePart={removePart}
             onMovePart={movePart}
