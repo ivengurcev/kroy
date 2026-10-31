@@ -124,3 +124,37 @@ test('reduced-motion browser preferences do not change the slider initial hydrat
         else globalThis.window = previous;
     }
 });
+
+test('reviews slider renders nothing when there are no reviews and submission is disabled', () => {
+    const html = renderToString(createElement(server.widgets['@kroy/reviews-slider'], {
+        data: { title: 'Отзывы', reviews: [], showSubmitButton: false },
+    }));
+    assert.equal(html, '');
+});
+
+test('reviews slider without reviews keeps its heading, submit button and existing form', () => {
+    const data = { title: 'Отзывы', reviews: [], showSubmitButton: true };
+    const html = renderToString(createElement(server.widgets['@kroy/reviews-slider'], { data }));
+    assert.match(html, /<h2[^>]*>Отзывы<\/h2>/);
+    assert.match(html, /<button[^>]*>Оставить отзыв<\/button>/);
+    assert.match(html, /<dialog/);
+    assert.match(html, /name="authorName"/);
+    assert.match(html, /name="text"/);
+    assert.doesNotMatch(html, /<article|Предыдущий отзыв|Следующий отзыв|Пауза/);
+    assert.equal(renderToString(createElement(client.widgets['@kroy/reviews-slider'], { data })), html);
+});
+
+test('reviews slider with reviews preserves slides, navigation and optional submission', () => {
+    const reviews = [...siteData.reviews, { ...siteData.reviews[0], id: 'second', text: 'Second review' }];
+    for (const showSubmitButton of [false, true]) {
+        const html = renderToString(createElement(server.widgets['@kroy/reviews-slider'], {
+            data: { title: 'Отзывы', reviews, showSubmitButton },
+        }));
+        assert.match(html, /Review body/);
+        assert.match(html, /Second review/);
+        assert.match(html, /Предыдущий отзыв/);
+        assert.match(html, /Следующий отзыв/);
+        assert.match(html, /Остановить автопрокрутку/);
+        assert.equal(html.includes('Оставить отзыв</button>'), showSubmitButton);
+    }
+});
