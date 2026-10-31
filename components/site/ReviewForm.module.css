@@ -1,0 +1,33 @@
+.reviewDialog { width: min(680px, calc(100vw - 32px)); max-width: 100%; max-height: calc(100dvh - 32px); overflow: auto; margin: auto; padding: 0; border: 1px solid var(--site-color-border); border-radius: var(--site-radius-lg); color: var(--site-color-text); background: var(--site-color-surface); box-shadow: 0 24px 80px color-mix(in srgb, var(--site-color-text) 24%, transparent); }
+.reviewDialog::backdrop { background: color-mix(in srgb, var(--site-color-text) 42%, transparent); }
+.reviewForm, .successMessage { display: grid; gap: var(--site-space-6); padding: clamp(var(--site-space-6), 5vw, var(--site-space-12)); font-family: var(--site-font-body); }
+.formHeader { display: flex; gap: var(--site-space-4); align-items: flex-start; justify-content: space-between; }
+.formHeader h2, .successMessage h2 { margin: 0; font: 400 calc(var(--site-font-size-base) * 1.6)/1.15 var(--site-font-heading); }
+.formHeader p, .successMessage p { margin: var(--site-space-2) 0 0; color: var(--site-color-text-secondary); font-size: calc(var(--site-font-size-base) * .9); }
+.closeButton { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; color: var(--site-color-text); font: 400 calc(var(--site-font-size-base) * 1.5)/1 var(--site-font-body); background: transparent; cursor: pointer; }
+.closeButton:hover { color: var(--site-color-accent); background: var(--site-color-surface-soft); }
+.formField, .photoField, .zoomField { display: grid; gap: var(--site-space-2); color: var(--site-color-text-secondary); font: 500 calc(var(--site-font-size-base) * .85)/1.35 var(--site-font-body); }
+.formField input, .formField textarea { width: 100%; box-sizing: border-box; padding: var(--site-space-3) var(--site-space-4); border: 1px solid var(--site-color-border); border-radius: var(--site-radius-base); color: var(--site-color-text); font: 400 var(--site-font-size-base)/var(--site-line-height) var(--site-font-body); background: var(--site-color-bg); }
+.formField textarea { resize: vertical; }
+.formField input:focus, .formField textarea:focus { border-color: var(--site-color-accent); outline: 2px solid color-mix(in srgb, var(--site-color-accent) 24%, transparent); outline-offset: 1px; }
+.honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.fileInput { display: none; }
+.photoActions, .formActions { display: flex; flex-wrap: wrap; gap: var(--site-space-3); align-items: center; }
+.formActions { justify-content: flex-end; }
+.formPrimaryButton, .formSecondaryButton, .formTextButton { min-height: 44px; padding: var(--site-space-3) var(--site-space-4); border-radius: var(--site-radius-base); font: 600 calc(var(--site-font-size-base) * .9)/1.2 var(--site-font-body); cursor: pointer; }
+.formPrimaryButton { border: 1px solid var(--site-color-accent); color: var(--site-color-bg); background: var(--site-color-accent); }
+.formSecondaryButton { border: 1px solid var(--site-color-border); color: var(--site-color-text); background: transparent; }
+.formTextButton { border: 0; color: var(--site-color-text-secondary); background: transparent; }
+.formPrimaryButton:hover { border-color: var(--site-color-accent-hover); background: var(--site-color-accent-hover); }
+.formSecondaryButton:hover, .formTextButton:hover { color: var(--site-color-accent); border-color: var(--site-color-accent); }
+.formPrimaryButton:disabled, .formSecondaryButton:disabled, .formTextButton:disabled, .closeButton:disabled { opacity: .55; cursor: wait; }
+.formPrimaryButton:focus-visible, .formSecondaryButton:focus-visible, .formTextButton:focus-visible, .closeButton:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 3px; }
+.cropArea { display: grid; gap: var(--site-space-3); }
+.cropStage { position: relative; width: min(100%, 440px); aspect-ratio: 1; overflow: hidden; touch-action: none; background: var(--site-color-text); cursor: grab; }
+.cropStage:active { cursor: grabbing; }
+.cropStage:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 3px; }
+.cropImage { position: absolute; top: 50%; left: 50%; max-width: none; user-select: none; pointer-events: none; transform-origin: center; }
+.zoomField input { width: 100%; accent-color: var(--site-color-accent); }
+.formError { margin: 0; color: var(--site-color-accent-hover); font: 500 calc(var(--site-font-size-base) * .85)/1.4 var(--site-font-body); }
+.successMessage { justify-items: start; }
+@media (max-width: 420px) { .reviewDialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }.reviewForm, .successMessage { padding: var(--site-space-4); }.formActions { display: grid; }.formPrimaryButton, .formSecondaryButton { width: 100%; } }

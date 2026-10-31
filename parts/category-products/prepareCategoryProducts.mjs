@@ -1,9 +1,7 @@
-import ProductCards from '../../components/site/ProductCards.jsx';
-import Section from '../../layout/Section.jsx';
-import styles from './category-products.module.css';
-
 /**
  * @kroy-title Товары категории
+ * @kroy-contract products
+ * @kroy-default-widget @kroy/category-products
  * @kroy-category Каталог
  *
  * @param {object} props
@@ -15,13 +13,13 @@ import styles from './category-products.module.css';
  * @kroy categoryId widget=catalog-category
  * @kroy limit widget=number
  */
-export default function CategoryProducts({ title = '', categoryId = '', limit = 0, products = [] }) {
-    const filtered = products
+export default function prepareCategoryProducts({ props, catalog }) {
+    const { title = '', categoryId = '', limit = 0 } = props;
+    const products = (catalog?.products ?? [])
         .filter((product) => product.status === 'published')
         .filter((product) => categoryId === '__all__'
             || categoryId === '__uncategorized__' && !product.categoryId
             || product.categoryId === categoryId)
         .slice(0, Number(limit) > 0 ? Number(limit) : undefined);
-    if (!filtered.length) return null;
-    return <Section className={styles.section}><div className={styles.inner}>{title && <h2>{title}</h2>}<ProductCards products={filtered} /></div></Section>;
+    return { title, products };
 }

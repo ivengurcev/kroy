@@ -1,5 +1,4 @@
 import styles from './hero.module.css';
-import { socialType } from '../../socialLinks.mjs';
 import Section from '../../layout/Section.jsx';
 import MaxIcon from '../../components/site/MaxIcon.jsx';
 
@@ -55,42 +54,10 @@ function SocialLink({ name, link, type }) {
 /**
  * @kroy-title Первый экран
  * @kroy-category Основное
- *
- * @param {object} props
- * @param {string} props.eyebrow - Надпись над заголовком
- * @param {string} props.title - Главный заголовок
- * @param {string} props.captionTitle - Заголовок плашки
- * @param {string} props.description - Текст плашки
- * @param {string} props.photo - Фотография
- *
- * @kroy eyebrow widget=input
- * @kroy title widget=textarea
- * @kroy captionTitle widget=input
- * @kroy description widget=textarea
- * @kroy photo widget=image aspectRatio=3:4 maxWidth=1600
+ * @kroy-contract hero
  */
-export default function Hero({
-    eyebrow = '',
-    title = '',
-    captionTitle = '',
-    description = '',
-    photo = '',
-    socials = [],
-}) {
-    const visibleSocials = Array.isArray(socials)
-        ? socials
-            .map((social) => ({
-                type: socialType(social),
-                name: social.name,
-                link: social.link,
-            }))
-            .map(({ type, name, link }) => ({
-                type,
-                name: typeof name === 'string' ? name.trim() : '',
-                link: typeof link === 'string' ? link.trim() : '',
-            }))
-            .filter(({ name, link }) => name && link)
-        : [];
+export default function Hero({ data }) {
+    const { eyebrow, title, captionTitle, description, photo, socials } = data;
     const hasCaption = captionTitle || description;
 
     return (
@@ -107,9 +74,9 @@ export default function Hero({
                         {title && <h1 className={styles.title}>{title}</h1>}
                     </div>
 
-                    {visibleSocials.length > 0 && (
+                    {socials.length > 0 && (
                         <nav className={styles.socials} aria-label="Социальные сети">
-                            {visibleSocials.map(({ type, name, link }, index) => (
+                            {socials.map(({ type, name, link }, index) => (
                                 <SocialLink key={`${name}-${link}-${index}`} type={type} name={name} link={link} />
                             ))}
                         </nav>

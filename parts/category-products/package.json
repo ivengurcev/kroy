@@ -1,5 +1,5 @@
 {
     "private": true,
     "name": "@kroy/category-products",
-    "main": "CategoryProducts.jsx"
+    "main": "prepareCategoryProducts.mjs"
 }

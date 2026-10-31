@@ -41,30 +41,25 @@ export default function PartEditor({
                 <div className={styles.section}>
                     <label className={styles.viewField}>
                         Отображение
-                        <select value={view?.name ?? ''} onChange={(event) => onViewChange(event.target.value)}>
-                            <option value="">По умолчанию</option>
+                        <select value={view.name} onChange={(event) => onViewChange(event.target.value)}>
                             {compatibleWidgets.map(([name, metadata]) => (
                                 <option value={name} key={name}>{metadata.title}</option>
                             ))}
                         </select>
                     </label>
 
-                    {view && (
-                        <>
-                            <h4>Настройки виджета</h4>
-                            {Object.entries(widgetMetadata[view.name]?.fields ?? {}).map(([name, schema]) => (
-                                <Field
-                                    key={name}
-                                    name={name}
-                                    schema={schema}
-                                    value={view.props[name]}
-                                    catalog={catalog}
-                                    reviews={reviews}
-                                    onChange={(value) => onViewPropChange(name, value)}
-                                />
-                            ))}
-                        </>
-                    )}
+                    <h4>Настройки виджета</h4>
+                    {Object.entries(widgetMetadata[view.name]?.fields ?? {}).map(([name, schema]) => (
+                        <Field
+                            key={name}
+                            name={name}
+                            schema={schema}
+                            value={view.props[name]}
+                            catalog={catalog}
+                            reviews={reviews}
+                            onChange={(value) => onViewPropChange(name, value)}
+                        />
+                    ))}
                 </div>
             )}
         </section>

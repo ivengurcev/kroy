@@ -35,8 +35,9 @@ after(async () => {
 });
 
 test('SSR uses the current detail page payload when it is absent from the shared registry', () => {
-    function Article({ context, record }) {
-        return createElement('output', null, `${context.params.caseId}|${record.title}`);
+    function Article({ record }) { return record; }
+    function Widget({ context, data }) {
+        return createElement('output', null, `${context.params.caseId}|${data.title}`);
     }
     const html = renderToStaticMarkup(createElement(SiteApp, {
         pages: {},
@@ -44,11 +45,12 @@ test('SSR uses the current detail page payload when it is absent from the shared
         initialPage: {
             path: '/cases/example',
             title: 'Example',
-            content: [{ part: 'article', props: {} }],
+            content: [{ part: 'article', props: {}, view: { name: 'article-view', props: {} } }],
             context: { params: { caseId: 'example' } },
             record: { title: 'Example article' },
         },
         parts: { article: Article },
+        widgets: { 'article-view': Widget },
     }));
 
     assert.match(html, /example\|Example article/);

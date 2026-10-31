@@ -4,6 +4,10 @@
     "props": {
       "title": "Демонстрационный сайт",
       "description": "Пример содержимого главной страницы"
+    },
+    "view": {
+      "name": "@kroy/hero",
+      "props": {}
     }
   },
   {
@@ -22,6 +26,10 @@
           ]
         }
       ]
+    },
+    "view": {
+      "name": "@kroy/services",
+      "props": {}
     }
   }
 ]

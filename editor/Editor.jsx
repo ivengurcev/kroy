@@ -7,7 +7,7 @@ import { widgets } from '../dist/kroy/widgets.mjs';
 import widgetMetadata from '../dist/kroy/widgets.json';
 
 import AdminShell from '../components/admin/AdminShell.jsx';
-import { createPart, createView } from './partModel.js';
+import { createPart, changePartView } from './partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadArticlePreview } from './articlePreview.mjs';
 
@@ -45,9 +45,10 @@ export default function Editor() {
 
                 const page = await response.json();
 
-                const loadedContent = page.content.map(({ part, props, view }) =>
-                    createPart(part, metadata[part]?.fields, props, view)
-                );
+                const loadedContent = page.content.map(({ part, props, view }) => {
+                    if (!view) throw new Error('Страница требует миграции виджетов.');
+                    return createPart(part, metadata[part], widgetMetadata, props, view);
+                });
 
                 setContent(loadedContent);
                 setPage(toEditorPage(page));
@@ -109,9 +110,9 @@ export default function Editor() {
         return () => controller.abort();
     }, [page.type, page.detailParentId]);
 
-    const pageContent = content.map(({ part, props, view }) => view
-        ? { part, props, view: { name: view.name, props: view.props } }
-        : { part, props });
+    const pageContent = content.map(({ part, props, view }) => ({
+        part, props, view: { name: view.name, props: view.props },
+    }));
 
     function markDirty() {
         revision.current += 1;
@@ -151,8 +152,7 @@ export default function Editor() {
     }
 
     function addPart(part, position) {
-        const fields = metadata[part]?.fields ?? {};
-        const newPart = createPart(part, fields);
+        const newPart = createPart(part, metadata[part], widgetMetadata);
 
         markDirty();
         setContent((previous) => {
@@ -213,15 +213,7 @@ export default function Editor() {
         markDirty();
         setContent((previous) => previous.map((item) => {
             if (item.id !== id) return item;
-            if (!name) {
-                const { view, ...part } = item;
-                return part;
-            }
-
-            return {
-                ...item,
-                view: createView(name, widgetMetadata[name]?.fields),
-            };
+            return changePartView(item, name, metadata[item.part], widgetMetadata);
         }));
     }
 

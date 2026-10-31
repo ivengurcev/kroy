@@ -2,38 +2,13 @@ import Map from '../../components/site/Map.jsx';
 import Section from '../../layout/Section.jsx';
 import styles from './contacts.module.css';
 
-function telephoneHref(phone) {
-    const value = typeof phone === 'string' ? phone.trim() : '';
-    const target = value.replace(/[^+\d]/g, '');
-    return /\d/.test(target) ? `tel:${target}` : null;
-}
-
 /**
  * @kroy-title Контакты
  * @kroy-category Основное
- *
- * @param {object} props
- * @param {string} props.title - Заголовок секции
- * @param {number} props.zoom - Масштаб карты
- * @param {string} props.markerText - Подпись маркера
- *
- * @kroy title widget=textarea
- * @kroy zoom widget=number
- * @kroy markerText widget=input
+ * @kroy-contract contacts
  */
-export default function Contacts({
-    title = '',
-    address = '',
-    hours = '',
-    phone = '',
-    latitude = null,
-    longitude = null,
-    zoom = 14,
-    markerText = '',
-}) {
-    const href = telephoneHref(phone);
-    const hasCoordinates = Number.isFinite(Number(latitude))
-        && Number.isFinite(Number(longitude));
+export default function Contacts({ data }) {
+    const { title, address, hours, phone, latitude, longitude, zoom, markerText, phoneHref: href, hasCoordinates } = data;
 
     return (
         <Section className={styles.contactsContainer}>

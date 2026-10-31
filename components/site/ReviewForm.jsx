@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import styles from './reviews.module.css';
+import styles from './ReviewForm.module.css';
 
 const MAX_WIDTH = 800;
 

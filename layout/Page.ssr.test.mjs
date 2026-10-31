@@ -10,84 +10,61 @@ import { transform } from 'esbuild';
 
 let Page;
 let compiledPath;
-
 before(async () => {
     const sourcePath = fileURLToPath(new URL('./Page.jsx', import.meta.url));
-    const source = await readFile(sourcePath, 'utf8');
-    const { code } = await transform(source, { loader: 'jsx', format: 'esm', jsx: 'automatic' });
+    const { code } = await transform(await readFile(sourcePath, 'utf8'), { loader: 'jsx', format: 'esm', jsx: 'automatic' });
     compiledPath = join(dirname(sourcePath), `.Page-test-${randomUUID()}.mjs`);
     await writeFile(compiledPath, code);
     ({ default: Page } = await import(pathToFileURL(compiledPath).href));
 });
+after(async () => { if (compiledPath) await rm(compiledPath, { force: true }); });
 
-after(async () => {
-    if (compiledPath) await rm(compiledPath, { force: true });
+test('calls the data part with independent settings, record, context and site data, then renders its widget', () => {
+    const props = { title: 'setting' };
+    const record = { title: 'record' };
+    const context = { params: { caseId: 'sample' } };
+    const contacts = { phone: '+70000000000' };
+    const catalog = { products: [] };
+    const reviews = [{ id: 'review' }];
+    const options = { layout: 'wide' };
+    function prepare(input) {
+        assert.deepEqual(input, { props, record, context, contacts, catalog, reviews });
+        return { title: `${input.props.title}|${input.record.title}` };
+    }
+    function Widget(input) {
+        assert.deepEqual(Object.keys(input).sort(), ['context', 'data', 'options']);
+        assert.equal(input.context, context);
+        assert.equal(input.options, options);
+        return createElement('output', null, `${input.data.title}|${input.options.layout}|${input.context.params.caseId}`);
+    }
+    assert.equal(renderToStaticMarkup(createElement(Page, {
+        content: [{ part: '@kroy/example', props, view: { name: '@kroy/view', props: options } }],
+        parts: { '@kroy/example': prepare }, widgets: { '@kroy/view': Widget },
+        record, context, contacts, catalog, reviews,
+    })), '<output>setting|record|wide|sample</output>');
 });
 
-test('passes separate context and record to a legacy part without changing its settings', () => {
-    function Part({ title, context, record }) {
-        return createElement('output', null, `${title}|${context.params.caseId}|${record.title}`);
+test('requires a known data part and a selected known widget', () => {
+    const item = { part: '@kroy/example', props: {}, view: { name: '@kroy/view', props: {} } };
+    const props = { content: [item], parts: { '@kroy/example': () => ({}) }, widgets: { '@kroy/view': () => null } };
+    for (const [overrides, message] of [
+        [{ parts: {} }, /Запчасть не найдена/],
+        [{ widgets: {} }, /Виджет не найден/],
+        [{ content: [{ part: item.part, props: {} }] }, /виджет/i],
+    ]) {
+        assert.throws(() => renderToStaticMarkup(createElement(Page, { ...props, ...overrides })), message);
     }
-    const html = renderToStaticMarkup(createElement(Page, {
-        content: [{ part: 'article', props: { title: 'setting' } }],
-        parts: { article: Part },
-        context: { params: { caseId: 'sample' } },
-        record: { title: 'record' },
-    }));
-
-    assert.equal(html, '<output>setting|sample|record</output>');
 });
 
-test('keeps widget data/options separate from route context and record', () => {
-    function Widget({ data, options, context, record }) {
-        return createElement('output', null, `${data.title}|${options.layout}|${context.params.entry}|${record.title}`);
+test('supplies empty route context and null record when rendering a standard page', () => {
+    function prepare({ context, record }) {
+        assert.deepEqual(context, { params: {} });
+        assert.equal(record, null);
+        return { title: 'Standard page' };
     }
-    const html = renderToStaticMarkup(createElement(Page, {
-        content: [{ part: 'article', props: { title: 'setting' }, view: { name: 'article-view', props: { layout: 'wide' } } }],
-        parts: {},
-        widgets: { 'article-view': Widget },
-        context: { params: { entry: 'story' } },
-        record: { title: 'record' },
-    }));
-
-    assert.equal(html, '<output>setting|wide|story|record</output>');
-});
-
-test('defaults context and record for existing callers', () => {
-    function Part({ context, record }) {
-        return createElement('output', null, `${context.params ? 'context' : 'missing'}|${record ?? 'empty'}`);
-    }
-    const html = renderToStaticMarkup(createElement(Page, {
-        content: [{ part: 'legacy', props: {} }],
-        parts: { legacy: Part },
-    }));
-
-    assert.equal(html, '<output>context|empty</output>');
-});
-
-test('preserves existing contacts, catalog and review preparation for parts and widgets', () => {
-    const contacts = { phone: '+70000000000', socials: [{ title: 'Link', url: '/link' }] };
-    const product = { id: 'product', categoryId: 'category', title: 'Product' };
-    const review = { id: 'review', text: 'Review' };
-    const cases = [
-        ['@kroy/hero', { title: 'Hero' }, { title: 'Hero', socials: contacts.socials }],
-        ['@kroy/contacts', {}, contacts],
-        ['@kroy/product-selection', { productIds: ['product', 'missing'] }, { productIds: ['product', 'missing'], products: [product] }],
-        ['@kroy/category-products', { categoryId: 'category' }, { categoryId: 'category', products: [product] }],
-        ['@kroy/reviews', { mode: 'manual', reviewIds: ['review'] }, { mode: 'manual', reviewIds: ['review'], reviews: [review] }],
-    ];
-    for (const [part, props, expected] of cases) {
-        for (const widget of [false, true]) {
-            let received;
-            function Part({ context, record, ...settings }) { received = settings; return null; }
-            function Widget({ data }) { received = data; return null; }
-            renderToStaticMarkup(createElement(Page, {
-                content: [{ part, props, ...(widget ? { view: { name: 'view', props: {} } } : {}) }],
-                parts: { [part]: Part }, widgets: { view: Widget }, contacts,
-                catalog: { products: [product] }, reviews: [review],
-                record: { title: 'Article must not replace other data' },
-            }));
-            assert.deepEqual(received, expected);
-        }
-    }
+    function Widget({ data }) { return createElement('p', null, data.title); }
+    assert.equal(renderToStaticMarkup(createElement(Page, {
+        content: [{ part: '@kroy/standard', props: {}, view: { name: '@kroy/view', props: {} } }],
+        parts: { '@kroy/standard': prepare }, widgets: { '@kroy/view': Widget },
+    })), '<p>Standard page</p>');
 });

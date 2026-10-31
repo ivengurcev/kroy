@@ -4,7 +4,7 @@ import Section from '../../layout/Section.jsx';
 
 function Category({ category }) {
     const [isOpen, setIsOpen] = useState(true);
-    const items = Array.isArray(category?.items) ? category.items : [];
+    const items = category.items;
 
     return (
         <div className={styles.category}>
@@ -37,26 +37,10 @@ function Category({ category }) {
 /**
  * @kroy-title Услуги
  * @kroy-category Контент
- *
- * @param {object} props
- * @param {string} props.title - Заголовок секции
- * @param {string} props.eyebrow - Надпись над заголовком
- * @param {{title: string, items: {name: string, price: string, note: string}[]}[]} props.categories - Направления
- *
- * @kroy title widget=textarea
- * @kroy eyebrow widget=input
- * @kroy categories.title label=Название
- * @kroy categories.items label=Услуги
- * @kroy categories.items.name label=Услуга
- * @kroy categories.items.price label=Цена
- * @kroy categories.items.note label=Примечание
+ * @kroy-contract services
  */
-export default function Services({
-    title = '',
-    eyebrow = '',
-    categories = [],
-}) {
-    const visibleCategories = Array.isArray(categories) ? categories : [];
+export default function Services({ data }) {
+    const { title, eyebrow, categories } = data;
 
     return (
         <Section className={styles.servicesContainer}>
@@ -67,7 +51,7 @@ export default function Services({
                 </header>
 
                 <div className={styles.categories}>
-                    {visibleCategories.map((category, index) => (
+                    {categories.map((category, index) => (
                         <Category category={category} key={`${category?.title ?? ''}-${index}`} />
                     ))}
                 </div>

@@ -1,6 +1,6 @@
 
 import { readdir, readFile, stat, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, extname, join, relative, resolve, isAbsolute, sep } from 'node:path';
+import { dirname, join, relative, resolve, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parsePartDoc } from './parsePartDoc.mjs';
 
@@ -74,6 +74,7 @@ async function discoverComponents(root, { optional = false } = {}) {
             title: metadata.title ?? fallbackTitle(name),
             category: metadata.category ?? 'Другое',
             contract: metadata.contract,
+            defaultWidget: metadata.defaultWidget,
             fields: metadata.fields,
         });
     }
@@ -107,8 +108,6 @@ async function discoverComponents(root, { optional = false } = {}) {
                 } else {
                     await scan(path);
                 }
-            } else if (entry.isFile() && extname(entry.name) === '.jsx') {
-                await register(componentName(root, path.slice(0, -'.jsx'.length)), path);
             }
         }
     }
@@ -122,12 +121,24 @@ async function discoverComponents(root, { optional = false } = {}) {
     return components.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function discoverParts() {
-    return discoverComponents(PARTS_DIR);
+export function discoverParts(root = PARTS_DIR) {
+    return discoverComponents(root);
 }
 
-export function discoverWidgets() {
-    return discoverComponents(WIDGETS_DIR, { optional: true });
+export function discoverWidgets(root = WIDGETS_DIR) {
+    return discoverComponents(root, { optional: true });
+}
+
+export function validateDefaultWidgets(parts, widgets) {
+    const available = new Map(widgets.map((widget) => [widget.name, widget]));
+    for (const part of parts) {
+        if (!part.defaultWidget) throw new Error(`Не указан виджет по умолчанию: ${part.name}`);
+        const widget = available.get(part.defaultWidget);
+        if (!widget) throw new Error(`Виджет по умолчанию не найден: ${part.defaultWidget}`);
+        if (!part.contract || part.contract !== widget.contract) {
+            throw new Error(`Виджет ${widget.name} несовместим с запчастью ${part.name}: контракты должны совпадать`);
+        }
+    }
 }
 
 function registryFiles(components, exportName) {
@@ -149,6 +160,7 @@ function registryFiles(components, exportName) {
             title: component.title,
             category: component.category,
             contract: component.contract,
+            defaultWidget: component.defaultWidget,
             fields: component.fields,
         };
     }
@@ -172,6 +184,7 @@ export async function generateParts() {
         discoverParts(),
         discoverWidgets(),
     ]);
+    validateDefaultWidgets(parts, widgets);
     const partFiles = registryFiles(parts, 'parts');
     const widgetFiles = registryFiles(widgets, 'widgets');
 

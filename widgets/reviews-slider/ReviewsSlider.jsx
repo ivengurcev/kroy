@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import ReviewForm from './ReviewForm.jsx';
+import ReviewForm from '../../components/site/ReviewForm.jsx';
 import styles from './reviews.module.css';
 import Section from '../../layout/Section.jsx';
 
@@ -9,23 +9,9 @@ const AUTOPLAY_DELAY = 6000;
  * @kroy-title Отзывы
  * @kroy-category Контент
  * @kroy-contract reviews
- *
- * @param {object} props
- * @param {string} props.title - Заголовок секции
- * @param {'auto'|'manual'} props.mode - Режим подбора
- * @param {number} props.limit - Максимальное количество отзывов
- * @param {string[]} props.reviewIds - Выбранные отзывы
- * @param {boolean} props.showSubmitButton - Показывать кнопку "Оставить отзыв"
- * @param {boolean} props.showAllReviewsButton - Показывать кнопку "Все отзывы"
- *
- * @kroy title widget=input
- * @kroy mode widget=select
- * @kroy limit widget=number
- * @kroy reviewIds widget=review-list
- * @kroy showSubmitButton widget=checkbox
- * @kroy showAllReviewsButton widget=checkbox
  */
-export default function Reviews({ title = 'Отзывы', reviews = [], showSubmitButton = false, showAllReviewsButton = false }) {
+export default function ReviewsSlider({ data }) {
+    const { title, reviews, showSubmitButton } = data;
     const [index, setIndex] = useState(0);
     const [paused, setPaused] = useState(false);
     const [hidden, setHidden] = useState(false);
@@ -34,7 +20,14 @@ export default function Reviews({ title = 'Отзывы', reviews = [], showSubm
     const [canExpand, setCanExpand] = useState(false);
     const touch = useRef(null);
     const quoteRefs = useRef([]);
-    const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const [reduced, setReduced] = useState(false);
+    useEffect(() => {
+        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const update = () => setReduced(media.matches);
+        update();
+        media.addEventListener('change', update);
+        return () => media.removeEventListener('change', update);
+    }, []);
     const canPlay = reviews.length > 1 && !paused && !hidden && !reduced && !expanded;
     const progressPaused = paused || hidden || expanded;
     const goBy = (offset) => {

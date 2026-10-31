@@ -17,7 +17,7 @@ before(async () => {
         stdin: {
             contents: `export { default as Page } from './layout/Page.jsx';
                 export { default as SiteApp } from './layout/SiteApp.jsx';
-                export { default as Article } from './parts/article/Article.jsx';
+                export { default as Article } from './parts/article/prepareArticle.mjs';
                 export { default as ArticleContent } from './widgets/article-content/ArticleContent.jsx';
                 export { default as EditorWorkspace } from './editor/EditorWorkspace.jsx';`,
             resolveDir: fileURLToPath(new URL('../', import.meta.url)),
@@ -71,26 +71,25 @@ test('ArticleContent renders data even when record disagrees', () => {
     assert.doesNotMatch(html, /Wrong record/);
 });
 
-test('article renders with and without a widget and has matching hydration payload markup', () => {
-    for (const content of [[item], [{ ...item, view: undefined }]]) {
-        const initialPage = { path: '/cases/published-story', title: record.title, content, record, context };
-        const props = { ...pageProps(content), pages: {}, path: initialPage.path, initialPage };
-        const html = renderToString(createElement(components.SiteApp, props));
-        assert.match(html, /Published title/);
-        assert.match(html, /Article body/);
-        assert.match(html, /src="\/api\/media\/cover-id"/);
-        assert.equal(renderToString(createElement(components.SiteApp, {
-            ...props, initialPage: JSON.parse(serializePagePayload(initialPage)),
-        })), html);
-    }
+test('article renders its selected widget with matching hydration payload markup', () => {
+    const content = [item];
+    const initialPage = { path: '/cases/published-story', title: record.title, content, record, context };
+    const props = { ...pageProps(content), pages: {}, path: initialPage.path, initialPage };
+    const html = renderToString(createElement(components.SiteApp, props));
+    assert.match(html, /Published title/);
+    assert.match(html, /Article body/);
+    assert.match(html, /src="\/api\/media\/cover-id"/);
+    assert.equal(renderToString(createElement(components.SiteApp, {
+        ...props, initialPage: JSON.parse(serializePagePayload(initialPage)),
+    })), html);
 });
 
 test('workspace forwards the sample record and named route context to every part and widget', () => {
-    function Probe({ record, context }) { return createElement('output', null, `${context.params.caseId}|${record.title}`); }
-    const content = [item, { id: 'other', part: '@kroy/other', props: {} }];
+    function Probe({ data, context }) { return createElement('output', null, `${context.params.caseId}|${data.title}`); }
+    const content = [item, { id: 'other', part: '@kroy/other', props: {}, view: item.view }];
     const snapshot = JSON.stringify(content);
     const html = renderToString(createElement(components.EditorWorkspace, {
-        ...pageProps(content), parts: { '@kroy/other': Probe }, widgets: { '@kroy/article-content': Probe },
+        ...pageProps(content), parts: { '@kroy/article': components.Article, '@kroy/other': ({ record, context }) => { assert.equal(context.params.caseId, 'published-story'); return record; } }, widgets: { '@kroy/article-content': Probe },
         metadata: {}, widgetMetadata: {}, loadStatus: 'success',
         page: { type: 'detail', routeParam: 'caseId' }, preview: { status: 'success', record },
     }));
@@ -101,7 +100,7 @@ test('workspace forwards the sample record and named route context to every part
 test('workspace explains missing published articles and preview loading failures', () => {
     for (const [status, message] of [['empty', /Нет опубликованных статей/], ['error', /Не удалось загрузить статью/], ['loading', /Загрузка статьи/]]) {
         const html = renderToString(createElement(components.EditorWorkspace, {
-            ...pageProps(), metadata: {}, widgetMetadata: {}, loadStatus: 'success',
+            ...pageProps(), record: null, metadata: {}, widgetMetadata: {}, loadStatus: 'success',
             page: { type: 'detail', routeParam: 'caseId' }, preview: { status, record: null },
         }));
         assert.match(html, message);

@@ -23,7 +23,8 @@ const testPageContent = [
     props: {
       title: "Тестовый сайт",
       description: "Отдельный сайт для проверки локальной мультисайтовости",
-    }
+    },
+    view: { name: "@kroy/hero", props: {} }
   }
 ];
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Section from '../../layout/Section.jsx';
-import ReviewForm from '../../parts/reviews/ReviewForm.jsx';
+import ReviewForm from '../../components/site/ReviewForm.jsx';
 import styles from './reviewCards.module.css';
 
 /**

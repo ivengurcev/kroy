@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverParts, discoverWidgets } from './discoverParts.mjs';
+import { discoverParts, discoverWidgets, validateDefaultWidgets } from './discoverParts.mjs';
+import { isValidContent } from '../api/pageContent.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
@@ -12,7 +13,7 @@ export default async function generateSiteParts(pages, siteSlug) {
         pages.flatMap(({ content }) => content.map(({ part }) => part))
     )];
     const widgetNames = [...new Set(
-        pages.flatMap(({ content }) => content.map(({ view }) => view?.name).filter(Boolean))
+        pages.flatMap(({ content }) => content.map(({ view }) => view?.name))
     )];
     const [discoveredParts, discoveredWidgets] = await Promise.all([
         discoverParts(),
@@ -20,6 +21,14 @@ export default async function generateSiteParts(pages, siteSlug) {
     ]);
     const availableParts = new Map(discoveredParts.map((part) => [part.name, part]));
     const availableWidgets = new Map(discoveredWidgets.map((widget) => [widget.name, widget]));
+    validateDefaultWidgets(discoveredParts, discoveredWidgets);
+    const partCatalog = Object.fromEntries(availableParts);
+    const widgetCatalog = Object.fromEntries(availableWidgets);
+    for (const page of pages) {
+        if (!isValidContent(page.content, partCatalog, widgetCatalog)) {
+            throw new Error(`Некорректный content сайта ${siteSlug}: каждая запчасть требует совместимый виджет`);
+        }
+    }
     const imports = [];
     const partEntries = [];
     const widgetEntries = [];
@@ -42,22 +51,6 @@ export default async function generateSiteParts(pages, siteSlug) {
 
         imports.push(`import ${variable} from ${JSON.stringify(importPath)};`);
         partEntries.push(`    ${JSON.stringify(name)}: ${variable},`);
-    }
-
-    for (const page of pages) {
-        for (const { part: partName, view } of page.content) {
-            if (!view) continue;
-
-            const part = availableParts.get(partName);
-            const widget = availableWidgets.get(view.name);
-
-            if (!widget) {
-                throw new Error(`Виджет сайта ${siteSlug} не найден: ${view.name}`);
-            }
-            if (!part?.contract || part.contract !== widget.contract) {
-                throw new Error(`Виджет ${view.name} несовместим с запчастью ${partName} сайта ${siteSlug}`);
-            }
-        }
     }
 
     for (const [index, name] of widgetNames.entries()) {

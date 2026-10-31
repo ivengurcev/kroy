@@ -4,18 +4,10 @@ import Section from '../../layout/Section.jsx';
 /**
  * @kroy-title О себе
  * @kroy-category Основное
- *
- * @param {object} props
- * @param {string} props.title - Заголовок секции
- * @param {string} props.text - Текст
- *
- * @kroy title widget=textarea
- * @kroy text widget=textarea
+ * @kroy-contract about
  */
-export default function About({ title = '', text = '' }) {
-    const paragraphs = typeof text === 'string'
-        ? text.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean)
-        : [];
+export default function About({ data }) {
+    const { title, paragraphs } = data;
 
     return (
         <Section className={styles.aboutContainer}>

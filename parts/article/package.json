@@ -1,4 +1,4 @@
 {
     "name": "@kroy/article",
-    "main": "Article.jsx"
+    "main": "prepareArticle.mjs"
 }

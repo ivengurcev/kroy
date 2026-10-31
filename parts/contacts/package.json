@@ -1,5 +1,5 @@
 {
     "private": true,
     "name": "@kroy/contacts",
-    "main": "Contacts.jsx"
+    "main": "prepareContacts.mjs"
 }

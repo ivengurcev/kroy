@@ -43,7 +43,20 @@ export function createView(name, fields = {}, props = {}) {
     };
 }
 
-export function createPart(part, fields = {}, props = {}, view) {
+function partView(name, metadata, widgetMetadata, props) {
+    const widget = widgetMetadata[name];
+    if (!widget) throw new Error(`Виджет не найден: ${name}`);
+    if (!metadata.contract || metadata.contract !== widget.contract) {
+        throw new Error(`Виджет ${name} несовместим с контрактом ${metadata.contract}`);
+    }
+    return createView(name, widget.fields, props);
+}
+
+export function changePartView(item, name, metadata, widgetMetadata) {
+    return { ...item, view: partView(name, metadata, widgetMetadata) };
+}
+
+export function createPart(part, metadata, widgetMetadata, props = {}, view) {
     const id = globalThis.crypto?.randomUUID?.()
         ?? `part-${Date.now()}-${++sequence}`;
 
@@ -51,14 +64,12 @@ export function createPart(part, fields = {}, props = {}, view) {
         id,
         part,
         props: {
-            ...defaultProps(fields),
+            ...defaultProps(metadata.fields),
             ...props,
         },
     };
 
-    if (view) {
-        item.view = createView(view.name, {}, view.props);
-    }
+    item.view = partView(view ? view.name : metadata.defaultWidget, metadata, widgetMetadata, view?.props);
 
     return item;
 }

@@ -1,6 +1,5 @@
 import styles from './links.module.css';
 import Section from '../../layout/Section.jsx';
-import { socialType } from '../../socialLinks.mjs';
 import MaxIcon from '../../components/site/MaxIcon.jsx';
 
 function LinkIcon({ type }) {
@@ -20,23 +19,17 @@ function LinkIcon({ type }) {
 /**
  * @kroy-title Ссылки
  * @kroy-category Контакты
- *
- * @param {object} props
- * @param {string} props.title - Заголовок секции
- *
- * @kroy title widget=input
+ * @kroy-contract links
  */
-export default function Links({ title = '', socials = [] }) {
-    const visibleLinks = Array.isArray(socials)
-        ? socials.filter(({ name, link }) => name?.trim() && link?.trim())
-        : [];
+export default function Links({ data }) {
+    const { title, socials } = data;
 
     return (
         <Section className={styles.linksContainer}>
             <div className={styles.links}>
                 {title && <h2 className={styles.title}>{title}</h2>}
-                {visibleLinks.length > 0 && <nav aria-label={title || 'Ссылки'} className={styles.list}>
-                    {visibleLinks.map((social, index) => <a href={social.link.trim()} key={`${social.name}-${social.link}-${index}`} target="_blank" rel="noopener noreferrer"><span>{social.name.trim()}</span><LinkIcon type={socialType(social)} /></a>)}
+                {socials.length > 0 && <nav aria-label={title || 'Ссылки'} className={styles.list}>
+                    {socials.map((social, index) => <a href={social.link} key={`${social.name}-${social.link}-${index}`} target="_blank" rel="noopener noreferrer"><span>{social.name}</span><LinkIcon type={social.type} /></a>)}
                 </nav>}
             </div>
         </Section>

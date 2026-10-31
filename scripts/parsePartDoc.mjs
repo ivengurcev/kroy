@@ -257,6 +257,16 @@ export function parsePartDoc(source) {
             }
 
             field.default = defaultValue;
+        } else if (tag.default !== undefined && field.type === 'checkbox') {
+            if (!['true', 'false'].includes(tag.default)) {
+                throw new Error(`Некорректное значение по умолчанию: ${tag.default}`);
+            }
+            field.default = tag.default === 'true';
+        } else if (tag.default !== undefined && ['input', 'select'].includes(field.type)) {
+            field.default = tag.default.replace(/^(['"])(.*)\1$/, '$2');
+            if (field.options && !field.options.includes(field.default)) {
+                throw new Error(`Некорректное значение по умолчанию: ${tag.default}`);
+            }
         }
 
         if (tag.description) {
@@ -291,10 +301,16 @@ export function parsePartDoc(source) {
         throw new Error('Пустой @kroy-contract');
     }
 
+    const defaultWidget = metadataValue('kroy-default-widget');
+    if (block.tags.some((tag) => tag.tag === 'kroy-default-widget') && !defaultWidget) {
+        throw new Error('Пустой @kroy-default-widget');
+    }
+
     return {
         title: metadataValue('kroy-title') || undefined,
         category: metadataValue('kroy-category') || undefined,
         contract: contract || undefined,
+        defaultWidget: defaultWidget || undefined,
         fields,
     };
 }

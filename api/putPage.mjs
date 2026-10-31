@@ -3,46 +3,7 @@ import widgetCatalog from "../dist/kroy/widgets.json" with { type: "json" };
 import { pool } from "../db/client.mjs";
 import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
-
-function isPlainObject(value) {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
-
-function isValidContent(content) {
-  return Array.isArray(content) && content.every((item) => {
-    if (!isPlainObject(item)) return false;
-
-    const keys = Object.keys(item);
-
-    const hasView = keys.includes("view");
-    const view = item.view;
-    const validView = !hasView || (
-      isPlainObject(view)
-      && Object.keys(view).length === 2
-      && Object.hasOwn(view, "name")
-      && Object.hasOwn(view, "props")
-      && typeof view.name === "string"
-      && Object.hasOwn(widgetCatalog, view.name)
-      && isPlainObject(view.props)
-      && partCatalog[item.part]?.contract
-      && partCatalog[item.part].contract === widgetCatalog[view.name].contract
-    );
-
-    return (keys.length === 2 || keys.length === 3 && hasView)
-      && keys.includes("part")
-      && keys.includes("props")
-      && typeof item.part === "string"
-      && item.part.trim().length > 0
-      && Object.hasOwn(partCatalog, item.part)
-      && isPlainObject(item.props)
-      && validView;
-  });
-}
+import { isPlainObject, isValidContent } from "./pageContent.mjs";
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");
@@ -59,7 +20,7 @@ export default async function putPage(c) {
     return c.json({ error: "Invalid request" }, 400);
   }
 
-  if (!isPlainObject(body) || !isValidContent(body.content)) {
+  if (!isPlainObject(body) || !isValidContent(body.content, partCatalog, widgetCatalog)) {
     return c.json({ error: "Invalid content" }, 400);
   }
 

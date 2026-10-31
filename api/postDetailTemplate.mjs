@@ -3,11 +3,18 @@ import getHostname from './getHostname.mjs';
 import isUuid from './isUuid.mjs';
 import { createDetailPath, isValidRouteParameter, normalizePageTitle } from './pageFields.mjs';
 import findPageRouteConflict from './pageRouteConflicts.mjs';
+import partCatalog from '../dist/kroy/parts.json' with { type: 'json' };
+import widgetCatalog from '../dist/kroy/widgets.json' with { type: 'json' };
+import { defaultProps, createView } from '../editor/partModel.js';
 
 export function initialDetailContent(dataSource) {
-    return dataSource === 'articles'
-        ? [{ part: '@kroy/article', props: {}, view: { name: '@kroy/article-content', props: {} } }]
-        : [];
+    if (dataSource !== 'articles') return [];
+    const part = partCatalog['@kroy/article'];
+    return [{
+        part: '@kroy/article',
+        props: defaultProps(part.fields),
+        view: createView(part.defaultWidget, widgetCatalog[part.defaultWidget].fields),
+    }];
 }
 
 export default async function postDetailTemplate(c) {
