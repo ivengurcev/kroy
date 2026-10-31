@@ -25,13 +25,9 @@ function price(value) {
     return Number(source).toFixed(2);
 }
 
-function paymentUrl(value) {
-    const source = text(value, 1000);
-    if (!source) return '';
-    let url;
-    try { url = new URL(source); } catch { throw new Error('Ссылка Prodamus должна быть корректным HTTPS-адресом.'); }
-    if (url.protocol !== 'https:') throw new Error('Ссылка Prodamus должна быть корректным HTTPS-адресом.');
-    return url.href;
+function productType(value = 'service') {
+    if (!['service', 'goods'].includes(value)) throw new Error('Тип позиции должен быть «Услуга» или «Товар».');
+    return value;
 }
 
 export function normalizeCatalog(value = {}) {
@@ -43,7 +39,7 @@ export function normalizeCatalog(value = {}) {
     const products = Array.isArray(source.products) ? source.products.slice(0, 5000).map((item, index) => ({
         id: uuid(item?.id), categoryId: item?.categoryId && categoryIds.has(item.categoryId) ? item.categoryId : null,
         name: requiredText(item?.name, 'Название товара/услуги', 200), description: text(item?.description, 2000), mediaId: uuid(item?.mediaId),
-        price: price(item?.price), paymentUrl: paymentUrl(item?.paymentUrl), sortOrder: Number.isInteger(item?.sortOrder) ? item.sortOrder : index,
+        price: price(item?.price), type: productType(item?.type), sortOrder: Number.isInteger(item?.sortOrder) ? item.sortOrder : index,
         status: item?.status === 'hidden' ? 'hidden' : 'published',
     })) : [];
     return { categories, products };
@@ -54,13 +50,13 @@ function mapCategory(row) {
 }
 
 function mapProduct(row) {
-    return { id: row.id, categoryId: row.category_id, name: row.name, description: row.description, mediaId: row.media_id, price: row.price, paymentUrl: row.payment_url, sortOrder: row.sort_order, status: row.status };
+    return { id: row.id, categoryId: row.category_id, name: row.name, description: row.description, mediaId: row.media_id, price: row.price, type: row.type, sortOrder: row.sort_order, status: row.status };
 }
 
 export async function getCatalog(siteId, { includeHidden = true } = {}) {
     const [categories, products] = await Promise.all([
         pool.query('SELECT id, name, sort_order FROM product_categories WHERE site_id = $1 ORDER BY sort_order, id', [siteId]),
-        pool.query(`SELECT id, category_id, name, description, media_id, price, payment_url, sort_order, status
+        pool.query(`SELECT id, category_id, name, description, media_id, price, type, sort_order, status
                     FROM products WHERE site_id = $1 ${includeHidden ? '' : "AND status = 'published'"}
                     ORDER BY category_id NULLS FIRST, sort_order, id`, [siteId]),
     ]);
@@ -89,12 +85,12 @@ export async function setCatalog(siteId, value) {
         await client.query('DELETE FROM product_categories WHERE site_id = $1 AND NOT (id = ANY($2::uuid[]))', [siteId, categoryIds]);
         const productIds = [];
         for (const [index, product] of catalog.products.entries()) {
-            const result = await client.query(`INSERT INTO products (id, site_id, category_id, name, description, media_id, price, payment_url, sort_order, status)
+            const result = await client.query(`INSERT INTO products (id, site_id, category_id, name, description, media_id, price, type, sort_order, status)
                 VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7::numeric, $8, $9, $10)
                 ON CONFLICT (id) DO UPDATE SET category_id = EXCLUDED.category_id, name = EXCLUDED.name, description = EXCLUDED.description,
-                    media_id = EXCLUDED.media_id, price = EXCLUDED.price, payment_url = EXCLUDED.payment_url, sort_order = EXCLUDED.sort_order, status = EXCLUDED.status, updated_at = now()
+                    media_id = EXCLUDED.media_id, price = EXCLUDED.price, type = EXCLUDED.type, sort_order = EXCLUDED.sort_order, status = EXCLUDED.status, updated_at = now()
                     WHERE products.site_id = EXCLUDED.site_id
-                RETURNING id`, [product.id, siteId, product.categoryId, product.name, product.description, product.mediaId, product.price, product.paymentUrl, index, product.status]);
+                RETURNING id`, [product.id, siteId, product.categoryId, product.name, product.description, product.mediaId, product.price, product.type, index, product.status]);
             productIds.push(result.rows[0].id);
         }
         await client.query('DELETE FROM products WHERE site_id = $1 AND NOT (id = ANY($2::uuid[]))', [siteId, productIds]);

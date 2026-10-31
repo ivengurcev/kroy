@@ -15,6 +15,7 @@ import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
 import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
+import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation } from './api/sitePayments.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './api/reviews.mjs';
 import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './api/articles.mjs';
 
@@ -49,6 +50,12 @@ await createApp({
             isPrivate: true,
             title: 'Каталог Oysite',
             component: './pages/SitePage.jsx',
+        },
+        {
+            path: '/admin/site/payments',
+            isPrivate: true,
+            title: 'Платежи Oysite',
+            component: './pages/SitePaymentsPage.jsx',
         },
         {
             path: '/admin/site/reviews',
@@ -190,6 +197,21 @@ await createApp({
             '/site/catalog',
             { method: 'PATCH', private: true },
             patchSiteCatalog,
+        ],
+        [
+            '/site/payments',
+            { method: 'GET', private: true },
+            getSitePayments,
+        ],
+        [
+            '/site/payments/:provider',
+            { method: 'PATCH', private: true },
+            patchSitePaymentSettings,
+        ],
+        [
+            '/site/payments/:provider/activation',
+            { method: 'PATCH', private: true },
+            patchSitePaymentActivation,
         ],
         [
             '/site/reviews',

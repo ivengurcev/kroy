@@ -1,0 +1,6 @@
+.panel { display: grid; gap: var(--space-5); padding: var(--space-5); }
+.status { margin: 0; font-weight: 600; }
+.selector select { width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.hint { margin: 0; color: var(--color-text-secondary); }
+.error { margin: 0; color: var(--color-danger); }

@@ -9,6 +9,7 @@ export const SITE_SETTINGS_SECTIONS = [
     { id: 'appearance', label: 'Внешний вид', icon: 'sun' },
     { id: 'contacts', label: 'Контактная информация', icon: 'phone' },
     { id: 'catalog', label: 'Каталог', icon: 'pages' },
+    { id: 'payments', label: 'Платежи', icon: 'pages', path: '/admin/site/payments' },
     { id: 'reviews', label: 'Отзывы', icon: 'pages', path: '/admin/site/reviews' },
     { id: 'articles', label: 'Статьи', icon: 'pages', path: '/admin/site/articles' },
     { id: 'seo', label: 'SEO', icon: 'seo' },

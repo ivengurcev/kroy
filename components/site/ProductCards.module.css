@@ -7,7 +7,5 @@
 .body p { color: var(--site-color-text-secondary); line-height: 1.5; }
 .footer { display: flex; gap: var(--site-space-3); align-items: center; justify-content: space-between; margin-top: var(--site-space-2); }
 .footer strong { font-size: 1.1rem; }
-.footer a { padding: var(--site-space-2) var(--site-space-4); border-radius: var(--site-radius-base); color: var(--site-color-bg); text-decoration: none; background: var(--site-color-accent); }
-.footer a:hover { background: var(--site-color-accent-hover); }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .grid { grid-template-columns: minmax(0, 1fr); } }
