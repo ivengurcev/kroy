@@ -8,6 +8,7 @@ test('editor keeps detail template settings from a loaded page and PATCH respons
         title: 'Case details',
         path: '/cases/:caseSlug',
         type: 'detail',
+        dataSource: null,
         routeParam: 'caseSlug',
         detailParentId: 'parent-id',
     });
@@ -23,6 +24,7 @@ test('editor keeps detail template settings from a loaded page and PATCH respons
         title: 'Case details',
         path: '/cases/:caseSlug',
         type: 'detail',
+        dataSource: null,
         routeParam: 'caseSlug',
         detailParentId: 'parent-id',
     });

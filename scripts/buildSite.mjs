@@ -14,6 +14,7 @@ import generateSiteRouting from './generateSiteRouting.mjs';
 import createSiteSvgPlugin from './siteSvgPlugin.mjs';
 import { assertArticlePathsAvailable, createArticlePages } from './createArticlePages.mjs';
 import { createClientPageRegistry } from './sitePageData.mjs';
+import { attachArticleLists } from '../layout/articleListData.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');
@@ -163,7 +164,7 @@ try {
         }
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content, page_type, route_param
+            `SELECT id, site_id, path, title, content, page_type AS type, route_param, data_source AS "dataSource"
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NULL
@@ -171,7 +172,8 @@ try {
             [site.id]
         );
         const detailTemplatesResult = await client.query(
-            `SELECT detail.id, detail.path, detail.route_param, detail.content
+            `SELECT detail.id, detail.path, detail.route_param, detail.content,
+                    detail.detail_parent_id AS "detailParentId"
              FROM pages detail
              JOIN pages list
                ON list.id = detail.detail_parent_id
@@ -185,9 +187,11 @@ try {
              ORDER BY detail.path`,
             [site.id],
         );
-        const articlesResult = detailTemplatesResult.rows.length
+        const hasArticleLists = pagesResult.rows.some((page) => page.type === 'list' && page.dataSource === 'articles');
+        const articlesResult = hasArticleLists
             ? await client.query(
-                `SELECT a.slug, a.title, a.summary, a.content, m.filename AS cover_filename
+                `SELECT a.slug, a.title, a.summary, a.status,
+                        ${detailTemplatesResult.rows.length ? 'a.content,' : ''} m.filename AS cover_filename
                  FROM articles a
                  LEFT JOIN media m ON m.id = a.cover_media_id AND m.site_id = a.site_id
                  WHERE a.site_id = $1 AND a.status = 'published'
@@ -214,9 +218,9 @@ try {
             [site.id]
         );
 
-        pages = pagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
-        allDetailTemplates = pagesResult.rows.filter(({ page_type }) => page_type === 'detail');
-        detailTemplates = detailTemplatesResult.rows;
+        pages = pagesResult.rows.filter(({ type }) => type !== 'detail');
+        allDetailTemplates = pagesResult.rows.filter(({ type }) => type === 'detail');
+        detailTemplates = detailTemplatesResult.rows.map((template) => ({ ...template, routeParam: template.route_param }));
         publishedArticles = articlesResult.rows;
         redirects = redirectsResult.rows;
         deletedPages = deletedPagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
@@ -266,7 +270,7 @@ try {
         ...deletedPages.map(({ path }) => path),
         ...allDetailTemplates.filter(({ id }) => !articleTemplateIds.has(id)).map(({ path }) => path),
     ]);
-    const renderPages = [...pages, ...articlePages];
+    const renderPages = [...attachArticleLists(pages, articleRecords, detailTemplates), ...articlePages];
 
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);

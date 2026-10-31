@@ -38,7 +38,7 @@ test('discovers package entry points and excludes ReviewForm helpers', async (t)
 test('all real parts declare compatible default widgets and no form is registered', async () => {
     const parts = await discoverParts();
     const widgets = await discoverWidgets();
-    assert.equal(parts.length, 9);
+    assert.equal(parts.length, 10);
     validateDefaultWidgets(parts, widgets);
     assert.equal(parts.some(({ name }) => name.includes('form')), false);
 });

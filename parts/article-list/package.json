@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/article-list",
+    "main": "prepareArticleList.mjs"
+}

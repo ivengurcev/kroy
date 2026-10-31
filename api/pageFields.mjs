@@ -42,6 +42,19 @@ export function isValidPageRoutePattern(path) {
   return match[1] === "" || isValidPagePath(match[1]);
 }
 
+export function resolveDetailPath(path, parameter, value) {
+  const suffix = `/:${parameter}`;
+  if (!isValidRouteParameter(parameter) || !isValidPageRoutePattern(path) || !path.endsWith(suffix)) {
+    throw new Error(`Invalid detail template: ${path}`);
+  }
+  if (typeof value !== 'string' || value.length > 200 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+    throw new Error(`Invalid detail route value: ${value}`);
+  }
+  const resolved = `${path.slice(0, -suffix.length)}/${value}`;
+  if (!isValidPagePath(resolved)) throw new Error(`Invalid detail path: ${resolved}`);
+  return resolved;
+}
+
 export function routePatternsOverlap(left, right) {
   if (typeof left !== "string" || typeof right !== "string") return false;
   const leftSegments = left.split("/").filter(Boolean);

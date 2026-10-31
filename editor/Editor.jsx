@@ -93,7 +93,7 @@ export default function Editor() {
     }, []);
 
     useEffect(() => {
-        if (page.type !== 'detail') {
+        if (page.type !== 'detail' && !(page.type === 'list' && page.dataSource === 'articles')) {
             setPreview({ status: 'idle', record: null });
             return undefined;
         }
@@ -108,7 +108,7 @@ export default function Editor() {
                 if (error.name !== 'AbortError') setPreview({ status: 'error', record: null });
             });
         return () => controller.abort();
-    }, [page.type, page.detailParentId]);
+    }, [page.id, page.path, page.type, page.dataSource, page.detailParentId]);
 
     const pageContent = content.map(({ part, props, view }) => ({
         part, props, view: { name: view.name, props: view.props },

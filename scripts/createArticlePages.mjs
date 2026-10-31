@@ -1,6 +1,4 @@
-import { isValidPagePath, isValidPageRoutePattern, isValidRouteParameter, routePatternsOverlap } from '../api/pageFields.mjs';
-
-const ARTICLE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+import { isValidPagePath, isValidPageRoutePattern, isValidRouteParameter, routePatternsOverlap, resolveDetailPath } from '../api/pageFields.mjs';
 
 export function createArticlePages(templates, articles) {
     if (!Array.isArray(templates) || !Array.isArray(articles)) {
@@ -18,19 +16,9 @@ export function createArticlePages(templates, articles) {
             throw new Error(`Invalid article detail template: ${template.path}`);
         }
 
-        const basePath = template.path.slice(0, -suffix.length);
-
         return articles.map((article) => {
-            if (
-                typeof article.slug !== 'string'
-                || article.slug.length > 200
-                || !ARTICLE_SLUG_PATTERN.test(article.slug)
-            ) {
-                throw new Error(`Invalid article slug: ${article.slug}`);
-            }
-
             return {
-                path: `${basePath}/${article.slug}`,
+                path: resolveDetailPath(template.path, template.route_param, article.slug),
                 title: article.title,
                 content: template.content,
                 context: { params: { [template.route_param]: article.slug } },

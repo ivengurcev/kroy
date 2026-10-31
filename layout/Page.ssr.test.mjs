@@ -28,7 +28,7 @@ test('calls the data part with independent settings, record, context and site da
     const reviews = [{ id: 'review' }];
     const options = { layout: 'wide' };
     function prepare(input) {
-        assert.deepEqual(input, { props, record, context, contacts, catalog, reviews });
+        assert.deepEqual(input, { props, record, context, contacts, catalog, reviews, articles: undefined });
         return { title: `${input.props.title}|${input.record.title}` };
     }
     function Widget(input) {

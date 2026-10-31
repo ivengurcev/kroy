@@ -49,3 +49,28 @@ test('propagates API failures and aborts instead of treating them as an empty si
     t.mock.method(globalThis, 'fetch', async () => { throw new DOMException('Aborted', 'AbortError'); });
     await assert.rejects(loadArticlePreview(page), { name: 'AbortError' });
 });
+
+test('loads published list previews with media URLs and a template linked to this list only', async (t) => {
+    const list = { id: 'news-id', type: 'list', dataSource: 'articles', content: [] };
+    const snapshot = JSON.stringify(list);
+    t.mock.method(globalThis, 'fetch', async (url) => {
+        if (url === '/api/site/articles') return Response.json([{ ...published, status: 'draft', slug: 'draft' }, published]);
+        assert.equal(url, '/api/pages');
+        return Response.json([
+            { type: 'detail', detailParentId: 'other-list', path: '/other/:slug', routeParam: 'slug' },
+            { type: 'detail', detailParentId: 'news-id', path: '/news/:articleId', routeParam: 'articleId' },
+        ]);
+    });
+    const result = await loadArticlePreview(list);
+    assert.equal(result.status, 'success');
+    assert.deepEqual(result.articles.items, [{ slug: 'sample', title: 'Published', summary: '', coverUrl: '/api/media/cover-id', status: 'published' }]);
+    assert.deepEqual(result.articles.detailTemplate, { path: '/news/:articleId', routeParam: 'articleId' });
+    assert.equal(JSON.stringify(list), snapshot);
+});
+
+test('list previews support no template and no published articles without falling back to a fake route', async (t) => {
+    t.mock.method(globalThis, 'fetch', async (url) => Response.json(url === '/api/pages' ? [] : [{ ...published, status: 'draft' }]));
+    const result = await loadArticlePreview({ id: 'news-id', type: 'list', dataSource: 'articles' });
+    assert.equal(result.status, 'empty');
+    assert.deepEqual(result.articles, { items: [], detailTemplate: null });
+});

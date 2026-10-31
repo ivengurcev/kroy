@@ -1,10 +1,10 @@
-export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews, context = { params: {} }, record = null }) {
+export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews, articles, context = { params: {} }, record = null }) {
     return content.map(({ id, part, props, view }, index) => {
         const prepare = parts[part];
         if (!prepare) throw new Error(`Запчасть не найдена: ${part}`);
         if (!view) throw new Error(`Не выбран виджет запчасти: ${part}`);
 
-        const data = prepare({ props, record, context, contacts, catalog, reviews });
+        const data = prepare({ props, record, context, contacts, catalog, reviews, articles });
         const Widget = widgets[view.name];
         if (!Widget) throw new Error(`Виджет не найден: ${view.name}`);
 

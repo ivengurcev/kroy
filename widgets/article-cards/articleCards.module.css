@@ -1,0 +1,13 @@
+.section { color: var(--site-color-text); background: var(--site-color-bg); }
+.inner { width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2)); margin-inline: auto; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--site-space-6); }
+.card { overflow: hidden; border: 1px solid var(--site-color-border); border-radius: var(--site-radius-lg); background: var(--site-color-surface); }
+.link { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
+.link:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: -2px; }
+.cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.body { display: flex; flex: 1; flex-direction: column; align-items: start; gap: var(--site-space-4); padding: var(--site-space-6); }
+.title { margin: 0; font: 400 clamp(24px, 3vw, 32px)/1.2 var(--site-font-heading); overflow-wrap: anywhere; }
+.summary, .empty { margin: 0; color: var(--site-color-text-secondary); font: 400 var(--site-font-size-base)/var(--site-line-height) var(--site-font-body); }
+.read { margin-top: auto; color: var(--site-color-accent); font: 600 var(--site-font-size-base)/1.4 var(--site-font-body); }
+a.link:hover .read { color: var(--site-color-accent-hover); }
+@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }

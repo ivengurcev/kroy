@@ -75,6 +75,9 @@ export default function EditorWorkspace({
         loading: 'Загрузка статьи для предпросмотра…',
         empty: 'Нет опубликованных статей для предпросмотра. Опубликуйте статью в настройках сайта.',
         error: 'Не удалось загрузить статью для предпросмотра.',
+    }[preview?.status] || page?.type === 'list' && page.dataSource === 'articles' && {
+        loading: 'Загрузка статей для предпросмотра…',
+        error: 'Не удалось загрузить список статей для предпросмотра.',
     }[preview?.status];
 
     const closePicker = useCallback((restoreFocus = true) => {
@@ -179,7 +182,7 @@ export default function EditorWorkspace({
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} record={record} context={context} />
+                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} articles={page?.type === 'list' ? preview?.articles : undefined} record={record} context={context} />
                                 </SiteRoot>
                             </div>
                         )}

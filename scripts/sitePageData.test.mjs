@@ -27,3 +27,12 @@ test('serializes only the current page payload and escapes script terminators', 
     assert.deepEqual(JSON.parse(payload), currentPage);
     assert.doesNotMatch(payload, /Unrelated article sentinel/);
 });
+
+test('keeps article-list data with its own page in the client registry without spreading it to other pages', () => {
+    const articles = { items: [{ slug: 'example', title: 'Article', summary: 'Summary', coverUrl: null, status: 'published' }], detailTemplate: { path: '/news/:articleId', routeParam: 'articleId' } };
+    const pages = [{ path: '/', title: 'Home', content: [] }, { path: '/news', title: 'News', content: [], articles }];
+    const registry = createClientPageRegistry(pages);
+    assert.deepEqual(registry['/news'].articles, articles);
+    assert.equal(registry['/'].articles, undefined);
+    assert.deepEqual(JSON.parse(serializePagePayload(registry['/news'])).articles, articles);
+});

@@ -18,6 +18,8 @@ before(async () => {
             contents: `export { default as Page } from './layout/Page.jsx';
                 export { default as SiteApp } from './layout/SiteApp.jsx';
                 export { default as Article } from './parts/article/prepareArticle.mjs';
+                export { default as ArticleList } from './parts/article-list/prepareArticleList.mjs';
+                export { default as ArticleCards } from './widgets/article-cards/ArticleCards.jsx';
                 export { default as ArticleContent } from './widgets/article-content/ArticleContent.jsx';
                 export { default as EditorWorkspace } from './editor/EditorWorkspace.jsx';`,
             resolveDir: fileURLToPath(new URL('../', import.meta.url)),
@@ -105,4 +107,25 @@ test('workspace explains missing published articles and preview loading failures
         }));
         assert.match(html, message);
     }
+});
+
+test('workspace renders article-list preview sources separately from saved content and keeps its empty state', () => {
+    const content = [{ id: 'list-part', part: '@kroy/article-list', props: {}, view: { name: '@kroy/article-cards', props: {} } }];
+    const snapshot = JSON.stringify(content);
+    const props = {
+        content, parts: { '@kroy/article-list': components.ArticleList }, widgets: { '@kroy/article-cards': components.ArticleCards },
+        metadata: {}, widgetMetadata: {}, loadStatus: 'success', page: { type: 'list', dataSource: 'articles' },
+    };
+    const articles = {
+        items: [{ slug: 'sample', title: 'Published list sample', summary: '', coverUrl: '/api/media/cover-id', status: 'published' }],
+        detailTemplate: { path: '/news/:articleId', routeParam: 'articleId' },
+    };
+    const html = renderToString(createElement(components.EditorWorkspace, { ...props, preview: { status: 'success', articles } }));
+    assert.match(html, /Published list sample/);
+    assert.match(html, /href="\/news\/sample"/);
+    assert.match(html, /src="\/api\/media\/cover-id"/);
+    assert.equal(JSON.stringify(content), snapshot);
+    assert.match(renderToString(createElement(components.EditorWorkspace, {
+        ...props, preview: { status: 'empty', articles: { items: [], detailTemplate: null } },
+    })), /Опубликованных статей пока нет/);
 });

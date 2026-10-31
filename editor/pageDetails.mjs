@@ -4,6 +4,7 @@ export function toEditorPage(page) {
         title: page.title,
         path: page.path,
         type: page.type ?? 'standard',
+        dataSource: page.dataSource ?? null,
         routeParam: page.routeParam ?? null,
         detailParentId: page.detailParentId ?? null,
     };
