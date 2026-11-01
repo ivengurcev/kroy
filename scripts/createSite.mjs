@@ -8,7 +8,7 @@ let client;
 
 try {
   if (!slug || !hostname) {
-    throw new Error("Использование: yarn site:create <slug> <hostname> [name]");
+    throw new Error("Использование: bun run site:create <slug> <hostname> [name]");
   }
 
   if (!SLUG_PATTERN.test(slug)) {

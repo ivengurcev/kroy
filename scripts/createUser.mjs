@@ -40,7 +40,7 @@ function readPassword() {
 try {
   const [email, flag, ...extra] = process.argv.slice(2);
   if (!email || email.startsWith("--") || extra.length || (flag && flag !== "--superadmin")) {
-    throw new Error("Использование: yarn user:create <email> [--superadmin]");
+    throw new Error("Использование: bun run user:create <email> [--superadmin]");
   }
   const password = await readPassword();
   const user = await createUser({ email, password, is_superadmin: flag === "--superadmin" });

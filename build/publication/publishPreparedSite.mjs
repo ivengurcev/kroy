@@ -73,7 +73,7 @@ let published = false;
 
 try {
     if (!siteSlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(siteSlug)) {
-        throw new Error('Укажите корректный slug сайта: yarn site:publish <slug>');
+        throw new Error('Укажите корректный slug сайта: bun run site:publish <slug>');
     }
 
     const stagingDirectory = join(STAGING_DIR, siteSlug);

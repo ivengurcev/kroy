@@ -2,12 +2,12 @@
 
 ## Первый запуск development
 
-Нужны Docker с Compose plugin и Yarn 4. Команда из корня проекта собирает
+Нужны Docker Compose plugin и Bun 1.4.4. Команда из корня проекта собирает
 контейнеры, создаёт отдельный volume PostgreSQL, применяет миграции и показывает
 общий поток логов:
 
 ```bash
-yarn dev
+bun run dev
 ```
 
 Открывайте Kroy через `http://demo.localhost:8080`. Приложение и PostgreSQL не
@@ -18,9 +18,9 @@ Kroy. Системные PostgreSQL и Nginx не используются и н
 первый релиз из другого терминала:
 
 ```bash
-yarn dev:run db:seed
-yarn dev:run user:create admin@example.org --superadmin
-yarn dev:run site:publish demo
+bun run dev:run db:seed
+bun run dev:run user:create admin@example.org --superadmin
+bun run dev:run site:publish demo
 ```
 
 `db:seed` и `user:create` интерактивны. При следующих запусках миграции
@@ -30,14 +30,14 @@ yarn dev:run site:publish demo
 ## Команды
 
 ```bash
-yarn dev                 # foreground и логи всех сервисов; Ctrl+C остановит их
-yarn dev:bg              # запуск в фоне
-yarn dev:down            # удалить контейнеры и сеть, сохранить данные
-yarn dev:logs            # следить за логами
-yarn dev:status          # показать состояние сервисов
-yarn dev:run <script> [...args] # выполнить Yarn-скрипт внутри app
-yarn dev:restart app     # также: nginx или db
-yarn dev:rebuild app     # пересобрать и пересоздать только выбранный сервис
+bun run dev                 # foreground и логи всех сервисов; Ctrl+C остановит их
+bun run dev:bg              # запуск в фоне
+bun run dev:down            # удалить контейнеры и сеть, сохранить данные
+bun run dev:logs            # следить за логами
+bun run dev:status          # показать состояние сервисов
+bun run dev:run <script> [...args] # выполнить Bun-скрипт внутри app
+bun run dev:restart app     # также: nginx или db
+bun run dev:rebuild app     # пересобрать и пересоздать только выбранный сервис
 ```
 
 CLI-команды и утилиты остаются в `scripts/`; реализация сборки, реестров,
@@ -48,10 +48,10 @@ CLI-команды и утилиты остаются в `scripts/`; реали�
 интерактивный терминал и код завершения:
 
 ```bash
-yarn dev:run user:create admin@example.org --superadmin
-yarn dev:run site:publish demo
-yarn dev:run db:status
-yarn dev:run site:rollback demo 20261028143003031
+bun run dev:run user:create admin@example.org --superadmin
+bun run dev:run site:publish demo
+bun run dev:run db:status
+bun run dev:run site:rollback demo 20261028143003031
 ```
 
 Не используйте `docker compose down --volumes`, если нужно сохранить
@@ -59,9 +59,9 @@ yarn dev:run site:rollback demo 20261028143003031
 
 ## Публикация и rollback
 
-`yarn site:build <slug>` только готовит staging. `yarn site:publish <slug>`
+`bun run site:build <slug>` только готовит staging. `bun run site:publish <slug>`
 выполняет полную сборку и публикацию; эту же команду вызывает административный
-API и `yarn deploy site <slug>`. Общий PostgreSQL advisory lock не позволяет
+API и `bun run deploy site <slug>`. Общий PostgreSQL advisory lock не позволяет
 одновременно выполнять publish и rollback.
 
 Алгоритм одинаков в development и production: staging, неизменяемый release-id,
@@ -69,8 +69,8 @@ API и `yarn deploy site <slug>`. Общий PostgreSQL advisory lock не по�
 восстановление прежней конфигурации при ошибке. Откат выполняется так:
 
 ```bash
-yarn dev:run site:releases demo
-yarn dev:run site:rollback demo <release-id>
+bun run dev:run site:releases demo
+bun run dev:run site:rollback demo <release-id>
 ```
 
 ## Диагностика Nginx
@@ -89,7 +89,7 @@ docker compose -f infra/compose.yaml exec -T nginx \
   nginx -t -c /app/dist/kroy/nginx-dev/nginx.conf
 ```
 
-Полезны также `yarn dev:status` и `yarn dev:logs`: development error/access log
+Полезны также `bun run dev:status` и `bun run dev:logs`: development error/access log
 Nginx выводятся в stderr/stdout Compose. Публикация вызывает reload процесса Nginx, а
 не перезапуск контейнера.
 
@@ -112,7 +112,7 @@ docker compose -f infra/compose.yaml up -d db
 docker compose -f infra/compose.yaml exec -T db \
   pg_restore --clean --if-exists --no-owner --no-acl -U kroy -d kroy \
   < /tmp/kroy.dump
-yarn dev
+bun run dev
 ```
 
 Хостовую PostgreSQL не останавливайте и не удаляйте, пока не проверите данные
@@ -121,10 +121,8 @@ yarn dev
 
 ## Production
 
-Production остаётся без Docker: системный PostgreSQL, Yarn 4.18.1, отдельный
-Kroy Nginx под systemd и внешний системный Nginx. Runtime по умолчанию — Node.js
-24.19.0 с Yarn PnP; на подготовленном Bun-хосте можно выбрать Bun 1.4.4,
-оставив Node.js/Yarn для управления зависимостями и rollback.
+Production работает без Docker: системный PostgreSQL, Bun 1.4.4, отдельный
+Kroy Nginx под systemd и внешний системный Nginx.
 Provisioning/deploy находятся в `infra/ansible`; inventory —
 `infra/ansible/inventory`. Начальная команда:
 
@@ -137,28 +135,27 @@ Compose не предназначен для VPS и не управляет prod
 проверка systemd, rsync и playbook требует целевого VPS; локальная разработка
 их не запускает.
 
-Runtime выбирается явно при bootstrap и deploy. В режиме Bun Yarn использует
-`nodeLinker: pnpm` только для VPS install, а systemd запускает `server.mjs`
-напрямую с `bun --no-install`; основной `.yarnrc.yml` остаётся PnP. Возврат к
-Node выполняется повторными bootstrap и deploy с `-e kroy_runtime=node`.
-Синхронизированные PnP-файлы сохраняются, данные и `node_modules` не удаляются.
-Подробности — в [Ansible-инструкции](ansible/README.md#runtime-nodejs-и-bun).
+Bootstrap устанавливает закреплённый Bun 1.4.4 и настраивает systemd для
+запуска сервера и Nginx через Bun. Ansible deploy устанавливает зависимости из
+`bun.lock` и исключает локальный `node_modules` из rsync. Данные, `.env`,
+опубликованные релизы и Nginx-конфигурации сохраняются. Подробности — в
+[Ansible-инструкции](ansible/README.md).
 
 
 ## Standalone-команды и окружение
 
-Прямые `yarn build`, `yarn serve`, команды БД и `yarn site:*` используют
+Прямые `bun run build`, `bun run serve`, команды БД и `bun run site:*` используют
 standalone/production-окружение. Для development выполняйте их через
-`yarn dev:run <script> [...args]`; `yarn demo` — алиас только подготовки demo.
-Полный список — `yarn kroy:help` (встроенный `yarn help` принадлежит Yarn).
+`bun run dev:run <script> [...args]`; `bun run demo` — алиас только подготовки demo.
+Полный список — `bun run help` или `bun run kroy:help`.
 
-Для ручного standalone-окружения с установленными PostgreSQL, Node.js и Yarn:
+Для ручного standalone-окружения нужны PostgreSQL и Bun 1.4.4:
 
 ```bash
 cp .env.example .env
 createuser --pwprompt --createdb kroy
 createdb -O kroy kroy
-yarn install --immutable
+bun install --frozen-lockfile
 ```
 
 Настройте DATABASE_URL и случайный AUTH_SECRET (не менее 32 случайных байт)
@@ -167,11 +164,11 @@ yarn install --immutable
 Команды миграций и запуска:
 
 ```bash
-yarn db:migrate
-yarn db:status
-yarn user:create admin@example.org --superadmin
-yarn build
-yarn serve
+bun run db:migrate
+bun run db:status
+bun run user:create admin@example.org --superadmin
+bun run build
+bun run serve
 ```
 
 `user:create` запрашивает пароль скрыто; не передавайте его аргументом.
@@ -181,7 +178,7 @@ yarn serve
 заблокированный пользователь не допускается. Назначение существующего пользователя:
 
 ```bash
-yarn site:user:add demo user@example.org
+bun run site:user:add demo user@example.org
 ```
 
 Структурные права роли admin шире первоначальных требований к владельцу сайта;
@@ -193,9 +190,9 @@ yarn site:user:add demo user@example.org
 Nginx в Compose. Для отдельного экземпляра Nginx Kroy:
 
 ```bash
-yarn preview
-yarn preview:validate
-yarn preview:reload
+bun run preview
+bun run preview:validate
+bun run preview:reload
 ```
 
 `preview` — алиас preview:start: создаёт базовый конфиг и MIME-таблицу до первого
@@ -238,12 +235,12 @@ nginx -t -c "$PWD/dist/kroy/nginx/nginx.conf"
 
 ```bash
 export KROY_REMOTE_HOST=user@example.org
-yarn remote db:status
-yarn remote site:list
-yarn remote user:create user@example.org --superadmin
-yarn remote site:user:add demo user@example.org
-yarn deploy app
-yarn deploy site demo
+bun run remote db:status
+bun run remote site:list
+bun run remote user:create user@example.org --superadmin
+bun run remote site:user:add demo user@example.org
+bun run deploy app
+bun run deploy site demo
 ```
 
 Без KROY_REMOTE_HOST remote/deploy завершаются до подключения и сборки.

@@ -119,7 +119,7 @@ let temporaryDirectory;
 
 try {
     if (!siteSlug) {
-        throw new Error('Укажите slug сайта: yarn site:build <slug>');
+        throw new Error('Укажите slug сайта: bun run site:build <slug>');
     }
 
     let site;

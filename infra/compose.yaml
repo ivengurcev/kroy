@@ -37,7 +37,7 @@ services:
       NGINX_LISTEN: 0.0.0.0:8080
       KROY_NGINX_CONTROL_URL: http://nginx:3001
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(() => process.exit(0), () => process.exit(1))"]
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:3000/').then(() => process.exit(0), () => process.exit(1))"]
       interval: 3s
       timeout: 5s
       retries: 40

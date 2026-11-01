@@ -6,20 +6,9 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
-    kroy_node_version: 24.19.0
-    kroy_node_package_version: 24.19.0-1nodesource1
-    kroy_yarn_version: 4.18.1
-    kroy_node_binary: /usr/bin/node
-    kroy_yarn_release: "{{ kroy_root }}/.yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
-    kroy_runtime: bun
     kroy_bun_version: 1.4.4
     kroy_bun_binary: /usr/local/bin/bun
   tasks:
-    - name: Validate selected Kroy runtime
-      ansible.builtin.assert:
-        that: kroy_runtime in ['node', 'bun']
-        fail_msg: "kroy_runtime must be node or bun"
-
     - name: Require supported host for Bun runtime
       ansible.builtin.assert:
         that:
@@ -27,7 +16,6 @@
           - ansible_distribution_version == '24.04'
           - ansible_architecture == 'x86_64'
         fail_msg: "Bun deployment supports Ubuntu 24.04 x86_64 only"
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
 
     - name: Install Kroy system dependencies
@@ -37,82 +25,10 @@
           - postgresql
           - rsync
           - acl
-          - python3-debian
           - python3-psycopg2
         state: present
         update_cache: true
         cache_valid_time: 3600
-
-    - name: Ensure APT keyring directory exists
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: '0755'
-
-    - name: Install NodeSource signing key
-      ansible.builtin.get_url:
-        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
-        dest: /etc/apt/keyrings/nodesource.asc
-        mode: '0644'
-
-    - name: Remove legacy NodeSource APT list
-      ansible.builtin.file:
-        path: /etc/apt/sources.list.d/nodesource.list
-        state: absent
-      register: kroy_nodesource_legacy
-
-    - name: Configure NodeSource Node.js 24 repository
-      ansible.builtin.deb822_repository:
-        name: nodesource
-        types:
-          - deb
-        uris:
-          - https://deb.nodesource.com/node_24.x
-        suites:
-          - nodistro
-        components:
-          - main
-        signed_by: /etc/apt/keyrings/nodesource.asc
-        enabled: true
-        state: present
-      register: kroy_nodesource_repository
-
-    - name: Update APT cache after NodeSource repository changes
-      ansible.builtin.apt:
-        update_cache: true
-      when: kroy_nodesource_legacy.changed or kroy_nodesource_repository.changed
-
-    - name: Check installed Node.js version before installation
-      ansible.builtin.command: node --version
-      register: kroy_installed_node_version
-      changed_when: false
-      failed_when: false
-      check_mode: false
-
-    - name: Install exact Node.js version
-      ansible.builtin.command:
-        argv:
-          - apt-get
-          - --yes
-          - --no-remove
-          - install
-          - "nodejs={{ kroy_node_package_version }}"
-      when:
-        - kroy_installed_node_version.rc != 0 or (kroy_installed_node_version.stdout | trim) != ('v' ~ kroy_node_version)
-      changed_when: true
-      check_mode: false
-
-    - name: Check installed Node.js version after installation
-      ansible.builtin.command: node --version
-      register: kroy_installed_node_version_after
-      changed_when: false
-      check_mode: false
-
-    - name: Require exact Node.js version
-      ansible.builtin.assert:
-        that:
-          - (kroy_installed_node_version_after.stdout | trim) == ('v' ~ kroy_node_version)
-        fail_msg: "Expected Node.js v{{ kroy_node_version }}, got {{ kroy_installed_node_version_after.stdout | trim }}"
 
     - name: Install unzip for Bun archive extraction
       ansible.builtin.apt:
@@ -120,7 +36,6 @@
         state: present
         update_cache: true
         cache_valid_time: 3600
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
 
     - name: Check installed Bun version
@@ -128,7 +43,6 @@
       register: kroy_installed_bun_version
       changed_when: false
       failed_when: false
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
 
     - name: Download pinned Bun release
@@ -138,7 +52,6 @@
         checksum: sha256:e0446eb55995772eb9894bebae9a6be368d985a8b9271ee124486f9946eedd76
         mode: '0644'
       when:
-        - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
       tags: [bun-install]
 
@@ -148,7 +61,6 @@
         state: directory
         mode: '0755'
       when:
-        - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
       tags: [bun-install]
 
@@ -158,7 +70,6 @@
         dest: "/var/tmp/kroy-bun-v{{ kroy_bun_version }}"
         remote_src: true
       when:
-        - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
       tags: [bun-install]
 
@@ -171,7 +82,6 @@
         group: root
         mode: '0755'
       when:
-        - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
       tags: [bun-install]
 
@@ -179,14 +89,12 @@
       ansible.builtin.command: "{{ kroy_bun_binary }} --version"
       register: kroy_installed_bun_version_after
       changed_when: false
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
 
     - name: Require exact Bun version
       ansible.builtin.assert:
         that: (kroy_installed_bun_version_after.stdout | trim) == kroy_bun_version
         fail_msg: "Expected Bun {{ kroy_bun_version }}, got {{ kroy_installed_bun_version_after.stdout | trim }}"
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
 
     - name: Remove temporary Bun archive and extraction
@@ -196,13 +104,7 @@
       loop:
         - "/var/tmp/bun-v{{ kroy_bun_version }}-linux-x64-baseline.zip"
         - "/var/tmp/kroy-bun-v{{ kroy_bun_version }}"
-      when: kroy_runtime == 'bun'
       tags: [bun-install]
-
-    - name: Enable Corepack and install Yarn shims
-      ansible.builtin.command: corepack enable --install-directory /usr/local/bin
-      changed_when: false
-      check_mode: false
 
     - name: Determine the SSH connection user
       ansible.builtin.command: id -un

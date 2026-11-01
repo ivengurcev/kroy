@@ -21,8 +21,9 @@
 | Nginx Kroy | Статика релизов, HTTP-правила URL, прокси приложения |
 | Системный Nginx в production | Внешний reverse proxy и HTTPS |
 
-Проект использует JavaScript, React 19, esbuild и Yarn 4 PnP; Vyaz подключён
-через Yarn workspace `workspace:*` для локального пакета `vyaz/`. Kroy использует сервер Vyaz, а публичный SSG работает
+Проект использует JavaScript, Bun 1.4.4, React 19 и esbuild; Vyaz подключён
+как workspace `workspace:*` из локального пакета `vyaz/`. `bun.lock` — единственный
+lockfile. Kroy использует сервер Vyaz, а публичный SSG работает
 отдельно от SSR на HTTP-запросах. Это сохраняет общую инфраструктуру админки и
 позволяет отдавать публичные страницы без серверного React-рендеринга на каждый запрос.
 
@@ -176,9 +177,10 @@ standard/list/detail, источники articles/products/reviews и один d
 ## Среды и артефакты
 
 Development: Compose с PostgreSQL 16, app и Nginx; на хост опубликован только
-127.0.0.1:8080. Управление Nginx — внутренний HTTP-адаптер validate/reload,
-без Docker socket. Production: системные PostgreSQL и Node.js, Yarn PnP,
-systemd, отдельный Nginx Kroy и внешний системный Nginx с TLS.
+127.0.0.1:8080. Все JavaScript-сервисы запускаются на Bun 1.4.4. Управление
+Nginx — внутренний HTTP-адаптер validate/reload, без Docker socket. Production:
+системный PostgreSQL, Bun 1.4.4, systemd, отдельный Nginx Kroy и внешний
+системный Nginx с TLS.
 Ansible содержит bootstrap, provision/deploy и отдельный выпуск сертификата
 oysite.ru / *.oysite.ru через Certbot/acme-dns. Автоматическое TLS-подключение
 произвольного клиентского домена не реализовано.

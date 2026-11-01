@@ -1,11 +1,10 @@
 import { spawn } from 'node:child_process';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../../db/client.mjs';
 import getHostname from './getHostname.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const YARN_PATH = join(ROOT, '.yarn', 'releases', 'yarn-4.18.1.cjs');
 const ACTIVE_STATUSES = new Set(['building', 'publishing']);
 const OUTPUT_LIMIT = 4096;
 const publicationJobs = new Map();
@@ -55,7 +54,7 @@ function runPackageScript(script, slug, onOutput) {
     return new Promise((resolvePromise, reject) => {
         const child = spawn(
             process.execPath,
-            [YARN_PATH, 'run', script, slug],
+            [script, slug],
             { cwd: ROOT },
         );
         let output = '';

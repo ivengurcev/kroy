@@ -1,4 +1,4 @@
-FROM node:24.19.0-bookworm-slim
+FROM oven/bun:1.4.4
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends nginx \
@@ -7,4 +7,4 @@ RUN apt-get update \
 COPY infra/nginx/controlServer.mjs /opt/kroy/controlServer.mjs
 COPY infra/docker/nginx-entrypoint.mjs /opt/kroy/nginx-entrypoint.mjs
 
-ENTRYPOINT ["node", "/opt/kroy/nginx-entrypoint.mjs"]
+ENTRYPOINT ["bun", "/opt/kroy/nginx-entrypoint.mjs"]

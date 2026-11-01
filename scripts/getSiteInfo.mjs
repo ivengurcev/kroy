@@ -4,7 +4,7 @@ const [slug] = process.argv.slice(2);
 
 try {
   if (!slug) {
-    throw new Error("Использование: yarn site:info <slug>");
+    throw new Error("Использование: bun run site:info <slug>");
   }
 
   const {

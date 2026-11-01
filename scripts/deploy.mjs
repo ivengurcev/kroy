@@ -7,7 +7,7 @@ const SITE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const [target, ...args] = process.argv.slice(2);
 
 function usage() {
-    console.error('Использование: yarn deploy app | yarn deploy site <slug>');
+    console.error('Использование: bun run deploy app | bun run deploy site <slug>');
 }
 
 if (target === 'app' && args.length === 0) {

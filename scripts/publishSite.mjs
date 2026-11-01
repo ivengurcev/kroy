@@ -17,7 +17,7 @@ function runScript(script) {
     return new Promise((resolvePromise, reject) => {
         const child = spawn(
             process.execPath,
-            ['--env-file-if-exists=.env', script, siteSlug],
+            [script, siteSlug],
             { cwd: ROOT, stdio: 'inherit' },
         );
         activeChild = child;
@@ -45,7 +45,7 @@ let locked = false;
 
 try {
     if (!siteSlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(siteSlug)) {
-        throw new Error('Укажите корректный slug сайта: yarn site:publish <slug>');
+        throw new Error('Укажите корректный slug сайта: bun run site:publish <slug>');
     }
 
     client = await acquireSitePublicationLock();

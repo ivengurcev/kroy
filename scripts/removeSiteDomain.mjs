@@ -6,7 +6,7 @@ let client;
 
 try {
   if (!slug || !hostname) {
-    throw new Error("Использование: yarn site:domain:remove <slug> <hostname>");
+    throw new Error("Использование: bun run site:domain:remove <slug> <hostname>");
   }
 
   if (!isValidHostname(hostname)) {

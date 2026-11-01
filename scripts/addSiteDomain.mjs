@@ -5,7 +5,7 @@ const [slug, hostname] = process.argv.slice(2);
 
 try {
   if (!slug || !hostname) {
-    throw new Error("Использование: yarn site:domain:add <slug> <hostname>");
+    throw new Error("Использование: bun run site:domain:add <slug> <hostname>");
   }
 
   if (!isValidHostname(hostname)) {

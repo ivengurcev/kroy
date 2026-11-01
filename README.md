@@ -4,25 +4,25 @@ Kroy — мультисайтовая платформа для небольши
 позволяет редактировать страницы из готовых блоков, вести каталог, отзывы и статьи,
 настраивать оформление и публиковать сайт.
 
-Стек: JavaScript, React 19, Vyaz (Hono, Auth.js, SSR), esbuild, PostgreSQL,
-Yarn 4 PnP и Nginx. Запчасти готовят данные, виджеты отображают их.
+Стек: JavaScript, Bun 1.4.4, React 19, Vyaz (Hono, Auth.js, SSR), esbuild,
+PostgreSQL и Nginx. Запчасти готовят данные, виджеты отображают их.
 Админка и API работают через Vyaz, публичные страницы — готовый HTML
 с гидратацией. Сохранение в БД и публикация релиза выполняются отдельно.
 
 ## Разработка
 
-Нужны Docker с Compose plugin и Yarn 4. Из корня репозитория:
+Нужны Bun 1.4.4 и Docker Compose plugin. Из корня репозитория:
 
 ```bash
-yarn dev
+bun run dev
 ```
 
 В другом терминале для пустой БД:
 
 ```bash
-yarn dev:run db:seed
-yarn dev:run user:create admin@example.org --superadmin
-yarn dev:run site:publish demo
+bun run dev:run db:seed
+bun run dev:run user:create admin@example.org --superadmin
+bun run dev:run site:publish demo
 ```
 
 Seed и создание пользователя интерактивны. Откройте
@@ -31,13 +31,13 @@ PostgreSQL, приложение и Nginx работают внутри Compose.
 
 | Задача | Команда |
 |---|---|
-| Справка | `yarn kroy:help` (или `yarn run help`; `yarn help` — справка Yarn) |
-| Development | `yarn dev:bg`, `yarn dev:down`, `yarn dev:logs`, `yarn dev:status` |
-| Команда внутри app | `yarn dev:run <script> [...args]` |
-| Подготовить без публикации | `yarn dev:run site:build <slug>` |
-| Опубликовать сохранённое | `yarn dev:run site:publish <slug>` |
-| Релизы и откат | `yarn dev:run site:releases <slug>`, `yarn dev:run site:rollback <slug> <release-id>` |
-| Удалённое управление | `yarn remote <script> [...args]`, `yarn deploy app`, `yarn deploy site <slug>` |
+| Справка | `bun run help` или `bun run kroy:help` |
+| Development | `bun run dev:bg`, `bun run dev:down`, `bun run dev:logs`, `bun run dev:status` |
+| Команда внутри app | `bun run dev:run <script> [...args]` |
+| Подготовить без публикации | `bun run dev:run site:build <slug>` |
+| Опубликовать сохранённое | `bun run dev:run site:publish <slug>` |
+| Релизы и откат | `bun run dev:run site:releases <slug>`, `bun run dev:run site:rollback <slug> <release-id>` |
+| Удалённое управление | `bun run remote <script> [...args]`, `bun run deploy app`, `bun run deploy site <slug>` |
 
 Для удалённых команд задайте `KROY_REMOTE_HOST=user@example.org`.
 Инструкции первого запуска, миграций, standalone, диагностики и переноса данных —

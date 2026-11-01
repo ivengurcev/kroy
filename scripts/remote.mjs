@@ -8,7 +8,7 @@ const BLOCKED_SCRIPTS = new Set(['remote', 'deploy', 'site:deploy']);
 const [script, ...args] = process.argv.slice(2);
 
 if (!script) {
-    console.error('Использование: yarn remote <script> [...args]');
+    console.error('Использование: bun run remote <script> [...args]');
     process.exitCode = 1;
 } else {
     const packageScripts = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts || {};

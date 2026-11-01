@@ -45,7 +45,7 @@ export async function migratePageViews(client, parts, widgets, { apply = false }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
     const args = process.argv.slice(2);
     if (args.length > 1 || args.length === 1 && args[0] !== '--apply') {
-        throw new Error('Использование: yarn node --env-file-if-exists=.env scripts/migratePageViews.mjs [--apply]');
+        throw new Error('Использование: bun scripts/migratePageViews.mjs [--apply]');
     }
     const [parts, widgets] = await Promise.all([discoverParts(), discoverWidgets()]);
     validateDefaultWidgets(parts, widgets);

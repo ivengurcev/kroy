@@ -39,7 +39,7 @@ prepare({ props, record, context, contacts, catalog, reviews, articles }) -> dat
 ## Регистрация
 
 `build/registry/discoverParts.mjs` рекурсивно обходит `site/parts/` и
-`site/widgets/`. Команда `yarn parts:generate` запускает её через CLI-обёртку
+`site/widgets/`. Команда `bun run parts:generate` запускает её через CLI-обёртку
 `scripts/discoverParts.mjs`. Алгоритм discovery:
 
 - Каталог с `package.json` регистрирует одну точку входа `main`; внутрь него
@@ -120,7 +120,7 @@ Defaults простых значений задаются в необязате�
 
 ## Реестры и стили
 
-`yarn parts:generate` через `build/registry/discoverParts.mjs` создаёт в `dist/kroy/`
+`bun run parts:generate` через `build/registry/discoverParts.mjs` создаёт в `dist/kroy/`
 полные `parts.mjs`, `parts.json`, `widgets.mjs`, `widgets.json` для редактора.
 `build/site/generateSiteParts.mjs`, вызываемый `site:build`, создаёт `site-parts.mjs`
 с экспортами parts/widgets только используемых блоков, включая детальные страницы.
@@ -139,13 +139,13 @@ view по default widget и сохраняет уже выбранные сов�
 Dry-run по умолчанию:
 
 ```bash
-yarn node --env-file-if-exists=.env scripts/migratePageViews.mjs
+bun scripts/migratePageViews.mjs
 ```
 
 После проверки результата и явного разрешения на изменение рабочей БД:
 
 ```bash
-yarn node --env-file-if-exists=.env scripts/migratePageViews.mjs --apply
+bun scripts/migratePageViews.mjs --apply
 ```
 
 Запись — одна транзакция с блокировкой строк. Повторный запуск не меняет уже

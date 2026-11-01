@@ -17,11 +17,10 @@ Nginx от пользователя приложения. Системный Ngi
 Существующий пользователь и каталоги не пересоздаются и не удаляются.
 
 Bootstrap устанавливает системные зависимости: Nginx, PostgreSQL, `rsync`,
-`acl`, `python3-debian`, `python3-psycopg2` и строго Node.js `24.19.0` из
-NodeSource. Репозиторий NodeSource настраивается в формате deb822
-(`/etc/apt/sources.list.d/nodesource.sources`), а legacy `nodesource.list`
-удаляется. При наличии Node.js 22 или другой версии пакет обновляется до этой
-точной версии; после установки выполняется проверка `node --version`.
+`acl`, `python3-psycopg2`, `unzip` и Bun `1.4.4`. Bun загружается из закреплённого
+Linux x64 baseline archive с проверкой SHA-256 и устанавливается в
+`/usr/local/bin/bun`. Проверяется Ubuntu 24.04 x86_64. Playbook не устанавливает
+Node.js, NodeSource, Corepack или Yarn.
 
 Playbook не перезаписывает основной `nginx.conf`; он добавляет отдельный файл в
 `conf.d` и systemd unit Kroy.
@@ -52,63 +51,35 @@ ansible-galaxy collection install -r infra/ansible/requirements.yml
 ```
 
 Bootstrap не изменяет конфигурации Nginx и PostgreSQL и не затрагивает другие
-приложения сервера. Для Node.js `24.19.0` включается Corepack с Yarn-shim в
-`/usr/local/bin/yarn`; Yarn выбирает версию из `packageManager` проекта.
-Пользователь берётся из настроек Ansible, inventory или `~/.ssh/config`.
-После bootstrap переподключитесь по SSH, чтобы обновилось членство в
-группе. Bootstrap устанавливает защищённый запускатель
+приложения сервера. Пользователь берётся из настроек Ansible, inventory или
+`~/.ssh/config`. После bootstrap переподключитесь по SSH, чтобы обновилось
+членство в группе. Bootstrap устанавливает защищённый запускатель
 `/usr/local/sbin/kroy-run` и узкое правило sudoers, разрешающее SSH-пользователю
 запускать только скрипты Kroy от имени `kroy`. Отдельное правило разрешает
 без пароля только `start`/`restart` для `kroy-app` и `reload` для `kroy-nginx`.
 Изменения этих правил применяются повторным запуском bootstrap с sudo-паролем;
-в обычном `yarn deploy app` пароль не требуется.
+в обычном `bun run deploy app` пароль не требуется.
 
-## Runtime: Node.js и Bun
-
-По умолчанию приложение работает под Node.js `24.19.0` и Yarn PnP. Для запуска
-HTTP-сервера под Bun укажите `kroy_runtime=bun` при bootstrap и deploy. Bun
-`1.4.4` ставится из закреплённого Linux x64 baseline archive в
-`/usr/local/bin/bun`; bootstrap разрешает режим только на Ubuntu 24.04 x86_64.
-Node.js и Yarn остаются установленными для сборки, Yarn-команд и rollback.
+Только Bun можно установить отдельно, не запуская остальную настройку сервера:
 
 ```bash
 ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-bootstrap.yml \
-  -e kroy_runtime=bun
-ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-deploy.yml \
-  -e kroy_runtime=bun
+  --tags bun-install
 ```
 
-Локальная установка и `yarn vyaz:build` выполняются в основном Yarn PnP
-checkout. `.yarnrc.yml` не переключается. На VPS защищённый
-`/usr/local/sbin/kroy-run deps:install` задаёт `YARN_NODE_LINKER=pnpm` и
-`YARN_GLOBAL_FOLDER=/srv/kroy/.yarn/global`, проверяет фактические `nodeLinker`
-и `globalFolder`, затем выполняет `yarn install --immutable` от пользователя
-`kroy`. Global folder находится на том же filesystem, что и проект. После установки
-`runtime:verify` проверяет импорт `@vyaz/core/createApp.mjs` выбранным runtime.
-Deploy применяет миграции и перезапускает службу после завершения шагов
-установки и проверки runtime.
+Обычный bootstrap устанавливает Bun, системные пакеты, пользователя и службы.
+Systemd запускает приложение командой `bun --no-install server.mjs --serve`,
+а `kroy-nginx.service` подготавливает конфигурацию через Bun `ExecStartPre`.
+Защищённый runner тоже работает на Bun: он ограничивает набор команд файлами
+`package.json`, запускает скрипты через `bun run` и проверяет импорт Vyaz.
 
-Systemd запускает Bun напрямую как `bun --no-install server.mjs --serve`.
-Пакетные скрипты и Yarn остаются под Node.js: `kroy-run` работает на Node, а
-сборка выполняется локально. Публикация из `scripts/publishSite.mjs` порождает
-дочерние процессы через `process.execPath`, то есть при вызове из Bun — Bun.
-Административный API также запускает Yarn release через `process.execPath`.
-Обе цепочки публикации успешно прошли тесты под Bun на этапе 2; использование
-`process.execPath` в этих сценариях проверено.
-
-Для rollback переключите systemd тем же bootstrap с `kroy_runtime=node`, затем
-выполните deploy с тем же значением:
-
-```bash
-ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-bootstrap.yml \
-  -e kroy_runtime=node
-ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-deploy.yml \
-  -e kroy_runtime=node
-```
-
-Синхронизированные `.pnp.cjs`, `.pnp.loader.mjs` и Yarn cache остаются для Node
-PnP. Bun install добавляет `node_modules`; rollback его не удаляет и не меняет
-данные приложения. Не запускайте Node и Bun одновременно на одной копии сервера.
+В Ansible deploy сначала локально выполняются `bun install --frozen-lockfile`
+и `bun run vyaz:build`. После передачи файлов на VPS зависимости устанавливаются
+повторно от пользователя `kroy` с той же замороженной Bun lockfile; затем
+проверяется импорт `@vyaz/core/createApp.mjs`, применяются миграции и служба
+перезапускается. Публикация из `scripts/publishSite.mjs` и административного API
+запускает дочерние Bun-процессы через `process.execPath`; эти цепочки успешно
+прошли Bun-тестирование на этапе 2.
 
 Для первоначальной настройки сервера, PostgreSQL и `.env` выполните bootstrap:
 
@@ -122,7 +93,7 @@ ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-bootstrap.yml \
 
 ```bash
 export KROY_REMOTE_HOST=user@example.org
-yarn deploy app
+bun run deploy app
 ```
 
 Эквивалентный прямой вызов Ansible:
@@ -148,29 +119,23 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 базы отсутствует, она восстанавливается с паролем из этого файла.
 
 `kroy-deploy.yml` не импортирует bootstrap или provision и не устанавливает
-системные пакеты, пользователей или PostgreSQL. При несовпадении Node.js либо
-выбранного Bun deploy завершается с рекомендацией повторно запустить bootstrap.
-Yarn release не
-проверяется отдельной удалённой задачей: необходимые PnP-артефакты проверяются
-локально перед rsync. `kroy-provision.yml` сохранён как совместимая точка входа
-и просто вызывает bootstrap.
+системные пакеты, пользователей или PostgreSQL. При отсутствии Bun `1.4.4` deploy
+завершается с рекомендацией запустить bootstrap. `kroy-provision.yml` сохранён
+как совместимая точка входа и вызывает bootstrap.
 
-Перед deploy на локальной машине выполняются `yarn install --immutable` и
-`yarn vyaz:build`. Версия Yarn и `enableGlobalCache: false` уже зафиксированы
-в репозитории. В rsync передаются `.pnp.cjs`, `.pnp.loader.mjs`,
-`.yarn/cache`, `.yarn/unplugged`, `.yarn/releases` и конфигурация Yarn, а также
-сборка `dist`. Перед синхронизацией их наличие проверяется. Данные передаются
-напрямую от пользователя SSH-подключения. Исключаются `.git`
+Перед deploy на локальной машине выполняются `bun install --frozen-lockfile` и
+`bun run vyaz:build`; проверяются Bun `1.4.4`, `package.json` и `bun.lock`.
+Через rsync передаются исходники и сборка `dist`. Данные передаются напрямую от
+пользователя SSH-подключения. Исключаются `.git`
 (в том числе внутри субмодулей), `.env`, `dist/sites`, конфигурации
-`dist/kroy/nginx`, `data/`, локальные `node_modules`, логи и `infra/ansible/`.
+`dist/kroy/nginx`, `data/`, все локальные `node_modules`, логи и `infra/ansible/`.
 `--delete` и `--chown` не используются: серверные данные и конфигурации
-сохраняются. В режиме Node на VPS `yarn install` и `vyaz:build` не запускаются;
-миграции используют переданный release Yarn через `/usr/bin/node` и PnP-
-зависимости. В режиме Bun deploy выполняет immutable Yarn install с pnpm linker
-перед миграциями; lockfile и основная PnP-конфигурация не меняются.
+сохраняются. На VPS защищённый runner от имени `kroy` выполняет
+`bun install --frozen-lockfile` до миграций. Существующие `.env`, PostgreSQL
+данные, опубликованные релизы, медиа и Nginx-конфиги остаются вне синхронизации.
 
-После bootstrap systemd-unit `kroy-app` уже подготовлен под выбранный runtime.
-Deploy проверяет импорт Vyaz, выполняет `yarn db:migrate` через защищённый
+После bootstrap systemd-units `kroy-app` и `kroy-nginx` подготовлены для Bun.
+Deploy проверяет импорт Vyaz, выполняет `bun run db:migrate` через защищённый
 запускатель от имени `kroy`, затем перезапускает приложение и проверяет
 активное состояние сервиса.
 
@@ -185,7 +150,7 @@ systemctl is-enabled kroy-app kroy-nginx
 командой:
 
 ```bash
-yarn deploy site demo
+bun run deploy site demo
 ```
 
 Команда использует `KROY_REMOTE_HOST`. На VPS защищённый запускатель выполняет

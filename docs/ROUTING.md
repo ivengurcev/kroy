@@ -112,8 +112,8 @@ URL. Нет перенаправления неизвестных путей н�
 
 ## Управление сайтами и доменами
 
-В development команды выполняются через `yarn dev:run <script> ...`, на VPS —
-через `yarn remote <script> ...`. Ниже имена скриптов и аргументы:
+В development команды выполняются через `bun run dev:run <script> ...`, на VPS —
+через `bun run remote <script> ...`. Ниже имена скриптов и аргументы:
 
 ```text
 site:create vet vet.example.test "Семейный ветеринар"

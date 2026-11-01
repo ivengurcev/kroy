@@ -6,81 +6,71 @@
     kroy_root: /srv/kroy
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
-    kroy_yarn_version: 4.18.1
-    kroy_runtime: bun
     kroy_bun_version: 1.4.4
     kroy_bun_binary: /usr/local/bin/bun
     kroy_local_root: "{{ playbook_dir }}/../.."
   tasks:
-    - name: Validate selected Kroy runtime
-      ansible.builtin.assert:
-        that: kroy_runtime in ['node', 'bun']
-        fail_msg: "kroy_runtime must be node or bun"
-
-    - name: Check Node.js version on the VPS
-      ansible.builtin.command: node --version
-      register: kroy_remote_node_version
-      changed_when: false
-      failed_when: false
-
-    - name: Require bootstrapped Node.js environment
-      ansible.builtin.assert:
-        that:
-          - kroy_remote_node_version.rc == 0
-          - (kroy_remote_node_version.stdout | trim) == 'v24.19.0'
-        fail_msg: "Node.js v24.19.0 is required on the VPS. Run infra/ansible/kroy-bootstrap.yml first."
-
     - name: Check Bun version on the VPS
       ansible.builtin.command: "{{ kroy_bun_binary }} --version"
       register: kroy_remote_bun_version
       changed_when: false
       failed_when: false
-      when: kroy_runtime == 'bun'
 
     - name: Require bootstrapped Bun environment
       ansible.builtin.assert:
         that:
           - kroy_remote_bun_version.rc == 0
           - (kroy_remote_bun_version.stdout | trim) == kroy_bun_version
-        fail_msg: "Bun {{ kroy_bun_version }} is required. Run kroy-bootstrap.yml with kroy_runtime=bun first."
-      when: kroy_runtime == 'bun'
+        fail_msg: "Bun {{ kroy_bun_version }} is required. Run infra/ansible/kroy-bootstrap.yml first."
 
-    - name: Install Kroy dependencies locally
+    - name: Check local Bun version
+      ansible.builtin.command: bun --version
+      register: kroy_local_bun_version
+      delegate_to: localhost
+      become: false
+      run_once: true
+      changed_when: false
+
+    - name: Require local Bun version
+      ansible.builtin.assert:
+        that: (kroy_local_bun_version.stdout | trim) == kroy_bun_version
+        fail_msg: "Bun {{ kroy_bun_version }} is required locally to build Kroy."
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Install Kroy dependencies locally with Bun
       ansible.builtin.command:
-        cmd: yarn install --immutable
+        cmd: bun install --frozen-lockfile
         chdir: "{{ kroy_local_root }}"
       delegate_to: localhost
       become: false
       run_once: true
       changed_when: true
 
-    - name: Check local Yarn PnP artifacts
+    - name: Check local Bun project artifacts
       ansible.builtin.stat:
         path: "{{ kroy_local_root }}/{{ item }}"
       loop:
-        - .pnp.cjs
-        - .pnp.loader.mjs
-        - .yarn/cache
-        - .yarn/unplugged
-        - ".yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
-        - .yarnrc.yml
-      register: kroy_local_yarn_artifacts
+        - package.json
+        - bun.lock
+      register: kroy_local_bun_artifacts
       delegate_to: localhost
       become: false
       run_once: true
 
-    - name: Require local Yarn PnP artifacts
+    - name: Require local Bun project artifacts
       ansible.builtin.assert:
         that: item.stat.exists
-        fail_msg: "Missing local Yarn artifact: {{ item.stat.path }}"
-      loop: "{{ kroy_local_yarn_artifacts.results }}"
+        fail_msg: "Missing Bun project artifact: {{ item.stat.path }}"
+      loop: "{{ kroy_local_bun_artifacts.results }}"
       delegate_to: localhost
       become: false
       run_once: true
 
     - name: Build Kroy locally
       ansible.builtin.command:
-        cmd: yarn vyaz:build
+        cmd: bun run vyaz:build
         chdir: "{{ kroy_local_root }}"
       delegate_to: localhost
       become: false
@@ -105,19 +95,18 @@
           - "--exclude=dist/kroy/staging/"
           - "--exclude=dist/kroy/nginx/"
           - "--exclude=data/"
-          - "--exclude=/node_modules/"
+          - "--exclude=node_modules/"
           - "--exclude=.cache/"
           - "--exclude=*.log"
           - "--exclude=infra/ansible/"
       register: kroy_sync_result
 
-    - name: Install Bun-compatible dependencies immutably on the VPS
+    - name: Install Bun dependencies immutably on the VPS
       ansible.builtin.command:
         argv: [sudo, -n, -u, "{{ kroy_user }}", /usr/local/sbin/kroy-run, deps:install]
-      when: kroy_runtime == 'bun'
       changed_when: true
 
-    - name: Verify selected runtime can import Vyaz
+    - name: Verify Bun can import Vyaz
       ansible.builtin.command:
         argv: [sudo, -n, -u, "{{ kroy_user }}", /usr/local/sbin/kroy-run, runtime:verify]
       changed_when: false

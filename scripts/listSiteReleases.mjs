@@ -16,7 +16,7 @@ function formatReleaseDate(releaseId) {
 
 try {
     if (!siteSlug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(siteSlug)) {
-        throw new Error('Укажите корректный slug сайта: yarn site:releases <slug>');
+        throw new Error('Укажите корректный slug сайта: bun run site:releases <slug>');
     }
 
     const releases = (await readdir(join(SITES_DIR, siteSlug), {

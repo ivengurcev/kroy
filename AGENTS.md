@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Kroy / Oysite — мультисайтовая платформа на JavaScript, React 19, Vyaz,
-esbuild, PostgreSQL и Yarn 4 PnP. Приложение настраивается в `server.mjs`;
+esbuild, PostgreSQL и Bun 1.4.4. Приложение настраивается в `server.mjs`;
 административный интерфейс находится в `admin/`, публичный сайт — в `site/`.
 Серверная реализация находится в `server/`, межсистемные модули — в `shared/`.
 `site/parts/` готовят данные, `site/widgets/` отображают их,

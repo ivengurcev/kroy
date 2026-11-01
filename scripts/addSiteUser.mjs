@@ -5,7 +5,7 @@ const normalizedEmail = email?.trim().toLowerCase();
 
 try {
     if (!slug || !normalizedEmail) {
-        throw new Error('Использование: yarn site:user:add <slug> <email>');
+        throw new Error('Использование: bun run site:user:add <slug> <email>');
     }
     const { rows: [site] } = await pool.query('SELECT id FROM sites WHERE slug = $1', [slug]);
     if (!site) throw new Error(`Сайт со slug ${slug} не найден`);
