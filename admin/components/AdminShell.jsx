@@ -1,5 +1,5 @@
 import AdminHeader from './AdminHeader.jsx';
-import EditorWorkspace from '../../editor/EditorWorkspace.jsx';
+import EditorWorkspace from '../editor/EditorWorkspace.jsx';
 import AdminLayout from './AdminLayout.jsx';
 
 export default function AdminShell({

@@ -1,13 +1,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { parts } from '../dist/kroy/parts.mjs';
-import metadata from '../dist/kroy/parts.json';
-import { widgets } from '../dist/kroy/widgets.mjs';
-import widgetMetadata from '../dist/kroy/widgets.json';
+import { parts } from '../../dist/kroy/parts.mjs';
+import metadata from '../../dist/kroy/parts.json';
+import { widgets } from '../../dist/kroy/widgets.mjs';
+import widgetMetadata from '../../dist/kroy/widgets.json';
 
-import AdminShell from '../components/admin/AdminShell.jsx';
-import { createPart, changePartView } from './partModel.js';
+import AdminShell from '../components/AdminShell.jsx';
+import { createPart, changePartView } from '../../editor/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadArticlePreview } from './articlePreview.mjs';
 

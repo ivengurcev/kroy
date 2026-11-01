@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 import theme from '../styles/AdminTheme.module.css';
 import styles from './PartPicker.module.css';
 

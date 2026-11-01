@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Page from '../layout/Page.jsx';
-import SiteRoot from '../layout/SiteRoot.jsx';
+import Page from '../../layout/Page.jsx';
+import SiteRoot from '../../layout/SiteRoot.jsx';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
-import Card from '../components/ui/Card.jsx';
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
-import barStyles from '../components/ui/AdminBar.module.css';
+import Card from '../ui/Card.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
+import barStyles from '../ui/AdminBar.module.css';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
 

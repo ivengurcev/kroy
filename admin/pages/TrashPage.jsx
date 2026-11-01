@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import PageList from '../components/admin/PageList.jsx';
+import PageList from '../components/PageList.jsx';
 import styles from './PagesPage.module.css';
-import AdminPageShell from '../components/admin/AdminPageShell.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import AdminPageShell from '../components/AdminPageShell.jsx';
+import Icon from '../ui/Icon.jsx';
 
 export default function TrashPage() {
     const [pages, setPages] = useState([]);

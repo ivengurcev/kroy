@@ -2,10 +2,10 @@
 import ListField from './ListField.jsx';
 import ImageField from './ImageField.jsx';
 import styles from './Field.module.css';
-import TokenControl from '../components/ui/TokenControls.jsx';
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
-import compactStyles from '../components/ui/CompactForm.module.css';
+import TokenControl from '../ui/TokenControls.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
+import compactStyles from '../ui/CompactForm.module.css';
 
 function CatalogProductField({ value, onChange, catalog }) {
     const selected = Array.isArray(value) ? value : [];

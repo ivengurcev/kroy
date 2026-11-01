@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './AdminLayout.module.css';
-import theme from '../../styles/AdminTheme.module.css';
+import theme from '../styles/AdminTheme.module.css';
 
 export default function AdminLayout({ header, children }) {
     const headerRef = useRef(null);

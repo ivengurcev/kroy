@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
-import Icon from '../components/ui/Icon.jsx';
-import TokenControl from '../components/ui/TokenControls.jsx';
-import SocialLinksEditor from '../components/admin/SocialLinksEditor.jsx';
-import CatalogEditor from '../components/admin/CatalogEditor.jsx';
-import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/admin/SiteSettingsLayout.jsx';
+import Button from '../ui/Button.jsx';
+import Card from '../ui/Card.jsx';
+import Icon from '../ui/Icon.jsx';
+import TokenControl from '../ui/TokenControls.jsx';
+import SocialLinksEditor from '../components/SocialLinksEditor.jsx';
+import CatalogEditor from '../components/CatalogEditor.jsx';
+import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
-import compactStyles from '../components/ui/CompactForm.module.css';
+import compactStyles from '../ui/CompactForm.module.css';
 
 const MODE_OPTIONS = [
     { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -159,12 +159,7 @@ function SeoPlaceholder() {
 }
 
 export default function SitePage() {
-    const initialSection = typeof window === 'undefined'
-        ? 'appearance'
-        : window.location.pathname === '/admin/site/catalog'
-            ? 'catalog'
-            : new URL(window.location.href).searchParams.get('section') || 'appearance';
-    const [section, setSection] = useState(SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === initialSection && !path) ? initialSection : 'appearance');
+    const [section, setSection] = useState('appearance');
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -182,7 +177,20 @@ export default function SitePage() {
         return () => controller.abort();
     }, []);
     useEffect(() => {
-        function syncSection() { const next = window.location.pathname === '/admin/site/catalog' ? 'catalog' : new URL(window.location.href).searchParams.get('section') || 'appearance'; if (SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path)) setSection(next); }
+        function syncSection() {
+            const next = window.location.pathname === '/admin/site/catalog'
+                ? 'catalog'
+                : new URL(window.location.href).searchParams.get('section') || 'appearance';
+
+            setSection(
+                SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path)
+                    ? next
+                    : 'appearance'
+            );
+        }
+
+        syncSection();
+
         window.addEventListener('popstate', syncSection);
         return () => window.removeEventListener('popstate', syncSection);
     }, []);

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import Button from '../ui/Button.jsx';
+import Card from '../ui/Card.jsx';
+import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
-import SiteSettingsLayout from '../components/admin/SiteSettingsLayout.jsx';
-import ArticleEditor from '../components/admin/ArticleEditor.jsx';
-import compactStyles from '../components/ui/CompactForm.module.css';
+import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
+import ArticleEditor from '../components/ArticleEditor.jsx';
+import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SiteArticleEditorPage.module.css';
 
 const EMPTY_CONTENT = {

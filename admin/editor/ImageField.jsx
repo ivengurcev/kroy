@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 import styles from './ImageField.module.css';
 
 const DEFAULT_MAX_WIDTH = 1600;

@@ -16,20 +16,20 @@ Auth.js и серверной проверкой сайта; спорные пр
 при ошибке — ошибка без подстановки demo-данных. Отдельный запрос
 `/api/site/preview` получает тему, контакты, каталог и опубликованные отзывы.
 Для статей редактор дополнительно получает sample record/список через
-`editor/articlePreview.mjs`; эти данные не сохраняются в content.
+`admin/editor/articlePreview.mjs`; эти данные не сохраняются в content.
 
 ## Файлы и состояние
 
 | Файл | Ответственность |
 |---|---|
-| `editor/Editor.jsx` | Загрузка, сохранение, dirty state и операции над блоками |
-| `editor/EditorWorkspace.jsx` | Рабочая область и живой предпросмотр |
-| `editor/PartPicker.jsx`, `editor/PartControls.jsx` | Выбор и управление блоками |
-| `editor/PartEditor.jsx` | Настройки данных и выбор/настройки виджета |
-| `editor/Field.jsx`, `editor/ListField.jsx`, `editor/ImageField.jsx` | Контролы по метаданным |
-| `editor/partModel.js` | Начальные значения, временные id, смена view |
+| `admin/editor/Editor.jsx` | Загрузка, сохранение, dirty state и операции над блоками |
+| `admin/editor/EditorWorkspace.jsx` | Рабочая область и живой предпросмотр |
+| `admin/editor/PartPicker.jsx`, `admin/editor/PartControls.jsx` | Выбор и управление блоками |
+| `admin/editor/PartEditor.jsx` | Настройки данных и выбор/настройки виджета |
+| `admin/editor/Field.jsx`, `admin/editor/ListField.jsx`, `admin/editor/ImageField.jsx` | Контролы по метаданным |
+| `editor/partModel.js` (общая с API и CLI) | Начальные значения, временные id, смена view |
 | `layout/Page.jsx` | Общий вызов запчасти и рендер виджета |
-| `pages/PreviewPage.jsx` | Приватный предпросмотр сохранённого сайта |
+| `admin/pages/PreviewPage.jsx` | Приватный предпросмотр сохранённого сайта |
 
 Внутренний блок содержит временный id и публичные данные:
 

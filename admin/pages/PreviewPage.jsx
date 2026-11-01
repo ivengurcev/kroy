@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { parts } from '../dist/kroy/parts.mjs';
-import { widgets } from '../dist/kroy/widgets.mjs';
-import SiteApp, { normalizePathname } from '../layout/SiteApp.jsx';
+import { parts } from '../../dist/kroy/parts.mjs';
+import { widgets } from '../../dist/kroy/widgets.mjs';
+import SiteApp, { normalizePathname } from '../../layout/SiteApp.jsx';
 import adminTheme from '../styles/AdminTheme.module.css';
-import '../layout/site.css';
+import '../../layout/site.css';
 import styles from './PreviewPage.module.css';
 import { isDetailTemplatePath } from './previewPaths.mjs';
 

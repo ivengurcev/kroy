@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
-import ImageField from '../../editor/ImageField.jsx';
+import ImageField from '../editor/ImageField.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './CatalogEditor.module.css';
 

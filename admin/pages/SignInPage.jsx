@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
-import FormField from '../components/ui/FormField.jsx';
-import OysiteLogo from '../components/admin/OysiteLogo.svg';
+import Button from '../ui/Button.jsx';
+import Card from '../ui/Card.jsx';
+import FormField from '../ui/FormField.jsx';
+import OysiteLogo from '../components/OysiteLogo.svg';
 import theme from '../styles/AdminTheme.module.css';
 import styles from './SignInPage.module.css';
 

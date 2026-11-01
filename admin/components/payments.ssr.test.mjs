@@ -14,11 +14,11 @@ const compiledPath = fileURLToPath(new URL(`.payments-test-${randomUUID()}.mjs`,
 before(async () => {
     const result = await build({
         stdin: {
-            contents: `export { default as PaymentIntegrationEditor } from './components/admin/PaymentIntegrationEditor.jsx';
-                export { default as CatalogEditor } from './components/admin/CatalogEditor.jsx';
+            contents: `export { default as PaymentIntegrationEditor } from './admin/components/PaymentIntegrationEditor.jsx';
+                export { default as CatalogEditor } from './admin/components/CatalogEditor.jsx';
                 export { default as ProductCards, ProductCard } from './components/site/ProductCards.jsx';
-                export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './components/admin/SiteSettingsLayout.jsx';
-                export { default as SitePaymentsPage } from './pages/SitePaymentsPage.jsx';`,
+                export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
+                export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath, bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',

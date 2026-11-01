@@ -21,7 +21,7 @@ before(async () => {
                 export { default as ArticleList } from './parts/article-list/prepareArticleList.mjs';
                 export { default as ArticleCards } from './widgets/article-cards/ArticleCards.jsx';
                 export { default as ArticleContent } from './widgets/article-content/ArticleContent.jsx';
-                export { default as EditorWorkspace } from './editor/EditorWorkspace.jsx';`,
+                export { default as EditorWorkspace } from './admin/editor/EditorWorkspace.jsx';`,
             resolveDir: fileURLToPath(new URL('../', import.meta.url)),
         },
         outfile: compiledPath,

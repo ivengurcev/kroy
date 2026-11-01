@@ -1,9 +1,9 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { defaultProps } from './partModel.js';
+import { defaultProps } from '../../editor/partModel.js';
 import styles from './ListField.module.css';
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 
 function itemSummary(item, fields, index) {
     const entries = Object.entries(fields);

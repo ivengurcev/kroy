@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './PagesPage.module.css';
-import PageList from '../components/admin/PageList.jsx';
-import AdminPageShell from '../components/admin/AdminPageShell.jsx';
-import Button from '../components/ui/Button.jsx';
-import Card from '../components/ui/Card.jsx';
-import Icon from '../components/ui/Icon.jsx';
-import compactStyles from '../components/ui/CompactForm.module.css';
-import { slugifyPageTitle } from '../api/pageFields.mjs';
-import { PAGE_DATA_SOURCES } from '../pageDataSources.mjs';
+import PageList from '../components/PageList.jsx';
+import AdminPageShell from '../components/AdminPageShell.jsx';
+import Button from '../ui/Button.jsx';
+import Card from '../ui/Card.jsx';
+import Icon from '../ui/Icon.jsx';
+import compactStyles from '../ui/CompactForm.module.css';
+import { slugifyPageTitle } from '../../api/pageFields.mjs';
+import { PAGE_DATA_SOURCES } from '../../pageDataSources.mjs';
 
 export default function PagesPage() {
     const [pages, setPages] = useState([]);

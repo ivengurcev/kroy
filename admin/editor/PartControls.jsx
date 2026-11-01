@@ -1,5 +1,5 @@
-import Button from '../components/ui/Button.jsx';
-import Icon from '../components/ui/Icon.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 import styles from './PartControls.module.css';
 
 export default function PartControls({
