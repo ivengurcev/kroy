@@ -1,11 +1,11 @@
 import { pool } from '../../db/client.mjs';
 import getHostname from './getHostname.mjs';
 import isUuid from './isUuid.mjs';
-import { createDetailPath, isValidRouteParameter, normalizePageTitle } from '../../api/pageFields.mjs';
+import { createDetailPath, isValidRouteParameter, normalizePageTitle } from '../../shared/pageFields.mjs';
 import findPageRouteConflict from './pageRouteConflicts.mjs';
 import partCatalog from '../../dist/kroy/parts.json' with { type: 'json' };
 import widgetCatalog from '../../dist/kroy/widgets.json' with { type: 'json' };
-import { defaultProps, createView } from '../../editor/partModel.js';
+import { defaultProps, createView } from '../../shared/partModel.js';
 
 export function initialDetailContent(dataSource) {
     if (dataSource !== 'articles') return [];

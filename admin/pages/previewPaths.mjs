@@ -1,4 +1,4 @@
-import { routePatternsOverlap } from '../../api/pageFields.mjs';
+import { routePatternsOverlap } from '../../shared/pageFields.mjs';
 
 export function isDetailTemplatePath(path, templates = []) {
     return templates.some(({ path: templatePath }) =>

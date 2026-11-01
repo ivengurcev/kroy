@@ -6,8 +6,8 @@ import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
-import { slugifyPageTitle } from '../../api/pageFields.mjs';
-import { PAGE_DATA_SOURCES } from '../../pageDataSources.mjs';
+import { slugifyPageTitle } from '../../shared/pageFields.mjs';
+import { PAGE_DATA_SOURCES } from '../../shared/pageDataSources.mjs';
 
 export default function PagesPage() {
     const [pages, setPages] = useState([]);

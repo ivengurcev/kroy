@@ -4,9 +4,9 @@ import {
   isPlainObject,
   isValidPagePath,
   normalizePageTitle,
-} from "../../api/pageFields.mjs";
+} from "../../shared/pageFields.mjs";
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
-import { isPageDataSource } from "../../pageDataSources.mjs";
+import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 
 export default async function postPage(c) {
   let body;

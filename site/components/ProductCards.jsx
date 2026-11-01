@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { paymentIsAvailable, createPaymentStarter } from '../../payments/client.mjs';
+import { paymentIsAvailable, createPaymentStarter } from '../payments/client.mjs';
 import styles from './ProductCards.module.css';
 
 export function ProductCard({ product, paymentEnabled }) {

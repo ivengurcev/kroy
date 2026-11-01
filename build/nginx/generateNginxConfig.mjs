@@ -1,7 +1,7 @@
 import { readFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isValidPagePath } from '../../api/pageFields.mjs';
+import { isValidPagePath } from '../../shared/pageFields.mjs';
 import isValidHostname from './isValidHostname.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');

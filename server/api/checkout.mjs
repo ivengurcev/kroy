@@ -1,5 +1,5 @@
 import getCurrentSite from './siteContext.mjs';
-import { isPlainObject } from '../../api/pageFields.mjs';
+import { isPlainObject } from '../../shared/pageFields.mjs';
 import isUuid from './isUuid.mjs';
 import { paymentAvailable, startPayment } from '../payments/checkout.mjs';
 import PaymentError from '../payments/paymentError.mjs';

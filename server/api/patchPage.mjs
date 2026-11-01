@@ -7,7 +7,7 @@ import {
   isValidPagePath,
   isValidRouteParameter,
   normalizePageTitle,
-} from "../../api/pageFields.mjs";
+} from "../../shared/pageFields.mjs";
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
 
 export default async function patchPage(c) {

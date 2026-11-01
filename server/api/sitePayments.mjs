@@ -1,5 +1,5 @@
 import getCurrentSite from './siteContext.mjs';
-import { isPlainObject } from '../../api/pageFields.mjs';
+import { isPlainObject } from '../../shared/pageFields.mjs';
 import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from '../../db/sitePaymentIntegrations.mjs';
 import { paymentProviders, getPaymentProvider, describePaymentProvider, PaymentSettingsError } from '../payments/providers.mjs';
 

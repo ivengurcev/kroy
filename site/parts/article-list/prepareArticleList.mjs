@@ -1,4 +1,4 @@
-import { resolveDetailPath } from '../../../api/pageFields.mjs';
+import { resolveDetailPath } from '../../../shared/pageFields.mjs';
 
 /**
  * @kroy-title Список статей

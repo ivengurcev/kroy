@@ -27,7 +27,7 @@ Auth.js и серверной проверкой сайта; спорные пр
 | `admin/editor/PartPicker.jsx`, `admin/editor/PartControls.jsx` | Выбор и управление блоками |
 | `admin/editor/PartEditor.jsx` | Настройки данных и выбор/настройки виджета |
 | `admin/editor/Field.jsx`, `admin/editor/ListField.jsx`, `admin/editor/ImageField.jsx` | Контролы по метаданным |
-| `editor/partModel.js` (общая с API и CLI) | Начальные значения, временные id, смена view |
+| `shared/partModel.js` (общая с API и CLI) | Начальные значения, временные id, смена view |
 | `site/runtime/Page.jsx` | Общий вызов запчасти и рендер виджета |
 | `admin/pages/PreviewPage.jsx` | Приватный предпросмотр сохранённого сайта |
 

@@ -1,6 +1,6 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { defaultProps } from '../../editor/partModel.js';
+import { defaultProps } from '../../shared/partModel.js';
 import styles from './ListField.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';

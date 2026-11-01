@@ -3,7 +3,7 @@ import widgetCatalog from "../../dist/kroy/widgets.json" with { type: "json" };
 import { pool } from "../../db/client.mjs";
 import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
-import { isPlainObject, isValidContent } from "./pageContent.mjs";
+import { isPlainObject, isValidContent } from "../../shared/pageContent.mjs";
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");

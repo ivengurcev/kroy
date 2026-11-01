@@ -1,5 +1,5 @@
 import { pool } from './client.mjs';
-import { normalizeSocialLinks } from '../socialLinks.mjs';
+import { normalizeSocialLinks } from '../shared/socialLinks.mjs';
 
 export const EMPTY_SITE_CONTACTS = {
     address: '',

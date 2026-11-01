@@ -1,4 +1,4 @@
-import { routePatternsOverlap } from '../../api/pageFields.mjs';
+import { routePatternsOverlap } from '../../shared/pageFields.mjs';
 
 export default async function findPageRouteConflict(
     client,

@@ -7,7 +7,7 @@ import { widgets } from '../../dist/kroy/widgets.mjs';
 import widgetMetadata from '../../dist/kroy/widgets.json';
 
 import AdminShell from '../components/AdminShell.jsx';
-import { createPart, changePartView } from '../../editor/partModel.js';
+import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadArticlePreview } from './articlePreview.mjs';
 

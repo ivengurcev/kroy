@@ -6,7 +6,7 @@ import {
     SOCIAL_TYPES,
     socialLabel,
     socialType,
-} from '../../socialLinks.mjs';
+} from '../../shared/socialLinks.mjs';
 import styles from './SocialLinksEditor.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
 

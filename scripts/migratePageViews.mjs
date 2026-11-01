@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { discoverParts, discoverWidgets, validateDefaultWidgets } from '../build/registry/discoverParts.mjs';
-import { createView } from '../editor/partModel.js';
-import { isPlainObject, isValidContent } from '../server/api/pageContent.mjs';
+import { createView } from '../shared/partModel.js';
+import { isPlainObject, isValidContent } from '../shared/pageContent.mjs';
 
 export function migratePageContent(content, parts, widgets) {
     if (!Array.isArray(content)) throw new Error('Содержимое страницы должно быть массивом');

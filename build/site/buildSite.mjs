@@ -2,7 +2,7 @@ import { dirname, join, resolve } from 'node:path';
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, transform } from 'esbuild';
-import { isValidPagePath, isValidPageRoutePattern } from '../../api/pageFields.mjs';
+import { isValidPagePath, isValidPageRoutePattern } from '../../shared/pageFields.mjs';
 import { pool } from '../../db/client.mjs';
 import { getThemeTokens } from '../../site/themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../../db/siteContacts.mjs';
