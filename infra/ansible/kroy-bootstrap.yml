@@ -130,6 +130,15 @@
         - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
 
+    - name: Create temporary Bun extraction directory
+      ansible.builtin.file:
+        path: "/var/tmp/kroy-bun-v{{ kroy_bun_version }}"
+        state: directory
+        mode: '0755'
+      when:
+        - kroy_runtime == 'bun'
+        - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
+
     - name: Extract pinned Bun release
       ansible.builtin.unarchive:
         src: "/var/tmp/bun-v{{ kroy_bun_version }}-linux-x64-baseline.zip"

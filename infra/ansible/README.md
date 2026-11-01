@@ -93,9 +93,8 @@ Systemd запускает Bun напрямую как `bun --no-install server.
 сборка выполняется локально. Публикация из `scripts/publishSite.mjs` порождает
 дочерние процессы через `process.execPath`, то есть при вызове из Bun — Bun.
 Административный API также запускает Yarn release через `process.execPath`.
-Совместимость этих цепочек с Bun не проверена, поэтому Bun здесь пока
-предназначен для HTTP-сервера; publication следует выполнять Yarn-командами под
-Node до отдельного runtime-тестирования.
+Обе цепочки публикации успешно прошли тесты под Bun на этапе 2; использование
+`process.execPath` в этих сценариях проверено.
 
 Для rollback переключите systemd тем же bootstrap с `kroy_runtime=node`, затем
 выполните deploy с тем же значением:
