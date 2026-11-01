@@ -45,22 +45,6 @@ CREATE TABLE public.domains (
 
 
 --
--- Name: media; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.media (
-    id uuid NOT NULL,
-    site_id uuid NOT NULL,
-    filename text NOT NULL,
-    mime_type text NOT NULL,
-    size bigint NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT media_mime_type_check CHECK ((mime_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text]))),
-    CONSTRAINT media_size_check CHECK (((size > 0) AND (size <= 10485760)))
-);
-
-
---
 -- Name: material_sections; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -100,6 +84,22 @@ CREATE TABLE public.materials (
 
 
 --
+-- Name: media; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.media (
+    id uuid NOT NULL,
+    site_id uuid NOT NULL,
+    filename text NOT NULL,
+    mime_type text NOT NULL,
+    size bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT media_mime_type_check CHECK ((mime_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text]))),
+    CONSTRAINT media_size_check CHECK (((size > 0) AND (size <= 10485760)))
+);
+
+
+--
 -- Name: pages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -112,9 +112,9 @@ CREATE TABLE public.pages (
     deleted_at timestamp with time zone,
     page_type text DEFAULT 'standard'::text NOT NULL,
     data_source text,
-    material_section_id uuid,
     detail_parent_id uuid,
     route_param text,
+    material_section_id uuid,
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
     CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['materials'::text, 'products'::text, 'reviews'::text])) AND (((data_source = 'materials'::text) AND (material_section_id IS NOT NULL)) OR ((data_source = ANY (ARRAY['products'::text, 'reviews'::text])) AND (material_section_id IS NULL))) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
@@ -255,6 +255,22 @@ CREATE TABLE public.users (
 
 
 --
+-- Name: domains domains_hostname_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domains
+    ADD CONSTRAINT domains_hostname_key UNIQUE (hostname);
+
+
+--
+-- Name: domains domains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domains
+    ADD CONSTRAINT domains_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: material_sections material_sections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -279,19 +295,19 @@ ALTER TABLE ONLY public.material_sections
 
 
 --
--- Name: domains domains_hostname_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: materials materials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.domains
-    ADD CONSTRAINT domains_hostname_key UNIQUE (hostname);
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_pkey PRIMARY KEY (id);
 
 
 --
--- Name: domains domains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: materials materials_site_id_section_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.domains
-    ADD CONSTRAINT domains_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_site_id_section_id_slug_key UNIQUE (site_id, section_id, slug);
 
 
 --
@@ -308,22 +324,6 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_site_id_filename_key UNIQUE (site_id, filename);
-
-
---
--- Name: materials materials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.materials
-    ADD CONSTRAINT materials_pkey PRIMARY KEY (id);
-
-
---
--- Name: materials materials_site_id_section_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.materials
-    ADD CONSTRAINT materials_site_id_section_id_slug_key UNIQUE (site_id, section_id, slug);
 
 
 --
@@ -453,17 +453,17 @@ CREATE INDEX materials_section_published_idx ON public.materials USING btree (si
 
 
 --
--- Name: pages_one_detail_template_per_list; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
-
-
---
 -- Name: pages_one_active_material_list_per_section; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX pages_one_active_material_list_per_section ON public.pages USING btree (site_id, material_section_id) WHERE ((page_type = 'list'::text) AND (data_source = 'materials'::text) AND (material_section_id IS NOT NULL) AND (deleted_at IS NULL));
+
+
+--
+-- Name: pages_one_detail_template_per_list; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
 
 
 --
@@ -509,6 +509,14 @@ CREATE UNIQUE INDEX users_email_lower_idx ON public.users USING btree (lower(ema
 
 
 --
+-- Name: domains domains_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.domains
+    ADD CONSTRAINT domains_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
+
+
+--
 -- Name: material_sections material_sections_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -541,22 +549,6 @@ ALTER TABLE ONLY public.materials
 
 
 --
--- Name: pages pages_material_section_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.pages
-    ADD CONSTRAINT pages_material_section_fkey FOREIGN KEY (site_id, material_section_id) REFERENCES public.material_sections(site_id, id) ON DELETE RESTRICT;
-
-
---
--- Name: domains domains_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.domains
-    ADD CONSTRAINT domains_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
-
-
---
 -- Name: media media_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -570,6 +562,14 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.pages
     ADD CONSTRAINT pages_detail_parent_fk FOREIGN KEY (site_id, detail_parent_id) REFERENCES public.pages(site_id, id);
+
+
+--
+-- Name: pages pages_material_section_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pages
+    ADD CONSTRAINT pages_material_section_fkey FOREIGN KEY (site_id, material_section_id) REFERENCES public.material_sections(site_id, id) ON DELETE RESTRICT;
 
 
 --
@@ -695,4 +695,6 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610310001'),
     ('202611010001'),
     ('202611010002'),
-    ('202611010003');
+    ('202611010003'),
+    ('202611020000'),
+    ('202611020001');

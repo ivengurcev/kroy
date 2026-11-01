@@ -27,11 +27,19 @@ async function withLegacySchema(callback) {
                 data_source text,
                 detail_parent_id uuid,
                 route_param text,
+                UNIQUE (site_id, id),
                 CONSTRAINT pages_type_fields_check CHECK (
                     (page_type = 'standard' AND data_source IS NULL AND detail_parent_id IS NULL AND route_param IS NULL)
                     OR (page_type = 'list' AND data_source IN ('articles', 'products', 'reviews') AND detail_parent_id IS NULL AND route_param IS NULL)
                     OR (page_type = 'detail' AND data_source IS NULL AND detail_parent_id IS NOT NULL AND route_param IS NOT NULL)
-                )
+                ),
+                CONSTRAINT pages_detail_parent_fk FOREIGN KEY (site_id, detail_parent_id) REFERENCES pages(site_id, id)
+            );
+            CREATE TABLE redirects (
+                site_id uuid NOT NULL REFERENCES sites(id),
+                from_path text NOT NULL,
+                page_id uuid NOT NULL,
+                FOREIGN KEY (site_id, page_id) REFERENCES pages(site_id, id)
             );
             CREATE TABLE articles (id uuid PRIMARY KEY, site_id uuid);
         `);
@@ -43,36 +51,61 @@ async function withLegacySchema(callback) {
     }
 }
 
-async function upMigration(client) {
-    const source = await readFile(new URL('./migrations/202611020001_replace_articles_with_materials.sql', import.meta.url), 'utf8');
+async function runMigration(client, filename) {
+    const source = await readFile(new URL(`./migrations/${filename}`, import.meta.url), 'utf8');
     return client.query(source.split('-- migrate:up')[1].split('-- migrate:down')[0]);
 }
 
-test('migration refuses old article Page references before changing the schema', async (t) => {
+async function upMigrations(client) {
+    await runMigration(client, '202611020000_remove_legacy_article_pages.sql');
+    await runMigration(client, '202611020001_replace_articles_with_materials.sql');
+}
+
+test('migration removes only legacy article pages, templates, redirects, and blocks', async (t) => {
     if (!runMigrationTests) {
         t.skip('Set RUN_MATERIAL_MIGRATION_TESTS=1 and MATERIALS_MIGRATION_TEST_DATABASE to an isolated test database');
         return;
     }
     await withLegacySchema(async (client) => {
         const siteId = randomUUID();
-        await client.query('INSERT INTO sites VALUES ($1)', [siteId]);
-        const { rows: [page] } = await client.query(
+        const { rows: [site] } = await client.query('INSERT INTO sites VALUES ($1) RETURNING id', [siteId]);
+        const standardContent = [
+            { part: '@kroy/article', props: { old: true } },
+            { part: '@kroy/hero', props: { title: 'Keep me' } },
+            { part: '@kroy/article-list', props: { old: true } },
+        ];
+        const { rows: [standard] } = await client.query(
+            `INSERT INTO pages (site_id, content) VALUES ($1, $2::jsonb) RETURNING id`,
+            [site.id, JSON.stringify(standardContent)],
+        );
+        const { rows: [articleList] } = await client.query(
             `INSERT INTO pages (site_id, page_type, data_source)
              VALUES ($1, 'list', 'articles') RETURNING id`,
-            [siteId],
+            [site.id],
         );
-
-        await assert.rejects(upMigration(client), /old article Page references/i);
-        assert.equal((await client.query("SELECT to_regclass('articles') AS table_name")).rows[0].table_name, 'articles');
-        assert.equal((await client.query("SELECT data_source FROM pages")).rows[0].data_source, 'articles');
-
+        const { rows: [template] } = await client.query(
+            `INSERT INTO pages (site_id, page_type, detail_parent_id, route_param)
+             VALUES ($1, 'detail', $2, 'slug') RETURNING id`,
+            [site.id, articleList.id],
+        );
+        const { rows: [unrelated] } = await client.query(
+            `INSERT INTO pages (site_id, content) VALUES ($1, $2::jsonb) RETURNING id`,
+            [site.id, JSON.stringify([{ part: '@kroy/hero', props: { keep: true } }])],
+        );
         await client.query(
-            `UPDATE pages SET page_type = 'standard', data_source = NULL,
-                content = $1::jsonb WHERE id = $2`,
-            [JSON.stringify([{ part: '@kroy/material-list', view: { name: '@kroy/article-cards', props: {} }, props: {} }]), page.id],
+            `INSERT INTO redirects (site_id, from_path, page_id) VALUES
+                ($1, '/old-articles', $2), ($1, '/old-template', $3), ($1, '/unrelated', $4)`,
+            [site.id, articleList.id, template.id, unrelated.id],
         );
-        await assert.rejects(upMigration(client), /old article Page references/i);
-        assert.equal((await client.query("SELECT to_regclass('articles') AS table_name")).rows[0].table_name, 'articles');
+
+        await runMigration(client, '202611020000_remove_legacy_article_pages.sql');
+        await runMigration(client, '202611020000_remove_legacy_article_pages.sql');
+        await runMigration(client, '202611020001_replace_articles_with_materials.sql');
+
+        assert.deepEqual((await client.query('SELECT id FROM pages ORDER BY id')).rows.map(({ id }) => id).sort(), [standard.id, unrelated.id].sort());
+        assert.deepEqual((await client.query('SELECT from_path FROM redirects')).rows, [{ from_path: '/unrelated' }]);
+        assert.deepEqual((await client.query('SELECT content FROM pages WHERE id = $1', [standard.id])).rows[0].content, [standardContent[1]]);
+        assert.equal((await client.query("SELECT to_regclass('articles') AS table_name")).rows[0].table_name, null);
     });
 });
 
@@ -82,7 +115,7 @@ test('migration replaces empty articles with section-scoped materials and Pages 
         return;
     }
     await withLegacySchema(async (client) => {
-        await upMigration(client);
+        await upMigrations(client);
         const tables = (await client.query(`
             SELECT to_regclass('material_sections') AS sections,
                    to_regclass('materials') AS materials,
@@ -105,7 +138,7 @@ test('database scopes materials by section and limits one active list Page per s
         return;
     }
     await withLegacySchema(async (client) => {
-        await upMigration(client);
+        await upMigrations(client);
         const siteA = randomUUID();
         const siteB = randomUUID();
         await client.query('INSERT INTO sites VALUES ($1), ($2)', [siteA, siteB]);
