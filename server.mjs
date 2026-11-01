@@ -1,24 +1,24 @@
 import createApp from '@vyaz/core/createApp.mjs';
-import auth, { hasAccess } from './auth.mjs';
-import deletePage from './api/deletePage.mjs';
-import getMedia from './api/getMedia.mjs';
-import getPage from './api/getPage.mjs';
-import getSitePreview from './api/getSitePreview.mjs';
-import { getSitePublishStatus, startSitePublish } from './api/sitePublish.mjs';
-import patchPage from './api/patchPage.mjs';
-import postPage from './api/postPage.mjs';
-import postDetailTemplate from './api/postDetailTemplate.mjs';
-import postMedia from './api/postMedia.mjs';
-import putPage from './api/putPage.mjs';
-import restorePage from './api/restorePage.mjs';
-import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
-import getSiteSettings from './api/siteSettings.mjs';
-import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
-import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
-import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './api/sitePayments.mjs';
-import { getPaymentStatus, postPaymentStart } from './api/checkout.mjs';
-import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './api/reviews.mjs';
-import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './api/articles.mjs';
+import auth, { hasAccess } from './server/auth.mjs';
+import deletePage from './server/api/deletePage.mjs';
+import getMedia from './server/api/getMedia.mjs';
+import getPage from './server/api/getPage.mjs';
+import getSitePreview from './server/api/getSitePreview.mjs';
+import { getSitePublishStatus, startSitePublish } from './server/api/sitePublish.mjs';
+import patchPage from './server/api/patchPage.mjs';
+import postPage from './server/api/postPage.mjs';
+import postDetailTemplate from './server/api/postDetailTemplate.mjs';
+import postMedia from './server/api/postMedia.mjs';
+import putPage from './server/api/putPage.mjs';
+import restorePage from './server/api/restorePage.mjs';
+import { getSiteThemeSettings, patchSiteTheme } from './server/api/siteTheme.mjs';
+import getSiteSettings from './server/api/siteSettings.mjs';
+import { getSiteContactSettings, patchSiteContactSettings } from './server/api/siteContact.mjs';
+import { getSiteCatalog, patchSiteCatalog } from './server/api/siteCatalog.mjs';
+import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
+import { getPaymentStatus, postPaymentStart } from './server/api/checkout.mjs';
+import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './server/api/reviews.mjs';
+import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './server/api/articles.mjs';
 
 await createApp({
     auth,

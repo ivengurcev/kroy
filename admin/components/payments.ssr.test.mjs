@@ -7,7 +7,7 @@ import { transform } from '@svgr/core';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { getPaymentProvider, describePaymentProvider } from '../../payments/providers.mjs';
+import { getPaymentProvider, describePaymentProvider } from '../../server/payments/providers.mjs';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.payments-test-${randomUUID()}.mjs`, import.meta.url));

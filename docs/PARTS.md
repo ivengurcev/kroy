@@ -31,7 +31,7 @@ prepare({ props, record, context, contacts, catalog, reviews, articles }) -> dat
 }
 ```
 
-`view` имеет ровно `name` и `props` и обязателен. `api/pageContent.mjs` проверяет
+`view` имеет ровно `name` и `props` и обязателен. `server/api/pageContent.mjs` проверяет
 объекты, известные имена и точное совпадение непустого контракта. Проверку
 используют API сохранения и генератор реестра сайта. Старый формат без `view`
 не поддерживается runtime. Временный id редактора исключается при сохранении.

@@ -8,7 +8,7 @@ import { getThemeTokens } from '../../site/themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../../db/siteContacts.mjs';
 import { getCatalog } from '../../db/catalog.mjs';
 import { getPublishedReviews } from '../../db/reviews.mjs';
-import { getMediaPath } from '../../media/storage.mjs';
+import { getMediaPath } from '../../server/media/storage.mjs';
 import generateSiteParts from './generateSiteParts.mjs';
 import generateSiteRouting from './generateSiteRouting.mjs';
 import createSiteSvgPlugin from './siteSvgPlugin.mjs';

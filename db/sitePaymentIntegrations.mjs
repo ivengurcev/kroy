@@ -1,5 +1,5 @@
 import { pool } from './client.mjs';
-import { PaymentSettingsError } from '../payments/providers.mjs';
+import { PaymentSettingsError } from '../server/payments/providers.mjs';
 
 function mapIntegration(row) {
     return { provider: row.provider, settings: row.settings, isActive: row.is_active };

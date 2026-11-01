@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pool } from './client.mjs';
 import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from './sitePaymentIntegrations.mjs';
-import { getPaymentProvider, PaymentSettingsError } from '../payments/providers.mjs';
+import { getPaymentProvider, PaymentSettingsError } from '../server/payments/providers.mjs';
 
 function database(t) {
     let rows = [];

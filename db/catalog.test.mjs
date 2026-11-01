@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pool } from './client.mjs';
 import { getCatalog, normalizeCatalog, setCatalog } from './catalog.mjs';
-import { patchSiteCatalog } from '../api/siteCatalog.mjs';
+import { patchSiteCatalog } from '../server/api/siteCatalog.mjs';
 
 const productId = '11111111-1111-4111-8111-111111111111';
 

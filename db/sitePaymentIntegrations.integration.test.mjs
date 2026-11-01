@@ -3,7 +3,7 @@ import test, { after } from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { pool } from './client.mjs';
 import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from './sitePaymentIntegrations.mjs';
-import { getPaymentProvider } from '../payments/providers.mjs';
+import { getPaymentProvider } from '../server/payments/providers.mjs';
 
 after(() => pool.end());
 

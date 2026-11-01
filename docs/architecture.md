@@ -9,7 +9,7 @@
 | Компонент | Ответственность |
 |---|---|
 | Vyaz (`vyaz/`, локальный `@vyaz/core`) | Hono-сервер, маршруты, SSR и гидратация админки, интеграция Auth.js, esbuild |
-| Kroy (`server.mjs`, `api/`, `admin/`) | Конфигурация приложения, бизнес-API, права сайта и административный интерфейс |
+| Kroy (`server.mjs`, `server/`, `admin/`) | Конфигурация приложения, бизнес-API, права сайта и административный интерфейс |
 | `site/parts/`, `site/widgets/`, `site/runtime/` | Подготовка данных, React-представления и публичный runtime |
 | `site/components/`, `site/themes/`, `site/styles/` | Общие компоненты, темы и стили публичного сайта |
 | `build/site/` | SSG, рендер HTML, клиентская гидратация и генерация данных страниц |
@@ -27,13 +27,13 @@
 
 ## Домены, пользователи и доступ
 
-`domains.hostname` связывает точный hostname с сайтом. `api/getHostname.mjs`
+`domains.hostname` связывает точный hostname с сайтом. `server/api/getHostname.mjs`
 нормализует `Host`; порт и завершающая точка не участвуют в поиске. `slug` сайта
 используется в CLI и каталогах, не вычисляется из домена. Исходный Host сохраняется
 при проксировании. Клиентский `X-Forwarded-Host` не выбирает tenant.
 
 Auth.js подключён через Vyaz (`@hono/auth-js`, Credentials provider). Kroy задаёт
-проверку email/пароля и JWT-сессию в `auth.mjs`. Пароль хранится как scrypt-хеш;
+проверку email/пароля и JWT-сессию в `server/auth.mjs`. Пароль хранится как scrypt-хеш;
 нужен `AUTH_SECRET`. Страница входа `/auth/signin` собственная, выход —
 `/auth/signout`. Cookies используются на домене входа, единого междоменного SSO нет.
 
