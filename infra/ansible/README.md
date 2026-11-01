@@ -127,10 +127,12 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 `bun run vyaz:build`; проверяются Bun `1.4.4`, `package.json` и `bun.lock`.
 Через rsync передаются исходники и сборка `dist`. Данные передаются напрямую от
 пользователя SSH-подключения. Исключаются `.git`
-(в том числе внутри субмодулей), `.env`, `dist/sites`, конфигурации
+(в том числе внутри субмодулей), `.env` и `.env.*`, `dist/sites`, конфигурации
 `dist/kroy/nginx`, `data/`, все локальные `node_modules`, логи и `infra/ansible/`.
 `--delete` и `--chown` не используются: серверные данные и конфигурации
-сохраняются. На VPS защищённый runner от имени `kroy` выполняет
+сохраняются. Перед проверкой Bun deploy удаляет из `/srv/kroy` только устаревшие
+`.pnp.cjs`, `.pnp.loader.mjs`, `.yarn/`, `.yarnrc.yml` и `yarn.lock`.
+На VPS защищённый runner от имени `kroy` выполняет
 `bun install --frozen-lockfile` до миграций. Существующие `.env`, PostgreSQL
 данные, опубликованные релизы, медиа и Nginx-конфиги остаются вне синхронизации.
 

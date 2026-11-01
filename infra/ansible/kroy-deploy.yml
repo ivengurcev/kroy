@@ -10,6 +10,17 @@
     kroy_bun_binary: /usr/local/bin/bun
     kroy_local_root: "{{ playbook_dir }}/../.."
   tasks:
+    - name: Remove obsolete Yarn PnP artifacts from Kroy root
+      ansible.builtin.file:
+        path: "{{ kroy_root }}/{{ item }}"
+        state: absent
+      loop:
+        - .pnp.cjs
+        - .pnp.loader.mjs
+        - .yarn
+        - .yarnrc.yml
+        - yarn.lock
+
     - name: Check Bun version on the VPS
       ansible.builtin.command: "{{ kroy_bun_binary }} --version"
       register: kroy_remote_bun_version
@@ -91,6 +102,11 @@
           - "--omit-dir-times"
           - "--exclude=.git"
           - "--exclude=.env"
+          - "--exclude=.env.*"
+          - "--exclude=.yarn/"
+          - "--exclude=.pnp.*"
+          - "--exclude=.yarnrc.yml"
+          - "--exclude=yarn.lock"
           - "--exclude=dist/sites/"
           - "--exclude=dist/kroy/staging/"
           - "--exclude=dist/kroy/nginx/"
