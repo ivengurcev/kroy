@@ -82,6 +82,10 @@ const child = spawn(NODE, [YARN_RELEASE, 'run', script, ...args], {
     cwd: ROOT,
     env: {
         ...process.env,
+        ...(RUNTIME === 'bun' ? {
+            YARN_NODE_LINKER: 'pnpm',
+            YARN_GLOBAL_FOLDER: join(ROOT, '.yarn/global'),
+        } : {}),
         PATH: `${dirname(NODE)}:/usr/local/bin:${process.env.PATH || ''}`,
     },
     stdio: 'inherit',
