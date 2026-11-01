@@ -6,10 +6,10 @@ import { build } from 'esbuild';
 import { randomUUID } from 'node:crypto';
 import { writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { discoverParts, discoverWidgets } from '../../scripts/discoverParts.mjs';
-import createSiteSvgPlugin from '../../scripts/siteSvgPlugin.mjs';
+import { discoverParts, discoverWidgets } from '../../build/registry/discoverParts.mjs';
+import createSiteSvgPlugin from '../../build/site/siteSvgPlugin.mjs';
 import { createArticleListData } from './articleListData.mjs';
-import { createClientPageRegistry, serializePagePayload } from '../../scripts/sitePageData.mjs';
+import { createClientPageRegistry, serializePagePayload } from '../../build/site/sitePageData.mjs';
 
 const outputs = [];
 let server;

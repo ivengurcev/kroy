@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { ensureNginxConfig } from './generateNginxConfig.mjs';
+import { ensureNginxConfig } from '../build/nginx/generateNginxConfig.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = process.env.NGINX_CONFIG_DIR

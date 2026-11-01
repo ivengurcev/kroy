@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverParts, discoverWidgets, validateDefaultWidgets } from './discoverParts.mjs';
+import { discoverParts, discoverWidgets, validateDefaultWidgets } from '../build/registry/discoverParts.mjs';
 import { createView } from '../editor/partModel.js';
 import { isPlainObject, isValidContent } from '../api/pageContent.mjs';
 

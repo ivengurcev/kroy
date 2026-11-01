@@ -1,4 +1,4 @@
-import { isValidPagePath, isValidPageRoutePattern, isValidRouteParameter, routePatternsOverlap, resolveDetailPath } from '../api/pageFields.mjs';
+import { isValidPagePath, isValidPageRoutePattern, isValidRouteParameter, routePatternsOverlap, resolveDetailPath } from '../../api/pageFields.mjs';
 
 export function createArticlePages(templates, articles) {
     if (!Array.isArray(templates) || !Array.isArray(articles)) {

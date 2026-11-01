@@ -7,7 +7,7 @@ import { transform } from '@svgr/core';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { serializePagePayload } from '../../scripts/sitePageData.mjs';
+import { serializePagePayload } from '../../build/site/sitePageData.mjs';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.articlePage-test-${randomUUID()}.mjs`, import.meta.url));

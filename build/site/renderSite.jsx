@@ -1,14 +1,14 @@
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { renderToString } from 'react-dom/server';
-import { isValidPagePath } from '../api/pageFields.mjs';
-import SiteApp from '../site/runtime/SiteApp.jsx';
-import { parts, widgets } from '../dist/kroy/site-parts.mjs';
-import { pages as pageRegistry } from '../dist/kroy/site-pages.mjs';
-import { theme } from '../dist/kroy/site-theme.mjs';
-import { contacts } from '../dist/kroy/site-contacts.mjs';
-import { catalog } from '../dist/kroy/site-catalog.mjs';
-import { reviews } from '../dist/kroy/site-reviews.mjs';
+import { isValidPagePath } from '../../api/pageFields.mjs';
+import SiteApp from '../../site/runtime/SiteApp.jsx';
+import { parts, widgets } from '../../dist/kroy/site-parts.mjs';
+import { pages as pageRegistry } from '../../dist/kroy/site-pages.mjs';
+import { theme } from '../../dist/kroy/site-theme.mjs';
+import { contacts } from '../../dist/kroy/site-contacts.mjs';
+import { catalog } from '../../dist/kroy/site-catalog.mjs';
+import { reviews } from '../../dist/kroy/site-reviews.mjs';
 import { serializePagePayload } from './sitePageData.mjs';
 
 const DIST_DIR = resolve('dist');

@@ -1,4 +1,4 @@
-import { pool } from '../db/client.mjs';
+import { pool } from '../../db/client.mjs';
 
 export const SITE_PUBLICATION_LOCK = 'kroy:site-publication';
 

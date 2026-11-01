@@ -1,6 +1,6 @@
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ensureNginxConfig } from './generateNginxConfig.mjs';
+import { ensureNginxConfig } from '../build/nginx/generateNginxConfig.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputDir = process.env.NGINX_CONFIG_DIR

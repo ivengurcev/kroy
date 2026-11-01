@@ -1,10 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverParts, discoverWidgets, validateDefaultWidgets } from './discoverParts.mjs';
-import { isValidContent } from '../api/pageContent.mjs';
+import { discoverParts, discoverWidgets, validateDefaultWidgets } from '../registry/discoverParts.mjs';
+import { isValidContent } from '../../api/pageContent.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 const OUTPUT_PATH = join(OUTPUT_DIR, 'site-parts.mjs');
 

@@ -38,7 +38,9 @@ prepare({ props, record, context, contacts, catalog, reviews, articles }) -> dat
 
 ## Регистрация
 
-`scripts/discoverParts.mjs` рекурсивно обходит `site/parts/` и `site/widgets/`:
+`build/registry/discoverParts.mjs` рекурсивно обходит `site/parts/` и
+`site/widgets/`. Команда `yarn parts:generate` запускает её через CLI-обёртку
+`scripts/discoverParts.mjs`. Алгоритм discovery:
 
 - Каталог с `package.json` регистрирует одну точку входа `main`; внутрь него
   дальнейший поиск не идёт. `main` не может выходить за пределы каталога.
@@ -118,8 +120,9 @@ Defaults простых значений задаются в необязате�
 
 ## Реестры и стили
 
-`yarn parts:generate` создаёт в `dist/kroy/` полные `parts.mjs`, `parts.json`,
-`widgets.mjs`, `widgets.json` для редактора. `site:build` создаёт `site-parts.mjs`
+`yarn parts:generate` через `build/registry/discoverParts.mjs` создаёт в `dist/kroy/`
+полные `parts.mjs`, `parts.json`, `widgets.mjs`, `widgets.json` для редактора.
+`build/site/generateSiteParts.mjs`, вызываемый `site:build`, создаёт `site-parts.mjs`
 с экспортами parts/widgets только используемых блоков, включая детальные страницы.
 SSR и гидратация используют этот общий сокращённый реестр.
 

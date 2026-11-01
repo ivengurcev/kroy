@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import generateSiteParts from './generateSiteParts.mjs';
 
-const output = new URL('../dist/kroy/site-parts.mjs', import.meta.url);
+const output = new URL('../../dist/kroy/site-parts.mjs', import.meta.url);
 
 test('imports only selected data parts and widgets, including a non-default compatible widget', async (t) => {
     const previous = await readFile(output).catch((error) => { if (error.code !== 'ENOENT') throw error; return null; });

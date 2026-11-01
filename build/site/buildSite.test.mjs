@@ -4,9 +4,9 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pool } from '../db/client.mjs';
+import { pool } from '../../db/client.mjs';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
+const root = fileURLToPath(new URL('../../', import.meta.url));
 
 test('static site build preserves list summaries, linked routes, covers and CSS without publishing drafts or full text to app.js', async (t) => {
     const slug = `test-article-list-${randomUUID()}`;

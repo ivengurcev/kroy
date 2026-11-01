@@ -1,7 +1,7 @@
 import { watch } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generateParts } from './discoverParts.mjs';
+import { generateParts } from '../build/registry/discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PARTS_DIR = resolve(ROOT, 'site', 'parts');

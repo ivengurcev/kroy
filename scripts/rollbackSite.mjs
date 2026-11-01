@@ -3,9 +3,9 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db/client.mjs';
 import nginx from '../infra/nginx/index.mjs';
-import generateNginxConfig from './generateNginxConfig.mjs';
-import getActiveRelease from './getActiveRelease.mjs';
-import { acquireSitePublicationLock, releaseSitePublicationLock } from './sitePublicationLock.mjs';
+import generateNginxConfig from '../build/nginx/generateNginxConfig.mjs';
+import getActiveRelease from '../build/publication/getActiveRelease.mjs';
+import { acquireSitePublicationLock, releaseSitePublicationLock } from '../build/publication/sitePublicationLock.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SITES_DIR = join(ROOT, 'dist', 'sites');

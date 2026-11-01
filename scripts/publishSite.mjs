@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../db/client.mjs';
-import { acquireSitePublicationLock, releaseSitePublicationLock } from './sitePublicationLock.mjs';
+import { acquireSitePublicationLock, releaseSitePublicationLock } from '../build/publication/sitePublicationLock.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const siteSlug = process.argv[2];
