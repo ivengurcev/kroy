@@ -29,6 +29,28 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: articles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.articles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    slug text NOT NULL,
+    title text NOT NULL,
+    summary text DEFAULT ''::text NOT NULL,
+    content jsonb,
+    cover_media_id uuid,
+    status text DEFAULT 'draft'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    published_at timestamp with time zone,
+    CONSTRAINT articles_check CHECK (((status <> 'published'::text) OR (published_at IS NOT NULL))),
+    CONSTRAINT articles_content_check CHECK (((content IS NULL) OR (jsonb_typeof(content) = 'object'::text))),
+    CONSTRAINT articles_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text])))
+);
+
+
+--
 -- Name: domains; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -77,8 +99,7 @@ CREATE TABLE public.pages (
     route_param text,
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
-    CONSTRAINT pages_type_fields_check CHECK (((page_type = 'standard'::text) AND (data_source IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['articles'::text, 'products'::text, 'reviews'::text])) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))),
-    CONSTRAINT pages_detail_parent_fk FOREIGN KEY (site_id, detail_parent_id) REFERENCES public.pages(site_id, id)
+    CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['articles'::text, 'products'::text, 'reviews'::text])) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
 );
 
 
@@ -106,12 +127,13 @@ CREATE TABLE public.products (
     description text DEFAULT ''::text NOT NULL,
     media_id uuid,
     price numeric(12,2) DEFAULT 0 NOT NULL,
-    payment_url text DEFAULT ''::text NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
     status text DEFAULT 'published'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT products_status_check CHECK ((status = ANY (ARRAY['published'::text, 'hidden'::text])))
+    type text DEFAULT 'service'::text NOT NULL,
+    CONSTRAINT products_status_check CHECK ((status = ANY (ARRAY['published'::text, 'hidden'::text]))),
+    CONSTRAINT products_type_check CHECK ((type = ANY (ARRAY['service'::text, 'goods'::text])))
 );
 
 
@@ -170,6 +192,18 @@ CREATE TABLE public.site_memberships (
 
 
 --
+-- Name: site_payment_integrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.site_payment_integrations (
+    site_id uuid NOT NULL,
+    provider text NOT NULL,
+    settings jsonb DEFAULT '{}'::jsonb NOT NULL,
+    is_active boolean DEFAULT false NOT NULL
+);
+
+
+--
 -- Name: sites; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -200,6 +234,22 @@ CREATE TABLE public.users (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT users_status_check CHECK ((status = ANY (ARRAY['active'::text, 'blocked'::text])))
 );
+
+
+--
+-- Name: articles articles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.articles
+    ADD CONSTRAINT articles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: articles articles_site_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.articles
+    ADD CONSTRAINT articles_site_id_slug_key UNIQUE (site_id, slug);
 
 
 --
@@ -315,6 +365,14 @@ ALTER TABLE ONLY public.site_memberships
 
 
 --
+-- Name: site_payment_integrations site_payment_integrations_site_id_provider_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.site_payment_integrations
+    ADD CONSTRAINT site_payment_integrations_site_id_provider_key UNIQUE (site_id, provider);
+
+
+--
 -- Name: sites sites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -339,12 +397,20 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: product_categories_site_order_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: articles_site_published_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX articles_site_published_idx ON public.articles USING btree (site_id, published_at DESC) WHERE (status = 'published'::text);
+
+
+--
+-- Name: pages_one_detail_template_per_list; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
 
 
+--
 -- Name: product_categories_site_order_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -373,10 +439,33 @@ CREATE INDEX site_memberships_user_id_idx ON public.site_memberships USING btree
 
 
 --
+-- Name: site_payment_integrations_one_active_per_site; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX site_payment_integrations_one_active_per_site ON public.site_payment_integrations USING btree (site_id) WHERE is_active;
+
+
+--
 -- Name: users_email_lower_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX users_email_lower_idx ON public.users USING btree (lower(email));
+
+
+--
+-- Name: articles articles_cover_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.articles
+    ADD CONSTRAINT articles_cover_media_id_fkey FOREIGN KEY (cover_media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- Name: articles articles_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.articles
+    ADD CONSTRAINT articles_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
 
 
 --
@@ -393,6 +482,14 @@ ALTER TABLE ONLY public.domains
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
+
+
+--
+-- Name: pages pages_detail_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pages
+    ADD CONSTRAINT pages_detail_parent_fk FOREIGN KEY (site_id, detail_parent_id) REFERENCES public.pages(site_id, id);
 
 
 --
@@ -484,6 +581,14 @@ ALTER TABLE ONLY public.site_memberships
 
 
 --
+-- Name: site_payment_integrations site_payment_integrations_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.site_payment_integrations
+    ADD CONSTRAINT site_payment_integrations_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -506,4 +611,8 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202610280001'),
     ('202610290001'),
     ('202610290002'),
-    ('202610310001');
+    ('202610300001'),
+    ('202610310001'),
+    ('202611010001'),
+    ('202611010002'),
+    ('202611010003');

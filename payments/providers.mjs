@@ -1,18 +1,21 @@
+import { normalizePayformDomain } from './prodamusDomain.mjs';
+
 export class PaymentSettingsError extends Error {}
 
 function normalizeProdamusSettings(settings) {
     if (!settings || typeof settings !== 'object' || Array.isArray(settings)
-        || Object.keys(settings).length !== 1 || !Object.hasOwn(settings, 'payformDomain')
-        || typeof settings.payformDomain !== 'string') {
+        || !Object.hasOwn(settings, 'payformDomain')
+        || Object.keys(settings).some((key) => !['payformDomain', 'secretKey'].includes(key))) {
         throw new PaymentSettingsError('Укажите адрес платёжной формы Prodamus.');
     }
-    const domain = settings.payformDomain.trim().toLowerCase().replace(/^https:\/\//, '').replace(/\/$/, '');
-    const labels = domain.split('.');
-    if (domain.length > 253 || labels.length < 2 || !/^[a-z]{2,63}$/.test(labels.at(-1))
-        || labels.some((label) => !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))) {
-        throw new PaymentSettingsError('Укажите домен платёжной формы без пути и параметров, например example.payform.ru.');
+    let payformDomain;
+    try { payformDomain = normalizePayformDomain(settings.payformDomain); }
+    catch { throw new PaymentSettingsError('Укажите домен платёжной формы вида example.payform.ru.'); }
+    if (settings.secretKey !== undefined && (typeof settings.secretKey !== 'string' || settings.secretKey.length > 4096)) {
+        throw new PaymentSettingsError('Некорректный секретный ключ.');
     }
-    return { payformDomain: domain };
+    const secretKey = settings.secretKey?.trim();
+    return { payformDomain, ...(secretKey ? { secretKey } : {}) };
 }
 
 export const paymentProviders = {
@@ -25,6 +28,7 @@ export const paymentProviders = {
                 label: 'Адрес платёжной формы', type: 'text', required: true,
                 default: '', placeholder: 'example.payform.ru', readable: true,
             },
+            secretKey: { label: 'Секретный ключ', type: 'password', required: false, default: '', readable: false },
         },
         normalizeSettings: normalizeProdamusSettings,
     },
@@ -41,7 +45,9 @@ export function describePaymentProvider(provider, integration) {
     const fields = {};
     const settings = {};
     for (const [name, field] of Object.entries(provider.fields)) {
-        fields[name] = { label: field.label, type: field.type, required: field.required, placeholder: field.placeholder };
+        fields[name] = { label: field.label, type: field.type, required: field.required, placeholder: field.placeholder,
+            ...(field.readable === true ? {} : { configured: Boolean(integration?.settings?.[name]) }),
+        };
         // New settings remain server-side unless explicitly allowed in the admin response.
         if (field.readable === true) settings[name] = integration?.settings?.[name] ?? field.default;
     }

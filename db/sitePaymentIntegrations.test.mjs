@@ -21,10 +21,10 @@ function database(t) {
         }
         if (sql.startsWith('INSERT') || sql.startsWith('UPDATE')) assert.equal(locked, true, 'Writes must hold the site lock');
         if (sql.startsWith('INSERT')) {
-            assert.match(sql, /ON CONFLICT \(site_id, provider\) DO UPDATE SET settings = EXCLUDED.settings/);
+            assert.match(sql, /ON CONFLICT \(site_id, provider\) DO UPDATE SET settings = site_payment_integrations.settings \|\| EXCLUDED.settings/);
             let row = rows.find((item) => item.site_id === values[0] && item.provider === values[1]);
             if (!row) { row = { site_id: values[0], provider: values[1], is_active: false }; rows.push(row); }
-            row.settings = JSON.parse(values[2]);
+            row.settings = { ...row.settings, ...JSON.parse(values[2]) };
             return { rows: [structuredClone(row)] };
         }
         assert.match(sql, /WHERE site_id = \$1/);
@@ -80,4 +80,11 @@ test('failed activation rolls back without disabling the currently active provid
     await assert.rejects(setPaymentIntegrationActive('site', 'missing', true, validate), PaymentSettingsError);
     assert.equal((await getPaymentIntegrations('site'))[0].isActive, true);
     assert.ok(fixture.calls.includes('ROLLBACK'));
+});
+
+test('saving other settings preserves an existing secret under the same site transaction lock', async (t) => {
+    database(t);
+    await savePaymentIntegration('site', 'prodamus', { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' });
+    await savePaymentIntegration('site', 'prodamus', { payformDomain: 'example.payform.ru' });
+    assert.equal((await getPaymentIntegrations('site'))[0].settings.secretKey, 'PRIVATE_SENTINEL');
 });

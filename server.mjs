@@ -16,6 +16,7 @@ import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation } from './api/sitePayments.mjs';
+import { getPaymentStatus, postPaymentStart } from './api/checkout.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './api/reviews.mjs';
 import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './api/articles.mjs';
 
@@ -108,6 +109,16 @@ await createApp({
         },
     ],
     api: [
+        [
+            '/payments/status',
+            { method: 'GET' },
+            getPaymentStatus,
+        ],
+        [
+            '/payments/start',
+            { method: 'POST' },
+            postPaymentStart,
+        ],
         [
             '/reviews',
             { method: 'POST' },

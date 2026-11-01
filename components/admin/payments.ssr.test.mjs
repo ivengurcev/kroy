@@ -16,7 +16,7 @@ before(async () => {
         stdin: {
             contents: `export { default as PaymentIntegrationEditor } from './components/admin/PaymentIntegrationEditor.jsx';
                 export { default as CatalogEditor } from './components/admin/CatalogEditor.jsx';
-                export { default as ProductCards } from './components/site/ProductCards.jsx';
+                export { default as ProductCards, ProductCard } from './components/site/ProductCards.jsx';
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './components/admin/SiteSettingsLayout.jsx';
                 export { default as SitePaymentsPage } from './pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
@@ -74,4 +74,24 @@ test('catalog admin and public product cards still render names, descriptions an
     assert.match(html, /₽/);
     assert.doesNotMatch(html, /<a\b|Купить/);
     assert.match(renderToString(createElement(components.CatalogEditor, { value: { categories: [], products: [product] } })), /Service/);
+});
+
+test('product card shows Buy only with available payments and positive price; initial SSR stays identical without readiness', () => {
+    const product = { id: 'id', name: 'Product', description: 'Description', price: '100.00', type: 'goods' };
+    const enabled = renderToString(createElement(components.ProductCard, { product, paymentEnabled: true }));
+    assert.match(enabled, /<button[^>]*>Купить<\/button>/);
+    assert.doesNotMatch(renderToString(createElement(components.ProductCard, { product, paymentEnabled: false })), /Купить/);
+    assert.doesNotMatch(renderToString(createElement(components.ProductCard, { product: { ...product, price: '0.00' }, paymentEnabled: true })), /Купить/);
+    const props = { products: [product] };
+    const initial = renderToString(createElement(components.ProductCards, props));
+    assert.doesNotMatch(initial, /Купить/);
+    assert.equal(renderToString(createElement(components.ProductCards, JSON.parse(JSON.stringify(props)))), initial);
+});
+
+test('admin password fields reveal only the saved-key indicator and never the stored secret', () => {
+    const provider = describePaymentProvider(getPaymentProvider('prodamus'), { settings: { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' } });
+    const html = renderToString(createElement(components.PaymentIntegrationEditor, { provider, settings: provider.settings, onChange() {} }));
+    assert.match(html, /type="password"/);
+    assert.match(html, /Ключ сохранён/);
+    assert.doesNotMatch(html, /PRIVATE_SENTINEL/);
 });

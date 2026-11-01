@@ -9,3 +9,8 @@
 .footer strong { font-size: 1.1rem; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.buy { padding: var(--site-space-2) var(--site-space-4); border: 0; border-radius: var(--site-radius-base); color: var(--site-color-bg); font: inherit; background: var(--site-color-accent); cursor: pointer; }
+.buy:hover { background: var(--site-color-accent-hover); }
+.buy:disabled { opacity: .65; cursor: wait; }
+.buy:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 3px; }
+.body .error { color: var(--site-color-danger); }

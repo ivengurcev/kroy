@@ -8,7 +8,8 @@ export default function PaymentIntegrationEditor({ provider, settings, disabled,
             <input
                 type={field.type}
                 value={settings[name] ?? ''}
-                placeholder={field.placeholder}
+                placeholder={field.configured ? 'Ключ сохранён; оставьте поле пустым, чтобы не менять' : field.placeholder}
+                autoComplete={field.type === 'password' ? 'new-password' : undefined}
                 required={field.required}
                 disabled={disabled}
                 onChange={(event) => onChange({ ...settings, [name]: event.target.value })}

@@ -21,7 +21,7 @@ export async function savePaymentIntegration(siteId, provider, settings) {
         const { rows: [saved] } = await client.query(
             `INSERT INTO site_payment_integrations (site_id, provider, settings)
              VALUES ($1, $2, $3::jsonb)
-             ON CONFLICT (site_id, provider) DO UPDATE SET settings = EXCLUDED.settings
+             ON CONFLICT (site_id, provider) DO UPDATE SET settings = site_payment_integrations.settings || EXCLUDED.settings
              RETURNING provider, settings, is_active`,
             [siteId, provider, JSON.stringify(settings)],
         );
@@ -63,4 +63,12 @@ export async function setPaymentIntegrationActive(siteId, provider, isActive, va
     } finally {
         client.release();
     }
+}
+
+export async function getActivePaymentIntegration(siteId) {
+    const { rows: [row] } = await pool.query(
+        'SELECT provider, settings, is_active FROM site_payment_integrations WHERE site_id = $1 AND is_active',
+        [siteId],
+    );
+    return row ? mapIntegration(row) : null;
 }

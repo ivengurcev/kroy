@@ -36,3 +36,16 @@ test('exposes only explicitly readable settings in the private admin descriptor,
     assert.equal(JSON.stringify(redacted).includes('PRIVATE_'), false);
     assert.equal(redacted.settings.secretToken, undefined);
 });
+
+test('secret keys are accepted for storage but never returned, and blank input means keep the stored value', () => {
+    const provider = getPaymentProvider('prodamus');
+    assert.equal(provider.fields.secretKey.type, 'password');
+    assert.equal(provider.fields.secretKey.readable, false);
+    const settings = provider.normalizeSettings({ payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' });
+    const result = describePaymentProvider(provider, { settings, isActive: true });
+    assert.equal(result.fields.secretKey.configured, true);
+    assert.equal(result.settings.secretKey, undefined);
+    assert.equal(JSON.stringify(result).includes('PRIVATE_SENTINEL'), false);
+    assert.deepEqual(provider.normalizeSettings({ payformDomain: 'example.payform.ru', secretKey: '' }), { payformDomain: 'example.payform.ru' });
+    assert.throws(() => provider.normalizeSettings({ payformDomain: 'example.payform.ru', secretKey: null }), PaymentSettingsError);
+});

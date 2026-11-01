@@ -24,7 +24,7 @@ function database(t, stored = []) {
         if (sql.includes('FROM sites')) return { rows: [{ id: 'current-site' }] };
         if (sql.startsWith('INSERT')) {
             assert.equal(values[1], 'prodamus');
-            settings = [{ provider: 'prodamus', settings: JSON.parse(values[2]), is_active: false }];
+            settings = [{ provider: 'prodamus', settings: { ...settings[0]?.settings, ...JSON.parse(values[2]) }, is_active: settings[0]?.is_active ?? false }];
             return { rows: structuredClone(settings) };
         }
         if (sql.startsWith('SELECT')) return { rows: structuredClone(settings) };
@@ -83,4 +83,16 @@ test('returns 404 for an absent site and 500 for internal failures', async (t) =
     assert.equal((await getSitePayments(context())).status, 500);
     assert.equal((await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'example.payform.ru' } }))).status, 500);
     assert.equal((await patchSitePaymentActivation(context('prodamus', { isActive: false }))).status, 500);
+});
+
+test('admin can set a secret and later save a blank password without erasing or disclosing it', async (t) => {
+    database(t);
+    let response = await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' } }));
+    assert.equal(response.status, 200);
+    assert.equal(response.value.providers[0].fields.secretKey.configured, true);
+    assert.doesNotMatch(JSON.stringify(response), /PRIVATE_SENTINEL/);
+    response = await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'example.payform.ru', secretKey: '' } }));
+    assert.equal(response.status, 200);
+    assert.equal(response.value.providers[0].fields.secretKey.configured, true);
+    assert.equal(response.value.providers[0].settings.secretKey, undefined);
 });

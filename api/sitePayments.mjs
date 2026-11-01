@@ -12,7 +12,7 @@ async function sitePayments(siteId) {
 
 function paymentError(c, error) {
     if (error instanceof PaymentSettingsError) return c.json({ error: error.message }, 400);
-    console.error('Failed to update site payments', error);
+    console.error('Failed to update site payments');
     return c.json({ error: 'Internal server error' }, 500);
 }
 

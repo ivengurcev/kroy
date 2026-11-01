@@ -27,6 +27,7 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
     const coverBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jN3sAAAAASUVORK5CYII=', 'base64');
     await writeFile(join(mediaDirectory, coverFilename), coverBytes);
     const listContent = [{ part: '@kroy/article-list', props: {}, view: { name: '@kroy/article-cards', props: {} } }];
+    const productId = randomUUID();
     const articleContent = [{ part: '@kroy/article', props: {}, view: { name: '@kroy/article-content', props: {} } }];
     let withoutTemplate = false;
     const allTemplates = [
@@ -37,6 +38,7 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         { id: 'home', path: '/', title: 'Articles', type: 'list', dataSource: 'articles', content: listContent },
         { id: 'news', path: '/news', title: 'News', type: 'list', dataSource: 'articles', content: listContent },
         { id: 'no-template', path: '/read', title: 'Read', type: 'list', dataSource: 'articles', content: listContent },
+        { id: 'catalog', path: '/catalog', title: 'Catalog', type: 'standard', content: [{ part: '@kroy/product-selection', props: { productIds: [productId] }, view: { name: '@kroy/product-selection', props: {} } }] },
         { id: 'about', path: '/about', title: 'About', type: 'standard', content: [] },
         ...allTemplates.map((template) => ({ ...template, type: 'detail' })),
     ];
@@ -59,6 +61,7 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
                 ...(!withoutTemplate ? { content: { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'FULL_ARTICLE_BODY_SENTINEL' }] }] } } } : {}),
             })) };
         }
+        if (sql.includes('FROM products')) return { rows: [{ id: productId, name: 'Public product', description: 'Product description', price: '100.00', type: 'service', status: 'published' }] };
         if (sql.includes('FROM redirects') || sql.includes('deleted_at IS NOT NULL') || sql.includes('FROM product_') || sql.includes('FROM products') || sql.includes('FROM reviews')) return { rows: [] };
         throw new Error('Unexpected build SQL: ' + sql);
     }
@@ -72,6 +75,9 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         else process.argv[2] = previousArgument;
         process.exitCode = previousExitCode;
     });
+    const previousSys = process.env.PRODAMUS_SYS;
+    process.env.PRODAMUS_SYS = 'PRIVATE_SYS_SENTINEL';
+    t.after(() => { if (previousSys === undefined) delete process.env.PRODAMUS_SYS; else process.env.PRODAMUS_SYS = previousSys; });
     process.argv[2] = slug;
     for (const noTemplate of [false, true]) {
         withoutTemplate = noTemplate;
@@ -88,6 +94,12 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         assert.equal(rootHtml.includes('href="/example"'), !withoutTemplate);
         assert.doesNotMatch(await readFile(join(staging, 'read', 'index.html'), 'utf8'), /Читать/);
         assert.match(app, /Published fixture/);
+        assert.ok(app.includes('/api/payments/status'));
+        assert.ok(app.includes('/api/payments/start'));
+        assert.doesNotMatch(app, /PRIVATE_SYS_SENTINEL|PRIVATE_MERCHANT_KEY/);
+        const catalogHtml = await readFile(join(staging, 'catalog', 'index.html'), 'utf8');
+        assert.match(catalogHtml, /Public product/);
+        assert.doesNotMatch(catalogHtml, /Купить|PRIVATE_SYS_SENTINEL|PRIVATE_MERCHANT_KEY/);
         assert.doesNotMatch(app, /FULL_ARTICLE_BODY_SENTINEL|DRAFT_SENTINEL/);
         assert.doesNotMatch(registrySource, /FULL_ARTICLE_BODY_SENTINEL|DRAFT_SENTINEL/);
         const registry = JSON.parse(registrySource.slice('export const pages = '.length).trim().slice(0, -1));
