@@ -1,6 +1,6 @@
 import getCurrentSite from './siteContext.mjs';
 import { isPlainObject } from './pageFields.mjs';
-import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive } from '../db/sitePaymentIntegrations.mjs';
+import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from '../db/sitePaymentIntegrations.mjs';
 import { paymentProviders, getPaymentProvider, describePaymentProvider, PaymentSettingsError } from '../payments/providers.mjs';
 
 async function sitePayments(siteId) {
@@ -53,6 +53,18 @@ export async function patchSitePaymentActivation(c) {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         await setPaymentIntegrationActive(site.id, provider.id, body.isActive, provider.normalizeSettings);
+        return c.json(await sitePayments(site.id));
+    } catch (error) {
+        return paymentError(c, error);
+    }
+}
+
+export async function deleteSitePaymentSecretKey(c) {
+    try {
+        const provider = getPaymentProvider(c.req.param('provider'));
+        const site = await getCurrentSite(c);
+        if (!site) return c.json({ error: 'Site not found' }, 404);
+        await deletePaymentSecretKey(site.id, provider.id);
         return c.json(await sitePayments(site.id));
     } catch (error) {
         return paymentError(c, error);

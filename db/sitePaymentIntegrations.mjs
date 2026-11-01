@@ -72,3 +72,21 @@ export async function getActivePaymentIntegration(siteId) {
     );
     return row ? mapIntegration(row) : null;
 }
+
+export async function deletePaymentSecretKey(siteId, provider) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('SELECT id FROM sites WHERE id = $1 FOR UPDATE', [siteId]);
+        await client.query(
+            "UPDATE site_payment_integrations SET settings = settings - 'secretKey', is_active = FALSE WHERE site_id = $1 AND provider = $2",
+            [siteId, provider],
+        );
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw error;
+    } finally {
+        client.release();
+    }
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pool } from './client.mjs';
-import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive } from './sitePaymentIntegrations.mjs';
+import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from './sitePaymentIntegrations.mjs';
 import { getPaymentProvider, PaymentSettingsError } from '../payments/providers.mjs';
 
 function database(t) {
@@ -40,6 +40,11 @@ function database(t) {
         }
         assert.match(sql, /provider = \$2/);
         selected = selected.filter((row) => row.provider === values[1]);
+        if (sql.includes("settings = settings - 'secretKey'")) {
+            assert.match(sql, /is_active = FALSE/);
+            selected.forEach((row) => { delete row.settings.secretKey; row.is_active = false; });
+            return { rows: structuredClone(selected) };
+        }
         selected.forEach((row) => { row.is_active = values[2]; });
         return { rows: structuredClone(selected) };
     }
@@ -87,4 +92,27 @@ test('saving other settings preserves an existing secret under the same site tra
     await savePaymentIntegration('site', 'prodamus', { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' });
     await savePaymentIntegration('site', 'prodamus', { payformDomain: 'example.payform.ru' });
     assert.equal((await getPaymentIntegrations('site'))[0].settings.secretKey, 'PRIVATE_SENTINEL');
+});
+
+
+test('deletes only the selected site/provider secret, deactivates atomically and supports repeated deletion', async (t) => {
+    const fixture = database(t);
+    for (const active of [false, true]) {
+        await savePaymentIntegration('site', 'prodamus', { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' });
+        if (active) await setPaymentIntegrationActive('site', 'prodamus', true, validate);
+        await savePaymentIntegration('other-site', 'prodamus', { payformDomain: 'other.payform.ru', secretKey: 'OTHER_SECRET' });
+        await savePaymentIntegration('site', 'test-second', { secretKey: 'SECOND_SECRET' });
+        await deletePaymentSecretKey('site', 'prodamus');
+        const result = (await getPaymentIntegrations('site')).find(({ provider }) => provider === 'prodamus');
+        assert.deepEqual(result.settings, { payformDomain: 'example.payform.ru' });
+        assert.equal(Object.hasOwn(result.settings, 'secretKey'), false);
+        assert.equal(result.isActive, false);
+        await deletePaymentSecretKey('site', 'prodamus');
+        assert.deepEqual((await getPaymentIntegrations('site')).find(({ provider }) => provider === 'prodamus'), result);
+        assert.equal((await getPaymentIntegrations('other-site'))[0].settings.secretKey, 'OTHER_SECRET');
+        assert.equal((await getPaymentIntegrations('site')).find(({ provider }) => provider === 'test-second').settings.secretKey, 'SECOND_SECRET');
+    }
+    await deletePaymentSecretKey('missing-site', 'prodamus');
+    assert.deepEqual(await getPaymentIntegrations('missing-site'), []);
+    assert.ok(fixture.calls.includes('COMMIT'));
 });

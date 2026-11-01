@@ -15,7 +15,7 @@ import { getSiteThemeSettings, patchSiteTheme } from './api/siteTheme.mjs';
 import getSiteSettings from './api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './api/siteContact.mjs';
 import { getSiteCatalog, patchSiteCatalog } from './api/siteCatalog.mjs';
-import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation } from './api/sitePayments.mjs';
+import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './api/sitePayments.mjs';
 import { getPaymentStatus, postPaymentStart } from './api/checkout.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './api/reviews.mjs';
 import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './api/articles.mjs';
@@ -218,6 +218,11 @@ await createApp({
             '/site/payments/:provider',
             { method: 'PATCH', private: true },
             patchSitePaymentSettings,
+        ],
+        [
+            '/site/payments/:provider/secret-key',
+            { method: 'DELETE', private: true },
+            deleteSitePaymentSecretKey,
         ],
         [
             '/site/payments/:provider/activation',

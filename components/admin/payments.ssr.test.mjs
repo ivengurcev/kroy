@@ -95,3 +95,27 @@ test('admin password fields reveal only the saved-key indicator and never the st
     assert.match(html, /Ключ сохранён/);
     assert.doesNotMatch(html, /PRIVATE_SENTINEL/);
 });
+
+test('saved-key deletion button is visible only for a configured key and requires confirmation', (t) => {
+    const definition = getPaymentProvider('prodamus');
+    const saved = describePaymentProvider(definition, { settings: { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' } });
+    const empty = describePaymentProvider(definition);
+    let deletions = 0;
+    const props = { settings: saved.settings, onChange() {}, onDeleteSecretKey() { deletions += 1; } };
+    const button = descendants(components.PaymentIntegrationEditor({ ...props, provider: saved }))
+        .find((element) => element.props?.children === 'Удалить секретный ключ');
+    assert.ok(button);
+    assert.equal(descendants(components.PaymentIntegrationEditor({ ...props, provider: empty }))
+        .some((element) => element.props?.children === 'Удалить секретный ключ'), false);
+    const previous = globalThis.window;
+    t.after(() => { if (previous === undefined) delete globalThis.window; else globalThis.window = previous; });
+    globalThis.window = { confirm: () => false };
+    button.props.onClick();
+    assert.equal(deletions, 0);
+    globalThis.window.confirm = (message) => { assert.match(message, /отключена/); return true; };
+    button.props.onClick();
+    assert.equal(deletions, 1);
+    const html = renderToString(createElement(components.PaymentIntegrationEditor, { ...props, provider: saved, disabled: true }));
+    assert.match(html, /disabled[^>]*>Удалить секретный ключ/);
+    assert.doesNotMatch(html, /PRIVATE_SENTINEL/);
+});

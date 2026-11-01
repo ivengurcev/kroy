@@ -1,3 +1,4 @@
 .fields { display: grid; gap: var(--space-4); }
 .fields input { width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
 .currency { margin: 0; color: var(--color-text-secondary); }
+.secretActions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); color: var(--color-text-secondary); }

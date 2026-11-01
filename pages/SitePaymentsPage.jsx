@@ -57,17 +57,23 @@ export default function SitePaymentsPage() {
 
     async function performAction(kind) {
         if (!provider || action || kind === 'save' && !dirty || kind === 'activate' && dirty) return;
+        const deletingSecret = kind === 'delete-secret';
         setAction(kind);
         setError('');
         if (kind === 'save') setSaveStatus('saving');
         try {
-            const result = await readPayments(await fetch(`/api/site/payments/${encodeURIComponent(provider.provider)}${kind === 'save' ? '' : '/activation'}`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(kind === 'save' ? { settings: draft } : { isActive: kind === 'activate' }),
+            const result = await readPayments(await fetch(`/api/site/payments/${encodeURIComponent(provider.provider)}${kind === 'save' ? '' : deletingSecret ? '/secret-key' : '/activation'}`, {
+                method: deletingSecret ? 'DELETE' : 'PATCH',
+                ...(deletingSecret ? {} : {
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(kind === 'save' ? { settings: draft } : { isActive: kind === 'activate' }),
+                }),
             }));
             setProviders(result);
             if (kind === 'save' || !dirty) setDraft(result.find((item) => item.provider === selected).settings);
+            else if (deletingSecret) setDraft(({ secretKey, ...settings }) => settings);
             if (kind === 'save') setSaveStatus('success');
+            if (deletingSecret) setSaveStatus('idle');
         } catch (saveError) {
             setError(saveError.message);
             if (kind === 'save') setSaveStatus('error');
@@ -88,7 +94,7 @@ export default function SitePaymentsPage() {
                 </select>
             </label>
             {provider && <>
-                <PaymentIntegrationEditor provider={provider} settings={draft} disabled={Boolean(action)} onChange={(settings) => { setDraft(settings); setSaveStatus('idle'); }} />
+                <PaymentIntegrationEditor provider={provider} settings={draft} disabled={Boolean(action)} onChange={(settings) => { setDraft(settings); setSaveStatus('idle'); }} onDeleteSecretKey={() => performAction('delete-secret')} />
                 <div className={styles.actions}>
                     <Button variant="primary" disabled={!dirty || Boolean(action)} onClick={() => performAction('save')}>
                         {action === 'save' ? 'Сохранение…' : 'Сохранить настройки'}

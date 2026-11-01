@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pool } from '../db/client.mjs';
-import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation } from './sitePayments.mjs';
+import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './sitePayments.mjs';
 
 function context(provider = 'prodamus', body = {}) {
     return {
@@ -29,6 +29,12 @@ function database(t, stored = []) {
         }
         if (sql.startsWith('SELECT')) return { rows: structuredClone(settings) };
         assert.match(sql, /^UPDATE site_payment_integrations/);
+        if (sql.includes("settings = settings - 'secretKey'")) {
+            assert.match(sql, /is_active = FALSE/);
+            assert.match(sql, /WHERE site_id = \$1 AND provider = \$2/);
+            assert.equal(values[1], 'prodamus');
+            settings.forEach((row) => { delete row.settings.secretKey; row.is_active = false; });
+        }
         if (sql.includes('SET is_active = $3')) settings.forEach((row) => { row.is_active = values[2]; });
         return {};
     }, release() {} }));
@@ -95,4 +101,30 @@ test('admin can set a secret and later save a blank password without erasing or 
     assert.equal(response.status, 200);
     assert.equal(response.value.providers[0].fields.secretKey.configured, true);
     assert.equal(response.value.providers[0].settings.secretKey, undefined);
+});
+
+
+test('deleting a saved active secret deactivates the integration, never exposes values and is idempotent', async (t) => {
+    database(t, [{ provider: 'prodamus', settings: { payformDomain: 'example.payform.ru', secretKey: 'PRIVATE_SENTINEL' }, is_active: true }]);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        const result = await deleteSitePaymentSecretKey(context());
+        assert.equal(result.status, 200);
+        assert.equal(result.value.providers[0].isActive, false);
+        assert.equal(result.value.providers[0].fields.secretKey.configured, false);
+        assert.equal(result.value.providers[0].settings.secretKey, undefined);
+        assert.doesNotMatch(JSON.stringify(result), /PRIVATE_SENTINEL/);
+        assert.deepEqual(result.value.providers[0].settings, { payformDomain: 'example.payform.ru' });
+    }
+});
+
+test('secret deletion rejects unknown providers, absent sites and internal failures safely', async (t) => {
+    t.mock.method(pool, 'query', () => { assert.fail('Unknown provider must be rejected before database access'); });
+    assert.equal((await deleteSitePaymentSecretKey(context('unknown'))).status, 400);
+    t.mock.method(pool, 'query', async () => ({ rows: [] }));
+    assert.equal((await deleteSitePaymentSecretKey(context())).status, 404);
+    t.mock.method(pool, 'query', async () => { throw new Error('PRIVATE_SENTINEL'); });
+    t.mock.method(console, 'error', () => {});
+    const result = await deleteSitePaymentSecretKey(context());
+    assert.equal(result.status, 500);
+    assert.doesNotMatch(JSON.stringify(result), /PRIVATE_SENTINEL/);
 });

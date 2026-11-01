@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test, { after } from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { pool } from './client.mjs';
-import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive } from './sitePaymentIntegrations.mjs';
+import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from './sitePaymentIntegrations.mjs';
 import { getPaymentProvider } from '../payments/providers.mjs';
 
 after(() => pool.end());
@@ -35,9 +35,18 @@ test('PostgreSQL enforces one active provider under concurrent switching and pre
         assert.equal(saved.filter(({ isActive }) => isActive).length, 1);
         assert.deepEqual(saved.map(({ settings }) => settings.payformDomain).sort(), ['a.payform.ru', 'second.payform.ru']);
         await assert.rejects(pool.query('UPDATE site_payment_integrations SET is_active = TRUE WHERE site_id = $1', [siteA]), { code: '23505' });
+        await savePaymentIntegration(siteB, 'prodamus', { payformDomain: 'b.payform.ru', secretKey: 'PRIVATE_TEST_SECRET' });
+        await savePaymentIntegration(siteB, 'prodamus', { payformDomain: 'b.payform.ru' });
+        assert.equal((await getPaymentIntegrations(siteB))[0].settings.secretKey, 'PRIVATE_TEST_SECRET');
         const otherSite = await getPaymentIntegrations(siteB);
         assert.equal(otherSite[0].settings.payformDomain, 'b.payform.ru');
         assert.equal(otherSite[0].isActive, true);
+        await deletePaymentSecretKey(siteB, 'prodamus');
+        await deletePaymentSecretKey(siteB, 'prodamus');
+        const deleted = (await getPaymentIntegrations(siteB))[0];
+        assert.equal(Object.hasOwn(deleted.settings, 'secretKey'), false);
+        assert.equal(deleted.isActive, false);
+        assert.equal(deleted.settings.payformDomain, 'b.payform.ru');
         await setPaymentIntegrationActive(siteA, saved.find(({ isActive }) => isActive).provider, false, validate);
         assert.equal((await getPaymentIntegrations(siteA)).some(({ isActive }) => isActive), false);
         const { rows: [product] } = await pool.query('INSERT INTO products (site_id, name) VALUES ($1, $2) RETURNING id, type', [siteA, 'Default service']);
