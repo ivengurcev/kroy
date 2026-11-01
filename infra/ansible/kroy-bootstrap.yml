@@ -183,7 +183,7 @@
         group: root
         mode: '0440'
         content: |
-          {{ kroy_connection_user.stdout | trim }} ALL=(root) NOPASSWD: /usr/bin/systemctl start kroy-app, /usr/bin/systemctl restart kroy-app, /usr/bin/systemctl reload kroy-nginx
+          {{ kroy_connection_user.stdout | trim }} ALL=(root) NOPASSWD: /usr/bin/systemctl start kroy-app, /usr/bin/systemctl restart kroy-app, /usr/bin/systemctl start kroy-nginx, /usr/bin/systemctl reload kroy-nginx
         validate: /usr/sbin/visudo -cf %s
 
     - name: Remove legacy site deployment script
@@ -267,3 +267,5 @@
         owner: "{{ kroy_user }}"
         group: "{{ kroy_group }}"
         mode: '0600'
+
+- import_playbook: kroy-nginx.yml

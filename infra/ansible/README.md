@@ -50,13 +50,16 @@ SSH-доступ и `rsync`. Установите коллекции:
 ansible-galaxy collection install -r infra/ansible/requirements.yml
 ```
 
-Bootstrap не изменяет конфигурации Nginx и PostgreSQL и не затрагивает другие
-приложения сервера. Пользователь берётся из настроек Ansible, inventory или
-`~/.ssh/config`. После bootstrap переподключитесь по SSH, чтобы обновилось
+Bootstrap настраивает отдельный `kroy-nginx`, системный reverse proxy и страницу-
+заглушку Oysite, не перезаписывая основной `nginx.conf` и не затрагивая другие
+приложения сервера или конфигурацию PostgreSQL. Выпуск TLS-сертификатов остаётся
+отдельной задачей `kroy-https.yml`. Пользователь берётся из настроек Ansible,
+inventory или `~/.ssh/config`. После bootstrap переподключитесь по SSH, чтобы обновилось
 членство в группе. Bootstrap устанавливает защищённый запускатель
 `/usr/local/sbin/kroy-run` и узкое правило sudoers, разрешающее SSH-пользователю
 запускать только скрипты Kroy от имени `kroy`. Отдельное правило разрешает
-без пароля только `start`/`restart` для `kroy-app` и `reload` для `kroy-nginx`.
+без пароля только `start`/`restart` для `kroy-app` и `start`/`reload` для
+`kroy-nginx`.
 Изменения этих правил применяются повторным запуском bootstrap с sudo-паролем;
 в обычном `bun run deploy app` пароль не требуется.
 
@@ -67,9 +70,10 @@ ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-bootstrap.yml \
   --tags bun-install
 ```
 
-Обычный bootstrap устанавливает Bun, системные пакеты, пользователя и службы.
-Systemd запускает приложение командой `bun --no-install server.mjs --serve`,
-а `kroy-nginx.service` подготавливает конфигурацию через Bun `ExecStartPre`.
+Обычный bootstrap устанавливает Bun, системные пакеты, пользователя, службы и
+конфигурацию Nginx. Systemd запускает приложение командой
+`bun --no-install server.mjs --serve`, а `kroy-nginx.service` подготавливает
+конфигурацию через Bun `ExecStartPre`.
 Защищённый runner тоже работает на Bun: он ограничивает набор команд файлами
 `package.json`, запускает скрипты через `bun run` и проверяет импорт Vyaz.
 
@@ -105,13 +109,11 @@ ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-deploy.yml \
   -e 'kroy_domains=["example.oysite.ru"]'
 ```
 
-Затем один раз настройте отдельный Kroy Nginx и системный reverse proxy:
-
-```bash
-ansible-playbook -i infra/ansible/inventory infra/ansible/kroy-nginx.yml \
-  -e kroy_root=/srv/kroy \
-  -e kroy_user=kroy
-```
+Отдельный запуск `kroy-nginx.yml` больше не требуется: bootstrap устанавливает и
+включает сервис, настраивает системный reverse proxy и placeholder. На чистом
+сервере `kroy-nginx` запускается первым deploy после появления приложения и
+сгенерированной конфигурации; при повторном bootstrap уже работающий сервис не
+перезапускается без изменения его unit-файла.
 
 Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` и файл
 `/srv/kroy/.env` с правами `0600`. Пароль базы и `AUTH_SECRET` генерируются

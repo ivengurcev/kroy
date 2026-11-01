@@ -1,6 +1,7 @@
 [Unit]
 Description=Kroy Nginx instance
 After=network.target
+ConditionPathExists={{ kroy_nginx_config }}
 
 [Service]
 Type=simple

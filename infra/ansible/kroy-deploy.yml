@@ -168,6 +168,19 @@
       when: kroy_nginx_config_changed | default(false) | bool
       changed_when: false
 
+    - name: Check whether Kroy Nginx is already active
+      ansible.builtin.command:
+        argv: [sudo, -n, /usr/bin/systemctl, is-active, --quiet, kroy-nginx]
+      register: kroy_nginx_service_status
+      changed_when: false
+      failed_when: false
+
+    - name: Start Kroy Nginx after its configuration is ready
+      ansible.builtin.command:
+        argv: [sudo, -n, /usr/bin/systemctl, start, kroy-nginx]
+      when: kroy_nginx_service_status.rc != 0
+      changed_when: true
+
     - name: Check whether Kroy Nginx is already running
       ansible.builtin.service_facts:
       when: kroy_nginx_config_changed | default(false) | bool
