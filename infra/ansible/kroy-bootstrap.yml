@@ -12,9 +12,9 @@
     - name: Require supported host for Bun runtime
       ansible.builtin.assert:
         that:
-          - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_version == '24.04'
-          - ansible_architecture == 'x86_64'
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version == '24.04'
+          - ansible_facts.architecture == 'x86_64'
         fail_msg: "Bun deployment supports Ubuntu 24.04 x86_64 only"
       tags: [bun-install]
 
