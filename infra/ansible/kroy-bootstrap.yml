@@ -28,6 +28,7 @@
           - ansible_architecture == 'x86_64'
         fail_msg: "Bun deployment supports Ubuntu 24.04 x86_64 only"
       when: kroy_runtime == 'bun'
+      tags: [bun-install]
 
     - name: Install Kroy system dependencies
       ansible.builtin.apt:
@@ -113,12 +114,22 @@
           - (kroy_installed_node_version_after.stdout | trim) == ('v' ~ kroy_node_version)
         fail_msg: "Expected Node.js v{{ kroy_node_version }}, got {{ kroy_installed_node_version_after.stdout | trim }}"
 
+    - name: Install unzip for Bun archive extraction
+      ansible.builtin.apt:
+        name: unzip
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: kroy_runtime == 'bun'
+      tags: [bun-install]
+
     - name: Check installed Bun version
       ansible.builtin.command: "{{ kroy_bun_binary }} --version"
       register: kroy_installed_bun_version
       changed_when: false
       failed_when: false
       when: kroy_runtime == 'bun'
+      tags: [bun-install]
 
     - name: Download pinned Bun release
       ansible.builtin.get_url:
@@ -129,6 +140,7 @@
       when:
         - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
+      tags: [bun-install]
 
     - name: Create temporary Bun extraction directory
       ansible.builtin.file:
@@ -138,6 +150,7 @@
       when:
         - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
+      tags: [bun-install]
 
     - name: Extract pinned Bun release
       ansible.builtin.unarchive:
@@ -147,6 +160,7 @@
       when:
         - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
+      tags: [bun-install]
 
     - name: Install Bun binary
       ansible.builtin.copy:
@@ -159,18 +173,21 @@
       when:
         - kroy_runtime == 'bun'
         - kroy_installed_bun_version.rc != 0 or (kroy_installed_bun_version.stdout | trim) != kroy_bun_version
+      tags: [bun-install]
 
     - name: Verify installed Bun version
       ansible.builtin.command: "{{ kroy_bun_binary }} --version"
       register: kroy_installed_bun_version_after
       changed_when: false
       when: kroy_runtime == 'bun'
+      tags: [bun-install]
 
     - name: Require exact Bun version
       ansible.builtin.assert:
         that: (kroy_installed_bun_version_after.stdout | trim) == kroy_bun_version
         fail_msg: "Expected Bun {{ kroy_bun_version }}, got {{ kroy_installed_bun_version_after.stdout | trim }}"
       when: kroy_runtime == 'bun'
+      tags: [bun-install]
 
     - name: Remove temporary Bun archive and extraction
       ansible.builtin.file:
@@ -180,6 +197,7 @@
         - "/var/tmp/bun-v{{ kroy_bun_version }}-linux-x64-baseline.zip"
         - "/var/tmp/kroy-bun-v{{ kroy_bun_version }}"
       when: kroy_runtime == 'bun'
+      tags: [bun-install]
 
     - name: Enable Corepack and install Yarn shims
       ansible.builtin.command: corepack enable --install-directory /usr/local/bin
