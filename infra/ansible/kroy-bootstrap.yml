@@ -11,7 +11,7 @@
     kroy_yarn_version: 4.18.1
     kroy_node_binary: /usr/bin/node
     kroy_yarn_release: "{{ kroy_root }}/.yarn/releases/yarn-{{ kroy_yarn_version }}.cjs"
-    kroy_runtime: node
+    kroy_runtime: bun
     kroy_bun_version: 1.4.4
     kroy_bun_binary: /usr/local/bin/bun
   tasks:

@@ -7,7 +7,7 @@
     kroy_user: kroy
     kroy_group: "{{ kroy_user }}"
     kroy_yarn_version: 4.18.1
-    kroy_runtime: node
+    kroy_runtime: bun
     kroy_bun_version: 1.4.4
     kroy_bun_binary: /usr/local/bin/bun
     kroy_local_root: "{{ playbook_dir }}/../.."
@@ -193,5 +193,5 @@
 
     - name: Verify Kroy application is active
       ansible.builtin.command:
-        argv: [sudo, -n, /usr/bin/systemctl, is-active, --quiet, kroy-app]
+        argv: [/usr/bin/systemctl, is-active, --quiet, kroy-app]
       changed_when: false
