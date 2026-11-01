@@ -121,8 +121,10 @@ yarn dev
 
 ## Production
 
-Production остаётся без Docker: системный PostgreSQL, Node.js 24.19.0, Yarn
-4.18.1 PnP, отдельный Kroy Nginx под systemd и внешний системный Nginx.
+Production остаётся без Docker: системный PostgreSQL, Yarn 4.18.1, отдельный
+Kroy Nginx под systemd и внешний системный Nginx. Runtime по умолчанию — Node.js
+24.19.0 с Yarn PnP; на подготовленном Bun-хосте можно выбрать Bun 1.4.4,
+оставив Node.js/Yarn для управления зависимостями и rollback.
 Provisioning/deploy находятся в `infra/ansible`; inventory —
 `infra/ansible/inventory`. Начальная команда:
 
@@ -134,6 +136,13 @@ ansible-playbook -i infra/ansible/inventory \
 Compose не предназначен для VPS и не управляет production-сервисами. Полная
 проверка systemd, rsync и playbook требует целевого VPS; локальная разработка
 их не запускает.
+
+Runtime выбирается явно при bootstrap и deploy. В режиме Bun Yarn использует
+`nodeLinker: pnpm` только для VPS install, а systemd запускает `server.mjs`
+напрямую с `bun --no-install`; основной `.yarnrc.yml` остаётся PnP. Возврат к
+Node выполняется повторными bootstrap и deploy с `-e kroy_runtime=node`.
+Синхронизированные PnP-файлы сохраняются, данные и `node_modules` не удаляются.
+Подробности — в [Ansible-инструкции](ansible/README.md#runtime-nodejs-и-bun).
 
 
 ## Standalone-команды и окружение

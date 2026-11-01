@@ -1,17 +1,68 @@
 #!/usr/bin/env node
-const { spawn } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { spawn, spawnSync } = require('node:child_process');
+const { mkdirSync, readFileSync } = require('node:fs');
 const { dirname, join } = require('node:path');
 
 const ROOT = '{{ kroy_root }}';
 const NODE = '{{ kroy_node_binary }}';
 const YARN_RELEASE = '{{ kroy_yarn_release }}';
+const RUNTIME = '{{ kroy_runtime | default("node") }}';
+const BUN = '{{ kroy_bun_binary | default("/usr/local/bin/bun") }}';
 const BLOCKED_SCRIPTS = new Set(['remote', 'deploy', 'site:deploy']);
 const [script, ...args] = process.argv.slice(2);
 
 if (!script || !/^[a-z0-9][a-z0-9:-]*$/.test(script) || BLOCKED_SCRIPTS.has(script)) {
     console.error('Unknown or forbidden Kroy script');
     process.exit(2);
+}
+
+if (script === 'deps:install') {
+    if (args.length) {
+        console.error('deps:install does not accept arguments');
+        process.exit(2);
+    }
+    const env = {
+        ...process.env,
+        YARN_NODE_LINKER: 'pnpm',
+        YARN_GLOBAL_FOLDER: join(ROOT, '.yarn/global'),
+    };
+    try {
+        mkdirSync(env.YARN_GLOBAL_FOLDER, { recursive: true });
+        const linker = spawnSync(NODE, [YARN_RELEASE, 'config', 'get', 'nodeLinker'], {
+            cwd: ROOT, env, encoding: 'utf8',
+        });
+        if (linker.status !== 0 || linker.stdout.trim() !== 'pnpm') {
+            console.error('Yarn nodeLinker must resolve to pnpm before installation');
+            process.exit(linker.status || 2);
+        }
+        const globalFolder = spawnSync(NODE, [YARN_RELEASE, 'config', 'get', 'globalFolder'], {
+            cwd: ROOT, env, encoding: 'utf8',
+        });
+        if (globalFolder.status !== 0 || globalFolder.stdout.trim() !== env.YARN_GLOBAL_FOLDER) {
+            console.error('Yarn globalFolder must resolve to the project filesystem before installation');
+            process.exit(globalFolder.status || 2);
+        }
+        const install = spawnSync(NODE, [YARN_RELEASE, 'install', '--immutable'], {
+            cwd: ROOT, env, stdio: 'inherit',
+        });
+        process.exit(install.status ?? 1);
+    } catch (error) {
+        console.error(`Cannot install Kroy dependencies: ${error.message}`);
+        process.exit(1);
+    }
+}
+
+if (script === 'runtime:verify') {
+    if (args.length) {
+        console.error('runtime:verify does not accept arguments');
+        process.exit(2);
+    }
+    const command = RUNTIME === 'bun' ? BUN : NODE;
+    const commandArgs = RUNTIME === 'bun'
+        ? ['--no-install', '-e', 'await import("@vyaz/core/createApp.mjs")']
+        : [YARN_RELEASE, 'node', '--input-type=module', '-e', 'await import("@vyaz/core/createApp.mjs")'];
+    const result = spawnSync(command, commandArgs, { cwd: ROOT, stdio: 'inherit' });
+    process.exit(result.status ?? 1);
 }
 
 let scripts;
