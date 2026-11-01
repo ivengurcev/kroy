@@ -7,7 +7,7 @@ import { transform } from '@svgr/core';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { serializePagePayload } from '../scripts/sitePageData.mjs';
+import { serializePagePayload } from '../../scripts/sitePageData.mjs';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.articlePage-test-${randomUUID()}.mjs`, import.meta.url));
@@ -15,14 +15,14 @@ const compiledPath = fileURLToPath(new URL(`.articlePage-test-${randomUUID()}.mj
 before(async () => {
     const result = await build({
         stdin: {
-            contents: `export { default as Page } from './layout/Page.jsx';
-                export { default as SiteApp } from './layout/SiteApp.jsx';
-                export { default as Article } from './parts/article/prepareArticle.mjs';
-                export { default as ArticleList } from './parts/article-list/prepareArticleList.mjs';
-                export { default as ArticleCards } from './widgets/article-cards/ArticleCards.jsx';
-                export { default as ArticleContent } from './widgets/article-content/ArticleContent.jsx';
+            contents: `export { default as Page } from './site/runtime/Page.jsx';
+                export { default as SiteApp } from './site/runtime/SiteApp.jsx';
+                export { default as Article } from './site/parts/article/prepareArticle.mjs';
+                export { default as ArticleList } from './site/parts/article-list/prepareArticleList.mjs';
+                export { default as ArticleCards } from './site/widgets/article-cards/ArticleCards.jsx';
+                export { default as ArticleContent } from './site/widgets/article-content/ArticleContent.jsx';
                 export { default as EditorWorkspace } from './admin/editor/EditorWorkspace.jsx';`,
-            resolveDir: fileURLToPath(new URL('../', import.meta.url)),
+            resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath,
         bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',

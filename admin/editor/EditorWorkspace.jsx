@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Page from '../../layout/Page.jsx';
-import SiteRoot from '../../layout/SiteRoot.jsx';
+import Page from '../../site/runtime/Page.jsx';
+import SiteRoot from '../../site/runtime/SiteRoot.jsx';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';

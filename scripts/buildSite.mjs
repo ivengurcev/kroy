@@ -4,7 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, transform } from 'esbuild';
 import { isValidPagePath, isValidPageRoutePattern } from '../api/pageFields.mjs';
 import { pool } from '../db/client.mjs';
-import { getThemeTokens } from '../themes/themeRegistry.mjs';
+import { getThemeTokens } from '../site/themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../db/siteContacts.mjs';
 import { getCatalog } from '../db/catalog.mjs';
 import { getPublishedReviews } from '../db/reviews.mjs';
@@ -14,7 +14,7 @@ import generateSiteRouting from './generateSiteRouting.mjs';
 import createSiteSvgPlugin from './siteSvgPlugin.mjs';
 import { assertArticlePathsAvailable, createArticlePages } from './createArticlePages.mjs';
 import { createClientPageRegistry } from './sitePageData.mjs';
-import { attachArticleLists } from '../layout/articleListData.mjs';
+import { attachArticleLists } from '../site/runtime/articleListData.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'scripts', 'hydrateSite.jsx');

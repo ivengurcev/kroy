@@ -1,4 +1,4 @@
-import { socialType } from '../../socialLinks.mjs';
+import { socialType } from '../../../socialLinks.mjs';
 
 /**
  * @kroy-title Ссылки

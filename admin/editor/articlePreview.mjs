@@ -1,4 +1,4 @@
-import { createArticleListData } from '../../layout/articleListData.mjs';
+import { createArticleListData } from '../../site/runtime/articleListData.mjs';
 
 export async function loadArticlePreview(page, signal) {
     if (page.type === 'list' && page.dataSource === 'articles') {

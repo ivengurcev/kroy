@@ -1,12 +1,12 @@
 import { hydrateRoot } from 'react-dom/client';
-import SiteApp, { normalizePathname } from '../layout/SiteApp.jsx';
+import SiteApp, { normalizePathname } from '../site/runtime/SiteApp.jsx';
 import { parts, widgets } from '../dist/kroy/site-parts.mjs';
 import { pages } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';
 import { contacts } from '../dist/kroy/site-contacts.mjs';
 import { catalog } from '../dist/kroy/site-catalog.mjs';
 import { reviews } from '../dist/kroy/site-reviews.mjs';
-import '../layout/site.css';
+import '../site/styles/site.css';
 
 const root = document.getElementById('root');
 const pageData = document.getElementById('kroy-page-data');

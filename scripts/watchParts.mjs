@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { generateParts } from './discoverParts.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const PARTS_DIR = resolve(ROOT, 'parts');
-const WIDGETS_DIR = resolve(ROOT, 'widgets');
+const PARTS_DIR = resolve(ROOT, 'site', 'parts');
+const WIDGETS_DIR = resolve(ROOT, 'site', 'widgets');
 let timer;
 let running = false;
 let queued = false;

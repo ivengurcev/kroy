@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import prepareArticleList from './article-list/prepareArticleList.mjs';
-import { createArticleListData } from '../layout/articleListData.mjs';
+import { createArticleListData } from '../runtime/articleListData.mjs';
 
 const published = { slug: 'example', title: 'Article', summary: 'Summary', coverUrl: '/cover.webp', status: 'published', content: { secret: 'Full text must stay out of lists' } };
 const draft = { ...published, slug: 'draft', status: 'draft' };
@@ -38,7 +38,7 @@ test('supports sites with no published articles and does not change input settin
 });
 
 test('attaches summaries only to article lists and selects each list own detail template', async () => {
-    const { attachArticleLists } = await import('../layout/articleListData.mjs');
+    const { attachArticleLists } = await import('../runtime/articleListData.mjs');
     const pages = [
         { id: 'home', path: '/', type: 'standard', content: [] },
         { id: 'news', path: '/news', type: 'list', dataSource: 'articles', content: [] },

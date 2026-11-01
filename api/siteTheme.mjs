@@ -1,7 +1,7 @@
 import { getSiteTheme, setSiteTheme } from "../db/siteThemes.mjs";
 import getCurrentSite from "./siteContext.mjs";
-import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../themes/themeRegistry.mjs";
-import { getAllTokenMetadata } from "../themes/tokenMetadata.mjs";
+import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../site/themes/themeRegistry.mjs";
+import { getAllTokenMetadata } from "../site/themes/tokenMetadata.mjs";
 
 function themeDetails() {
   return listThemes().map(({ id }) => getThemeEditorModel(id));

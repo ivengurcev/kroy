@@ -1,11 +1,11 @@
 import { pool } from '../db/client.mjs';
 import { getSiteTheme } from '../db/siteThemes.mjs';
-import { getThemeTokens } from '../themes/themeRegistry.mjs';
+import { getThemeTokens } from '../site/themes/themeRegistry.mjs';
 import getCurrentSite from './siteContext.mjs';
 import { getSiteContacts } from '../db/siteContacts.mjs';
 import { getCatalog } from '../db/catalog.mjs';
 import { getPublishedReviews } from '../db/reviews.mjs';
-import { attachArticleLists } from '../layout/articleListData.mjs';
+import { attachArticleLists } from '../site/runtime/articleListData.mjs';
 
 export default async function getSitePreview(c) {
     try {

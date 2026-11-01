@@ -2,7 +2,7 @@ import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { renderToString } from 'react-dom/server';
 import { isValidPagePath } from '../api/pageFields.mjs';
-import SiteApp from '../layout/SiteApp.jsx';
+import SiteApp from '../site/runtime/SiteApp.jsx';
 import { parts, widgets } from '../dist/kroy/site-parts.mjs';
 import { pages as pageRegistry } from '../dist/kroy/site-pages.mjs';
 import { theme } from '../dist/kroy/site-theme.mjs';

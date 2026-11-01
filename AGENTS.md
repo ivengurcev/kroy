@@ -2,7 +2,8 @@
 
 Kroy / Oysite — мультисайтовая платформа на JavaScript, React 19, Vyaz,
 esbuild, PostgreSQL и Yarn 4 PnP. Приложение настраивается в `server.mjs`; административный интерфейс находится в
-`admin/`; `parts/` готовят данные, `widgets/` отображают их.
+`admin/`; публичный сайт находится в `site/`: `site/parts/` готовят данные,
+`site/widgets/` отображают их, `site/runtime/` рендерит страницы.
 
 ## Документация перед изменениями
 

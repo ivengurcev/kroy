@@ -6,10 +6,10 @@ import { build } from 'esbuild';
 import { randomUUID } from 'node:crypto';
 import { writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { discoverParts, discoverWidgets } from '../scripts/discoverParts.mjs';
-import createSiteSvgPlugin from '../scripts/siteSvgPlugin.mjs';
+import { discoverParts, discoverWidgets } from '../../scripts/discoverParts.mjs';
+import createSiteSvgPlugin from '../../scripts/siteSvgPlugin.mjs';
 import { createArticleListData } from './articleListData.mjs';
-import { createClientPageRegistry, serializePagePayload } from '../scripts/sitePageData.mjs';
+import { createClientPageRegistry, serializePagePayload } from '../../scripts/sitePageData.mjs';
 
 const outputs = [];
 let server;
@@ -29,15 +29,15 @@ before(async () => {
         });
         registries.push(`export const ${label} = {${entries.join(',')}};`);
     }
-    const contents = [...imports, ...registries, "export { default as SiteApp } from './layout/SiteApp.jsx';"].join('\n');
+    const contents = [...imports, ...registries, "export { default as SiteApp } from './site/runtime/SiteApp.jsx';"].join('\n');
     for (const platform of ['node', 'browser']) {
         const outfile = fileURLToPath(new URL(`.widgets-${platform}-${randomUUID()}.mjs`, import.meta.url));
         outputs.push(outfile);
         const result = await build({
-            stdin: { contents, resolveDir: fileURLToPath(new URL('../', import.meta.url)) },
+            stdin: { contents, resolveDir: fileURLToPath(new URL('../../', import.meta.url)) },
             outfile, bundle: true, write: false, packages: 'external', platform, format: 'esm', jsx: 'automatic',
             loader: { '.module.css': 'local-css', '.png': 'dataurl' },
-            plugins: [createSiteSvgPlugin({ root: fileURLToPath(new URL('../', import.meta.url)) })],
+            plugins: [createSiteSvgPlugin({ root: fileURLToPath(new URL('../../', import.meta.url)) })],
         });
         await writeFile(outfile, result.outputFiles.find(({ path }) => path.endsWith('.mjs')).contents);
         const module = await import(pathToFileURL(outfile).href);

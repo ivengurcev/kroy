@@ -38,7 +38,7 @@ prepare({ props, record, context, contacts, catalog, reviews, articles }) -> dat
 
 ## Регистрация
 
-`scripts/discoverParts.mjs` рекурсивно обходит `parts/` и `widgets/`:
+`scripts/discoverParts.mjs` рекурсивно обходит `site/parts/` и `site/widgets/`:
 
 - Каталог с `package.json` регистрирует одну точку входа `main`; внутрь него
   дальнейший поиск не идёт. `main` не может выходить за пределы каталога.
@@ -48,8 +48,8 @@ prepare({ props, record, context, contacts, catalog, reviews, articles }) -> dat
   Формат — `@kroy/<kebab-case>`, допускаются вложенные сегменты. Проверяются коллизии,
   формат имён и существование файла. Специальный Workspace или базовый класс не нужен.
 
-Например, `parts/services/package.json` указывает на `prepareServices.mjs`,
-`widgets/services/package.json` — на `Services.jsx`; оба могут иметь имя
+Например, `site/parts/services/package.json` указывает на `prepareServices.mjs`,
+`site/widgets/services/package.json` — на `Services.jsx`; оба могут иметь имя
 `@kroy/services`, так как принадлежат разным реестрам.
 
 ## JSDoc
@@ -123,7 +123,7 @@ Defaults простых значений задаются в необязате�
 с экспортами parts/widgets только используемых блоков, включая детальные страницы.
 SSR и гидратация используют этот общий сокращённый реестр.
 
-`SiteRoot` применяет scoped CSS-переменные `--site-*` из темы сайта. Виджеты
+`site/runtime/SiteRoot.jsx` применяет scoped CSS-переменные `--site-*` из темы сайта. Виджеты
 используют их для палитры, типографики и базовой геометрии, сохраняя свою компоновку
 и адаптивность. Тема вычисляется по настройкам конкретного сайта; административная
 тема независима. Файлы в dist не редактируются вручную.

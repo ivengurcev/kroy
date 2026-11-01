@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { parsePartDoc } from './parsePartDoc.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const PARTS_DIR = join(ROOT, 'parts');
-const WIDGETS_DIR = join(ROOT, 'widgets');
+const PARTS_DIR = join(ROOT, 'site', 'parts');
+const WIDGETS_DIR = join(ROOT, 'site', 'widgets');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 
 const asPosix = (path) => path.split(sep).join('/');

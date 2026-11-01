@@ -16,7 +16,7 @@ before(async () => {
         stdin: {
             contents: `export { default as PaymentIntegrationEditor } from './admin/components/PaymentIntegrationEditor.jsx';
                 export { default as CatalogEditor } from './admin/components/CatalogEditor.jsx';
-                export { default as ProductCards, ProductCard } from './components/site/ProductCards.jsx';
+                export { default as ProductCards, ProductCard } from './site/components/ProductCards.jsx';
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
                 export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),

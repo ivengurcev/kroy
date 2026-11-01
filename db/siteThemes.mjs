@@ -3,7 +3,7 @@ import {
   normalizeThemeOverrides,
   resetThemeOverride,
   setThemeOverride,
-} from "../themes/themeRegistry.mjs";
+} from "../site/themes/themeRegistry.mjs";
 
 function toSiteTheme(row) {
   if (!row) return null;

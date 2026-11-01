@@ -1,0 +1,198 @@
+.heroContainer {
+    container-name: hero;
+    container-type: inline-size;
+}
+
+.hero {
+    position: relative;
+    isolation: isolate;
+    height: 100svh;
+    min-height: 750px;
+    max-height: 1150px;
+    overflow: hidden;
+    color: var(--site-color-text);
+    background: var(--site-color-bg);
+}
+
+.photo {
+    position: absolute;
+    z-index: -2;
+    inset: 0 0 0 auto;
+    width: 54%;
+    background-color: var(--site-color-surface-soft);
+    background-position: 50% 12%;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.photo::before {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        var(--site-color-bg) 0%,
+        color-mix(in srgb, var(--site-color-bg) 78%, transparent) 6%,
+        transparent 31%
+    );
+    left:-1px;
+    content: '';
+}
+
+.inner {
+    position: relative;
+    width: min(100%, var(--site-container-max));
+    height: 100%;
+    margin-inline: auto;
+}
+
+.content {
+    position: absolute;
+    top: 25%;
+    left: var(--site-page-gutter);
+    width: 57%;
+    max-width: 720px;
+}
+
+.eyebrow {
+    margin: 0 0 clamp(var(--site-space-12), 6.6vh, 82px);
+    color: var(--site-color-accent);
+    font-size: clamp(18px, 1.65cqw, 27px);
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: .21em;
+    text-transform: uppercase;
+}
+
+.title {
+    margin: 0;
+    font-family: var(--site-font-heading);
+    font-size: clamp(51px, 5.2cqw, 82px);
+    font-weight: 400;
+    line-height: 1.07;
+    letter-spacing: -.038em;
+    text-wrap: balance;
+}
+
+.socials {
+    position: absolute;
+    bottom: 6.3%;
+    left: var(--site-page-gutter);
+    display: flex;
+    gap: 0;
+    align-items: center;
+}
+
+.social {
+    display: inline-flex;
+    gap: var(--site-space-4);
+    align-items: center;
+    min-height: 54px;
+    padding: var(--site-space-1) var(--site-space-6) var(--site-space-1) 0;
+    color: inherit;
+    font-size: calc(var(--site-font-size-base) * 1.0625);
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color .2s;
+}
+
+.social + .social {
+    margin-left: 0;
+    padding-left: var(--site-space-6);
+    border-left: 1px solid var(--site-color-border);
+}
+
+.social:hover { color: var(--site-color-accent-hover); }
+.social:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 5px; }
+
+.socialIcon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 51px;
+    height: 51px;
+    border-radius: 50%;
+    color: var(--site-color-accent-secondary, var(--site-color-accent));
+    background: color-mix(in srgb, var(--site-color-accent-secondary, var(--site-color-accent)) 14%, var(--site-color-bg));
+}
+
+.socialIcon svg { width: 24px; height: 24px; }
+.maxMark { font-size: 11px; font-weight: 700; letter-spacing: -.03em; }
+
+.caption {
+    position: absolute;
+    right: var(--site-page-gutter);
+    bottom: 5.9%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: clamp(210px, 17.5cqw, 270px);
+    aspect-ratio: 1;
+    padding: var(--site-space-4);
+    border-top: 3px solid var(--site-color-accent-secondary, var(--site-color-accent));
+    background: color-mix(in srgb, var(--site-color-section-bg, var(--site-color-surface-soft)) 77%, transparent);
+    backdrop-filter: blur(9px);
+}
+
+.captionTitle {
+    margin: 0 0 var(--site-space-2);
+    font: 400 clamp(19px, 1.5cqw, 23px)/1.16 var(--site-font-heading);
+}
+
+.description {
+    margin: 0;
+    color: var(--site-color-text-secondary);
+    font-size: clamp(calc(var(--site-font-size-base) * .8125), 1cqw, var(--site-font-size-base));
+    line-height: 1.45;
+}
+
+@container hero (max-width: 1100px) {
+    .content { width: 62%; max-width: 610px; }
+    .title { font-size: clamp(48px, 5.7cqw, 67px); }
+    .photo { width: 58%; }
+}
+
+@container hero (max-width: 800px) {
+    .hero { display: flex; height: auto; min-height: 0; max-height: none; overflow: visible; flex-direction: column; }
+    .inner { display: contents; }
+    .photo { position: relative; inset: auto; order: 2; width: 100%; height: clamp(220px, 72cqw, 420px); background-position: 50% 50%; background-size: cover; }
+    .photoEmpty { display: none; }
+    .photo::before {
+        background: linear-gradient(
+            180deg,
+            transparent 55%,
+            color-mix(in srgb, var(--site-color-bg) 20%, transparent) 78%,
+            var(--site-color-bg) 100%
+        );
+    }
+    .content { position: static; order: 1; width: auto; max-width: none; padding: var(--site-space-12) var(--site-page-gutter) var(--site-space-8); }
+    .eyebrow { margin-bottom: var(--site-space-6); font-size: clamp(14px, 3.1cqw, 19px); letter-spacing: .13em; }
+    .title { font-size: clamp(40px, 8.5cqw, 65px); }
+    .caption { position: static; order: 4; width: auto; aspect-ratio: auto; margin: 0 var(--site-page-gutter) var(--site-space-8); padding: var(--site-space-4); }
+    .captionTitle { font-size: 19px; }
+    .description { font-size: calc(var(--site-font-size-base) * .8125); }
+    .socials { position: static; order: 3; width: 100%; padding: var(--site-space-4) var(--site-page-gutter); flex-wrap: wrap; gap: var(--site-space-3); align-items: stretch; justify-content: center; }
+    .social { flex: 1 1 0; min-width: 0; gap: var(--site-space-2); padding: var(--site-space-1) 0; font-size: 13px; white-space: normal; overflow-wrap: anywhere; justify-content: center; }
+    .social + .social { padding-left: 0; border-left: 0; }
+    .socialIcon { width: 38px; height: 38px; }
+    .socialIcon svg { width: 20px; height: 20px; }
+    .maxMark { font-size: 9px; }
+}
+
+@container hero (min-width: 801px) {
+    .captionTitle { white-space: nowrap; }
+}
+
+@container hero (max-width: 390px) {
+    .title { font-size: 42px; }
+    .social { gap: 6px; padding-right: 7px; font-size: 12px; }
+    .social + .social { padding-left: 0; }
+    .socialIcon { width: 33px; height: 33px; }
+}
+
+@container hero (max-width: 350px) {
+    .socials { flex-wrap: wrap; justify-content: center; gap: var(--site-space-1) var(--site-space-3); }
+    .social { flex: 1 1 140px; }
+    .social + .social { padding-left: 0; border-left: 0; }
+}
