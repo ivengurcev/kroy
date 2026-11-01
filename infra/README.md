@@ -130,3 +130,112 @@ ansible-playbook -i infra/ansible/inventory \
 Compose не предназначен для VPS и не управляет production-сервисами. Полная
 проверка systemd, rsync и playbook требует целевого VPS; локальная разработка
 их не запускает.
+
+
+## Standalone-команды и окружение
+
+Прямые `yarn build`, `yarn serve`, команды БД и `yarn site:*` используют
+standalone/production-окружение. Для development выполняйте их через
+`yarn dev:run <script> [...args]`; `yarn demo` — алиас только подготовки demo.
+Полный список — `yarn kroy:help` (встроенный `yarn help` принадлежит Yarn).
+
+Для ручного standalone-окружения с установленными PostgreSQL, Node.js и Yarn:
+
+```bash
+cp .env.example .env
+createuser --pwprompt --createdb kroy
+createdb -O kroy kroy
+yarn install --immutable
+```
+
+Настройте DATABASE_URL и случайный AUTH_SECRET (не менее 32 случайных байт)
+в .env; для платежей нужен платформенный PRODAMUS_SYS, см.
+[prodamus.md](../docs/prodamus.md). Не перезаписывайте существующий .env.
+Команды миграций и запуска:
+
+```bash
+yarn db:migrate
+yarn db:status
+yarn user:create admin@example.org --superadmin
+yarn build
+yarn serve
+```
+
+`user:create` запрашивает пароль скрыто; не передавайте его аргументом.
+`db:rollback` и `db:seed` требуют подтверждения в интерактивном терминале.
+Вход — /auth/signin на том же домене, где открыт /admin; выход — /auth/signout.
+Доступ имеют активный superadmin и назначенный admin текущего сайта;
+заблокированный пользователь не допускается. Назначение существующего пользователя:
+
+```bash
+yarn site:user:add demo user@example.org
+```
+
+Структурные права роли admin шире первоначальных требований к владельцу сайта;
+[расхождение](../docs/requirements.md#сайты-и-доступ) ещё требует решения.
+
+## Nginx вне Compose
+
+Эти команды сохранены для standalone-окружения; штатный development запускает
+Nginx в Compose. Для отдельного экземпляра Nginx Kroy:
+
+```bash
+yarn preview
+yarn preview:validate
+yarn preview:reload
+```
+
+`preview` — алиас preview:start: создаёт базовый конфиг и MIME-таблицу до первого
+запуска, проверяет и запускает Nginx; повторный вызов делает reload. По умолчанию
+используются dist/kroy/nginx/nginx.conf, каталоги logs/tmp/sites внутри этого
+каталога, listen 127.0.0.1:8080 и upstream 127.0.0.1:3000. Переменные
+NGINX_CONFIG_DIR, NGINX_SITES_ROOT, NGINX_UPSTREAM и NGINX_LISTEN меняют пути/адреса.
+Kroy не вызывает sudo для управления этим процессом.
+
+После перехода со старой схемы удалите прежний системный include
+`dist/kroy/nginx/*.conf`: системный Nginx не должен подключать фрагменты
+отдельного экземпляра напрямую. В production используйте Ansible/systemd,
+а не второй ручной запуск preview поверх работающего сервиса.
+
+site:build меняет только staging; site:publish обновляет конфигурацию и вызывает
+validate/reload. Активный релиз определяется конфигурацией, не именем самого
+нового каталога. URL ресурсов содержит /_kroy/releases/<release-id>/assets/;
+откат на уже активную версию не переключает её повторно и не откатывает БД.
+О доменах, зарезервированных путях и кодах ответа — [ROUTING.md](../docs/ROUTING.md).
+
+Для домена без локальной DNS-записи можно обратиться к Nginx так:
+
+```bash
+curl --resolve vet.example.test:8080:127.0.0.1 http://vet.example.test:8080/
+```
+
+Проверка standalone-конфига:
+
+```bash
+nginx -t -c "$PWD/dist/kroy/nginx/nginx.conf"
+```
+
+Неизвестный Host получает 404. После изменения доменов или обновления правил
+проксирования публикуйте сайт заново; одной подготовки staging недостаточно.
+Публичный DNS и TLS собственного домена отдельно этими командами не настраиваются.
+Для oysite.ru и *.oysite.ru есть отдельный TLS playbook в
+[Ansible-инструкции](ansible/README.md).
+
+## Удалённые команды
+
+```bash
+export KROY_REMOTE_HOST=user@example.org
+yarn remote db:status
+yarn remote site:list
+yarn remote user:create user@example.org --superadmin
+yarn remote site:user:add demo user@example.org
+yarn deploy app
+yarn deploy site demo
+```
+
+Без KROY_REMOTE_HOST remote/deploy завершаются до подключения и сборки.
+Команды выполняются из /srv/kroy от kroy через защищённый запускатель; аргументы
+передаются без shell-подстановки, интерактивным командам выделяется TTY.
+`deploy app` разворачивает приложение через Ansible, `deploy site` вызывает
+site:publish на VPS. Первичная настройка сервера и права sudoers описаны в
+[infra/ansible/README.md](ansible/README.md).
