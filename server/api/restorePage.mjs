@@ -35,12 +35,15 @@ export default async function restorePage(c) {
     const { rows } = await client.query(
       `UPDATE pages SET deleted_at = NULL WHERE id = $1
        RETURNING id, site_id, path, title, content, page_type AS type,
-                 data_source AS "dataSource", detail_parent_id AS "detailParentId",
-                 route_param AS "routeParam"`, [pageId]);
+                 data_source AS "dataSource", material_section_id AS "materialSectionId",
+                 detail_parent_id AS "detailParentId", route_param AS "routeParam"`, [pageId]);
     await client.query("COMMIT");
     return rows[0];
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
+    if (error.code === "23505" && error.constraint === "pages_one_active_material_list_per_section") {
+      return c.json({ error: "A material list already exists for this section" }, 409);
+    }
     console.error("Failed to restore page", error);
     return c.json({ error: "Internal server error" }, 500);
   } finally { client?.release(); }

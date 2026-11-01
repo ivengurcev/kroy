@@ -9,6 +9,7 @@ import {
   normalizePageTitle,
 } from "../../shared/pageFields.mjs";
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
+import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -26,14 +27,18 @@ export default async function patchPage(c) {
   const hasTitle = Object.hasOwn(body ?? {}, "title");
   const hasPath = Object.hasOwn(body ?? {}, "path");
   const hasRouteParam = Object.hasOwn(body ?? {}, "routeParam");
+  const hasDataSource = Object.hasOwn(body ?? {}, "dataSource");
+  const hasMaterialSectionId = Object.hasOwn(body ?? {}, "materialSectionId");
   const title = hasTitle ? normalizePageTitle(body.title) : null;
 
   if (
     keys.length === 0
-    || keys.length > 3
-    || keys.some((key) => !["title", "path", "routeParam"].includes(key))
+    || keys.length > 5
+    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId"].includes(key))
     || (hasTitle && !title)
     || (hasRouteParam && !isValidRouteParameter(body.routeParam))
+    || (hasDataSource && !isPageDataSource(body.dataSource))
+    || (hasMaterialSectionId && body.materialSectionId !== null && !isUuid(body.materialSectionId))
   ) {
     return c.json({ error: "Invalid page" }, 400);
   }
@@ -61,7 +66,7 @@ export default async function patchPage(c) {
 
     const siteId = sites[0].id;
     const { rows: pages } = await client.query(
-      `SELECT id, site_id, path, title, content, page_type, data_source,
+      `SELECT id, site_id, path, title, content, page_type, data_source, material_section_id,
               detail_parent_id, route_param
        FROM pages
        WHERE id = $1 AND site_id = $2 AND deleted_at IS NULL
@@ -75,8 +80,9 @@ export default async function patchPage(c) {
     }
 
     if (
-      page.page_type === "detail" && hasPath
+      page.page_type === "detail" && (hasPath || hasDataSource || hasMaterialSectionId)
       || page.page_type !== "detail" && hasRouteParam
+      || page.page_type !== "list" && (hasDataSource || hasMaterialSectionId)
     ) {
       await client.query("ROLLBACK");
       return c.json({ error: "Invalid page" }, 400);
@@ -84,6 +90,24 @@ export default async function patchPage(c) {
 
     const nextTitle = hasTitle ? title : page.title;
     const nextRouteParam = hasRouteParam ? body.routeParam : page.route_param;
+    const nextDataSource = hasDataSource ? body.dataSource : page.data_source;
+    const nextMaterialSectionId = nextDataSource === "materials"
+      ? hasMaterialSectionId ? body.materialSectionId : page.material_section_id
+      : null;
+    if (page.page_type === "list" && nextDataSource === "materials") {
+      if (!nextMaterialSectionId) {
+        await client.query("ROLLBACK");
+        return c.json({ error: "Select a material section" }, 400);
+      }
+      const { rowCount } = await client.query(
+        "SELECT 1 FROM material_sections WHERE id = $1 AND site_id = $2",
+        [nextMaterialSectionId, siteId],
+      );
+      if (!rowCount) {
+        await client.query("ROLLBACK");
+        return c.json({ error: "Invalid material section" }, 400);
+      }
+    }
     let nextPath = page.path;
     let pathChanged = false;
     let detailTemplate;
@@ -166,12 +190,15 @@ export default async function patchPage(c) {
 
     const { rows } = await client.query(
       `UPDATE pages
-       SET title = $2, path = $3, route_param = $4
+       SET title = $2, path = $3, route_param = $4,
+           data_source = $5, material_section_id = $6
        WHERE id = $1
        RETURNING id, site_id, path, title, content, page_type AS type,
-                 data_source AS "dataSource", detail_parent_id AS "detailParentId",
-                 route_param AS "routeParam"`,
-      [pageId, nextTitle, nextPath, page.page_type === "detail" ? nextRouteParam : null],
+                 data_source AS "dataSource", material_section_id AS "materialSectionId",
+                 detail_parent_id AS "detailParentId", route_param AS "routeParam"`,
+      [pageId, nextTitle, nextPath, page.page_type === "detail" ? nextRouteParam : null,
+        page.page_type === "list" ? nextDataSource : null,
+        page.page_type === "list" ? nextMaterialSectionId : null],
     );
 
     if (detailTemplate && nextDetailPath !== detailTemplate.path) {
@@ -205,7 +232,7 @@ export default async function patchPage(c) {
     return rows[0];
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
-    if (error.code === "23505") return c.json({ error: "Page already exists" }, 409);
+    if (error.code === "23505") return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
     console.error("Failed to update page details", error);
     return c.json({ error: "Internal server error" }, 500);
   } finally {

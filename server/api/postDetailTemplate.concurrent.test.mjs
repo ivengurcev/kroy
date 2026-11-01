@@ -16,7 +16,7 @@ function context(hostname, pageId, body) {
     };
 }
 
-test('new article templates get editable starter content while existing empty templates stay empty', async (t) => {
+test('new material templates get editable starter content while existing empty templates stay empty', async (t) => {
     if (process.env.RUN_PAGE_INTEGRATION_TESTS !== '1') {
         t.skip('Set RUN_PAGE_INTEGRATION_TESTS=1 to run page database integration tests');
         return;
@@ -34,16 +34,18 @@ test('new article templates get editable starter content while existing empty te
 
     try {
         await pool.query('INSERT INTO domains (site_id, hostname) VALUES ($1, $2)', [site.id, hostname]);
-        const articleList = (await pool.query(
-            `INSERT INTO pages (site_id, path, title, page_type, data_source)
-             VALUES ($1, '/cases', 'Cases', 'list', 'articles') RETURNING id`,
-            [site.id],
+        const materialSectionA = (await pool.query("INSERT INTO material_sections (site_id, name, slug) VALUES ($1, 'Cases', 'cases') RETURNING id", [site.id])).rows[0];
+        const materialSectionB = (await pool.query("INSERT INTO material_sections (site_id, name, slug) VALUES ($1, 'Legacy', 'legacy') RETURNING id", [site.id])).rows[0];
+        const materialList = (await pool.query(
+            `INSERT INTO pages (site_id, path, title, page_type, data_source, material_section_id)
+             VALUES ($1, '/cases', 'Cases', 'list', 'materials', $2) RETURNING id`,
+            [site.id, materialSectionA.id],
         )).rows[0];
-        const created = await postDetailTemplate(context(hostname, articleList.id, { title: 'Case detail' }));
+        const created = await postDetailTemplate(context(hostname, materialList.id, { title: 'Case detail' }));
         const expected = {
-            part: '@kroy/article',
+            part: '@kroy/material',
             props: {},
-            view: { name: '@kroy/article-content', props: {} },
+            view: { name: '@kroy/material-content', props: {} },
         };
         assert.equal(created.status, 201);
         assert.deepEqual(created.value.content, [expected]);
@@ -52,9 +54,9 @@ test('new article templates get editable starter content while existing empty te
         assert.deepEqual(cleared.content, []);
 
         const legacyList = (await pool.query(
-            `INSERT INTO pages (site_id, path, title, page_type, data_source)
-             VALUES ($1, '/legacy', 'Legacy', 'list', 'articles') RETURNING id`,
-            [site.id],
+            `INSERT INTO pages (site_id, path, title, page_type, data_source, material_section_id)
+             VALUES ($1, '/legacy', 'Legacy', 'list', 'materials', $2) RETURNING id`,
+            [site.id, materialSectionB.id],
         )).rows[0];
         const legacyTemplate = (await pool.query(
             `INSERT INTO pages (site_id, path, title, content, page_type, detail_parent_id, route_param)

@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { initialDetailContent } from './postDetailTemplate.mjs';
 
-test('new article detail templates start with the catalogued article part and compatible widget', () => {
-    assert.deepEqual(initialDetailContent('articles'), [{
-        part: '@kroy/article',
+test('new material detail templates start with the catalogued material part and compatible widget', () => {
+    assert.deepEqual(initialDetailContent('materials'), [{
+        part: '@kroy/material',
         props: {},
-        view: { name: '@kroy/article-content', props: {} },
+        view: { name: '@kroy/material-content', props: {} },
     }]);
 });
 

@@ -7,6 +7,7 @@ import {
 } from "../../shared/pageFields.mjs";
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
+import isUuid from "./isUuid.mjs";
 
 export default async function postPage(c) {
   let body;
@@ -21,15 +22,16 @@ export default async function postPage(c) {
   const title = normalizePageTitle(body?.title);
   const type = body?.type ?? "standard";
   const dataSource = body?.dataSource ?? null;
+  const materialSectionId = body?.materialSectionId ?? null;
 
   if (
-    keys.some((key) => !["title", "path", "type", "dataSource"].includes(key))
+    keys.some((key) => !["title", "path", "type", "dataSource", "materialSectionId"].includes(key))
     || !keys.includes("title")
     || !keys.includes("path")
     || !title
     || !isValidPagePath(body.path)
     || !["standard", "list"].includes(type)
-    || (type === "list" ? !isPageDataSource(dataSource) : dataSource !== null)
+    || (type === "list" ? !isPageDataSource(dataSource) || (dataSource === "materials" ? !isUuid(materialSectionId) : materialSectionId !== null) : dataSource !== null || materialSectionId !== null)
   ) {
     return c.json({ error: "Invalid page" }, 400);
   }
@@ -59,6 +61,10 @@ export default async function postPage(c) {
     }
 
     const siteId = sites[0].id;
+    if (dataSource === "materials") {
+      const { rowCount } = await client.query("SELECT 1 FROM material_sections WHERE id = $1 AND site_id = $2", [materialSectionId, siteId]);
+      if (!rowCount) { await client.query("ROLLBACK"); return c.json({ error: "Invalid material section" }, 400); }
+    }
     const conflict = await findPageRouteConflict(client, siteId, body.path);
 
     if (conflict) {
@@ -67,10 +73,10 @@ export default async function postPage(c) {
     }
 
     const { rows } = await client.query(
-      `INSERT INTO pages (site_id, title, path, content, page_type, data_source)
-       VALUES ($1, $2, $3, '[]'::jsonb, $4, $5)
-       RETURNING id, site_id, path, title, content, page_type AS type, data_source AS "dataSource"`,
-      [siteId, title, body.path, type, dataSource],
+      `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
+       VALUES ($1, $2, $3, '[]'::jsonb, $4, $5, $6)
+       RETURNING id, site_id, path, title, content, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`,
+      [siteId, title, body.path, type, dataSource, materialSectionId],
     );
 
     await client.query("COMMIT");
@@ -80,7 +86,7 @@ export default async function postPage(c) {
     await client?.query("ROLLBACK").catch(() => {});
 
     if (error.code === "23505") {
-      return c.json({ error: "Page already exists" }, 409);
+      return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
     }
 
     console.error("Failed to create page", error);

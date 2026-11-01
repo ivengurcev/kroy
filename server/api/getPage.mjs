@@ -20,7 +20,7 @@ export default async function getPage(c) {
       const { rows } = await pool.query(
         deletedPages
           ? `SELECT p.id, p.path, p.title, p.deleted_at,
-                    p.page_type AS type, p.data_source AS "dataSource",
+                    p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
                     p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
              FROM domains d
              LEFT JOIN pages p ON p.site_id = d.site_id
@@ -80,7 +80,7 @@ export default async function getPage(c) {
   try {
     const { rows } = await pool.query(
       `SELECT p.id, p.site_id, p.path, p.title, p.content,
-              p.page_type AS type, p.data_source AS "dataSource",
+              p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
               p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
        FROM pages p
        JOIN domains d ON d.site_id = p.site_id

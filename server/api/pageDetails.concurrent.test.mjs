@@ -35,7 +35,7 @@ test('detail template settings remain saved after PATCH', async (t) => {
         await pool.query('INSERT INTO domains (site_id, hostname) VALUES ($1, $2)', [site.id, hostname]);
         const listPage = (await pool.query(
             `INSERT INTO pages (site_id, path, title, page_type, data_source)
-             VALUES ($1, '/cases', 'Cases', 'list', 'articles') RETURNING id`,
+             VALUES ($1, '/cases', 'Cases', 'list', 'products') RETURNING id`,
             [site.id],
         )).rows[0];
         const template = (await pool.query(

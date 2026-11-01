@@ -8,10 +8,10 @@ import widgetCatalog from '../../dist/kroy/widgets.json' with { type: 'json' };
 import { defaultProps, createView } from '../../shared/partModel.js';
 
 export function initialDetailContent(dataSource) {
-    if (dataSource !== 'articles') return [];
-    const part = partCatalog['@kroy/article'];
+    if (dataSource !== 'materials') return [];
+    const part = partCatalog['@kroy/material'];
     return [{
-        part: '@kroy/article',
+        part: '@kroy/material',
         props: defaultProps(part.fields),
         view: createView(part.defaultWidget, widgetCatalog[part.defaultWidget].fields),
     }];
