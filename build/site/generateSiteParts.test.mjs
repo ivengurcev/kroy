@@ -22,6 +22,6 @@ test('imports only selected data parts and widgets, including a non-default comp
 test('rejects missing and incompatible views instead of importing legacy display parts', async () => {
     for (const item of [
         { part: '@kroy/reviews', props: {} },
-        { part: '@kroy/reviews', props: {}, view: { name: '@kroy/article-content', props: {} } },
+        { part: '@kroy/reviews', props: {}, view: { name: '@kroy/material-content', props: {} } },
     ]) await assert.rejects(generateSiteParts([{ content: [item] }], 'test'), /совместимый виджет/);
 });

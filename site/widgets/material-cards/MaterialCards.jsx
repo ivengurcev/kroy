@@ -1,12 +1,12 @@
 import Section from '../../runtime/Section.jsx';
-import styles from './articleCards.module.css';
+import styles from './materialCards.module.css';
 
 /**
- * @kroy-title Карточки статей
- * @kroy-category Статьи
- * @kroy-contract articles-list
+ * @kroy-title Карточки материалов
+ * @kroy-category Материалы
+ * @kroy-contract materials-list
  */
-export default function ArticleCards({ data }) {
+export default function MaterialCards({ data }) {
     return (
         <Section className={styles.section}>
             <div className={styles.inner}>
@@ -24,7 +24,7 @@ export default function ArticleCards({ data }) {
                             </Link>
                         </article>;
                     })}
-                </div> : <p className={styles.empty} role="status">Опубликованных статей пока нет.</p>}
+                </div> : <p className={styles.empty} role="status">Опубликованных материалов пока нет.</p>}
             </div>
         </Section>
     );

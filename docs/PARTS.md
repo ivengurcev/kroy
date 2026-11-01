@@ -8,12 +8,12 @@
 Запчасть — обычная синхронная функция без JSX:
 
 ```js
-prepare({ props, record, context, contacts, catalog, reviews, articles }) -> data
+prepare({ props, record, context, contacts, catalog, reviews, materials, materialSectionId }) -> data
 ```
 
 `props` — настройки данных блока, `record` — текущая запись детальной страницы,
 `context.params` — параметры маршрута; остальные поля — общие источники сайта
-или данные списка статей. Подготовка, фильтрация, подбор и нормализация выполняются
+или section-scoped данные списка материалов. Подготовка, фильтрация, подбор и нормализация выполняются
 запчастью. Источники и record не записываются в content.
 
 Виджет — React-компонент с аргументами `{ data, options, context }`.

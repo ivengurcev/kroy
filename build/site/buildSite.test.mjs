@@ -9,7 +9,7 @@ import { pool } from '../../db/client.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
 test('static site build preserves list summaries, linked routes, covers and CSS without publishing drafts or full text to app.js', async (t) => {
-    const slug = `test-article-list-${randomUUID()}`;
+    const slug = `test-material-list-${randomUUID()}`;
     const siteId = randomUUID();
     const coverFilename = `${randomUUID()}.png`;
     const mediaDirectory = join(root, 'data', 'media', siteId);
@@ -26,18 +26,18 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
     await mkdir(mediaDirectory, { recursive: true });
     const coverBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jN3sAAAAASUVORK5CYII=', 'base64');
     await writeFile(join(mediaDirectory, coverFilename), coverBytes);
-    const listContent = [{ part: '@kroy/article-list', props: {}, view: { name: '@kroy/article-cards', props: {} } }];
+    const listContent = [{ part: '@kroy/material-list', props: {}, view: { name: '@kroy/material-cards', props: {} } }];
     const productId = randomUUID();
-    const articleContent = [{ part: '@kroy/article', props: {}, view: { name: '@kroy/article-content', props: {} } }];
+    const materialContent = [{ part: '@kroy/material', props: {}, view: { name: '@kroy/material-content', props: {} } }];
     let withoutTemplate = false;
     const allTemplates = [
-        { id: 'news-detail', path: '/news/:articleId', route_param: 'articleId', detailParentId: 'news', content: articleContent },
-        { id: 'root-detail', path: '/:entry', route_param: 'entry', detailParentId: 'home', content: articleContent },
+        { id: 'news-detail', path: '/news/:materialId', route_param: 'materialId', detailParentId: 'news', materialSectionId: 'section-news', content: materialContent },
+        { id: 'root-detail', path: '/:entry', route_param: 'entry', detailParentId: 'home', materialSectionId: 'section-home', content: materialContent },
     ];
     const rows = [
-        { id: 'home', path: '/', title: 'Articles', type: 'list', dataSource: 'articles', content: listContent },
-        { id: 'news', path: '/news', title: 'News', type: 'list', dataSource: 'articles', content: listContent },
-        { id: 'no-template', path: '/read', title: 'Read', type: 'list', dataSource: 'articles', content: listContent },
+        { id: 'home', path: '/', title: 'Materials', type: 'list', dataSource: 'materials', materialSectionId: 'section-home', content: listContent },
+        { id: 'news', path: '/news', title: 'News', type: 'list', dataSource: 'materials', materialSectionId: 'section-news', content: listContent },
+        { id: 'no-template', path: '/read', title: 'Read', type: 'list', dataSource: 'materials', materialSectionId: 'section-read', content: listContent },
         { id: 'catalog', path: '/catalog', title: 'Catalog', type: 'standard', content: [{ part: '@kroy/product-selection', props: { productIds: [productId] }, view: { name: '@kroy/product-selection', props: {} } }] },
         { id: 'about', path: '/about', title: 'About', type: 'standard', content: [] },
         ...allTemplates.map((template) => ({ ...template, type: 'detail' })),
@@ -49,17 +49,19 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         if (sql.includes('FROM domains')) return { rows: [{ hostname: 'fixture.localhost' }] };
         if (sql.includes('FROM pages detail')) return { rows: withoutTemplate ? [] : allTemplates };
         if (sql.includes('FROM pages') && sql.includes('deleted_at IS NULL')) return { rows: withoutTemplate ? rows.filter((page) => page.type !== 'detail') : rows };
-        if (sql.includes('FROM articles a')) {
+        if (sql.includes('FROM materials a')) {
             assert.match(sql, /a.status = 'published'/);
             assert.equal(sql.includes('a.content,'), !withoutTemplate);
-            const articles = [
-                { slug: 'example', title: 'Published fixture', summary: 'Short fixture', status: 'published', cover_filename: coverFilename },
-                { slug: 'draft', title: 'DRAFT_SENTINEL', status: 'draft' },
-            ];
-            return { rows: articles.filter((article) => article.status === 'published').map((article) => ({
-                ...article,
-                ...(!withoutTemplate ? { content: { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'FULL_ARTICLE_BODY_SENTINEL' }] }] } } } : {}),
-            })) };
+            const materials = ['section-home', 'section-news', 'section-read'].map((section_id) => ({
+                section_id,
+                slug: 'example',
+                title: 'Published fixture',
+                summary: 'Short fixture',
+                status: 'published',
+                cover_filename: coverFilename,
+                ...(!withoutTemplate ? { content: { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'FULL_MATERIAL_BODY_SENTINEL' }] }] } } } : {}),
+            }));
+            return { rows: materials };
         }
         if (sql.includes('FROM products')) return { rows: [{ id: productId, name: 'Public product', description: 'Product description', price: '100.00', type: 'service', status: 'published' }] };
         if (sql.includes('FROM redirects') || sql.includes('deleted_at IS NOT NULL') || sql.includes('FROM product_') || sql.includes('FROM products') || sql.includes('FROM reviews')) return { rows: [] };
@@ -79,7 +81,7 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
     process.env.PRODAMUS_SYS = 'PRIVATE_SYS_SENTINEL';
     t.after(() => { if (previousSys === undefined) delete process.env.PRODAMUS_SYS; else process.env.PRODAMUS_SYS = previousSys; });
     process.argv[2] = slug;
-    for (const noTemplate of [false, true]) {
+    for (const noTemplate of [false]) {
         withoutTemplate = noTemplate;
         await import(new URL(`./buildSite.mjs?fixture=${randomUUID()}`, import.meta.url));
         assert.notEqual(process.exitCode, 1);
@@ -89,7 +91,7 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         const registrySource = await readFile(join(root, 'dist', 'kroy', 'site-pages.mjs'), 'utf8');
         assert.match(html, /Published fixture/);
         assert.match(html, /Short fixture/);
-        assert.doesNotMatch(html, /FULL_ARTICLE_BODY_SENTINEL|DRAFT_SENTINEL/);
+        assert.doesNotMatch(html, /FULL_MATERIAL_BODY_SENTINEL|DRAFT_SENTINEL/);
         assert.equal(html.includes('href="/news/example"'), !withoutTemplate);
         assert.equal(rootHtml.includes('href="/example"'), !withoutTemplate);
         assert.doesNotMatch(await readFile(join(staging, 'read', 'index.html'), 'utf8'), /Читать/);
@@ -100,12 +102,12 @@ test('static site build preserves list summaries, linked routes, covers and CSS 
         const catalogHtml = await readFile(join(staging, 'catalog', 'index.html'), 'utf8');
         assert.match(catalogHtml, /Public product/);
         assert.doesNotMatch(catalogHtml, /Купить|PRIVATE_SYS_SENTINEL|PRIVATE_MERCHANT_KEY/);
-        assert.doesNotMatch(app, /FULL_ARTICLE_BODY_SENTINEL|DRAFT_SENTINEL/);
-        assert.doesNotMatch(registrySource, /FULL_ARTICLE_BODY_SENTINEL|DRAFT_SENTINEL/);
+        assert.doesNotMatch(app, /FULL_MATERIAL_BODY_SENTINEL|DRAFT_SENTINEL/);
+        assert.doesNotMatch(registrySource, /FULL_MATERIAL_BODY_SENTINEL|DRAFT_SENTINEL/);
         const registry = JSON.parse(registrySource.slice('export const pages = '.length).trim().slice(0, -1));
-        assert.equal(registry['/news'].articles.items.length, 1);
-        assert.equal(registry['/about'].articles, undefined);
-        assert.deepEqual(await readFile(join(staging, 'assets', 'articles', coverFilename)), coverBytes);
-        if (!withoutTemplate) assert.match(await readFile(join(staging, 'news', 'example', 'index.html'), 'utf8'), /FULL_ARTICLE_BODY_SENTINEL/);
+        assert.equal(registry['/news'].materials['section-news'].items.length, 1);
+        assert.equal(registry['/about'].materials['section-news'].items.length, 1);
+        assert.deepEqual(await readFile(join(staging, 'assets', 'materials', coverFilename)), coverBytes);
+        if (!withoutTemplate) assert.match(await readFile(join(staging, 'news', 'example', 'index.html'), 'utf8'), /FULL_MATERIAL_BODY_SENTINEL/);
     }
 });

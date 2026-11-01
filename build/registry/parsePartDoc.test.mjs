@@ -3,15 +3,15 @@ import test from 'node:test';
 import { parsePartDoc } from './parsePartDoc.mjs';
 
 const source = (annotation) => `/**
- * @kroy-title Статья
+ * @kroy-title Материал
  * @kroy-contract article
  * ${annotation}
  */
-export default function prepareArticle() { return {}; }`;
+export default function prepareMaterial() { return {}; }`;
 
 test('reads a default widget identifier separately from contract and fields', () => {
-    const metadata = parsePartDoc(source('@kroy-default-widget @kroy/article-content'));
-    assert.equal(metadata.defaultWidget, '@kroy/article-content');
+    const metadata = parsePartDoc(source('@kroy-default-widget @kroy/material-content'));
+    assert.equal(metadata.defaultWidget, '@kroy/material-content');
     assert.equal(metadata.contract, 'article');
     assert.deepEqual(metadata.fields, {});
 });
@@ -42,4 +42,9 @@ test('reads string and boolean widget defaults from JSDoc', () => {
     assert.equal(fields.autoplay.default, true);
     assert.equal(fields.align.default, 'right');
     assert.equal(fields.label.default, 'Read more');
+});
+
+test('parses a dynamic material section field', () => {
+    const metadata = parsePartDoc(source('@param {string} props.sectionId\n * @kroy sectionId widget=material-section label=Раздел'));
+    assert.deepEqual(metadata.fields.sectionId, { type: 'material-section', label: 'Раздел', required: true });
 });

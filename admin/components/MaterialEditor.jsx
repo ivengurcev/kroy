@@ -30,7 +30,7 @@ import { LinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
-import styles from './ArticleEditor.module.css';
+import styles from './MaterialEditor.module.css';
 
 const EMPTY_EDITOR_STATE = {
     root: {
@@ -111,7 +111,7 @@ function ToolbarPlugin() {
     }
 
     return (
-        <div className={styles.toolbar} role="toolbar" aria-label="Форматирование статьи">
+        <div className={styles.toolbar} role="toolbar" aria-label="Форматирование материала">
             <div className={styles.toolbarGroup}>
                 <ToolbarButton label="Абзац" onClick={() => setBlock('paragraph')}>¶</ToolbarButton>
                 <ToolbarButton label="Заголовок H2" onClick={() => setBlock('h2')}>H2</ToolbarButton>
@@ -133,14 +133,14 @@ function ToolbarPlugin() {
     );
 }
 
-export default function ArticleEditor({ value, onChange, disabled = false }) {
+export default function MaterialEditor({ value, onChange, disabled = false }) {
     const [mounted, setMounted] = useState(false);
     const initialState = useRef(value ?? EMPTY_EDITOR_STATE);
 
     useEffect(() => setMounted(true), []);
 
     const initialConfig = useMemo(() => ({
-        namespace: 'KroyArticleEditor',
+        namespace: 'KroyMaterialEditor',
         theme: EDITOR_THEME,
         nodes: [HeadingNode, ListNode, ListItemNode, LinkNode],
         onError(error) {
@@ -158,8 +158,8 @@ export default function ArticleEditor({ value, onChange, disabled = false }) {
             <LexicalComposer initialConfig={initialConfig}>
                 <ToolbarPlugin />
                 <RichTextPlugin
-                    contentEditable={<ContentEditable className={styles.contentEditable} aria-label="Текст статьи" />}
-                    placeholder={<div className={styles.placeholderText}>Начните писать статью…</div>}
+                    contentEditable={<ContentEditable className={styles.contentEditable} aria-label="Текст материала" />}
+                    placeholder={<div className={styles.placeholderText}>Начните писать материал…</div>}
                     ErrorBoundary={LexicalErrorBoundary}
                 />
                 <HistoryPlugin />

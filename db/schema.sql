@@ -29,28 +29,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: articles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.articles (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    site_id uuid NOT NULL,
-    slug text NOT NULL,
-    title text NOT NULL,
-    summary text DEFAULT ''::text NOT NULL,
-    content jsonb,
-    cover_media_id uuid,
-    status text DEFAULT 'draft'::text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    published_at timestamp with time zone,
-    CONSTRAINT articles_check CHECK (((status <> 'published'::text) OR (published_at IS NOT NULL))),
-    CONSTRAINT articles_content_check CHECK (((content IS NULL) OR (jsonb_typeof(content) = 'object'::text))),
-    CONSTRAINT articles_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text])))
-);
-
-
---
 -- Name: domains; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -83,6 +61,45 @@ CREATE TABLE public.media (
 
 
 --
+-- Name: material_sections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.material_sections (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    name text NOT NULL,
+    slug text NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    CONSTRAINT material_sections_name_check CHECK (((char_length(name) >= 1) AND (char_length(name) <= 200))),
+    CONSTRAINT material_sections_slug_check CHECK ((slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'::text))
+);
+
+
+--
+-- Name: materials; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.materials (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    section_id uuid NOT NULL,
+    slug text NOT NULL,
+    title text NOT NULL,
+    summary text DEFAULT ''::text NOT NULL,
+    content jsonb,
+    cover_media_id uuid,
+    status text DEFAULT 'draft'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    published_at timestamp with time zone,
+    CONSTRAINT materials_check CHECK (((status <> 'published'::text) OR (published_at IS NOT NULL))),
+    CONSTRAINT materials_content_check CHECK (((content IS NULL) OR (jsonb_typeof(content) = 'object'::text))),
+    CONSTRAINT materials_slug_check CHECK ((slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'::text)),
+    CONSTRAINT materials_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'published'::text])))
+);
+
+
+--
 -- Name: pages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -95,11 +112,12 @@ CREATE TABLE public.pages (
     deleted_at timestamp with time zone,
     page_type text DEFAULT 'standard'::text NOT NULL,
     data_source text,
+    material_section_id uuid,
     detail_parent_id uuid,
     route_param text,
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
-    CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['articles'::text, 'products'::text, 'reviews'::text])) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
+    CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['materials'::text, 'products'::text, 'reviews'::text])) AND (((data_source = 'materials'::text) AND (material_section_id IS NOT NULL)) OR ((data_source = ANY (ARRAY['products'::text, 'reviews'::text])) AND (material_section_id IS NULL))) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
 );
 
 
@@ -237,19 +255,27 @@ CREATE TABLE public.users (
 
 
 --
--- Name: articles articles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: material_sections material_sections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.articles
-    ADD CONSTRAINT articles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.material_sections
+    ADD CONSTRAINT material_sections_pkey PRIMARY KEY (id);
 
 
 --
--- Name: articles articles_site_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: material_sections material_sections_site_id_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.articles
-    ADD CONSTRAINT articles_site_id_slug_key UNIQUE (site_id, slug);
+ALTER TABLE ONLY public.material_sections
+    ADD CONSTRAINT material_sections_site_id_id_key UNIQUE (site_id, id);
+
+
+--
+-- Name: material_sections material_sections_site_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.material_sections
+    ADD CONSTRAINT material_sections_site_id_slug_key UNIQUE (site_id, slug);
 
 
 --
@@ -282,6 +308,22 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_site_id_filename_key UNIQUE (site_id, filename);
+
+
+--
+-- Name: materials materials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: materials materials_site_id_section_id_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_site_id_section_id_slug_key UNIQUE (site_id, section_id, slug);
 
 
 --
@@ -397,10 +439,17 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: articles_site_published_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: material_sections_site_order_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX articles_site_published_idx ON public.articles USING btree (site_id, published_at DESC) WHERE (status = 'published'::text);
+CREATE INDEX material_sections_site_order_idx ON public.material_sections USING btree (site_id, sort_order, id);
+
+
+--
+-- Name: materials_section_published_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX materials_section_published_idx ON public.materials USING btree (site_id, section_id, published_at DESC, slug) WHERE (status = 'published'::text);
 
 
 --
@@ -408,6 +457,13 @@ CREATE INDEX articles_site_published_idx ON public.articles USING btree (site_id
 --
 
 CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
+
+
+--
+-- Name: pages_one_active_material_list_per_section; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX pages_one_active_material_list_per_section ON public.pages USING btree (site_id, material_section_id) WHERE ((page_type = 'list'::text) AND (data_source = 'materials'::text) AND (material_section_id IS NOT NULL) AND (deleted_at IS NULL));
 
 
 --
@@ -453,19 +509,43 @@ CREATE UNIQUE INDEX users_email_lower_idx ON public.users USING btree (lower(ema
 
 
 --
--- Name: articles articles_cover_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: material_sections material_sections_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.articles
-    ADD CONSTRAINT articles_cover_media_id_fkey FOREIGN KEY (cover_media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.material_sections
+    ADD CONSTRAINT material_sections_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
 
 
 --
--- Name: articles articles_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: materials materials_cover_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.articles
-    ADD CONSTRAINT articles_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_cover_media_id_fkey FOREIGN KEY (cover_media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- Name: materials materials_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
+-- Name: materials materials_site_id_section_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.materials
+    ADD CONSTRAINT materials_site_id_section_id_fkey FOREIGN KEY (site_id, section_id) REFERENCES public.material_sections(site_id, id) ON DELETE RESTRICT;
+
+
+--
+-- Name: pages pages_material_section_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pages
+    ADD CONSTRAINT pages_material_section_fkey FOREIGN KEY (site_id, material_section_id) REFERENCES public.material_sections(site_id, id) ON DELETE RESTRICT;
 
 
 --

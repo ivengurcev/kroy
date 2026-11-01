@@ -19,6 +19,9 @@ export function defaultValue(schema) {
         case 'review-list':
             return [];
 
+        case 'material-section':
+            return '';
+
         default:
             return '';
     }

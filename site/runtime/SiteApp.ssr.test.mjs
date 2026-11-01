@@ -35,7 +35,7 @@ after(async () => {
 });
 
 test('SSR uses the current detail page payload when it is absent from the shared registry', () => {
-    function Article({ record }) { return record; }
+    function Material({ record }) { return record; }
     function Widget({ context, data }) {
         return createElement('output', null, `${context.params.caseId}|${data.title}`);
     }
@@ -45,13 +45,13 @@ test('SSR uses the current detail page payload when it is absent from the shared
         initialPage: {
             path: '/cases/example',
             title: 'Example',
-            content: [{ part: 'article', props: {}, view: { name: 'article-view', props: {} } }],
+            content: [{ part: 'material', props: {}, view: { name: 'material-view', props: {} } }],
             context: { params: { caseId: 'example' } },
-            record: { title: 'Example article' },
+            record: { title: 'Example material' },
         },
-        parts: { article: Article },
-        widgets: { 'article-view': Widget },
+        parts: { material: Material },
+        widgets: { 'material-view': Widget },
     }));
 
-    assert.match(html, /example\|Example article/);
+    assert.match(html, /example\|Example material/);
 });

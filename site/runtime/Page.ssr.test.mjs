@@ -26,9 +26,11 @@ test('calls the data part with independent settings, record, context and site da
     const contacts = { phone: '+70000000000' };
     const catalog = { products: [] };
     const reviews = [{ id: 'review' }];
+    const materials = { section: { items: [] } };
+    const materialSectionId = 'section';
     const options = { layout: 'wide' };
     function prepare(input) {
-        assert.deepEqual(input, { props, record, context, contacts, catalog, reviews, articles: undefined });
+        assert.deepEqual(input, { props, record, context, contacts, catalog, reviews, materials, materialSectionId });
         return { title: `${input.props.title}|${input.record.title}` };
     }
     function Widget(input) {
@@ -40,7 +42,7 @@ test('calls the data part with independent settings, record, context and site da
     assert.equal(renderToStaticMarkup(createElement(Page, {
         content: [{ part: '@kroy/example', props, view: { name: '@kroy/view', props: options } }],
         parts: { '@kroy/example': prepare }, widgets: { '@kroy/view': Widget },
-        record, context, contacts, catalog, reviews,
+        record, context, contacts, catalog, reviews, materials, materialSectionId,
     })), '<output>setting|record|wide|sample</output>');
 });
 

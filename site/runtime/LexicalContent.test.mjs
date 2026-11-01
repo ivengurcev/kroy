@@ -8,7 +8,7 @@ function markup(value) {
     return renderToStaticMarkup(createElement('div', null, renderLexicalContent(value)));
 }
 
-test('renders article text marks, headings, paragraphs, and lists as HTML', () => {
+test('renders material text marks, headings, paragraphs, and lists as HTML', () => {
     const html = markup({
         root: {
             type: 'root',

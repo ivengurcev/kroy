@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import prepareAbout from './about/prepareAbout.mjs';
-import prepareArticle from './article/prepareArticle.mjs';
+import prepareMaterial from './material/prepareMaterial.mjs';
 import prepareHero from './hero/prepareHero.mjs';
 import prepareLinks from './links/prepareLinks.mjs';
 import prepareContacts from './contacts/prepareContacts.mjs';
@@ -10,10 +10,10 @@ import prepareReviews from './reviews/prepareReviews.mjs';
 import prepareProductSelection from './product-selection/prepareProductSelection.mjs';
 import prepareCategoryProducts from './category-products/prepareCategoryProducts.mjs';
 
-test('prepares article data from record without mixing route context and settings', () => {
-    const record = { slug: 'story', title: 'Article', summary: 'Summary', content: { root: {} }, coverUrl: '/cover.webp' };
-    assert.deepEqual(prepareArticle({ props: { title: 'Setting' }, record, context: { params: { slug: 'route' } } }), record);
-    assert.equal(prepareArticle({ props: {}, record: null }), null);
+test('prepares material data from record without mixing route context and settings', () => {
+    const record = { slug: 'story', title: 'Material', summary: 'Summary', content: { root: {} }, coverUrl: '/cover.webp' };
+    assert.deepEqual(prepareMaterial({ props: { title: 'Setting' }, record, context: { params: { slug: 'route' } } }), record);
+    assert.equal(prepareMaterial({ props: {}, record: null }), null);
 });
 
 test('selects reviews only in the data part and preserves manual order and flags', () => {

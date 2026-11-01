@@ -176,7 +176,7 @@ export default function SiteReviewsPage() {
 
     function changeSection(nextSection) {
         if (nextSection === 'catalog') window.location.assign('/admin/site/catalog');
-        else if (nextSection === 'articles') window.location.assign('/admin/site/articles');
+        else if (nextSection === 'materials') window.location.assign('/admin/site/materials');
         else window.location.assign(`/admin/site?section=${encodeURIComponent(nextSection)}`);
     }
 

@@ -2,9 +2,10 @@ export function createClientPageRegistry(pages) {
     return Object.fromEntries(
         pages
             .filter(({ record }) => record === undefined)
-            .map(({ path, title, content, articles }) => [path, {
+            .map(({ path, title, content, materials, materialSectionId }) => [path, {
                 path, title, content,
-                ...(articles ? { articles } : {}),
+                ...(materials ? { materials } : {}),
+                ...(materialSectionId ? { materialSectionId } : {}),
             }]),
     );
 }

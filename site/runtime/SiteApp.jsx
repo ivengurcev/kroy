@@ -123,7 +123,7 @@ export default function SiteApp({
     return (
         <SiteRoot tokens={tokens} theme={theme}>
             {page
-                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} articles={page.articles} context={page.context} record={page.record} />
+                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={page.materials} materialSectionId={page.materialSectionId} context={page.context} record={page.record} />
                 : notFound}
         </SiteRoot>
     );

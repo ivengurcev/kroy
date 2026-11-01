@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderLexicalContent } from './lexicalContent.mjs';
 
-export function createArticleDisplay(record, styles = {}) {
+export function createMaterialDisplay(record, styles = {}) {
     if (!record) return null;
 
     return createElement('article', { className: styles.article },

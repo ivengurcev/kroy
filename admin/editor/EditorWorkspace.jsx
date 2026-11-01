@@ -59,6 +59,7 @@ export default function EditorWorkspace({
     contacts,
     catalog,
     reviews,
+    materialSections,
     preview,
     onAddPart,
     onRemovePart,
@@ -72,12 +73,12 @@ export default function EditorWorkspace({
     const record = page?.type === 'detail' ? preview?.record : null;
     const context = { params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
     const previewMessage = page?.type === 'detail' && {
-        loading: 'Загрузка статьи для предпросмотра…',
-        empty: 'Нет опубликованных статей для предпросмотра. Опубликуйте статью в настройках сайта.',
-        error: 'Не удалось загрузить статью для предпросмотра.',
-    }[preview?.status] || page?.type === 'list' && page.dataSource === 'articles' && {
-        loading: 'Загрузка статей для предпросмотра…',
-        error: 'Не удалось загрузить список статей для предпросмотра.',
+        loading: 'Загрузка материала для предпросмотра…',
+        empty: 'Нет опубликованных материалов для предпросмотра. Опубликуйте материал в настройках сайта.',
+        error: 'Не удалось загрузить материал для предпросмотра.',
+    }[preview?.status] || page?.type === 'list' && page.dataSource === 'materials' && {
+        loading: 'Загрузка материалов для предпросмотра…',
+        error: 'Не удалось загрузить список материалов для предпросмотра.',
     }[preview?.status];
 
     const closePicker = useCallback((restoreFocus = true) => {
@@ -173,6 +174,7 @@ export default function EditorWorkspace({
                                         widgetMetadata={widgetMetadata}
                                         catalog={catalog}
                                         reviews={reviews}
+                    materialSections={materialSections}
                                         onPropChange={(name, value) => onPropChange(item.id, name, value)}
                                         onViewChange={(name) => onViewChange(item.id, name)}
                                         onViewPropChange={(name, value) => onViewPropChange(item.id, name, value)}
@@ -182,7 +184,7 @@ export default function EditorWorkspace({
                         ) : (
                             <div className={styles.partContent} inert={false}>
                                 <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} articles={page?.type === 'list' ? preview?.articles : undefined} record={record} context={context} />
+                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={preview?.materials} materialSectionId={page?.materialSectionId} record={record} context={context} />
                                 </SiteRoot>
                             </div>
                         )}

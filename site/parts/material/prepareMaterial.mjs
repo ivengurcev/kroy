@@ -1,10 +1,10 @@
 /**
- * @kroy-title Статья
+ * @kroy-title Материал
  * @kroy-category Контент
- * @kroy-contract article
- * @kroy-default-widget @kroy/article-content
+ * @kroy-contract material
+ * @kroy-default-widget @kroy/material-content
  */
-export default function prepareArticle({ record = null }) {
+export default function prepareMaterial({ record = null }) {
     if (!record) return null;
     return {
         slug: record.slug,

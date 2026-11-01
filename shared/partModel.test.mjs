@@ -6,7 +6,7 @@ const partMetadata = { contract: 'reviews', defaultWidget: '@kroy/slider', field
 const widgets = {
     '@kroy/slider': { contract: 'reviews', fields: { autoplay: { type: 'checkbox', default: true } } },
     '@kroy/cards': { contract: 'reviews', fields: { columns: { type: 'number', default: 3 } } },
-    '@kroy/article': { contract: 'article', fields: {} },
+    '@kroy/material': { contract: 'material', fields: {} },
 };
 
 test('creates a part with the JSDoc default widget and its initial settings', () => {
@@ -23,7 +23,7 @@ test('changes to a compatible widget without altering the data settings', () => 
     assert.equal(next.id, item.id);
     assert.deepEqual(next.view, { name: '@kroy/cards', props: { columns: 3 } });
     assert.deepEqual(item.view, { name: '@kroy/slider', props: { autoplay: true } });
-    for (const name of ['', '@kroy/missing', '@kroy/article']) {
+    for (const name of ['', '@kroy/missing', '@kroy/material']) {
         assert.throws(() => changePartView(item, name, partMetadata, widgets), /виджет|совместим/i);
     }
 });

@@ -8,7 +8,7 @@ import { writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { discoverParts, discoverWidgets } from '../../build/registry/discoverParts.mjs';
 import createSiteSvgPlugin from '../../build/site/siteSvgPlugin.mjs';
-import { createArticleListData } from './articleListData.mjs';
+import { createMaterialListData } from './materialListData.mjs';
 import { createClientPageRegistry, serializePagePayload } from '../../build/site/sitePageData.mjs';
 
 const outputs = [];
@@ -50,8 +50,8 @@ after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
     '@kroy/about': { title: 'About heading', text: 'First paragraph\n\nSecond paragraph' },
-    '@kroy/article': {},
-    '@kroy/article-list': {},
+    '@kroy/material': {},
+    '@kroy/material-list': { sectionId: 'section' },
     '@kroy/hero': { title: 'Hero heading', photo: '/hero.webp', description: 'Hero caption' },
     '@kroy/links': { title: 'Links heading' },
     '@kroy/contacts': { title: 'Contacts heading', zoom: 14 },
@@ -62,8 +62,8 @@ const settings = {
 };
 const expected = {
     '@kroy/about': /<p>First paragraph<\/p><p>Second paragraph<\/p>/,
-    '@kroy/article': /Article body/,
-    '@kroy/article-list': /List article/,
+    '@kroy/material': /Material body/,
+    '@kroy/material-list': /List material/,
     '@kroy/hero': /Hero caption/,
     '@kroy/links': /href="\/social"/,
     '@kroy/contacts': /tel:\+79999999999/,
@@ -72,7 +72,7 @@ const expected = {
     '@kroy/category-products': /Product name/,
     '@kroy/reviews': /Review body/,
 };
-const record = { slug: 'article', title: 'Article title', coverUrl: '/article.webp', content: { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Article body' }] }] } } };
+const record = { slug: 'material', title: 'Material title', coverUrl: '/material.webp', content: { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Material body' }] }] } } };
 const siteData = {
     contacts: { phone: '+79999999999', latitude: 55, longitude: 37, socials: [{ name: 'Social', link: '/social' }] },
     catalog: { products: [{ id: 'product', name: 'Product name', price: '100.00', status: 'published' }] },
@@ -88,8 +88,8 @@ function render(module, page) {
 test('all default widgets preserve visible content and CSS Modules with identical server/client initial markup', () => {
     for (const definition of definitions) {
         const page = {
-            path: '/', title: 'Page', record, context: { params: { entry: 'article' } },
-            articles: definition.name === '@kroy/article-list' ? createArticleListData([{ slug: 'list-article', title: 'List article', status: 'published' }], null) : undefined,
+            path: '/', title: 'Page', record, context: { params: { entry: 'material' } },
+            materials: definition.name === '@kroy/material-list' ? { section: createMaterialListData([{ slug: 'list-material', title: 'List material', status: 'published' }], null) } : undefined,
             content: [{ part: definition.name, props: settings[definition.name], view: { name: definition.defaultWidget, props: {} } }],
         };
         const html = render(server, page);
@@ -163,36 +163,35 @@ test('reviews slider with reviews preserves slides, navigation and optional subm
     }
 });
 
-const listContent = [{ part: '@kroy/article-list', props: {}, view: { name: '@kroy/article-cards', props: {} } }];
-const listArticle = { slug: 'example', title: 'List article', summary: 'Short description', coverUrl: '/cover.webp', status: 'published' };
+const listContent = [{ part: '@kroy/material-list', props: { sectionId: 'section' }, view: { name: '@kroy/material-cards', props: {} } }];
+const listMaterial = { slug: 'example', title: 'List material', summary: 'Short description', coverUrl: '/cover.webp', status: 'published' };
 
-test('SSR article cards show the cover, title, summary and real detail link with identical client markup', () => {
+test('SSR material cards show covers, summaries, section detail links, and matching hydration markup', () => {
     const page = {
-        path: '/', title: 'Articles', content: listContent,
-        articles: createArticleListData([listArticle], { path: '/news/:articleId', routeParam: 'articleId' }),
+        path: '/', title: 'Materials', content: listContent,
+        materials: { section: createMaterialListData([listMaterial], { path: '/news/:slug', routeParam: 'slug' }) },
     };
     const html = render(server, page);
     assert.match(html, /src="\/cover\.webp"/);
-    assert.match(html, /<h2[^>]*>List article<\/h2>/);
+    assert.match(html, /<h2[^>]*>List material<\/h2>/);
     assert.match(html, /Short description/);
     assert.match(html, /<a[^>]*href="\/news\/example"/);
-    assert.match(html, /Читать/);
     assert.equal(render(client, JSON.parse(serializePagePayload(page))), html);
 });
 
-test('article cards show an empty state or unlinked summaries when no detail template exists', () => {
-    const base = { path: '/', title: 'Articles', content: listContent };
-    assert.match(render(server, { ...base, articles: createArticleListData([], null) }), /Опубликованных статей пока нет/);
-    const html = render(server, { ...base, articles: createArticleListData([{ ...listArticle, coverUrl: null }], null) });
-    assert.match(html, /List article/);
+test('material cards show an empty state or unlinked summaries when there is no detail template', () => {
+    const base = { path: '/', title: 'Materials', content: listContent };
+    assert.match(render(server, { ...base, materials: { section: createMaterialListData([], null) } }), /Опубликованных материалов пока нет/);
+    const html = render(server, { ...base, materials: { section: createMaterialListData([{ ...listMaterial, coverUrl: null }], null) } });
+    assert.match(html, /List material/);
     assert.doesNotMatch(html, /<a\b|Читать|<img\b/);
 });
 
-test('list data survives selection of each page from the registry used by client navigation', () => {
+test('per-page material data survives client navigation and serialization', () => {
     const registry = createClientPageRegistry([
         { path: '/', title: 'Home', content: [] },
-        { path: '/news', title: 'News', content: listContent, articles: createArticleListData([listArticle], { path: '/news/:articleId', routeParam: 'articleId' }) },
-        { path: '/journal', title: 'Journal', content: listContent, articles: createArticleListData([listArticle], { path: '/journal/:entry', routeParam: 'entry' }) },
+        { path: '/news', title: 'News', content: listContent, materials: { section: createMaterialListData([listMaterial], { path: '/news/:slug', routeParam: 'slug' }) } },
+        { path: '/journal', title: 'Journal', content: listContent, materials: { section: createMaterialListData([listMaterial], { path: '/journal/:slug', routeParam: 'slug' }) } },
     ]);
     for (const path of ['/news', '/journal', '/', '/news']) {
         const props = { pages: registry, path, parts: server.parts, widgets: server.widgets };
@@ -202,6 +201,6 @@ test('list data survives selection of each page from the registry used by client
         }));
         assert.equal(hydrated, html);
         if (path !== '/') assert.ok(html.includes(`href="${path}/example"`));
-        else assert.doesNotMatch(html, /List article/);
+        else assert.doesNotMatch(html, /List material/);
     }
 });

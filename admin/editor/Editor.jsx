@@ -9,7 +9,7 @@ import widgetMetadata from '../../dist/kroy/widgets.json';
 import AdminShell from '../components/AdminShell.jsx';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
-import { loadArticlePreview } from './articlePreview.mjs';
+import { loadMaterialPreview } from './materialPreview.mjs';
 
 export default function Editor() {
     const [content, setContent] = useState([]);
@@ -21,6 +21,7 @@ export default function Editor() {
     const [contacts, setContacts] = useState();
     const [catalog, setCatalog] = useState();
     const [reviews, setReviews] = useState();
+    const [materialSections, setMaterialSections] = useState([]);
     const [preview, setPreview] = useState({ status: 'idle', record: null });
     const revision = useRef(0);
 
@@ -79,11 +80,12 @@ export default function Editor() {
                 if (!response.ok) throw new Error('Не удалось загрузить тему сайта.');
                 return response.json();
             })
-            .then(({ theme: nextTheme, contacts: nextContacts, catalog: nextCatalog, reviews: nextReviews }) => {
+            .then(({ theme: nextTheme, contacts: nextContacts, catalog: nextCatalog, reviews: nextReviews, materialSections: nextMaterialSections }) => {
                 setTheme(nextTheme);
                 setContacts(nextContacts);
                 setCatalog(nextCatalog);
                 setReviews(nextReviews);
+                setMaterialSections(nextMaterialSections ?? []);
             })
             .catch((error) => {
                 if (error.name !== 'AbortError') setTheme(undefined);
@@ -93,14 +95,14 @@ export default function Editor() {
     }, []);
 
     useEffect(() => {
-        if (page.type !== 'detail' && !(page.type === 'list' && page.dataSource === 'articles')) {
+        if (page.type !== 'detail' && !(page.type === 'list' && page.dataSource === 'materials')) {
             setPreview({ status: 'idle', record: null });
             return undefined;
         }
 
         const controller = new AbortController();
         setPreview({ status: 'loading', record: null });
-        loadArticlePreview(page, controller.signal)
+        loadMaterialPreview(page, controller.signal)
             .then((sample) => {
                 if (!controller.signal.aborted) setPreview(sample);
             })
@@ -252,6 +254,7 @@ export default function Editor() {
             contacts={contacts}
             catalog={catalog}
             reviews={reviews}
+            materialSections={materialSections}
             preview={preview}
             onAddPart={addPart}
             onRemovePart={removePart}

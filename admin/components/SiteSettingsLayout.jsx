@@ -11,7 +11,7 @@ export const SITE_SETTINGS_SECTIONS = [
     { id: 'catalog', label: 'Каталог', icon: 'pages' },
     { id: 'payments', label: 'Платежи', icon: 'pages', path: '/admin/site/payments' },
     { id: 'reviews', label: 'Отзывы', icon: 'pages', path: '/admin/site/reviews' },
-    { id: 'articles', label: 'Статьи', icon: 'pages', path: '/admin/site/articles' },
+    { id: 'materials', label: 'Материалы', icon: 'pages', path: '/admin/site/materials' },
     { id: 'seo', label: 'SEO', icon: 'seo' },
 ];
 

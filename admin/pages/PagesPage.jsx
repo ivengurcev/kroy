@@ -16,13 +16,22 @@ export default function PagesPage() {
     const [title, setTitle] = useState('');
     const [path, setPath] = useState('');
     const [type, setType] = useState('standard');
-    const [dataSource, setDataSource] = useState('articles');
+    const [dataSource, setDataSource] = useState('materials');
+    const [sections, setSections] = useState([]);
+    const [materialSectionId, setMaterialSectionId] = useState('');
     const [pathEdited, setPathEdited] = useState(false);
     const [createStatus, setCreateStatus] = useState('idle');
     const [deletingPageId, setDeletingPageId] = useState(null);
     const [deleteErrorId, setDeleteErrorId] = useState(null);
     const titleInputRef = useRef(null);
     const generatedPath = slugifyPageTitle(title) ? `/${slugifyPageTitle(title)}` : '';
+
+    useEffect(() => {
+        fetch('/api/site/material-sections').then((response) => response.json()).then((result) => {
+            const nextSections = Array.isArray(result) ? result : [];
+            setSections(nextSections); setMaterialSectionId(nextSections[0]?.id || '');
+        }).catch(() => {});
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -62,11 +71,12 @@ export default function PagesPage() {
             const response = await fetch('/api/pages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, path: pathEdited ? path : generatedPath, type, dataSource: type === 'list' ? dataSource : null }),
+                body: JSON.stringify({ title, path: pathEdited ? path : generatedPath, type, dataSource: type === 'list' ? dataSource : null, materialSectionId: type === 'list' && dataSource === 'materials' ? materialSectionId : null }),
             });
 
             if (!response.ok) {
-                throw new Error(`Не удалось создать страницу: ${response.status}`);
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.error || `Не удалось создать страницу: ${response.status}`);
             }
 
             const page = await response.json();
@@ -177,6 +187,12 @@ export default function PagesPage() {
                                 {PAGE_DATA_SOURCES.map((source) => <option key={source.id} value={source.id}>{source.title}</option>)}
                             </select>
                         </label>}
+                        {type === 'list' && dataSource === 'materials' && <label className={`${compactStyles.field} ${compactStyles.compact}`}>
+                            <span>Раздел материалов</span>
+                            <select value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required>
+                                <option value="">Выберите раздел</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}
+                            </select>
+                        </label>}
                         <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                             <span>Путь</span>
                             <input value={pathEdited ? path : generatedPath} onChange={(event) => { setPath(event.target.value); setPathEdited(true); }} />
@@ -188,7 +204,7 @@ export default function PagesPage() {
                             <Button title="Отменить создание страницы" disabled={createStatus === 'submitting'} onClick={closeCreateForm}><Icon name="close" /> Отмена</Button>
                         </div>
                         <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
-                            {createStatus === 'error' && 'Не удалось создать страницу.'}
+                            {createStatus === 'error' && 'Не удалось создать страницу. Проверьте источник данных, раздел и путь.'}
                         </div>
                     </Card>
                 )}

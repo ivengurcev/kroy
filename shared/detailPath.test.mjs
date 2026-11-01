@@ -4,8 +4,8 @@ import { resolveDetailPath } from './pageFields.mjs';
 
 test('resolves a validated template using its actual parameter, including a root list', () => {
     for (const [path, parameter, expected] of [
-        ['/articles/:slug', 'slug', '/articles/example'],
-        ['/news/:articleId', 'articleId', '/news/example'],
+        ['/materials/:slug', 'slug', '/materials/example'],
+        ['/news/:materialId', 'materialId', '/news/example'],
         ['/:entry', 'entry', '/example'],
     ]) assert.equal(resolveDetailPath(path, parameter, 'example'), expected);
 });

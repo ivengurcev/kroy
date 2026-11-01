@@ -11,6 +11,7 @@ export default function PartEditor({
     widgetMetadata,
     catalog,
     reviews,
+    materialSections,
     onPropChange,
     onViewChange,
     onViewPropChange,
@@ -32,6 +33,7 @@ export default function PartEditor({
                         value={props[name]}
                         catalog={catalog}
                         reviews={reviews}
+                        materialSections={materialSections}
                         onChange={(value) => onPropChange(name, value)}
                     />
                 ))}
@@ -57,6 +59,7 @@ export default function PartEditor({
                             value={view.props[name]}
                             catalog={catalog}
                             reviews={reviews}
+                        materialSections={materialSections}
                             onChange={(value) => onViewPropChange(name, value)}
                         />
                     ))}

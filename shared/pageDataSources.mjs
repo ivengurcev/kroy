@@ -1,5 +1,5 @@
 export const PAGE_DATA_SOURCES = [
-    { id: 'articles', title: 'Статьи' },
+    { id: 'materials', title: 'Материалы' },
     { id: 'products', title: 'Товары' },
     { id: 'reviews', title: 'Отзывы' },
 ];

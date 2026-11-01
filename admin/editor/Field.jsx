@@ -15,6 +15,10 @@ function CatalogProductField({ value, onChange, catalog }) {
     return <div className={styles.field}><span>Товары</span><div className={styles.catalogOptions}>{products.map((product) => <label key={product.id}><input type="checkbox" checked={selected.includes(product.id)} onChange={() => toggle(product.id)} /> {product.name}</label>)}</div><div className={styles.catalogSelected}>{selected.map((id, index) => <div key={id}><span>{products.find((product) => product.id === id)?.name || id}</span><Button variant="compact" title="Выше" disabled={!index} onClick={() => move(index, -1)}><Icon name="up" /></Button><Button variant="compact" title="Ниже" disabled={index === selected.length - 1} onClick={() => move(index, 1)}><Icon name="down" /></Button></div>)}</div></div>;
 }
 
+function MaterialSectionField({ value, onChange, materialSections }) {
+    return <label className={styles.field}>Раздел материалов<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{(materialSections ?? []).map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}</select></label>;
+}
+
 function CatalogCategoryField({ value, onChange, catalog }) {
     return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
 }
@@ -27,11 +31,12 @@ function ReviewField({ value, onChange, reviews }) {
     return <div className={styles.field}><span>Отзывы</span><div className={styles.catalogOptions}>{available.map((review) => <label key={review.id}><input type="checkbox" checked={selected.includes(review.id)} onChange={() => toggle(review.id)} /> {review.authorName}</label>)}</div><div className={styles.catalogSelected}>{selected.map((id, index) => <div key={id}><span>{available.find((review) => review.id === id)?.authorName || id}</span><Button variant="compact" title="Выше" disabled={!index} onClick={() => move(index, -1)}><Icon name="up" /></Button><Button variant="compact" title="Ниже" disabled={index === selected.length - 1} onClick={() => move(index, 1)}><Icon name="down" /></Button></div>)}</div></div>;
 }
 
-export default function Field({ name, schema, value, onChange, catalog, reviews }) {
+export default function Field({ name, schema, value, onChange, catalog, reviews, materialSections }) {
     const label = schema.label ?? name;
     const maxLength = schema.validators?.maxLength;
 
     if (schema.type === 'catalog-products') return <CatalogProductField value={value} onChange={onChange} catalog={catalog} />;
+    if (schema.type === 'material-section') return <MaterialSectionField value={value} onChange={onChange} materialSections={materialSections} />;
     if (schema.type === 'catalog-category') return <CatalogCategoryField value={value} onChange={onChange} catalog={catalog} />;
     if (schema.type === 'review-list') return <ReviewField value={value} onChange={onChange} reviews={reviews} />;
 

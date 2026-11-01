@@ -18,7 +18,8 @@ import { getSiteCatalog, patchSiteCatalog } from './server/api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
 import { getPaymentStatus, postPaymentStart } from './server/api/checkout.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './server/api/reviews.mjs';
-import { deleteSiteArticle, getSiteArticle, getSiteArticles, patchSiteArticle, postSiteArticle } from './server/api/articles.mjs';
+import { deleteSiteMaterial, getSiteMaterial, getSiteMaterials, patchSiteMaterial, postSiteMaterial } from './server/api/materials.mjs';
+import { deleteSiteMaterialSection, getSiteMaterialSections, patchSiteMaterialSection, postSiteMaterialSection } from './server/api/materialSections.mjs';
 
 await createApp({
     auth,
@@ -65,22 +66,22 @@ await createApp({
             component: './admin/pages/SiteReviewsPage.jsx',
         },
         {
-            path: '/admin/site/articles/new',
+            path: '/admin/site/materials/new',
             isPrivate: true,
-            title: 'Новая статья Oysite',
-            component: './admin/pages/SiteArticleEditorPage.jsx',
+            title: 'Новый материал Oysite',
+            component: './admin/pages/SiteMaterialEditorPage.jsx',
         },
         {
-            path: '/admin/site/articles/:id',
+            path: '/admin/site/materials/:id',
             isPrivate: true,
-            title: 'Редактор статьи Oysite',
-            component: './admin/pages/SiteArticleEditorPage.jsx',
+            title: 'Редактор материала Oysite',
+            component: './admin/pages/SiteMaterialEditorPage.jsx',
         },
         {
-            path: '/admin/site/articles',
+            path: '/admin/site/materials',
             isPrivate: true,
-            title: 'Статьи Oysite',
-            component: './admin/pages/SiteArticlesPage.jsx',
+            title: 'Материалы Oysite',
+            component: './admin/pages/SiteMaterialsPage.jsx',
         },
         {
             path: '/admin/site',
@@ -250,29 +251,49 @@ await createApp({
             deleteSiteReview,
         ],
         [
-            '/site/articles',
+            '/site/material-sections',
             { method: 'GET', private: true },
-            getSiteArticles,
+            getSiteMaterialSections,
         ],
         [
-            '/site/articles',
+            '/site/material-sections',
             { method: 'POST', private: true },
-            postSiteArticle,
+            postSiteMaterialSection,
         ],
         [
-            '/site/articles/:id',
-            { method: 'GET', private: true },
-            getSiteArticle,
-        ],
-        [
-            '/site/articles/:id',
+            '/site/material-sections/:id',
             { method: 'PATCH', private: true },
-            patchSiteArticle,
+            patchSiteMaterialSection,
         ],
         [
-            '/site/articles/:id',
+            '/site/material-sections/:id',
             { method: 'DELETE', private: true },
-            deleteSiteArticle,
+            deleteSiteMaterialSection,
+        ],
+        [
+            '/site/materials',
+            { method: 'GET', private: true },
+            getSiteMaterials,
+        ],
+        [
+            '/site/materials',
+            { method: 'POST', private: true },
+            postSiteMaterial,
+        ],
+        [
+            '/site/materials/:id',
+            { method: 'GET', private: true },
+            getSiteMaterial,
+        ],
+        [
+            '/site/materials/:id',
+            { method: 'PATCH', private: true },
+            patchSiteMaterial,
+        ],
+        [
+            '/site/materials/:id',
+            { method: 'DELETE', private: true },
+            deleteSiteMaterial,
         ],
         [
             '/site/preview',

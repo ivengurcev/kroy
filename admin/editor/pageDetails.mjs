@@ -5,6 +5,7 @@ export function toEditorPage(page) {
         path: page.path,
         type: page.type ?? 'standard',
         dataSource: page.dataSource ?? null,
+        materialSectionId: page.materialSectionId ?? null,
         routeParam: page.routeParam ?? null,
         detailParentId: page.detailParentId ?? null,
     };
