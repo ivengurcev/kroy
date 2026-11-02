@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f6f4">
+    <title>Oysite — прототип редактора</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --accent: #176e6b;
+            --accent-strong: #0c625f;
+            --accent-soft: #e9f2f0;
+            --text: #27332f;
+            --muted: #6f7d78;
+            --canvas: #f4f6f4;
+            --surface: #fff;
+            --surface-soft: #fbfcfa;
+            --toolbar: #f0f3f1;
+            --border: #dde5e0;
+            --border-strong: #cbd7d1;
+            --header-height: 68px;
+            --sidebar-width: 272px;
+            --content-max: 1600px;
+            --radius-sm: 6px;
+            --radius-md: 9px;
+            --radius-lg: 12px;
+            --shadow-dialog: 0 22px 70px rgb(23 45 39 / 22%);
+            font: 15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--text);
+            background: var(--canvas);
+        }
+
+        *,
+        *::before,
+        *::after { box-sizing: border-box; }
+
+        body { min-width: 320px; min-height: 100vh; margin: 0; }
+        button, input { font: inherit; }
+        button { color: inherit; }
+        button:focus-visible { outline: 3px solid rgb(23 110 107 / 28%); outline-offset: 2px; }
+        .icon { display: block; width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+        .icon.small { width: 17px; height: 17px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+        .topbar {
+            position: sticky;
+            z-index: 30;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: var(--header-height);
+            padding: 0 28px 0 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .brand-area, .top-actions { display: flex; align-items: center; }
+        .brand-area { gap: 22px; min-width: 0; }
+        .brand { display: inline-flex; align-items: center; width: 164px; height: 40px; }
+        .brand img { display: block; width: 112px; height: 40px; object-fit: contain; object-position: left center; }
+        .header-divider { width: 1px; height: 40px; background: var(--border-strong); }
+        .icon-button {
+            display: inline-grid;
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            place-items: center;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            background: transparent;
+            cursor: pointer;
+        }
+        .icon-button:hover { border-color: var(--border); background: var(--surface-soft); }
+        .menu-toggle .icon { width: 23px; height: 23px; }
+        .top-actions { gap: 10px; }
+        .top-icon-action {
+            display: inline-grid;
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            padding: 0;
+            place-items: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text);
+            background: var(--surface);
+            cursor: not-allowed;
+        }
+        .top-icon-action:hover,
+        .top-icon-action:disabled:hover { border-color: var(--border); background: var(--surface); }
+        .top-icon-action:disabled { cursor: not-allowed; }
+        .top-icon-action .icon { width: 20px; height: 20px; }
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 44px;
+            padding: 0 20px;
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-md);
+            color: var(--accent-strong);
+            background: var(--surface);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .action-button.primary { color: #fff; background: var(--accent); }
+        .action-button.primary:hover { background: var(--accent-strong); }
+        .action-button:disabled { cursor: not-allowed; }
+        .action-button.demo:hover { background: var(--surface); }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+            min-height: calc(100vh - var(--header-height));
+            min-height: calc(100dvh - var(--header-height));
+            transition: grid-template-columns 180ms ease;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: var(--header-height);
+            align-self: start;
+            height: calc(100vh - var(--header-height));
+            height: calc(100dvh - var(--header-height));
+            overflow-y: auto;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .sidebar-inner { padding: 24px 0 30px; }
+        .nav-group + .nav-group { margin-top: 28px; }
+        .nav-label {
+            padding: 0 28px 10px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 650;
+            letter-spacing: .075em;
+            text-transform: uppercase;
+        }
+        .nav-item {
+            position: relative;
+            display: flex;
+            width: 100%;
+            min-height: 50px;
+            align-items: center;
+            gap: 15px;
+            padding: 0 25px 0 29px;
+            border: 0;
+            color: var(--text);
+            text-align: left;
+            background: transparent;
+            font-size: 16px;
+        }
+        .nav-item .icon { width: 22px; height: 22px; color: #37443f; }
+        .nav-item.current { color: var(--accent-strong); background: var(--accent-soft); font-weight: 650; }
+        .nav-item.current::before { position: absolute; top: 4px; bottom: 4px; left: 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); content: ""; }
+        .nav-item.current .icon { color: var(--accent); }
+        .nav-item:disabled { cursor: default; }
+        .nav-item.seo { color: #98a19d; }
+        .nav-item.seo .icon { color: #9aa49f; }
+
+        .main-content { min-width: 0; padding: 25px clamp(20px, 2.1vw, 36px) 48px; }
+        .content-inner { width: 100%; max-width: var(--content-max); margin: 0 auto; }
+        .page-heading { display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 20px; }
+        .page-heading h1 { margin: 0; font-size: clamp(21px, 1.7vw, 26px); font-weight: 650; letter-spacing: -.025em; }
+        .page-settings {
+            display: inline-flex;
+            min-height: 44px;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 11px;
+            padding: 0 16px;
+            border: 1px solid #9aa7a1;
+            border-radius: var(--radius-md);
+            color: var(--text);
+            background: var(--surface);
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .page-settings:hover { border-color: var(--accent); color: var(--accent-strong); }
+        .parts { border-top: 1px solid var(--border); }
+        .part { min-width: 0; border-bottom: 1px solid var(--border); }
+        .part-toolbar {
+            display: flex;
+            min-height: 47px;
+            align-items: center;
+            gap: 14px;
+            margin-top: 0;
+            padding: 0 12px 0 20px;
+            background: var(--toolbar);
+        }
+        .drag-handle { color: #48544f; }
+        .part-title { overflow: hidden; color: #17251f; font-size: 16px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+        .part-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .control-button {
+            display: inline-flex;
+            min-width: 38px;
+            height: 34px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: #293631;
+            background: #fff;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .control-button:disabled { cursor: not-allowed; }
+        .control-button.edit-control { min-width: 146px; }
+        .part-content { min-width: 0; }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+            align-items: center;
+            gap: 34px;
+            min-height: 330px;
+            padding: 30px 32px 25px 40px;
+            background: var(--surface-soft);
+        }
+        .hero-copy h2 { max-width: 680px; margin: 0 0 14px; color: #1c2925; font-size: clamp(33px, 3.5vw, 54px); font-weight: 700; letter-spacing: -.045em; line-height: 1.07; }
+        .hero-copy p { max-width: 590px; margin: 0; color: #34413c; font-size: clamp(17px, 1.5vw, 21px); line-height: 1.55; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+        .site-button {
+            display: inline-flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            border: 1.5px solid var(--accent);
+            border-radius: var(--radius-md);
+            color: var(--accent-strong);
+            background: #fff;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .site-button.filled { color: #fff; background: var(--accent); }
+        .site-button:disabled { cursor: not-allowed; }
+        .hero-art { width: 100%; max-width: 470px; justify-self: center; color: var(--accent); }
+        .hero-art svg { display: block; width: 100%; height: auto; max-height: 300px; }
+        .art-accent { fill: #eaf1ee; stroke: none; }
+
+        .services-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(20px, 3.5vw, 56px); padding: 34px 38px 38px; background: var(--surface-soft); }
+        .service { display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: center; gap: 16px; }
+        .service-icon { display: grid; width: 68px; height: 68px; place-items: center; border-radius: 50%; color: var(--accent); background: #edf3f0; }
+        .service-icon .icon { width: 31px; height: 31px; }
+        .service h3 { margin: 0 0 5px; color: #1e2c27; font-size: 18px; font-weight: 650; }
+        .service p { margin: 0; color: #3f4c46; font-size: 15px; line-height: 1.5; }
+
+        .review-content { display: flex; align-items: flex-start; gap: 22px; min-height: 102px; padding: 24px 46px 28px; background: var(--surface-soft); }
+        .quote-mark { color: #b6d4ce; font-family: Georgia, serif; font-size: 66px; font-weight: 700; line-height: .8; }
+        .review-content blockquote { max-width: 930px; margin: 0; color: #34413b; font-size: 17px; line-height: 1.55; }
+        .demo-note { margin: 23px 0 0; color: var(--muted); font-size: 12px; text-align: right; }
+
+        .sidebar-backdrop { display: none; }
+        body.sidebar-collapsed .app-layout { grid-template-columns: 78px minmax(0, 1fr); }
+        body.sidebar-collapsed .nav-label,
+        body.sidebar-collapsed .nav-name { display: none; }
+        body.sidebar-collapsed .sidebar-inner { padding-top: 21px; }
+        body.sidebar-collapsed .nav-group + .nav-group { margin-top: 20px; }
+        body.sidebar-collapsed .nav-item { min-height: 52px; justify-content: center; padding: 0; }
+        body.sidebar-collapsed .nav-item .icon { width: 22px; height: 22px; }
+
+        dialog {
+            width: min(500px, calc(100vw - 32px));
+            max-width: none;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            background: var(--surface);
+            box-shadow: var(--shadow-dialog);
+        }
+        dialog::backdrop { background: rgb(27 39 34 / 34%); backdrop-filter: blur(2px); }
+        .dialog-head { padding: 26px 28px 0; }
+        .dialog-head h2 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.02em; }
+        .dialog-tabs { display: flex; gap: 25px; margin: 22px 28px 0; border-bottom: 1px solid var(--border); }
+        .dialog-tabs button { position: relative; min-height: 42px; padding: 0 1px; border: 0; color: var(--muted); background: transparent; font-size: 14px; }
+        .dialog-tabs button.active { color: var(--accent-strong); font-weight: 650; }
+        .dialog-tabs button.active::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--accent); content: ""; }
+        .dialog-tabs button:disabled { cursor: not-allowed; opacity: .55; }
+        .dialog-form { display: grid; gap: 18px; padding: 24px 28px 26px; }
+        .field { display: grid; gap: 7px; color: #36443e; font-size: 14px; font-weight: 550; }
+        .field input { width: 100%; height: 43px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: #47534e; background: #f8faf8; }
+        .field input[readonly] { cursor: default; }
+        .field-hint { margin: -3px 0 0; color: var(--muted); font-size: 12px; font-weight: 400; }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 5px; padding-top: 18px; border-top: 1px solid var(--border); }
+        .dialog-actions button { min-height: 40px; padding: 0 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: #fff; }
+        .dialog-actions .primary { border-color: var(--accent); color: #fff; background: var(--accent); }
+        .dialog-actions button:disabled { cursor: not-allowed; opacity: .55; }
+
+        @media (min-width: 1800px) {
+            :root { --content-max: 1680px; }
+            .main-content { padding-inline: 44px; }
+            .hero-content { min-height: 360px; }
+        }
+
+        @media (max-width: 1180px) {
+            :root { --sidebar-width: 240px; }
+            .topbar { padding-inline: 22px; }
+            .brand-area { gap: 16px; }
+            .brand { width: 144px; }
+            .main-content { padding-inline: 22px; }
+            .hero-content { grid-template-columns: minmax(0, 1fr) minmax(270px, .85fr); gap: 20px; padding-inline: 30px; }
+            .services-grid { gap: 20px; padding-inline: 24px; }
+            .service { grid-template-columns: 56px minmax(0, 1fr); gap: 12px; }
+            .service-icon { width: 56px; height: 56px; }
+        }
+
+        @media (max-width: 820px) {
+            :root { --header-height: 68px; }
+            .topbar { padding: 0 16px; }
+            .brand-area { gap: 13px; }
+            .brand { width: 118px; }
+            .brand img { width: 100px; }
+            .header-divider { height: 34px; }
+            .top-actions { gap: 5px; }
+            .top-actions .action-button { min-height: 40px; padding-inline: 12px; font-size: 14px; }
+            .top-actions .action-button .action-label { display: none; }
+            .app-layout, body.sidebar-collapsed .app-layout { display: block; }
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                top: var(--header-height);
+                bottom: 0;
+                left: 0;
+                width: min(292px, calc(100vw - 58px));
+                height: auto;
+                box-shadow: 12px 0 30px rgb(27 39 34 / 12%);
+                transform: translateX(-110%);
+                transition: transform 180ms ease;
+            }
+            body.mobile-menu-open .sidebar { transform: translateX(0); }
+            body.mobile-menu-open .sidebar-backdrop {
+                position: fixed;
+                z-index: 45;
+                inset: var(--header-height) 0 0;
+                display: block;
+                border: 0;
+                background: rgb(20 31 26 / 30%);
+            }
+            body.sidebar-collapsed .nav-label,
+            body.sidebar-collapsed .nav-name { display: block; }
+            body.sidebar-collapsed .nav-item { min-height: 50px; justify-content: flex-start; padding: 0 25px 0 29px; }
+            .main-content { padding: 20px 22px 36px; }
+            .hero-content { grid-template-columns: minmax(0, 1fr) minmax(230px, .8fr); min-height: 295px; padding-inline: 24px; }
+            .services-grid { gap: 15px; padding-inline: 20px; }
+            .service { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
+            .service-icon { width: 48px; height: 48px; }
+            .service-icon .icon { width: 25px; height: 25px; }
+            .service h3 { font-size: 16px; }
+            .service p { font-size: 13px; }
+        }
+
+        @media (max-width: 560px) {
+            :root { --header-height: 62px; }
+            .topbar { padding-inline: 11px; }
+            .brand-area { gap: 9px; }
+            .brand { width: 85px; height: 34px; }
+            .brand img { width: 84px; height: 34px; }
+            .header-divider { height: 29px; }
+            .menu-toggle { width: 36px; height: 38px; }
+            .menu-toggle .icon { width: 21px; height: 21px; }
+            .top-actions { gap: 4px; }
+            .top-actions .action-button { width: 39px; min-width: 39px; min-height: 38px; gap: 0; padding: 0; }
+            .top-actions .action-button .icon { width: 18px; height: 18px; }
+            .main-content { padding: 16px 13px 30px; }
+            .page-heading { min-height: 46px; gap: 10px; margin-bottom: 13px; }
+            .page-heading h1 { font-size: 21px; }
+            .page-settings { min-height: 40px; gap: 7px; padding-inline: 10px; font-size: 13px; }
+            .page-settings .icon { width: 18px; height: 18px; }
+            .part-toolbar { min-height: 44px; gap: 8px; padding-inline: 9px; }
+            .part-title { font-size: 14px; }
+            .part-controls { gap: 4px; }
+            .control-button { min-width: 31px; height: 30px; padding-inline: 6px; }
+            .control-button .icon { width: 16px; height: 16px; }
+            .control-button.edit-control { min-width: 34px; width: 34px; padding: 0; }
+            .control-button.edit-control span { display: none; }
+            .hero-content { grid-template-columns: minmax(0, 1fr); gap: 12px; min-height: 0; padding: 25px 21px 18px; }
+            .hero-copy h2 { margin-bottom: 10px; font-size: clamp(30px, 8.5vw, 40px); }
+            .hero-copy p { max-width: 430px; font-size: 16px; }
+            .hero-actions { gap: 9px; margin-top: 18px; }
+            .site-button { min-height: 42px; padding-inline: 13px; font-size: 13px; }
+            .hero-art { width: min(100%, 320px); max-height: 195px; }
+            .hero-art svg { max-height: 195px; }
+            .services-grid { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 8px 20px; }
+            .service { grid-template-columns: 48px minmax(0, 1fr); min-height: 88px; gap: 14px; border-bottom: 1px solid #e7ece9; }
+            .service:last-child { border-bottom: 0; }
+            .service p { font-size: 14px; }
+            .review-content { gap: 12px; min-height: 0; padding: 20px 22px 24px; }
+            .quote-mark { font-size: 52px; }
+            .review-content blockquote { font-size: 15px; }
+            .demo-note { margin-top: 16px; font-size: 11px; }
+        }
+
+        @media (max-width: 370px) {
+            .topbar { padding-inline: 8px; }
+            .brand-area { gap: 6px; }
+            .brand { width: 78px; }
+            .brand img { width: 78px; }
+            .top-actions .action-button { width: 35px; min-width: 35px; }
+            .page-heading h1 { font-size: 19px; }
+            .page-settings { padding-inline: 8px; font-size: 12px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <svg class="sr-only" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+        <symbol id="i-pen" viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h8l5 5V20a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"/><path d="M14 4v5h5M8 13h8M8 17h8"/></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></symbol>
+        <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-4 2v-5.2A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 11h8M8 14h5"/></symbol>
+        <symbol id="i-brush" viewBox="0 0 24 24"><path d="m14.5 5.5 4 4M4 20c2.4 0 4-1.2 4-3.2 0-1.2.8-2.1 2-2.1h1.5L20 6.2 17.8 4l-8.5 8.5v1.3c0 1.2-.8 2-2 2-2 0-3.3 1.6-3.3 4.2Z"/></symbol>
+        <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3h3l1.6 4-2 1.8a15 15 0 0 0 6.1 6.1l1.8-2 4 1.6v3c0 1.1-.9 2-2 2A16 16 0 0 1 4.5 5c0-1.1.9-2 2-2Z"/></symbol>
+        <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7.3"/><path d="m16.2 16.2 4.3 4.3"/></symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="white"/><circle cx="15" cy="12" r="2" fill="white"/><circle cx="8" cy="18" r="2" fill="white"/></symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M13 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5M10 8l4 4-4 4M14 12H3"/></symbol>
+        <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M7 3v6h10V4M7 21v-8h10v8"/></symbol>
+        <symbol id="i-publish" viewBox="0 0 24 24"><path d="M6 18.5a4 4 0 0 1-.2-8A6.4 6.4 0 0 1 18 9a4.8 4.8 0 0 1 0 9.5H6Z"/><path d="m9 13 3-3 3 3M12 10v8"/></symbol>
+        <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+        <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14m6-6-6 6-6-6"/></symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/></symbol>
+        <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M6 4v5a4 4 0 0 0 8 0V4M4 4h4M12 4h4M10 13v2a4 4 0 0 0 8 0v-2"/><circle cx="18" cy="11" r="2"/><path d="M18 19v1"/></symbol>
+        <symbol id="i-syringe" viewBox="0 0 24 24"><path d="m4 20 2.5-2.5M7 16l7-7m-4 9 7-7m-4-3 5 5m-2-8 5 5M4 20l-1 1"/></symbol>
+        <symbol id="i-paw" viewBox="0 0 24 24"><path d="M7 13.5c-1.2 1.4-2 2.6-2 4 0 1.6 1.4 2.5 3 2.5 1.3 0 2.5-.8 4-.8s2.7.8 4 .8c1.6 0 3-.9 3-2.5 0-1.4-.8-2.6-2-4-1.5-1.7-3.2-2.6-5-2.6s-3.5.9-5 2.6Z"/><ellipse cx="5.2" cy="8.7" rx="1.7" ry="2.2" transform="rotate(-24 5.2 8.7)"/><ellipse cx="10" cy="6.4" rx="1.7" ry="2.2"/><ellipse cx="15" cy="6.4" rx="1.7" ry="2.2"/><ellipse cx="18.8" cy="8.7" rx="1.7" ry="2.2" transform="rotate(24 18.8 8.7)"/></symbol>
+        <symbol id="i-grip" viewBox="0 0 16 20"><circle cx="4" cy="4" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></symbol>
+    </svg>
+
+    <header class="topbar">
+        <div class="brand-area">
+            <div class="brand" title="Публичная главная страница (демо)">
+                <img src="oysite-brand-kit/logo/oysite-logo.svg" alt="Oysite">
+            </div>
+            <span class="header-divider" aria-hidden="true"></span>
+            <button class="icon-button menu-toggle" id="sidebarToggle" type="button" aria-label="Свернуть меню" aria-expanded="true" aria-controls="adminSidebar" title="Свернуть меню">
+                <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
+            </button>
+        </div>
+
+        <div class="top-actions" aria-label="Действия страницы">
+            <button class="action-button primary demo" type="button" disabled title="Демонстрационный элемент — сохранение не подключено">
+                <svg class="icon small" aria-hidden="true"><use href="#i-save"/></svg><span class="action-label">Сохранить</span>
+            </button>
+            <button class="action-button demo" type="button" disabled title="Демонстрационный элемент — публикация не подключена">
+                <svg class="icon small" aria-hidden="true"><use href="#i-publish"/></svg><span class="action-label">Опубликовать</span>
+            </button>
+            <button class="top-icon-action" type="button" disabled aria-label="Предпросмотр сайта" title="Предпросмотр сайта">
+                <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+            </button>
+            <button class="top-icon-action" type="button" disabled aria-label="Выйти из аккаунта" title="Выйти из аккаунта">
+                <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="app-layout" id="appLayout">
+        <aside class="sidebar" id="adminSidebar" aria-label="Административная навигация">
+            <nav class="sidebar-inner">
+                <div class="nav-group">
+                    <div class="nav-label">Основное</div>
+                    <button class="nav-item current" type="button" aria-current="page" title="Редактор — текущий раздел">
+                        <svg class="icon" aria-hidden="true"><use href="#i-pen"/></svg><span class="nav-name">Редактор</span>
+                    </button>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg><span class="nav-name">Страницы</span>
+                    </button>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-label">Содержимое</div>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg><span class="nav-name">Материалы</span>
+                    </button>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg><span class="nav-name">Каталог</span>
+                    </button>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg><span class="nav-name">Отзывы</span>
+                    </button>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-label">Настройки</div>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-brush"/></svg><span class="nav-name">Оформление</span>
+                    </button>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg><span class="nav-name">Контакты</span>
+                    </button>
+                    <button class="nav-item" type="button" disabled title="Демонстрационный пункт меню">
+                        <svg class="icon" aria-hidden="true"><use href="#i-card"/></svg><span class="nav-name">Платежи</span>
+                    </button>
+                    <button class="nav-item seo" type="button" disabled title="SEO — недоступно в прототипе">
+                        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span class="nav-name">SEO</span>
+                    </button>
+                </div>
+            </nav>
+        </aside>
+        <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Закрыть меню"></button>
+
+        <main class="main-content">
+            <div class="content-inner">
+                <div class="page-heading">
+                    <h1>Главная страница</h1>
+                    <button class="page-settings" id="openPageSettings" type="button" aria-haspopup="dialog">
+                        <svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>
+                        <span>Настройки страницы</span>
+                    </button>
+                </div>
+
+                <div class="parts" aria-label="Демонстрационные блоки страницы">
+                    <section class="part" aria-labelledby="hero-part-title">
+                        <div class="part-toolbar">
+                            <svg class="icon small drag-handle" aria-hidden="true"><use href="#i-grip"/></svg>
+                            <h2 class="part-title" id="hero-part-title">Главный блок</h2>
+                            <div class="part-controls" aria-label="Действия с блоком — демо">
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вверх" title="Демонстрационное действие"><svg class="icon small"><use href="#i-up"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вниз" title="Демонстрационное действие"><svg class="icon small"><use href="#i-down"/></svg></button>
+                                <button class="control-button edit-control" type="button" disabled title="Редактирование не подключено"><svg class="icon small"><use href="#i-edit"/></svg><span>Редактировать</span></button>
+                                <button class="control-button" type="button" disabled aria-label="Дублировать блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-copy"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Удалить блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-trash"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="part-content hero-content">
+                            <div class="hero-copy">
+                                <h2>Ветеринарный врач</h2>
+                                <p>Забота о здоровье ваших питомцев: диагностика, лечение, профилактика</p>
+                                <div class="hero-actions">
+                                    <button class="site-button filled" type="button" disabled title="Демонстрационный элемент">Записаться на приём</button>
+                                    <button class="site-button" type="button" disabled title="Демонстрационный элемент">Наши услуги</button>
+                                </div>
+                            </div>
+                            <div class="hero-art" aria-label="Иллюстрация собаки и кошки">
+                                <svg viewBox="0 0 520 320" role="img" xmlns="http://www.w3.org/2000/svg">
+                                    <circle class="art-accent" cx="117" cy="232" r="48"/>
+                                    <circle class="art-accent" cx="418" cy="260" r="37"/>
+                                    <rect x="365" y="23" width="113" height="104" rx="18" fill="#fff" stroke="currentColor" stroke-width="5"/>
+                                    <path d="M422 45v60M392 75h60" stroke="currentColor" stroke-width="16" stroke-linecap="round"/>
+                                    <path d="M82 267c9-54 31-91 67-119 18-14 31-35 37-63 7-30 34-51 65-51 18 0 32 6 43 18 8 9 14 20 24 24 11 5 27 4 40 5 11 1 19 9 19 20 0 14-10 23-27 23h-26c-10 36-19 60-31 80-12 20-18 46-19 75v11H92M104 289h113M107 276l-23 12M231 276l25 12M297 200c0 31 4 59 12 88M345 184v104M377 282h69c-7-24-20-39-40-44M175 143c-12 29-17 58-16 88" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M206 76c-13-4-22-1-29 8-9 11-9 31-3 45 7 15 18 21 31 19 12-2 18-14 19-29 2-19-5-38-18-43Z" fill="#fff" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+                                    <path d="M280 62c9 3 16 9 21 18M278 80c6 2 10 5 13 10" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                                    <path d="m307 286 2-60c2-38 11-63 29-82l-2-34 28 19 21-23 12 37c20 14 33 39 36 73l5 70M338 176l-19-30-8 37M385 164l20-29 14 35" fill="#fff" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M350 191c8-9 17-9 24 0M397 191c8-9 17-9 24 0M378 204c-5 6-12 6-17 0m17 0c5 6 12 6 17 0m-17 2v9m-17 5c11 10 23 10 34 0M337 205l-22-4m22 13-24 4m84-13 22-4m-22 13 24 4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                                    <path d="M321 282c-17 0-26 8-28 22h137c-2-15-11-22-29-22" fill="#fff" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="part" aria-labelledby="services-part-title">
+                        <div class="part-toolbar">
+                            <svg class="icon small drag-handle" aria-hidden="true"><use href="#i-grip"/></svg>
+                            <h2 class="part-title" id="services-part-title">Услуги</h2>
+                            <div class="part-controls" aria-label="Действия с блоком — демо">
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вверх" title="Демонстрационное действие"><svg class="icon small"><use href="#i-up"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вниз" title="Демонстрационное действие"><svg class="icon small"><use href="#i-down"/></svg></button>
+                                <button class="control-button edit-control" type="button" disabled title="Редактирование не подключено"><svg class="icon small"><use href="#i-edit"/></svg><span>Редактировать</span></button>
+                                <button class="control-button" type="button" disabled aria-label="Дублировать блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-copy"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Удалить блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-trash"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="part-content services-grid">
+                            <article class="service">
+                                <span class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-stethoscope"/></svg></span>
+                                <div><h3>Консультация</h3><p>Осмотр, диагностика и рекомендации</p></div>
+                            </article>
+                            <article class="service">
+                                <span class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-syringe"/></svg></span>
+                                <div><h3>Вакцинация</h3><p>Профилактические прививки для собак и кошек</p></div>
+                            </article>
+                            <article class="service">
+                                <span class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-paw"/></svg></span>
+                                <div><h3>Лечение</h3><p>Комплексная терапия при заболеваниях</p></div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="part" aria-labelledby="reviews-part-title">
+                        <div class="part-toolbar">
+                            <svg class="icon small drag-handle" aria-hidden="true"><use href="#i-grip"/></svg>
+                            <h2 class="part-title" id="reviews-part-title">Отзывы</h2>
+                            <div class="part-controls" aria-label="Действия с блоком — демо">
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вверх" title="Демонстрационное действие"><svg class="icon small"><use href="#i-up"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Переместить блок вниз" title="Демонстрационное действие"><svg class="icon small"><use href="#i-down"/></svg></button>
+                                <button class="control-button edit-control" type="button" disabled title="Редактирование не подключено"><svg class="icon small"><use href="#i-edit"/></svg><span>Редактировать</span></button>
+                                <button class="control-button" type="button" disabled aria-label="Дублировать блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-copy"/></svg></button>
+                                <button class="control-button" type="button" disabled aria-label="Удалить блок" title="Демонстрационное действие"><svg class="icon small"><use href="#i-trash"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="part-content review-content">
+                            <span class="quote-mark" aria-hidden="true">“</span>
+                            <blockquote>Отличный врач! Внимательный, всё подробно объяснил, помог нашему коту быстро восстановиться.</blockquote>
+                        </div>
+                    </section>
+                </div>
+
+                <p class="demo-note">Статический прототип · действия редактора показаны для примера</p>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="pageSettings" aria-labelledby="dialogTitle">
+        <div class="dialog-head"><h2 id="dialogTitle">Настройки страницы</h2></div>
+        <nav class="dialog-tabs" aria-label="Разделы настроек страницы">
+            <button class="active" type="button" aria-current="page">Основное</button>
+            <button type="button" disabled title="Раздел пока недоступен">SEO</button>
+            <button type="button" disabled title="Раздел пока недоступен">Внешний вид</button>
+        </nav>
+        <form class="dialog-form" method="dialog">
+            <label class="field">
+                <span>Название страницы</span>
+                <input type="text" value="Главная страница" readonly aria-readonly="true" title="Демонстрационное поле">
+            </label>
+            <label class="field">
+                <span>Путь страницы</span>
+                <input type="text" value="/" readonly aria-readonly="true" title="Демонстрационное поле">
+                <span class="field-hint">Главная страница сайта</span>
+            </label>
+            <div class="dialog-actions">
+                <button type="button" id="cancelPageSettings">Отмена</button>
+                <button class="primary" type="button" disabled title="Демонстрационный элемент — сохранение не подключено">Сохранить</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        const sidebarToggle = document.querySelector('#sidebarToggle');
+        const sidebarBackdrop = document.querySelector('#sidebarBackdrop');
+        const pageSettings = document.querySelector('#pageSettings');
+        const mobileMenu = window.matchMedia('(max-width: 820px)');
+
+        function closeMobileMenu() {
+            document.body.classList.remove('mobile-menu-open');
+            sidebarToggle.setAttribute('aria-expanded', 'false');
+            sidebarToggle.setAttribute('aria-label', 'Открыть меню');
+            sidebarToggle.title = 'Открыть меню';
+        }
+
+        sidebarToggle.addEventListener('click', () => {
+            if (mobileMenu.matches) {
+                const isOpen = document.body.classList.toggle('mobile-menu-open');
+                sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+                sidebarToggle.setAttribute('aria-label', isOpen ? 'Закрыть меню' : 'Открыть меню');
+                sidebarToggle.title = isOpen ? 'Закрыть меню' : 'Открыть меню';
+                return;
+            }
+
+            const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+            sidebarToggle.setAttribute('aria-expanded', String(!isCollapsed));
+            sidebarToggle.setAttribute('aria-label', isCollapsed ? 'Развернуть меню' : 'Свернуть меню');
+            sidebarToggle.title = isCollapsed ? 'Развернуть меню' : 'Свернуть меню';
+        });
+
+        sidebarBackdrop.addEventListener('click', closeMobileMenu);
+        window.addEventListener('resize', () => {
+            if (!mobileMenu.matches) closeMobileMenu();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeMobileMenu();
+        });
+
+        document.querySelector('#openPageSettings').addEventListener('click', () => pageSettings.showModal());
+        document.querySelector('#cancelPageSettings').addEventListener('click', () => pageSettings.close());
+    </script>
+</body>
+</html>
