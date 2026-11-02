@@ -1,7 +1,6 @@
-import AdminHeader from './AdminHeader.jsx';
-import AdminLayout from './AdminLayout.jsx';
-import styles from './AdminLayout.module.css';
-import Card from '../ui/Card.jsx';
+import styles from './AdminPageShell.module.css';
+import AdminPageHeader from './AdminPageHeader.jsx';
+import { useAdminHeader } from './AdminWorkspaceContext.jsx';
 
 export default function AdminPageShell({
     title,
@@ -14,19 +13,14 @@ export default function AdminPageShell({
     onSave,
     children,
 }) {
+    useAdminHeader({ mode: headerMode, title, isDirty, loadStatus: status, saveStatus, onSave });
+
     return (
-        <AdminLayout header={(
-            <>
-                <AdminHeader mode={headerMode} title={title} isDirty={isDirty} saveStatus={saveStatus} loadStatus={status} onSave={onSave} />
-                {headerMode !== 'site' && headerMode !== 'pages' && <Card className={styles.sectionBar}>
-                    <h1>{title}</h1>
-                    <div className={styles.actions}>{actions}</div>
-                </Card>}
-            </>
-            )}>
-                {status === 'loading' && <p className={styles.status} role="status">Загрузка…</p>}
-                {status === 'error' && <p className={styles.status} role="alert">{errorMessage}</p>}
-                {status === 'success' && children}
-        </AdminLayout>
+        <div className={styles.page}>
+            <AdminPageHeader title={title} actions={actions} />
+            {status === 'loading' && <p className={styles.status} role="status">Загрузка…</p>}
+            {status === 'error' && <p className={styles.status} role="alert">{errorMessage}</p>}
+            {status === 'success' && children}
+        </div>
     );
 }

@@ -108,6 +108,7 @@ export default function SiteReviewsPage() {
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const [reload, setReload] = useState(0);
+    const actions = <Button variant="primary" onClick={openCreate} disabled={Boolean(form)}><Icon name="add" /> Добавить отзыв</Button>;
 
     useEffect(() => {
         const controller = new AbortController();
@@ -174,28 +175,17 @@ export default function SiteReviewsPage() {
         }
     }
 
-    function changeSection(nextSection) {
-        if (nextSection === 'catalog') window.location.assign('/admin/site/catalog');
-        else if (nextSection === 'materials') window.location.assign('/admin/site/materials');
-        else window.location.assign(`/admin/site?section=${encodeURIComponent(nextSection)}`);
-    }
-
     return (
         <SiteSettingsLayout
             section="reviews"
             title="Отзывы"
+            actions={actions}
+            isDirty={Boolean(form)}
             status={status}
             errorMessage={error || 'Не удалось загрузить отзывы.'}
-            onSectionChange={changeSection}
         >
             <div className={styles.content}>
-                <div className={styles.toolbar}>
-                    <div>
-                        <h2>Отзывы</h2>
-                        <p>Управление отзывами текущего сайта.</p>
-                    </div>
-                    <Button variant="primary" onClick={openCreate} disabled={Boolean(form)}><Icon name="add" /> Добавить отзыв</Button>
-                </div>
+                <p>Управление отзывами текущего сайта.</p>
                 <Card className={styles.filterBar}>
                     <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Показать</span>

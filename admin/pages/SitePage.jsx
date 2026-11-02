@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -159,6 +160,7 @@ function SeoPlaceholder() {
 }
 
 export default function SitePage() {
+    const { pathname, search } = useContext(ApplicationContext) || {};
     const [section, setSection] = useState('appearance');
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
@@ -177,23 +179,11 @@ export default function SitePage() {
         return () => controller.abort();
     }, []);
     useEffect(() => {
-        function syncSection() {
-            const next = window.location.pathname === '/admin/site/catalog'
-                ? 'catalog'
-                : new URL(window.location.href).searchParams.get('section') || 'appearance';
-
-            setSection(
-                SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path)
-                    ? next
-                    : 'appearance'
-            );
-        }
-
-        syncSection();
-
-        window.addEventListener('popstate', syncSection);
-        return () => window.removeEventListener('popstate', syncSection);
-    }, []);
+        const next = pathname === '/admin/site/catalog'
+            ? 'catalog'
+            : new URLSearchParams(search).get('section') || 'appearance';
+        setSection(SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path) ? next : 'appearance');
+    }, [pathname, search]);
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const catalogDirty = Boolean(catalog && savedCatalog && JSON.stringify(catalog) !== JSON.stringify(savedCatalog));
@@ -204,16 +194,6 @@ export default function SitePage() {
     function updateContacts(change) { setContacts((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
-    function changeSection(nextSection) {
-        if (nextSection === section) return;
-        if (dirty && !window.confirm('Есть несохранённые изменения. Перейти в другой раздел?')) return;
-        const target = SITE_SETTINGS_SECTIONS.find((item) => item.id === nextSection);
-        if (target?.path) window.location.assign(target.path);
-        else {
-            window.history.pushState({}, '', `/admin/site?section=${nextSection}`);
-            setSection(nextSection);
-        }
-    }
     async function save() {
         if (saveStatus === 'saving' || !dirty) return;
         const requestTheme = themeDirty ? cloneSettings(draft) : null;
@@ -246,7 +226,7 @@ export default function SitePage() {
     }
     const activeMode = draft?.themeMode;
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
-    return <SiteSettingsLayout section={section} title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save} onSectionChange={changeSection}>
+    return <SiteSettingsLayout title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save}>
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} />}
         {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={setCatalog} />}

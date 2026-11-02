@@ -83,7 +83,6 @@ export default function SitePaymentsPage() {
     return <SiteSettingsLayout
         section="payments" title="Платежи" status={status} errorMessage={error}
         isDirty={dirty} saveStatus={saveStatus} onSave={() => performAction('save')}
-        onSectionChange={(section) => window.location.assign(`/admin/site?section=${encodeURIComponent(section)}`)}
     >
         <Card className={styles.panel}>
             <p className={styles.status} role="status">{active ? `Активная система: ${active.name}` : 'Нет активной платёжной системы.'}</p>

@@ -1,0 +1,2 @@
+.page { width: 100%; min-width: 0; }
+.status { max-width: 960px; margin: 48px auto; padding: 32px; border: 1px solid #dde5e0; border-radius: 12px; text-align: center; background: #fff; box-shadow: 0 10px 28px rgb(32 51 48 / 7%); }

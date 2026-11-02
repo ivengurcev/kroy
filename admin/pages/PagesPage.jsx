@@ -8,8 +8,10 @@ import Icon from '../ui/Icon.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import { slugifyPageTitle } from '../../shared/pageFields.mjs';
 import { PAGE_DATA_SOURCES } from '../../shared/pageDataSources.mjs';
+import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 
 export default function PagesPage() {
+    const navigate = useAppNavigate();
     const [pages, setPages] = useState([]);
     const [status, setStatus] = useState('loading');
     const [showForm, setShowForm] = useState(false);
@@ -81,7 +83,7 @@ export default function PagesPage() {
 
             const page = await response.json();
 
-            window.location.assign(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`);
+            navigate?.(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`);
         } catch {
             setCreateStatus('error');
         }
@@ -103,7 +105,7 @@ export default function PagesPage() {
                 const response = await fetch(`/api/pages/${page.detailTemplateId}/restore`, { method: 'POST' });
                 if (!response.ok) { setDeleteErrorId(page.id); return; }
             }
-            window.location.assign(`/admin/pages/${page.detailTemplateId}`);
+            navigate?.(`/admin/pages/${page.detailTemplateId}`);
             return;
         }
         try {
@@ -113,7 +115,7 @@ export default function PagesPage() {
             });
             if (!response.ok) throw new Error();
             const template = await response.json();
-            window.location.assign(`/admin/pages/${template.id}`);
+            navigate?.(`/admin/pages/${template.id}`);
         } catch {
             setDeleteErrorId(page.id);
         }
@@ -163,11 +165,12 @@ export default function PagesPage() {
     return (
         <AdminPageShell
             title="Карта страниц"
+            actions={actions}
+            isDirty={showForm}
             status={status}
             errorMessage="Не удалось загрузить страницы."
         >
             <div className={styles.content}>
-                <div className={styles.pageActions}>{actions}</div>
                 {showForm && (
                     <Card as="form" className={styles.createForm} onSubmit={createPage}>
                         <label className={`${compactStyles.field} ${compactStyles.compact}`}>

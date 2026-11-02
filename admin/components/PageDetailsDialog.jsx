@@ -6,7 +6,7 @@ import styles from './PageDetailsDialog.module.css';
 const tabs = [
     { label: 'Основное' },
     { label: 'SEO', disabled: true },
-    { label: 'Дополнительно', disabled: true },
+    { label: 'Внешний вид', disabled: true },
 ];
 
 export default function PageDetailsDialog({ page, onSaved, onCancel }) {

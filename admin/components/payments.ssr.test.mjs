@@ -58,12 +58,13 @@ test('payment fields render the provider schema and send edited settings without
     assert.match(html, /RUB/);
 });
 
-test('site settings expose a Payments section with its own page and the payments page renders a loading state on SSR', () => {
+test('site settings expose a Payments route without a duplicate section menu and the payments page renders a loading state on SSR', () => {
     assert.equal(components.SITE_SETTINGS_SECTIONS.find(({ id }) => id === 'payments').path, '/admin/site/payments');
     const html = renderToString(createElement(components.SitePaymentsPage));
     assert.match(html, /Загрузка/);
     const layout = renderToString(createElement(components.SiteSettingsLayout, { section: 'payments', title: 'Платежи', status: 'success' }));
-    assert.match(layout, /aria-current="page"[^>]*>[^<]*<svg[\s\S]*Платежи/);
+    assert.match(layout, /<h1>Платежи<\/h1>/);
+    assert.doesNotMatch(layout, /Разделы настроек сайта/);
 });
 
 test('materials page renders on SSR without browser globals', () => {

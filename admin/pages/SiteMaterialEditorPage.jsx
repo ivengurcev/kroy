@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -45,6 +46,7 @@ async function responseError(response, fallback) {
 }
 
 export default function SiteMaterialEditorPage() {
+    const { pathname, search, navigate } = useContext(ApplicationContext) || {};
     const [materialId, setMaterialId] = useState(undefined);
     const [material, setMaterial] = useState(null);
     const [sections, setSections] = useState([]);
@@ -61,10 +63,10 @@ export default function SiteMaterialEditorPage() {
     }, []);
 
     useEffect(() => {
-        const match = window.location.pathname.match(/^\/admin\/site\/materials(?:\/([^/]+))?/);
+        const match = pathname.match(/^\/admin\/site\/materials(?:\/([^/]+))?/);
         const nextId = match?.[1] && match[1] !== 'new' ? match[1] : null;
         setMaterialId(nextId);
-    }, []);
+    }, [pathname]);
 
     useEffect(() => {
         if (materialId === undefined) return undefined;
@@ -73,7 +75,7 @@ export default function SiteMaterialEditorPage() {
             return undefined;
         }
         if (!materialId) {
-            const next = { ...emptyMaterial(), sectionId: new URLSearchParams(window.location.search).get('sectionId') || '' };
+            const next = { ...emptyMaterial(), sectionId: new URLSearchParams(search).get('sectionId') || '' };
             setMaterial(next);
             setSavedMaterial(next);
             setStatus('success');
@@ -102,7 +104,7 @@ export default function SiteMaterialEditorPage() {
                 }
             });
         return () => controller.abort();
-    }, [materialId]);
+    }, [materialId, search]);
 
     const dirty = Boolean(material && savedMaterial && JSON.stringify(material) !== JSON.stringify(savedMaterial));
 
@@ -115,12 +117,6 @@ export default function SiteMaterialEditorPage() {
         window.addEventListener('beforeunload', warn);
         return () => window.removeEventListener('beforeunload', warn);
     }, [dirty]);
-
-    function changeSection(nextSection) {
-        if (nextSection === 'catalog') window.location.assign('/admin/site/catalog');
-        else if (nextSection === 'reviews') window.location.assign('/admin/site/reviews');
-        else if (nextSection !== 'materials') window.location.assign(`/admin/site?section=${encodeURIComponent(nextSection)}`);
-    }
 
     function updateField(name, value) {
         revision.current += 1;
@@ -159,7 +155,7 @@ export default function SiteMaterialEditorPage() {
             }
             if (!materialId && result.id) {
                 skipLoadId.current = result.id;
-                window.history.replaceState({}, '', `/admin/site/materials/${result.id}`);
+                navigate?.(`/admin/site/materials/${result.id}`, { replace: true, skipGuard: true });
                 setMaterialId(result.id);
             }
         } catch (saveError) {
@@ -173,7 +169,7 @@ export default function SiteMaterialEditorPage() {
         try {
             const response = await fetch(`/api/site/materials/${materialId}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить материал'));
-            window.location.assign('/admin/site/materials');
+            navigate?.('/admin/site/materials', { skipGuard: true });
         } catch (deleteError) {
             setFormError(deleteError.message);
         }
@@ -182,25 +178,22 @@ export default function SiteMaterialEditorPage() {
     const imageUrl = material?.coverMediaId ? `/api/media/${material.coverMediaId}` : '';
     const editorValue = useMemo(() => material?.content || EMPTY_CONTENT, [material?.content]);
     const title = materialId ? 'Редактирование материала' : 'Новый материал';
+    const actions = <Button type="button" variant="secondary" onClick={() => navigate?.('/admin/site/materials')}><Icon name="back" /> К списку</Button>;
 
     return (
         <SiteSettingsLayout
             section="materials"
             title={title}
+            actions={actions}
             status={status}
             errorMessage={error || 'Не удалось загрузить материал.'}
             isDirty={dirty}
             saveStatus={saveStatus}
             onSave={() => saveMaterial()}
-            onSectionChange={changeSection}
         >
             {material && <Card as="form" className={styles.form} onSubmit={saveMaterial}>
                 <div className={styles.heading}>
-                    <div>
-                        <h2>{title}</h2>
-                        <p>{materialId ? 'Изменения сохраняются только после явного действия.' : 'Сначала сохраните черновик, чтобы открыть постоянный адрес материала.'}</p>
-                    </div>
-                    <Button type="button" variant="secondary" onClick={() => window.location.assign('/admin/site/materials')}><Icon name="back" /> К списку</Button>
+                    <p>{materialId ? 'Изменения сохраняются только после явного действия.' : 'Сначала сохраните черновик, чтобы открыть постоянный адрес материала.'}</p>
                 </div>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Раздел</span>

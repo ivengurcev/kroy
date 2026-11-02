@@ -27,6 +27,7 @@ await createApp({
     PORT: 3000,
     PAGE_TITLE: 'Oysite',
     LAYOUT_HTML: './admin/components/AdminDocument.jsx',
+    LAYOUT_APP: './admin/components/AdminApplication.jsx',
     LAYOUT_AUTH: './admin/pages/SignInPage.jsx',
     routes: [
         {

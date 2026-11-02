@@ -3,31 +3,27 @@ import styles from './AdminHeader.module.css';
 import OysiteLogo from './OysiteLogo.svg';
 import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
 import Icon from '../ui/Icon.jsx';
-import barStyles from '../ui/AdminBar.module.css';
-import PageDetailsDialog from './PageDetailsDialog.jsx';
 
 export default function AdminHeader({
     mode = 'editor',
-    title = '',
     page = {},
     isDirty = false,
     loadStatus = 'loading',
     saveStatus = 'idle',
     onSave,
-    onPageDetailsChange,
+    onToggleSidebar,
+    onToggleMobileMenu,
+    sidebarCollapsed = false,
+    mobileMenuOpen = false,
+    onAllowUnload,
 }) {
-    const [detailsOpen, setDetailsOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
     const [publicationNoticeVisible, setPublicationNoticeVisible] = useState(false);
-    const detailsButtonRef = useRef(null);
     const publishRequestRef = useRef(false);
     const publicationVersionRef = useRef(0);
-    const pagesMode = mode === 'pages';
-    const trashMode = mode === 'trash';
     const siteMode = mode === 'site';
     const editorMode = mode === 'editor';
     const isSaving = saveStatus === 'saving';
@@ -42,7 +38,6 @@ export default function AdminHeader({
     const saveTitle = isDirty && !isSaving
         ? 'Сохранить изменения страницы'
         : saveLabel;
-    const detailsDisabled = loadStatus !== 'success' || !page.id;
     const isPublishing = publication.status === 'building' || publication.status === 'publishing';
     const hasPublicationResult = publication.status === 'success' || publication.status === 'error';
     const publishLabel = publication.status === 'building'
@@ -113,27 +108,6 @@ export default function AdminHeader({
         return () => window.clearTimeout(timer);
     }, [hasPublicationResult, isPublishing, publication.status, publication.message, publication.releaseId]);
 
-    function openPageMap(event) {
-        if (
-            isDirty
-            && !window.confirm('Есть несохранённые изменения. Перейти к карте страниц?')
-        ) {
-            event.preventDefault();
-        }
-    }
-
-    function openSiteSettings(event) {
-        if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти к настройкам сайта?')) {
-            event.preventDefault();
-        }
-    }
-
-    function openHome(event) {
-        if (isDirty && !window.confirm('Есть несохранённые изменения. Перейти на главную страницу?')) {
-            event.preventDefault();
-        }
-    }
-
     function openPreview(event) {
         if (isDirty && !window.confirm('В предпросмотре будут показаны только сохранённые изменения. Продолжить?')) {
             event.preventDefault();
@@ -168,16 +142,6 @@ export default function AdminHeader({
         }
     }
 
-    function closePageDetails() {
-        setDetailsOpen(false);
-        requestAnimationFrame(() => detailsButtonRef.current?.focus());
-    }
-
-    function savePageDetails(updatedPage) {
-        onPageDetailsChange(updatedPage);
-        closePageDetails();
-    }
-
     async function logOut() {
         if (
             isDirty
@@ -202,6 +166,7 @@ export default function AdminHeader({
                 body,
             });
             if (!response.ok) throw new Error('Не удалось завершить сессию.');
+            onAllowUnload?.();
             window.location.assign('/auth/signin');
         } catch (error) {
             setLogoutError(error.message || 'Не удалось выйти из аккаунта.');
@@ -209,108 +174,64 @@ export default function AdminHeader({
         }
     }
 
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 820px)').matches;
+
     return (
         <>
-            <Card className={`${barStyles.bar} ${barStyles.floating} ${styles.headerBar} ${pagesMode ? styles.pagesHeader : ''}`}>
+            <div className={styles.headerBar}>
                 <div className={styles.leftGroup}>
-                    <div className={styles.logo} role="img" aria-label="Oysite">
+                    <a className={styles.logo} href="/" aria-label="Oysite — на главную сайта" title="Открыть публичный сайт">
                         <OysiteLogo className={styles.fullLogo} aria-hidden="true" />
                         <OysiteMark className={styles.compactLogo} aria-hidden="true" />
-                    </div>
-
-                    {editorMode && page.path === '/' ? (
-                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Главная страница" aria-current="page">
-                            <Icon name="home" />
-                            <span className={styles.actionLabel}>Главная</span>
-                        </span>
-                    ) : (
-                        <a className={styles.action} href="/admin" aria-label="Главная страница" title="Открыть главную страницу" onClick={openHome}>
-                            <Icon name="home" />
-                            <span className={styles.actionLabel}>Главная</span>
-                        </a>
-                    )}
-
-                    {siteMode ? (
-                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Сайт" aria-current="page">
-                            <Icon name="globe" />
-                            <span className={styles.actionLabel}>Сайт</span>
-                        </span>
-                    ) : (
-                        <a className={styles.action} href="/admin/site" aria-label="Сайт" title="Управление оформлением сайта" onClick={openSiteSettings}>
-                            <Icon name="globe" />
-                            <span className={styles.actionLabel}>Сайт</span>
-                        </a>
-                    )}
-
-                    {pagesMode ? (
-                        <span className={`${styles.action} ${styles.activeAction}`} aria-label="Карта страниц" aria-current="page">
-                            <Icon name="pages" />
-                            <span className={styles.actionLabel}>Карта страниц</span>
-                        </span>
-                    ) : (
-                        <a className={styles.action} href="/admin/pages" aria-label="Карта страниц" title="Открыть карту страниц" onClick={openPageMap}>
-                            <Icon name="pages" />
-                            <span className={styles.actionLabel}>Карта страниц</span>
-                        </a>
-                    )}
+                    </a>
+                    <Button
+                        className={styles.menuToggle}
+                        aria-label={isMobile ? mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню' : sidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+                        title={isMobile ? mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню' : sidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+                        aria-expanded={isMobile ? mobileMenuOpen : !sidebarCollapsed}
+                        aria-controls="admin-sidebar"
+                        onClick={() => {
+                            if (window.matchMedia('(max-width: 820px)').matches) onToggleMobileMenu?.();
+                            else onToggleSidebar?.();
+                        }}
+                    ><Icon name="menu" size={23} /></Button>
                 </div>
 
-                {(editorMode || siteMode || pagesMode || trashMode) && (
-                    <div className={styles.centerGroup}>
-                        <span className={styles.pageTitle} title={siteMode || pagesMode || trashMode ? title : (page.title || 'Текущая страница')}>
-                            {siteMode || pagesMode || trashMode ? title : (page.title || '—')}
-                        </span>
-                        {editorMode && <Button
-                            className={styles.iconAction}
-                            variant="compact"
-                            ref={detailsButtonRef}
-                            aria-label="Настройки страницы"
-                            title="Настройки страницы"
-                            disabled={detailsDisabled}
-                            onClick={() => setDetailsOpen(true)}
-                        >
-                            <Icon name="settings" />
-                        </Button>}
-                    </div>
-                )}
-
                 <div className={styles.rightGroup}>
-                    {(editorMode || siteMode) && (
-                        <Button
-                            className={`${styles.action} ${styles.compactAction} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
-                            variant="primary"
-                            aria-label={saveLabel}
-                            title={siteMode ? (isDirty && !isSaving ? 'Сохранить настройки оформления' : saveLabel) : saveTitle}
-                            disabled={saveDisabled}
-                            onClick={onSave}
-                        >
-                            <Icon name="save" />
-                        </Button>
-                    )}
+                    <Button
+                        className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
+                        variant="primary"
+                        aria-label={saveLabel}
+                        title={siteMode ? (isDirty && !isSaving ? 'Сохранить настройки' : saveLabel) : saveTitle}
+                        disabled={saveDisabled || !onSave}
+                        onClick={onSave}
+                    ><Icon name="save" /><span>Сохранить</span></Button>
 
                     <Button
-                        className={`${styles.action} ${styles.compactAction} ${styles.publishAction}`}
+                        className={`${styles.action} ${styles.publishAction}`}
                         variant="outline"
                         aria-label={publishLabel}
                         title={isPublishing ? publishLabel : 'Опубликовать сайт'}
                         disabled={isPublishing}
                         onClick={publishSite}
-                    >
-                        <Icon name="publish" />
-                    </Button>
+                    ><Icon name="publish" /><span>{publishLabel}</span></Button>
                     <a
-                        className={`${styles.action} ${styles.compactAction}`}
+                        className={`${styles.iconAction} ${styles.action}`}
                         href={`/admin/preview?path=${encodeURIComponent(editorMode && page.path ? page.path : '/')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Посмотреть сайт"
-                        title="Открыть предпросмотр сайта"
-                        onClick={openPreview}
+                        aria-label="Предпросмотр сайта"
+                        title="Предпросмотр сайта"
+                        aria-disabled={isLoggingOut}
+                        onClick={(event) => {
+                            if (isLoggingOut) event.preventDefault();
+                            else openPreview(event);
+                        }}
                     >
                         <Icon name="preview" />
                     </a>
                     <Button
-                        className={`${styles.action} ${styles.compactAction}`}
+                        className={`${styles.iconAction} ${styles.action}`}
                         aria-label={logoutLabel}
                         title={isLoggingOut ? 'Выход из аккаунта…' : 'Выйти из аккаунта'}
                         disabled={isLoggingOut}
@@ -336,15 +257,8 @@ export default function AdminHeader({
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>
                 )}
-            </Card>
+            </div>
 
-            {editorMode && detailsOpen && (
-                <PageDetailsDialog
-                    page={page}
-                    onSaved={savePageDetails}
-                    onCancel={closePageDetails}
-                />
-            )}
         </>
     );
 }

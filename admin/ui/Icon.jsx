@@ -24,6 +24,11 @@ import SunIcon from './icons/sun.svg';
 import TabletIcon from './icons/tablet.svg';
 import TrashIcon from './icons/trash.svg';
 import UpIcon from './icons/up.svg';
+import MaterialsIcon from './icons/materials.svg';
+import CatalogIcon from './icons/catalog.svg';
+import ReviewsIcon from './icons/reviews.svg';
+import PaymentsIcon from './icons/payments.svg';
+import MenuIcon from './icons/menu.svg';
 import styles from './Icon.module.css';
 
 const icons = {
@@ -52,6 +57,11 @@ const icons = {
     desktop: DesktopIcon,
     tablet: TabletIcon,
     phone: PhoneIcon,
+    materials: MaterialsIcon,
+    catalog: CatalogIcon,
+    reviews: ReviewsIcon,
+    payments: PaymentsIcon,
+    menu: MenuIcon,
     sun: SunIcon,
 };
 

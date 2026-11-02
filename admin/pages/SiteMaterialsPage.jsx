@@ -5,6 +5,7 @@ import Icon from '../ui/Icon.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SiteMaterialsPage.module.css';
+import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 
 const FILTERS = [
     { value: 'all', label: 'Все' },
@@ -28,6 +29,7 @@ function formatDate(value) {
 }
 
 export default function SiteMaterialsPage() {
+    const navigate = useAppNavigate();
     const [filter, setFilter] = useState('all');
     const [materials, setMaterials] = useState([]);
     const [sections, setSections] = useState([]);
@@ -69,6 +71,11 @@ export default function SiteMaterialsPage() {
     }, []);
 
     const selectedSection = sections.find(({ id }) => id === sectionId);
+    const sectionDirty = Boolean(selectedSection && (
+        sectionName !== selectedSection.name
+        || sectionSlug !== selectedSection.slug
+        || Number(sectionSortOrder) !== selectedSection.sortOrder
+    )) || Boolean(newSectionName || newSectionSlug);
 
     useEffect(() => {
         setSectionName(selectedSection?.name || '');
@@ -81,12 +88,7 @@ export default function SiteMaterialsPage() {
         [materials, filter, sectionId],
     );
 
-    function changeSection(nextSection) {
-        if (nextSection === 'catalog') window.location.assign('/admin/site/catalog');
-        else if (nextSection === 'reviews') window.location.assign('/admin/site/reviews');
-        else if (nextSection === 'materials') return;
-        else window.location.assign(`/admin/site?section=${encodeURIComponent(nextSection)}`);
-    }
+    const actions = <Button variant="primary" onClick={() => navigate?.('/admin/site/materials/new')}><Icon name="add" /> Новый материал</Button>;
 
     async function saveSection(event, id = null) {
         event.preventDefault(); setSectionError('');
@@ -123,20 +125,13 @@ export default function SiteMaterialsPage() {
         <SiteSettingsLayout
             section="materials"
             title="Материалы"
+            actions={actions}
+            isDirty={sectionDirty}
             status={status}
             errorMessage={error || 'Не удалось загрузить материалы.'}
-            onSectionChange={changeSection}
         >
             <div className={styles.content}>
-                <div className={styles.toolbar}>
-                    <div>
-                        <h2>Материалы</h2>
-                        <p>Разделы и опубликованные материалы текущего сайта.</p>
-                    </div>
-                    <Button variant="primary" onClick={() => window.location.assign('/admin/site/materials/new')}>
-                        <Icon name="add" /> Новый материал
-                    </Button>
-                </div>
+                <p>Разделы и опубликованные материалы текущего сайта.</p>
                 <Card className={styles.filterBar}>
                     <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Раздел</span>
@@ -179,7 +174,7 @@ export default function SiteMaterialsPage() {
                                     <td>{formatDate(material.updatedAt)}</td>
                                     <td><span className={`${styles.status} ${styles[`status${material.status}`]}`}>{STATUS_LABELS[material.status] || material.status}</span></td>
                                     <td className={styles.actions}>
-                                        <Button variant="compact" title="Редактировать материал" onClick={() => window.location.assign(`/admin/site/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
+                                        <Button variant="compact" title="Редактировать материал" onClick={() => navigate?.(`/admin/site/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
                                         <Button variant="compact" title="Удалить материал" onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
                                     </td>
                                 </tr>)}

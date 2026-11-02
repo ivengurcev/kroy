@@ -1,6 +1,11 @@
-import AdminHeader from './AdminHeader.jsx';
+import { useRef, useState } from 'react';
 import EditorWorkspace from '../editor/EditorWorkspace.jsx';
-import AdminLayout from './AdminLayout.jsx';
+import AdminPageHeader from './AdminPageHeader.jsx';
+import PageDetailsDialog from './PageDetailsDialog.jsx';
+import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
+import { useAdminHeader } from './AdminWorkspaceContext.jsx';
+import styles from './AdminShell.module.css';
 
 export default function AdminShell({
     page,
@@ -27,17 +32,28 @@ export default function AdminShell({
     onSave,
     onPageDetailsChange,
 }) {
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const detailsButtonRef = useRef(null);
+    useAdminHeader({ mode: 'editor', page, loadStatus, saveStatus, isDirty, onSave, onPageDetailsChange });
+
+    function closePageDetails() {
+        setDetailsOpen(false);
+        requestAnimationFrame(() => detailsButtonRef.current?.focus());
+    }
+
     return (
-        <AdminLayout header={(
-                <AdminHeader
-                    page={page}
-                    loadStatus={loadStatus}
-                    saveStatus={saveStatus}
-                    isDirty={isDirty}
-                    onSave={onSave}
-                    onPageDetailsChange={onPageDetailsChange}
+        <div className={styles.shell}>
+                <AdminPageHeader
+                    title={page.title || 'Редактор страницы'}
+                    actions={<Button
+                        ref={detailsButtonRef}
+                        variant="secondary"
+                        disabled={loadStatus !== 'success' || !page.id}
+                        aria-label="Настройки страницы"
+                        title="Настройки страницы"
+                        onClick={() => setDetailsOpen(true)}
+                    ><Icon name="settings" /> Настройки страницы</Button>}
                 />
-            )}>
                 <EditorWorkspace
                     page={page}
                     content={content}
@@ -59,6 +75,7 @@ export default function AdminShell({
                     onViewChange={onViewChange}
                     onViewPropChange={onViewPropChange}
                 />
-        </AdminLayout>
+                {detailsOpen && <PageDetailsDialog page={page} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
+        </div>
     );
 }

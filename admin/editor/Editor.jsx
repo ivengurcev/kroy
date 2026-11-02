@@ -1,5 +1,6 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import ApplicationContext from '@vyaz/core/Context.js';
 
 import { parts } from '../../dist/kroy/parts.mjs';
 import metadata from '../../dist/kroy/parts.json';
@@ -12,6 +13,7 @@ import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview } from './materialPreview.mjs';
 
 export default function Editor() {
+    const { pathname, navigate } = useContext(ApplicationContext) || {};
     const [content, setContent] = useState([]);
     const [page, setPage] = useState({ id: null, title: '', path: '' });
     const [loadStatus, setLoadStatus] = useState('loading');
@@ -27,7 +29,8 @@ export default function Editor() {
 
     useEffect(() => {
         const controller = new AbortController();
-        const match = window.location.pathname.match(
+        setLoadStatus('loading');
+        const match = pathname.match(
             /^\/admin\/pages\/([^/]+)$/
         );
         const pageUrl = match
@@ -53,8 +56,8 @@ export default function Editor() {
 
                 setContent(loadedContent);
                 setPage(toEditorPage(page));
-                if (page.path === '/' && window.location.pathname !== '/admin') {
-                    window.history.replaceState({}, '', '/admin');
+                if (page.path === '/' && pathname !== '/admin') {
+                    navigate?.('/admin', { replace: true, skipGuard: true });
                 }
                 setIsDirty(false);
                 setSaveStatus('success');
@@ -70,7 +73,7 @@ export default function Editor() {
         loadPage();
 
         return () => controller.abort();
-    }, []);
+    }, [pathname, navigate]);
 
     useEffect(() => {
         const controller = new AbortController();
