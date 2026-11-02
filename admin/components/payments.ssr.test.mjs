@@ -18,6 +18,7 @@ before(async () => {
                 export { default as CatalogEditor } from './admin/components/CatalogEditor.jsx';
                 export { default as ProductCards, ProductCard } from './site/components/ProductCards.jsx';
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
+                export { default as SiteMaterialsPage } from './admin/pages/SiteMaterialsPage.jsx';
                 export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
@@ -63,6 +64,10 @@ test('site settings expose a Payments section with its own page and the payments
     assert.match(html, /Загрузка/);
     const layout = renderToString(createElement(components.SiteSettingsLayout, { section: 'payments', title: 'Платежи', status: 'success' }));
     assert.match(layout, /aria-current="page"[^>]*>[^<]*<svg[\s\S]*Платежи/);
+});
+
+test('materials page renders on SSR without browser globals', () => {
+    assert.doesNotThrow(() => renderToString(createElement(components.SiteMaterialsPage)));
 });
 
 test('catalog admin and public product cards still render names, descriptions and ruble prices without purchase links', () => {

@@ -31,7 +31,7 @@ export default function SiteMaterialsPage() {
     const [filter, setFilter] = useState('all');
     const [materials, setMaterials] = useState([]);
     const [sections, setSections] = useState([]);
-    const [sectionId, setSectionId] = useState(new URLSearchParams(window.location.search).get('sectionId') || '');
+    const [sectionId, setSectionId] = useState('');
     const [sectionName, setSectionName] = useState('');
     const [sectionSlug, setSectionSlug] = useState('');
     const [sectionSortOrder, setSectionSortOrder] = useState(0);
@@ -41,6 +41,10 @@ export default function SiteMaterialsPage() {
     const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
     const [deletingId, setDeletingId] = useState(null);
+
+    useEffect(() => {
+        setSectionId(new URLSearchParams(window.location.search).get('sectionId') || '');
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
