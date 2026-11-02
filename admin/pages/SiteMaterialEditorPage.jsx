@@ -5,6 +5,7 @@ import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import MaterialEditor from '../components/MaterialEditor.jsx';
+import { materialRequestBody } from '../editor/materialRequest.mjs';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SiteMaterialEditorPage.module.css';
 
@@ -140,11 +141,7 @@ export default function SiteMaterialEditorPage() {
         const savedRevision = revision.current;
         setSaveStatus('saving');
         setFormError('');
-        const body = { ...material, status: nextStatus };
-        delete body.id;
-        delete body.createdAt;
-        delete body.updatedAt;
-        delete body.publishedAt;
+        const body = materialRequestBody(material, nextStatus);
         try {
             const response = await fetch(materialId ? `/api/site/materials/${materialId}` : '/api/site/materials', {
                 method: materialId ? 'PATCH' : 'POST',
