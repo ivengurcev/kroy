@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import ApplicationContext from '@vyaz/core/Context.js';
 import Icon from '../ui/Icon.jsx';
 import styles from './AdminSidebar.module.css';
 
@@ -20,7 +22,8 @@ const groups = [
 ];
 
 export default function AdminSidebar({ pathname, collapsed, mobileOpen, onNavigate }) {
-    const search = new URLSearchParams(window.location.search);
+    const { search = '' } = useContext(ApplicationContext) || {};
+    const searchParams = new URLSearchParams(search);
 
     return (
         <>
@@ -31,7 +34,7 @@ export default function AdminSidebar({ pathname, collapsed, mobileOpen, onNaviga
                         <section className={styles.group} key={group.label} aria-label={group.label}>
                             <h2>{group.label}</h2>
                             {group.items.map((item) => {
-                                const active = item.match?.(pathname, search);
+                                const active = item.match?.(pathname, searchParams);
                                 const className = `${styles.item} ${active ? styles.active : ''}`;
                                 return item.disabled ? (
                                     <button className={`${className} ${styles.disabled}`} type="button" disabled key={item.label} title={`${item.label} — скоро`}>

@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { getPaymentProvider, describePaymentProvider } from '../../server/payments/providers.mjs';
+import ApplicationContext from '@vyaz/core/Context.js';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.payments-test-${randomUUID()}.mjs`, import.meta.url));
@@ -18,6 +19,7 @@ before(async () => {
                 export { default as CatalogEditor } from './admin/components/CatalogEditor.jsx';
                 export { default as ProductCards, ProductCard } from './site/components/ProductCards.jsx';
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
+                export { default as AdminSidebar } from './admin/components/AdminSidebar.jsx';
                 export { default as SiteMaterialsPage } from './admin/pages/SiteMaterialsPage.jsx';
                 export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
@@ -69,6 +71,17 @@ test('site settings expose a Payments route without a duplicate section menu and
 
 test('materials page renders on SSR without browser globals', () => {
     assert.doesNotThrow(() => renderToString(createElement(components.SiteMaterialsPage)));
+});
+
+test('admin sidebar renders on SSR and selects contact settings from application search', () => {
+    const html = renderToString(createElement(
+        ApplicationContext.Provider,
+        { value: { search: '?section=contacts' } },
+        createElement(components.AdminSidebar, { pathname: '/admin/site' }),
+    ));
+
+    assert.match(html, /href="\/admin\/site\?section=contacts"[^>]*aria-current="page"/);
+    assert.doesNotMatch(html, /href="\/admin\/site"[^>]*aria-current="page"/);
 });
 
 test('catalog admin and public product cards still render names, descriptions and ruble prices without purchase links', () => {

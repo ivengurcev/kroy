@@ -83,7 +83,7 @@ export default function PagesPage() {
 
             const page = await response.json();
 
-            navigate?.(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`);
+            navigate?.(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`, { skipGuard: true });
         } catch {
             setCreateStatus('error');
         }
