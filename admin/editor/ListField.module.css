@@ -1,114 +1,71 @@
 .listField {
     display: grid;
     gap: var(--space-2);
+    min-width: 0;
     margin: 0;
-    padding: var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: 0;
+    border: 0;
 }
 
 .listField legend {
-    padding: 0 var(--space-1);
+    padding: 0;
     color: var(--color-text-secondary);
+    font-weight: 600;
 }
 
 .items {
-    overflow: visible;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-}
-
-.listItem {
-    position: relative;
-    min-width: 0;
-    background: var(--color-surface);
-}
-
-.listItem + .listItem {
-    border-top: 1px solid var(--color-border);
-}
-
-.itemRow {
-    display: flex;
-    min-width: 0;
-    padding: var(--space-1);
-}
-
-.summary {
-    flex: 1 1 auto;
-    justify-content: space-between;
-    min-width: 0;
-    min-height: 50px;
-    padding: var(--space-2);
-    border-color: transparent;
-    text-align: left;
-}
-
-.summaryText {
     display: grid;
     min-width: 0;
 }
 
-.summaryText strong,
-.summaryText small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.listItem {
+    min-width: 0;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.summaryText strong {
+.itemHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: var(--control-height-sm);
     color: var(--color-text);
     font-size: var(--font-size-sm);
 }
 
-.summaryText small {
-    color: var(--color-text-muted);
+.itemHeader strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
-.summary > svg {
+.actions {
+    display: flex;
     flex: 0 0 auto;
-}
-
-.menuTrigger {
-    flex: 0 0 auto;
-    align-self: center;
-    border-color: transparent;
-}
-
-.menu {
-    position: absolute;
-    z-index: 10;
-    top: calc(var(--control-height-sm) + var(--space-3));
-    right: var(--space-2);
-    display: grid;
-    min-width: 205px;
-    padding: var(--space-1);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-panel);
-}
-
-.menu button {
-    justify-content: flex-start;
-    min-height: var(--control-height-sm);
-    border-color: transparent;
-}
-
-.menu button:disabled {
-    opacity: .45;
+    gap: var(--space-1);
 }
 
 .editor {
     display: grid;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    border-top: 1px solid var(--color-border);
-    background: var(--color-canvas);
+    gap: var(--space-2);
+    min-width: 0;
+    margin-left: var(--space-2);
+    padding-left: var(--space-2);
+    border-left: 1px solid var(--color-border);
 }
 
-.editor > button,
 .addButton {
     justify-self: start;
     min-height: var(--control-height-sm);
+}
+
+@media (max-width: 600px) {
+    .itemHeader {
+        align-items: flex-start;
+    }
+
+    .editor {
+        margin-left: var(--space-1);
+        padding-left: var(--space-1);
+    }
 }

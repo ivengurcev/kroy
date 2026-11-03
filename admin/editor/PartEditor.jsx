@@ -24,7 +24,7 @@ export default function PartEditor({
             <h3>{title}</h3>
 
             <div className={styles.section}>
-                <h4>Настройки данных</h4>
+                <h4>Данные</h4>
                 {Object.entries(fields).map(([name, schema]) => (
                     <Field
                         key={name}
@@ -41,8 +41,8 @@ export default function PartEditor({
 
             {compatibleWidgets.length > 0 && (
                 <div className={styles.section}>
+                    <h4>Отображение</h4>
                     <label className={styles.viewField}>
-                        Отображение
                         <select value={view.name} onChange={(event) => onViewChange(event.target.value)}>
                             {compatibleWidgets.map(([name, metadata]) => (
                                 <option value={name} key={name}>{metadata.title}</option>
@@ -50,7 +50,6 @@ export default function PartEditor({
                         </select>
                     </label>
 
-                    <h4>Настройки виджета</h4>
                     {Object.entries(widgetMetadata[view.name]?.fields ?? {}).map(([name, schema]) => (
                         <Field
                             key={name}
@@ -59,7 +58,7 @@ export default function PartEditor({
                             value={view.props[name]}
                             catalog={catalog}
                             reviews={reviews}
-                        materialSections={materialSections}
+                            materialSections={materialSections}
                             onChange={(value) => onViewPropChange(name, value)}
                         />
                     ))}

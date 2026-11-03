@@ -5,8 +5,7 @@ import styles from './AdminSidebar.module.css';
 
 const groups = [
     { label: 'Основное', items: [
-        { label: 'Редактор', path: '/admin', icon: 'home', match: (path) => path === '/admin' || /^\/admin\/pages\/(?!trash$)[^/]+$/.test(path) },
-        { label: 'Страницы', path: '/admin/pages', icon: 'pages', match: (path) => path === '/admin/pages' || path === '/admin/pages/trash' },
+        { label: 'Страницы', path: '/admin/pages', icon: 'pages', match: (path) => path === '/admin' || path === '/admin/pages' || /^\/admin\/pages\/[^/]+$/.test(path) },
     ] },
     { label: 'Содержимое', items: [
         { label: 'Материалы', path: '/admin/site/materials', icon: 'materials', match: (path) => path.startsWith('/admin/site/materials') },

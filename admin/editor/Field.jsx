@@ -44,6 +44,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
         return (
             <ListField
                 label={label}
+                itemLabel={schema.itemLabel}
                 fields={schema.fields ?? {}}
                 value={value}
                 onChange={onChange}

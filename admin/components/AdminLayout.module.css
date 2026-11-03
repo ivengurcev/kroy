@@ -1,5 +1,6 @@
 .layout {
     --admin-header-offset: 68px;
+    --admin-layout-content-padding: clamp(20px, 2.1vw, 36px);
     width: 100%;
     min-width: 320px;
     min-height: 100vh;
@@ -9,13 +10,21 @@
 .header { position: sticky; z-index: 50; top: 0; background: #fff; }
 .body { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: calc(100vh - var(--admin-header-offset)); transition: grid-template-columns 180ms ease; }
 .collapsed .body { grid-template-columns: 78px minmax(0, 1fr); }
-.content { min-width: 0; padding: 25px clamp(20px, 2.1vw, 36px) 48px; }
+.content { min-width: 0; padding: 25px var(--admin-layout-content-padding) 48px; }
 
 @media (max-width: 820px) {
+    .layout{
+        --admin-layout-content-padding: 16px;
+    }
     .body, .collapsed .body { display: block; min-height: calc(100vh - var(--admin-header-offset)); }
-    .content { padding: 20px 16px 40px; }
+    .content {
+        padding: 20px var(--admin-layout-content-padding) 40px;
+    }
 }
 
 @media (max-width: 480px) {
-    .content { padding: 16px 10px 32px; }
+    .layout{
+        --admin-layout-content-padding: 10px;
+    }
+    .content { padding: 16px var(--admin-layout-content-padding) 32px; }
 }

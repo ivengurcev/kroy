@@ -1,6 +1,7 @@
 .card {
     border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-lg);
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
     background: var(--color-surface-translucent);
     box-shadow: var(--shadow-panel);
 }

@@ -30,7 +30,7 @@ export default function PartControls({
                 {isEditing ? 'Закрыть' : 'Редактировать'}
             </Button>
             <Button
-                variant="compact"
+                variant="iconAction"
                 aria-label="Переместить запчасть вверх"
                 title="Переместить запчасть вверх"
                 disabled={isFirst}
@@ -43,7 +43,7 @@ export default function PartControls({
                 <Icon name="up" />
             </Button>
             <Button
-                variant="compact"
+                variant="iconAction"
                 aria-label="Переместить запчасть вниз"
                 title="Переместить запчасть вниз"
                 disabled={isLast}
@@ -56,7 +56,7 @@ export default function PartControls({
                 <Icon name="down" />
             </Button>
             <Button
-                variant="compact"
+                variant="iconAction"
                 aria-label="Удалить запчасть"
                 title="Удалить запчасть"
                 onClick={(event) => {
