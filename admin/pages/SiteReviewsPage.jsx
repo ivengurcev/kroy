@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
@@ -47,7 +47,7 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
     const setField = (name) => (event) => onChange({ ...review, [name]: event.target.value });
 
     return (
-        <Card as="form" className={styles.form} onSubmit={onSubmit}>
+        <AdminPanel as="form" className={styles.form} onSubmit={onSubmit}>
             <div className={styles.formHeading}>
                 <h2>{editing ? 'Редактирование отзыва' : 'Новый отзыв'}</h2>
                 <p>{editing ? 'Изменения сохраняются сразу в текущем сайте.' : 'Новый отзыв будет опубликован сразу.'}</p>
@@ -94,7 +94,7 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
                 <Button type="submit" variant="primary" disabled={busy}><Icon name="save" /> {busy ? 'Сохранение…' : 'Сохранить'}</Button>
                 <Button type="button" disabled={busy} onClick={onCancel}><Icon name="close" /> Отмена</Button>
             </div>
-        </Card>
+        </AdminPanel>
     );
 }
 
@@ -186,17 +186,17 @@ export default function SiteReviewsPage() {
         >
             <div className={styles.content}>
                 <p>Управление отзывами текущего сайта.</p>
-                <Card className={styles.filterBar}>
+                <AdminPanel className={styles.filterBar}>
                     <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Показать</span>
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
                         </select>
                     </label>
-                </Card>
+                </AdminPanel>
                 {form && <ReviewForm review={form} editing={Boolean(form.id)} busy={saving} error={formError} onChange={setForm} onSubmit={saveReview} onCancel={() => setForm(null)} />}
                 {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
-                <Card className={styles.tableCard}>
+                <AdminPanel className={styles.tableCard} noPadding>
                     <div className={styles.tableScroll}>
                         <table className={styles.table}>
                             <thead><tr><th>Дата</th><th>Автор</th><th>Текст</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr></thead>
@@ -212,7 +212,7 @@ export default function SiteReviewsPage() {
                             </tbody>
                         </table>
                     </div>
-                </Card>
+                </AdminPanel>
             </div>
         </SiteSettingsLayout>
     );

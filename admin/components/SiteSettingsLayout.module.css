@@ -7,7 +7,7 @@
     grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
     gap: var(--space-6);
     align-items: start;
-    max-width: 1440px;
+    max-width: var(--admin-content-max);
     margin: 0 auto;
 }
 

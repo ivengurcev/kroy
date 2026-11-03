@@ -16,7 +16,10 @@ export default function AdminLayout({ header, sidebar, children, sidebarCollapse
         };
 
         updateHeaderHeight();
-        if (typeof ResizeObserver === 'undefined') return undefined;
+        if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', updateHeaderHeight);
+            return () => window.removeEventListener('resize', updateHeaderHeight);
+        }
 
         const observer = new ResizeObserver(updateHeaderHeight);
         observer.observe(headerElement);

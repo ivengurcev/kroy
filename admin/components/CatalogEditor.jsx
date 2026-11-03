@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
@@ -77,13 +77,13 @@ export default function CatalogEditor({ value, onChange }) {
     return <div className={styles.catalog}>
         <div className={styles.toolbar}><Button onClick={addCategory}><Icon name="add" /> Добавить категорию</Button><Button onClick={() => addProduct()}><Icon name="add" /> Добавить товар/услугу</Button></div>
         <div className={`${styles.layout} ${selection ? styles.hasSelection : ''}`}>
-            <Card className={styles.tree}>{catalog.categories.map(treeCategory)}<div className={styles.group}><div className={styles.categoryRow}><span className={styles.toggle} aria-hidden="true">•</span><strong className={styles.categoryName}>Без категории <small>{uncategorized.length}</small></strong></div>{uncategorized.length > 0 && <div className={styles.children}>{uncategorized.map((product, productIndex, list) => treeProduct(product, productIndex, list))}</div>}</div></Card>
-            <Card className={styles.editor}>
+            <AdminPanel className={styles.tree}>{catalog.categories.map(treeCategory)}<div className={styles.group}><div className={styles.categoryRow}><span className={styles.toggle} aria-hidden="true">•</span><strong className={styles.categoryName}>Без категории <small>{uncategorized.length}</small></strong></div>{uncategorized.length > 0 && <div className={styles.children}>{uncategorized.map((product, productIndex, list) => treeProduct(product, productIndex, list))}</div>}</div></AdminPanel>
+            <AdminPanel className={styles.editor}>
                 {selection && <Button className={styles.backButton} variant="compact" onClick={() => setSelection(null)}><Icon name="back" /> Назад к каталогу</Button>}
                 {selectedCategory && <><h2>Категория</h2><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Название</span><input value={selectedCategory.name} onChange={(event) => updateCategory(selectedCategory.id, { name: event.target.value })} /></label><Button variant="danger" onClick={() => removeCategory(selectedCategory.id)}><Icon name="delete" /> Удалить категорию</Button></>}
                 {selectedProduct && <><h2>Товар/услуга</h2><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Название</span><input value={selectedProduct.name} onChange={(event) => updateProduct(selectedProduct.id, { name: event.target.value })} /></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.long}`}><span>Описание</span><textarea rows="4" value={selectedProduct.description} onChange={(event) => updateProduct(selectedProduct.id, { description: event.target.value })} /></label><ImageField label="Изображение" value={selectedProduct.mediaId ? `/api/media/${selectedProduct.mediaId}` : ''} aspectRatio="4:3" maxWidth={1200} onChange={(url) => updateProduct(selectedProduct.id, { mediaId: url.split('/').pop() || null })} /><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Цена, ₽</span><input inputMode="decimal" value={selectedProduct.price} onChange={(event) => updateProduct(selectedProduct.id, { price: event.target.value })} /></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Тип позиции</span><select value={selectedProduct.type} onChange={(event) => updateProduct(selectedProduct.id, { type: event.target.value })}><option value="service">Услуга</option><option value="goods">Товар</option></select></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Категория</span><select value={selectedProduct.categoryId ?? ''} onChange={(event) => updateProduct(selectedProduct.id, { categoryId: event.target.value || null })}><option value="">Без категории</option>{catalog.categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label><label className={`${styles.checkbox} ${compactStyles.checkbox}`}><input type="checkbox" checked={selectedProduct.status === 'published'} onChange={(event) => updateProduct(selectedProduct.id, { status: event.target.checked ? 'published' : 'hidden' })} /> Опубликован</label><div className={styles.editorActions}><Button variant="danger" onClick={() => removeProduct(selectedProduct.id)}><Icon name="delete" /> Удалить</Button><Button onClick={() => setSelection(null)}>Готово</Button></div></>}
                 {!selectedCategory && !selectedProduct && <p className={styles.empty}>Выберите категорию или товар.</p>}
-            </Card>
+            </AdminPanel>
         </div>
     </div>;
 }

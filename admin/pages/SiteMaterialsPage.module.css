@@ -1,9 +1,8 @@
-.content { display: grid; gap: var(--space-4); max-width: 1180px; margin: 0 auto; }
+.content { display: grid; gap: var(--space-4); max-width: var(--admin-content-max); margin: 0 auto; }
 .toolbar { display: flex; gap: var(--space-4); align-items: center; justify-content: space-between; }
 .toolbar h2, .toolbar p { margin: 0; }
 .toolbar h2 { font-size: var(--font-size-lg); }
 .toolbar p { margin-top: var(--space-1); color: var(--color-text-secondary); }
-.filterBar { padding: var(--space-3) var(--space-4); }
 .filterBar label { max-width: 360px; }
 .tableCard { overflow: hidden; }
 .tableScroll { overflow-x: auto; }

@@ -1,4 +1,4 @@
-.form { display: grid; gap: var(--space-4); max-width: 1000px; margin: 0 auto; padding: var(--space-5); }
+.form { display: grid; gap: var(--space-4); max-width: var(--admin-content-max); margin: 0 auto; }
 .heading { display: flex; gap: var(--space-4); align-items: start; justify-content: space-between; }
 .heading h2, .heading p { margin: 0; }
 .heading h2 { font-size: var(--font-size-lg); }
@@ -14,7 +14,6 @@
 .actionSpacer { flex: 1; }
 
 @media (max-width: 600px) {
-    .form { padding: var(--space-4); }
     .heading { align-items: stretch; flex-direction: column; }
     .heading button { align-self: flex-start; }
     .actions { flex-wrap: wrap; }

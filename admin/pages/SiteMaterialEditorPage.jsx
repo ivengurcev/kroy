@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
@@ -191,7 +191,7 @@ export default function SiteMaterialEditorPage() {
             saveStatus={saveStatus}
             onSave={() => saveMaterial()}
         >
-            {material && <Card as="form" className={styles.form} onSubmit={saveMaterial}>
+            {material && <AdminPanel as="form" className={styles.form} onSubmit={saveMaterial}>
                 <div className={styles.heading}>
                     <p>{materialId ? 'Изменения сохраняются только после явного действия.' : 'Сначала сохраните черновик, чтобы открыть постоянный адрес материала.'}</p>
                 </div>
@@ -241,7 +241,7 @@ export default function SiteMaterialEditorPage() {
                     <Button type="submit" variant="secondary" disabled={saveStatus === 'saving'}><Icon name="save" /> {saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>
                     <Button type="button" variant="primary" disabled={saveStatus === 'saving'} onClick={() => saveMaterial(undefined, 'published')}><Icon name="publish" /> Опубликовать</Button>
                 </div>
-            </Card>}
+            </AdminPanel>}
         </SiteSettingsLayout>
     );
 }

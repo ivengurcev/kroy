@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import EditorWorkspace from '../editor/EditorWorkspace.jsx';
 import AdminPageHeader from './AdminPageHeader.jsx';
 import PageDetailsDialog from './PageDetailsDialog.jsx';
@@ -6,6 +6,8 @@ import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import { useAdminHeader } from './AdminWorkspaceContext.jsx';
 import styles from './AdminShell.module.css';
+
+const useMeasuredLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export default function AdminShell({
     page,
@@ -34,7 +36,24 @@ export default function AdminShell({
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const detailsButtonRef = useRef(null);
+    const headerRef = useRef(null);
+    const [headerHeight, setHeaderHeight] = useState(null);
     useAdminHeader({ mode: 'editor', page, loadStatus, saveStatus, isDirty, onSave, onPageDetailsChange });
+
+    useMeasuredLayoutEffect(() => {
+        const header = headerRef.current;
+        if (!header) return undefined;
+        const updateHeaderHeight = () => setHeaderHeight(header.getBoundingClientRect().height);
+        if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', updateHeaderHeight);
+            updateHeaderHeight();
+            return () => window.removeEventListener('resize', updateHeaderHeight);
+        }
+        const observer = new ResizeObserver(updateHeaderHeight);
+        observer.observe(header);
+        updateHeaderHeight();
+        return () => observer.disconnect();
+    }, []);
 
     function closePageDetails() {
         setDetailsOpen(false);
@@ -42,8 +61,9 @@ export default function AdminShell({
     }
 
     return (
-        <div className={styles.shell}>
+        <div className={styles.shell} style={{ '--admin-page-header-height': headerHeight ? `${headerHeight}px` : undefined }}>
                 <AdminPageHeader
+                    headerRef={headerRef}
                     title={page.title || 'Редактор страницы'}
                     actions={<Button
                         ref={detailsButtonRef}

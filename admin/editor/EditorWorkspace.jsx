@@ -9,6 +9,7 @@ import Icon from '../ui/Icon.jsx';
 import barStyles from '../ui/AdminBar.module.css';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 
 function StickyPartHeader({ children }) {
     const sentinelRef = useRef(null);
@@ -20,16 +21,26 @@ function StickyPartHeader({ children }) {
 
         if (!sentinel || !header) return undefined;
 
-        const observer = new IntersectionObserver(([entry]) => {
-            header.toggleAttribute(
-                'data-stuck',
-                !entry.isIntersecting && entry.boundingClientRect.top < 0,
-            );
-        });
+        let observer;
+        const update = () => {
+            observer?.disconnect();
+            const style = getComputedStyle(header);
+            const offset = parseFloat(style.top);
+            observer = new IntersectionObserver(([entry]) => {
+                header.toggleAttribute('data-stuck', !entry.isIntersecting);
+            }, { rootMargin: `-${offset}px 0px 0px 0px` });
+            observer.observe(sentinel);
+        };
+        const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+        resizeObserver?.observe(header);
+        window.addEventListener('resize', update);
+        update();
 
-        observer.observe(sentinel);
-
-        return () => observer.disconnect();
+        return () => {
+            observer?.disconnect();
+            resizeObserver?.disconnect();
+            window.removeEventListener('resize', update);
+        };
     }, []);
 
     return (
@@ -144,8 +155,9 @@ export default function EditorWorkspace({
                 {previewMessage && <Card role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
-                    <div
+                    <AdminPanel
                         className={styles.previewPart}
+                        noPadding
                         key={item.id}
                     >
                         <StickyPartHeader>
@@ -188,7 +200,7 @@ export default function EditorWorkspace({
                                 </SiteRoot>
                             </div>
                         )}
-                    </div>,
+                    </AdminPanel>,
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
             </section>

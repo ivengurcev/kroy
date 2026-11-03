@@ -1,9 +1,10 @@
 .layout {
     --admin-header-offset: 68px;
+    --admin-page-header-height: 50px;
     width: 100%;
     min-width: 320px;
     min-height: 100vh;
-    background: #f4f6f4;
+    background: var(--color-canvas);
 }
 
 .header { position: sticky; z-index: 50; top: 0; background: #fff; }

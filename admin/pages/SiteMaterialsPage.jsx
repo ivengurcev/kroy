@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
@@ -132,7 +132,7 @@ export default function SiteMaterialsPage() {
         >
             <div className={styles.content}>
                 <p>Разделы и опубликованные материалы текущего сайта.</p>
-                <Card className={styles.filterBar}>
+                <AdminPanel className={styles.filterBar}>
                     <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Раздел</span>
                         <select value={sectionId} onChange={(event) => setSectionId(event.target.value)}>
@@ -152,17 +152,17 @@ export default function SiteMaterialsPage() {
                         <Button type="submit" variant="secondary"><Icon name="add" /> Добавить раздел</Button>
                     </form>
                     {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
-                </Card>
-                <Card className={styles.filterBar}>
+                </AdminPanel>
+                <AdminPanel className={styles.filterBar}>
                     <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Показать</span>
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
                         </select>
                     </label>
-                </Card>
+                </AdminPanel>
                 {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
-                <Card className={styles.tableCard}>
+                <AdminPanel className={styles.tableCard} noPadding>
                     <div className={styles.tableScroll}>
                         <table className={styles.table}>
                             <thead>
@@ -182,7 +182,7 @@ export default function SiteMaterialsPage() {
                             </tbody>
                         </table>
                     </div>
-                </Card>
+                </AdminPanel>
             </div>
         </SiteSettingsLayout>
     );

@@ -3,7 +3,7 @@ import styles from './PagesPage.module.css';
 import PageList from '../components/PageList.jsx';
 import AdminPageShell from '../components/AdminPageShell.jsx';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import { slugifyPageTitle } from '../../shared/pageFields.mjs';
@@ -172,7 +172,7 @@ export default function PagesPage() {
         >
             <div className={styles.content}>
                 {showForm && (
-                    <Card as="form" className={styles.createForm} onSubmit={createPage}>
+                    <AdminPanel as="form" className={styles.createForm} onSubmit={createPage}>
                         <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                             <span>Название</span>
                             <input ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -209,7 +209,7 @@ export default function PagesPage() {
                         <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
                             {createStatus === 'error' && 'Не удалось создать страницу. Проверьте источник данных, раздел и путь.'}
                         </div>
-                    </Card>
+                    </AdminPanel>
                 )}
 
                 <PageList

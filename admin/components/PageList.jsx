@@ -3,6 +3,7 @@ import styles from './PageList.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import PageDetailsForm from './PageDetailsForm.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 
 function pathDepth(path) {
     return path.split('/').filter(Boolean).length;
@@ -66,7 +67,7 @@ export default function PageList({
             : '');
 
     return (
-        <section className={styles.pageList}>
+        <AdminPanel className={styles.pageList} noPadding>
             {errorMessage && (
                 <div className={styles.errorArea} role="alert">{errorMessage}</div>
             )}
@@ -148,6 +149,6 @@ export default function PageList({
                     </ul>
                 </>
             )}
-        </section>
+        </AdminPanel>
     );
 }

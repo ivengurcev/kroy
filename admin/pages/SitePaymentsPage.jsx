@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import PaymentIntegrationEditor from '../components/PaymentIntegrationEditor.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Button from '../ui/Button.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SitePaymentsPage.module.css';
@@ -84,7 +84,7 @@ export default function SitePaymentsPage() {
         section="payments" title="Платежи" status={status} errorMessage={error}
         isDirty={dirty} saveStatus={saveStatus} onSave={() => performAction('save')}
     >
-        <Card className={styles.panel}>
+        <AdminPanel className={styles.panel}>
             <p className={styles.status} role="status">{active ? `Активная система: ${active.name}` : 'Нет активной платёжной системы.'}</p>
             <label className={`${compactStyles.field} ${compactStyles.compact} ${styles.selector}`}>
                 <span>Платёжная система</span>
@@ -105,6 +105,6 @@ export default function SitePaymentsPage() {
                 {dirty && <p className={styles.hint}>Сохраните настройки перед активацией.</p>}
             </>}
             {error && <p className={styles.error} role="alert">{error}</p>}
-        </Card>
+        </AdminPanel>
     </SiteSettingsLayout>;
 }

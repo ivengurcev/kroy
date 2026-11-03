@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
-import Card from '../ui/Card.jsx';
+import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import TokenControl from '../ui/TokenControls.jsx';
 import SocialLinksEditor from '../components/SocialLinksEditor.jsx';
@@ -115,7 +115,7 @@ function ContactSettings({ value, onChange }) {
     const update = (name, nextValue) => onChange({ ...contacts, [name]: nextValue });
 
     return (
-        <Card className={styles.contactPanel}>
+        <AdminPanel className={styles.contactPanel}>
             <div className={styles.formGrid}>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Адрес</span>
@@ -141,22 +141,22 @@ function ContactSettings({ value, onChange }) {
                 </div>
             </div>
             <SocialLinksEditor value={contacts.socials ?? []} onChange={(socials) => update('socials', socials)} />
-        </Card>
+        </AdminPanel>
     );
 }
 
 function Overview({ siteData }) {
-    return <Card className={styles.overviewPanel}>
+    return <AdminPanel className={styles.overviewPanel}>
         <dl className={styles.overviewList}>
             <div><dt>Название сайта</dt><dd>{siteData?.site?.name || '—'}</dd></div>
             <div><dt>Идентификатор</dt><dd>{siteData?.site?.slug || '—'}</dd></div>
             <div><dt>Домены</dt><dd>{siteData?.domains?.length ? siteData.domains.join(', ') : 'Домены не добавлены'}</dd></div>
         </dl>
-    </Card>;
+    </AdminPanel>;
 }
 
 function SeoPlaceholder() {
-    return <Card className={styles.placeholder}><h2>SEO</h2><p>Настройки SEO появятся позже.</p></Card>;
+    return <AdminPanel className={styles.placeholder}><h2>SEO</h2><p>Настройки SEO появятся позже.</p></AdminPanel>;
 }
 
 export default function SitePage() {
@@ -232,7 +232,7 @@ export default function SitePage() {
         {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={setCatalog} />}
         {section === 'seo' && <SeoPlaceholder />}
         {section === 'appearance' && draft && selectedTheme && <div className={styles.content}>
-            <Card className={styles.panel}>
+            <AdminPanel className={styles.panel}>
                 <div className={styles.sectionHeading}>
                     <div>
                         <p>{selectedTheme.name}</p>
@@ -247,10 +247,10 @@ export default function SitePage() {
                     <span>{option.label}</span>
                     </button>)}
                 </div>
-            </Card>
-            <Card className={styles.tokensPanel}>
+            </AdminPanel>
+            <AdminPanel className={styles.tokensPanel} noPadding>
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
-            </Card>{error && <p className={styles.error} role="alert">{error}</p>}
+            </AdminPanel>{error && <p className={styles.error} role="alert">{error}</p>}
         </div>}
     </SiteSettingsLayout>;
 }
