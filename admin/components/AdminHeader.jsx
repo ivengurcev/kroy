@@ -4,9 +4,12 @@ import OysiteLogo from './OysiteLogo.svg';
 import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
+import AdminPageHeader from './AdminPageHeader.jsx';
 
 export default function AdminHeader({
     mode = 'editor',
+    title = '',
+    actions,
     page = {},
     isDirty = false,
     loadStatus = 'loading',
@@ -26,6 +29,7 @@ export default function AdminHeader({
     const publicationVersionRef = useRef(0);
     const siteMode = mode === 'site';
     const editorMode = mode === 'editor';
+    const headerTitle = title || (editorMode ? page.title : '') || 'Администрирование';
     const isSaving = saveStatus === 'saving';
     const saveDisabled = loadStatus !== 'success' || !isDirty || isSaving;
     const saveLabel = loadStatus !== 'success'
@@ -195,9 +199,11 @@ export default function AdminHeader({
                             else onToggleSidebar?.();
                         }}
                     ><Icon name="menu" size={23} /></Button>
+                    <AdminPageHeader title={headerTitle} />
                 </div>
 
                 <div className={styles.rightGroup}>
+                    {actions && <div className={styles.contextActions}>{actions}</div>}
                     <Button
                         className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
                         variant="primary"

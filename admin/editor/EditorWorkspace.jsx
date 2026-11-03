@@ -6,7 +6,6 @@ import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
-import barStyles from '../ui/AdminBar.module.css';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
@@ -18,11 +17,18 @@ function StickyPartHeader({ children }) {
     useEffect(() => {
         const sentinel = sentinelRef.current;
         const header = headerRef.current;
+        const panel = header?.parentElement;
+        const main = header?.closest('main');
 
-        if (!sentinel || !header) return undefined;
+        if (!sentinel || !header || !panel || !main) return undefined;
 
         let observer;
         const update = () => {
+            const panelLeft = panel.getBoundingClientRect().left;
+            const mainLeft = main.getBoundingClientRect().left;
+            header.style.setProperty('--admin-sticky-breakout-left', `${Math.max(0, panelLeft - mainLeft)}px`);
+            header.style.setProperty('--admin-sticky-main-left', `${mainLeft}px`);
+            header.style.setProperty('--admin-sticky-viewport-width', `${document.documentElement.clientWidth}px`);
             observer?.disconnect();
             const style = getComputedStyle(header);
             const offset = parseFloat(style.top);
@@ -33,6 +39,8 @@ function StickyPartHeader({ children }) {
         };
         const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
         resizeObserver?.observe(header);
+        resizeObserver?.observe(panel);
+        resizeObserver?.observe(main);
         window.addEventListener('resize', update);
         update();
 
@@ -46,7 +54,7 @@ function StickyPartHeader({ children }) {
     return (
         <>
             <span ref={sentinelRef} className={styles.stickySentinel} aria-hidden="true" />
-            <div ref={headerRef} className={`${barStyles.bar} ${barStyles.attached} ${styles.partHeader}`}>
+            <div ref={headerRef} className={styles.partHeader}>
                 {children}
             </div>
         </>
@@ -152,7 +160,7 @@ export default function EditorWorkspace({
     return (
         <div className={styles.workspace}>
             <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
-                {previewMessage && <Card role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
+                {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <AdminPanel

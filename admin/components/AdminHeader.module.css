@@ -16,6 +16,13 @@
 }
 
 .leftGroup, .rightGroup { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.leftGroup { flex: 1 1 auto; }
+.rightGroup { flex: 0 0 auto; }
+.contextActions { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.contextActions > :global(button), .contextActions > :global(a) { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; white-space: nowrap; }
+.contextActions > :global(a) { border: 1px solid #cbd7d1; border-radius: 9px; color: #27332f; text-decoration: none; background: #fff; }
+.contextActions > :global(a):hover { border-color: #176e6b; color: #0c625f; }
+.contextActions > :global(a):focus-visible { outline: 3px solid rgb(23 110 107 / 28%); outline-offset: 2px; }
 .logo { display: inline-flex; width: 112px; height: 40px; flex: 0 0 auto; align-items: center; margin-right: 8px; }
 .logo svg { display: block; width: 100%; height: auto; }
 .compactLogo { display: none !important; }
@@ -40,13 +47,17 @@
 @media (max-width: 820px) {
     .action > span { display: none; }
     .action { width: 40px; min-width: 40px; padding: 0; }
+    .contextActions { gap: 4px; }
+    .contextActions > :global(button), .contextActions > :global(a) { width: 40px; min-width: 40px; min-height: 44px; padding: 0; font-size: 0; }
+    .contextActions :global(svg) { flex: 0 0 auto; }
+    .contextActions :global(span) { display: none; }
 }
 @media (max-width: 600px) {
     .headerBar { min-height: 62px; gap: 8px; padding: 0 10px; }
     .logo { width: 36px; margin-right: 0; }
     .fullLogo { display: none !important; }
     .compactLogo { display: block !important; }
-    .rightGroup { gap: 6px; }
+    .rightGroup { gap: 4px; }
     .menuToggle, .action, .iconAction { width: 36px; min-width: 36px; min-height: 36px; height: 36px; border-radius: 7px; }
     .action svg, .iconAction svg { width: 18px; height: 18px; }
 }

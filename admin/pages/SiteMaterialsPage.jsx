@@ -88,7 +88,7 @@ export default function SiteMaterialsPage() {
         [materials, filter, sectionId],
     );
 
-    const actions = <Button variant="primary" onClick={() => navigate?.('/admin/site/materials/new')}><Icon name="add" /> Новый материал</Button>;
+    const actions = useMemo(() => <Button variant="primary" aria-label="Новый материал" onClick={() => navigate?.('/admin/site/materials/new')}><Icon name="add" /> <span>Новый материал</span></Button>, [navigate]);
 
     async function saveSection(event, id = null) {
         event.preventDefault(); setSectionError('');

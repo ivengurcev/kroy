@@ -178,7 +178,7 @@ export default function SiteMaterialEditorPage() {
     const imageUrl = material?.coverMediaId ? `/api/media/${material.coverMediaId}` : '';
     const editorValue = useMemo(() => material?.content || EMPTY_CONTENT, [material?.content]);
     const title = materialId ? 'Редактирование материала' : 'Новый материал';
-    const actions = <Button type="button" variant="secondary" onClick={() => navigate?.('/admin/site/materials')}><Icon name="back" /> К списку</Button>;
+    const actions = useMemo(() => <Button type="button" variant="secondary" aria-label="К списку материалов" onClick={() => navigate?.('/admin/site/materials')}><Icon name="back" /> <span>К списку</span></Button>, [navigate]);
 
     return (
         <SiteSettingsLayout

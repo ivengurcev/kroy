@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -108,7 +108,12 @@ export default function SiteReviewsPage() {
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const [reload, setReload] = useState(0);
-    const actions = <Button variant="primary" onClick={openCreate} disabled={Boolean(form)}><Icon name="add" /> Добавить отзыв</Button>;
+    const hasForm = Boolean(form);
+    const openCreate = useCallback(() => {
+        setForm(emptyReview());
+        setFormError('');
+    }, []);
+    const actions = useMemo(() => <Button variant="primary" aria-label="Добавить отзыв" onClick={openCreate} disabled={hasForm}><Icon name="add" /> <span>Добавить отзыв</span></Button>, [hasForm, openCreate]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -126,11 +131,6 @@ export default function SiteReviewsPage() {
             });
         return () => controller.abort();
     }, [filter, reload]);
-
-    function openCreate() {
-        setForm(emptyReview());
-        setFormError('');
-    }
 
     function openEdit(review) {
         setForm({ authorName: review.authorName ?? '', authorSubtitle: review.authorSubtitle ?? '', text: review.text ?? '', mediaId: review.mediaId ?? null, reviewDate: review.reviewDate ?? today(), status: review.status ?? 'pending', id: review.id });

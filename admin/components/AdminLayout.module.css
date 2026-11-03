@@ -1,6 +1,5 @@
 .layout {
     --admin-header-offset: 68px;
-    --admin-page-header-height: 50px;
     width: 100%;
     min-width: 320px;
     min-height: 100vh;

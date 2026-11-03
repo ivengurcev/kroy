@@ -1,13 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import EditorWorkspace from '../editor/EditorWorkspace.jsx';
-import AdminPageHeader from './AdminPageHeader.jsx';
 import PageDetailsDialog from './PageDetailsDialog.jsx';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import { useAdminHeader } from './AdminWorkspaceContext.jsx';
 import styles from './AdminShell.module.css';
-
-const useMeasuredLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export default function AdminShell({
     page,
@@ -36,24 +33,16 @@ export default function AdminShell({
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const detailsButtonRef = useRef(null);
-    const headerRef = useRef(null);
-    const [headerHeight, setHeaderHeight] = useState(null);
-    useAdminHeader({ mode: 'editor', page, loadStatus, saveStatus, isDirty, onSave, onPageDetailsChange });
-
-    useMeasuredLayoutEffect(() => {
-        const header = headerRef.current;
-        if (!header) return undefined;
-        const updateHeaderHeight = () => setHeaderHeight(header.getBoundingClientRect().height);
-        if (typeof ResizeObserver === 'undefined') {
-            window.addEventListener('resize', updateHeaderHeight);
-            updateHeaderHeight();
-            return () => window.removeEventListener('resize', updateHeaderHeight);
-        }
-        const observer = new ResizeObserver(updateHeaderHeight);
-        observer.observe(header);
-        updateHeaderHeight();
-        return () => observer.disconnect();
-    }, []);
+    const title = page.title || 'Редактор страницы';
+    const actions = useMemo(() => <Button
+        ref={detailsButtonRef}
+        variant="secondary"
+        disabled={loadStatus !== 'success' || !page.id}
+        aria-label="Настройки страницы"
+        title="Настройки страницы"
+        onClick={() => setDetailsOpen(true)}
+    ><Icon name="settings" /><span> Настройки страницы</span></Button>, [loadStatus, page.id]);
+    useAdminHeader({ mode: 'editor', title, actions, page, loadStatus, saveStatus, isDirty, onSave, onPageDetailsChange });
 
     function closePageDetails() {
         setDetailsOpen(false);
@@ -61,19 +50,7 @@ export default function AdminShell({
     }
 
     return (
-        <div className={styles.shell} style={{ '--admin-page-header-height': headerHeight ? `${headerHeight}px` : undefined }}>
-                <AdminPageHeader
-                    headerRef={headerRef}
-                    title={page.title || 'Редактор страницы'}
-                    actions={<Button
-                        ref={detailsButtonRef}
-                        variant="secondary"
-                        disabled={loadStatus !== 'success' || !page.id}
-                        aria-label="Настройки страницы"
-                        title="Настройки страницы"
-                        onClick={() => setDetailsOpen(true)}
-                    ><Icon name="settings" /> Настройки страницы</Button>}
-                />
+        <div className={styles.shell}>
                 <EditorWorkspace
                     page={page}
                     content={content}

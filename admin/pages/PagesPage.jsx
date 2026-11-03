@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './PagesPage.module.css';
 import PageList from '../components/PageList.jsx';
 import AdminPageShell from '../components/AdminPageShell.jsx';
@@ -153,14 +153,14 @@ export default function PagesPage() {
         setCreateStatus('idle');
     }
 
-    const actions = (
+    const actions = useMemo(() => (
         <>
-            <Button variant="primary" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
-                <Icon name="add" /> Создать страницу
+            <Button variant="primary" aria-label="Создать новую страницу" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
+                <Icon name="add" /> <span>Создать страницу</span>
             </Button>
-            <a href="/admin/pages/trash" title="Открыть корзину страниц"><Icon name="trash" /> Корзина</a>
+            <a href="/admin/pages/trash" aria-label="Корзина страниц" title="Открыть корзину страниц"><Icon name="trash" /> <span>Корзина</span></a>
         </>
-    );
+    ), [showForm]);
 
     return (
         <AdminPageShell

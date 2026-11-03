@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PageList from '../components/PageList.jsx';
 import styles from './PagesPage.module.css';
 import AdminPageShell from '../components/AdminPageShell.jsx';
@@ -9,6 +9,7 @@ export default function TrashPage() {
     const [status, setStatus] = useState('loading');
     const [restoringPageId, setRestoringPageId] = useState(null);
     const [restoreErrorId, setRestoreErrorId] = useState(null);
+    const actions = useMemo(() => <a href="/admin/pages" aria-label="Вернуться к карте страниц" title="Вернуться к карте страниц"><Icon name="back" /> <span>Страницы</span></a>, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -58,7 +59,7 @@ export default function TrashPage() {
         <AdminPageShell
             headerMode="trash"
             title="Корзина"
-            actions={<a href="/admin/pages" title="Вернуться к карте страниц"><Icon name="back" /> Вернуться к страницам</a>}
+            actions={actions}
             status={status}
             errorMessage="Не удалось загрузить корзину."
         >

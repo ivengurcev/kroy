@@ -1,22 +1,30 @@
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; width: 100%; max-width: var(--admin-content-max); min-width: 0; min-height: 100%; margin: 0 auto; }
-.pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2);}
+.pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2); }
+.workspaceMessage, .insertionPoint, .previewPart { width: 100%; max-width: var(--admin-content-max); margin-inline: auto; }
 .previewPart { position: relative; }
 .partContent { pointer-events: none; }
 .stickySentinel { position: absolute; top: 0; width: 1px; height: 1px; pointer-events: none; }
-.partHeader { 
+.partHeader {
     position: sticky; 
     z-index: 5; 
-    top: calc(var(--admin-header-offset) + var(--admin-page-header-height));
+    top: var(--admin-header-offset);
     display: flex; 
     gap: var(--space-3); 
     align-items: center; 
     justify-content: space-between; 
-    border: 0;
     min-width: 0; 
     padding: var(--space-3) var(--space-4); 
 }
-.partHeader.partHeader:not([data-stuck]) { border: none; border-radius: 0; }
-.partHeader.partHeader[data-stuck] { border-width: 0 0 1px; border-style: solid; border-color: var(--color-border-subtle); border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: var(--color-surface); box-shadow: var(--shadow-panel); }
+.partHeader[data-stuck] {
+    width: calc(var(--admin-sticky-viewport-width) - var(--admin-sticky-main-left));
+    max-width: none;
+    margin-left: calc(0px - var(--admin-sticky-breakout-left));
+    border-radius: 0;
+    background: var(--color-surface);
+    box-shadow: none;
+    /* padding: var(--space-3) calc(var(--space-4) + var(--admin-layout-content-padding));  */
+}
+.partHeader[data-stuck]::after { position: absolute; right: 0; bottom: 0; left: 0; height: 1px; background: var(--color-border-subtle); content: ''; pointer-events: none; }
 .partTitle { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .partHeader .partControls { position: static; flex: 0 0 auto; opacity: 1; pointer-events: auto; }
 .insertionPoint { position: relative; z-index: 3; display: grid; height: 28px; place-items: center; }
@@ -30,6 +38,6 @@
 .inlineEditorBody > section > h3 { display: none; }
 
 @media (max-width: 600px) {
-    .partHeader { min-height: 48px; padding: var(--space-1) var(--space-2); }
+    .partHeader, .partHeader[data-stuck] { min-height: 48px; padding: var(--space-1) var(--space-2); }
     .inlineEditor { padding: 0 var(--space-4) var(--space-4); }
 }
