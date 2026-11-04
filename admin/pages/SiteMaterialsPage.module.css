@@ -1,25 +1,59 @@
-.content { display: grid; gap: var(--space-4); max-width: var(--admin-content-max); margin: 0 auto; }
-.toolbar { display: flex; gap: var(--space-4); align-items: center; justify-content: space-between; }
-.toolbar h2, .toolbar p { margin: 0; }
-.toolbar h2 { font-size: var(--font-size-lg); }
-.toolbar p { margin-top: var(--space-1); color: var(--color-text-secondary); }
-.filterBar label { max-width: 360px; }
+.content { display: grid; gap: var(--space-3); max-width: var(--admin-content-max); margin: 0 auto; }
+
+.sectionBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.tabsViewport {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.sectionTabs {
+    width: max-content;
+    min-width: 100%;
+}
+
+.sectionTabs > button {
+    flex: 0 0 auto;
+    padding: var(--space-2) var(--space-3);
+    white-space: nowrap;
+}
+
+.tableToolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.statusFilter { width: min(100%, 320px); }
+.statusFilter select { height: var(--control-height-md); padding: 0 var(--space-3); border-radius: var(--radius-sm); }
+
 .tableCard { overflow: hidden; }
 .tableScroll { overflow-x: auto; }
 .table { width: 100%; min-width: 680px; border-collapse: collapse; }
-.table th, .table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border-subtle); text-align: left; vertical-align: middle; }
+.table th, .table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border-subtle); text-align: left; vertical-align: middle; }
 .table th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
 .table tbody tr:last-child td { border-bottom: 0; }
-.table td small { display: block; margin-top: 2px; color: var(--color-text-secondary); }
-.status { display: inline-flex; padding: 4px 8px; border-radius: 999px; font-size: var(--font-size-sm); white-space: nowrap; }
-.statusdraft { color: var(--color-warning-text); background: var(--color-warning-soft); }
-.statuspublished { color: var(--color-success-text); background: var(--color-success-soft); }
+.table td small { display: block; margin-top: var(--space-1); color: var(--color-text-secondary); }
 .actions { display: flex; gap: var(--space-1); justify-content: flex-end; }
 .empty { padding-block: var(--space-8) !important; color: var(--color-text-secondary); text-align: center !important; }
 .actionError { margin: 0; color: var(--color-error-text); }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
+.sectionForm { display: grid; gap: var(--space-3); min-width: 0; }
+.sectionFormActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.deleteSectionAction { margin-right: auto; }
+
 @media (max-width: 600px) {
-    .toolbar { align-items: stretch; flex-direction: column; }
-    .toolbar button { align-self: flex-start; }
+    .tableToolbar { align-items: stretch; flex-direction: column; }
+    .tableToolbar > button { align-self: flex-start; }
 }

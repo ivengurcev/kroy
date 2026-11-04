@@ -19,7 +19,7 @@
 .leftGroup { flex: 1 1 auto; }
 .rightGroup { flex: 0 0 auto; }
 .contextActions { display: flex; min-width: 0; align-items: center; gap: 8px; }
-.contextActions > :global(button), .contextActions > :global(a) { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; white-space: nowrap; }
+.contextActions > :global(button), .contextActions > :global(a) { display: inline-flex; min-height: var(--control-height-lg); align-items: center; justify-content: center; gap: 8px; padding: 0 12px; white-space: nowrap; }
 .contextActions > :global(a) { border: 1px solid #cbd7d1; border-radius: 9px; color: #27332f; text-decoration: none; background: #fff; }
 .contextActions > :global(a):hover { border-color: #176e6b; color: #0c625f; }
 .contextActions > :global(a):focus-visible { outline: 3px solid rgb(23 110 107 / 28%); outline-offset: 2px; }
@@ -28,11 +28,11 @@
 .compactLogo { display: none !important; }
 .menuToggle { display: inline-grid; width: 42px; min-width: 42px; height: 42px; padding: 0; place-items: center; border-color: transparent; background: transparent; }
 .menuToggle:hover { border-color: #dde5e0; background: #fbfcfa; }
-.action { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 9px; padding: 0 16px; white-space: nowrap; }
+.action { display: inline-flex; min-height: var(--control-height-lg); align-items: center; justify-content: center; gap: 9px; padding: 0 16px; white-space: nowrap; }
 .saveAction { color: #fff; }
 .saveAction:disabled { color: #82918b; }
 .savingAction svg { animation: save-pulse 900ms ease-in-out infinite; }
-.iconAction { width: 40px; min-width: 40px; height: 40px; padding: 0; border: 1px solid #dde5e0; border-radius: 9px; color: #27332f; text-decoration: none; background: #fff; }
+.iconAction { width: var(--control-height-md); min-width: var(--control-height-md); height: var(--control-height-md); padding: 0; border: 1px solid #dde5e0; border-radius: 9px; color: #27332f; text-decoration: none; background: #fff; }
 .iconAction:hover { border-color: #cbd7d1; background: #fbfcfa; }
 .iconAction:focus-visible { outline: 3px solid rgb(23 110 107 / 28%); outline-offset: 2px; }
 .iconAction:disabled, .iconAction[aria-disabled="true"] { color: #98a19d; background: #f4f6f4; cursor: not-allowed; }
@@ -46,9 +46,9 @@
 }
 @media (max-width: 820px) {
     .action > span { display: none; }
-    .action { width: 40px; min-width: 40px; padding: 0; }
+    .action { width: var(--control-height-md); min-width: var(--control-height-md); padding: 0; }
     .contextActions { gap: 4px; }
-    .contextActions > :global(button), .contextActions > :global(a) { width: 40px; min-width: 40px; min-height: 44px; padding: 0; font-size: 0; }
+    .contextActions > :global(button), .contextActions > :global(a) { width: var(--control-height-md); min-width: var(--control-height-md); min-height: var(--control-height-lg); padding: 0; font-size: 0; }
     .contextActions :global(svg) { flex: 0 0 auto; }
     .contextActions :global(span) { display: none; }
 }
@@ -58,7 +58,7 @@
     .fullLogo { display: none !important; }
     .compactLogo { display: block !important; }
     .rightGroup { gap: 4px; }
-    .menuToggle, .action, .iconAction { width: 36px; min-width: 36px; min-height: 36px; height: 36px; border-radius: 7px; }
+    .menuToggle, .action, .iconAction { width: var(--control-height-sm); min-width: var(--control-height-sm); min-height: var(--control-height-sm); height: var(--control-height-sm); border-radius: 7px; }
     .action svg, .iconAction svg { width: 18px; height: 18px; }
 }
 @media (max-width: 375px) {

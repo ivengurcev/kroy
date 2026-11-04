@@ -5,6 +5,7 @@ import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
+import StatusBadge from '../ui/StatusBadge.jsx';
 import styles from './SiteReviewsPage.module.css';
 
 const FILTERS = [
@@ -205,7 +206,7 @@ export default function SiteReviewsPage() {
                                     <td>{formatDate(review.reviewDate)}</td>
                                     <td><strong>{review.authorName}</strong>{review.authorSubtitle && <small>{review.authorSubtitle}</small>}</td>
                                     <td className={styles.reviewText} title={review.text}>{review.text}</td>
-                                    <td><span className={`${styles.status} ${styles[`status${review.status}`]}`}>{STATUS_LABELS[review.status] || review.status}</span></td>
+                                    <td><StatusBadge tone={review.status === 'rejected' ? 'error' : review.status === 'pending' ? 'warning' : 'success'}>{STATUS_LABELS[review.status] || review.status}</StatusBadge></td>
                                     <td className={styles.actions}><Button variant="compact" title="Редактировать отзыв" onClick={() => openEdit(review)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button><Button variant="compact" title="Удалить отзыв" onClick={() => deleteReview(review)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button></td>
                                 </tr>)}
                             {!reviews.length && <tr><td className={styles.empty} colSpan="5">Отзывов пока нет.</td></tr>}

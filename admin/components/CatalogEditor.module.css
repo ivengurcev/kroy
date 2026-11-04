@@ -15,7 +15,7 @@
 .productRow .treeItem { flex: 1 1 auto; }
 .menuTrigger, .addItem { flex: 0 0 auto; width: 30px; min-width: 30px; height: 30px; padding: 0; border-color: transparent; }
 .menu { position: absolute; z-index: 10; top: calc(100% + 2px); right: var(--space-1); display: grid; min-width: 190px; padding: var(--space-1); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-panel); }
-.menu button { justify-content: flex-start; min-height: var(--control-height-sm); border-color: transparent; }
+.menu button { justify-content: flex-start; min-height: var(--control-height-md); border-color: transparent; }
 .menu button:disabled { opacity: .45; }
 .editor { display: grid; align-content: start; gap: var(--space-3); min-width: 0; }
 .editor h2 { margin: 0; font-size: var(--font-size-lg); }

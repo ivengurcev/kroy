@@ -3,7 +3,7 @@
     gap: var(--space-2);
     align-items: center;
     justify-content: center;
-    min-height: var(--control-height);
+    min-height: var(--control-height-lg);
     padding: 0 var(--space-4);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -38,16 +38,16 @@
 }
 
 .compact {
-    min-width: var(--control-height-sm);
-    min-height: var(--control-height-sm);
+    min-width: var(--control-height-md);
+    min-height: var(--control-height-md);
     padding: 0 var(--space-3);
 }
 
 .iconCompact {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    min-height: 34px;
+    width: var(--control-height-sm);
+    min-width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    min-height: var(--control-height-sm);
     padding: 0;
 }
 

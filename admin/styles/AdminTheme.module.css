@@ -68,8 +68,10 @@
     --admin-bar-floating-background: var(--color-surface-translucent);
     --admin-bar-floating-shadow: var(--shadow-panel);
     --admin-bar-backdrop-filter: blur(14px);
-    --control-height: 46px;
-    --control-height-sm: 40px;
+    --control-height-lg: 46px;
+    --control-height-md: 40px;
+    --control-height-sm: 34px;
+    --control-height: var(--control-height-lg);
     --admin-content-max: 1800px;
 
     color: var(--color-text);

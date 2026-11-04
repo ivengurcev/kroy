@@ -1,18 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
+import Tabs from '../ui/Tabs.jsx';
+import StatusBadge from '../ui/StatusBadge.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
+import fieldStyles from '../editor/Field.module.css';
+import dialogStyles from '../components/PageDetailsDialog.module.css';
 import styles from './SiteMaterialsPage.module.css';
 import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
+import { slugifyPageTitle } from '../../shared/pageFields.mjs';
 
 const FILTERS = [
-    { value: 'all', label: 'Все' },
+    { value: 'all', label: 'Все статусы' },
     { value: 'draft', label: 'Черновики' },
     { value: 'published', label: 'Опубликованные' },
 ];
 const STATUS_LABELS = { draft: 'Черновик', published: 'Опубликован' };
+const STATUS_TONES = { draft: 'warning', published: 'success' };
 
 async function responseError(response, fallback) {
     const result = await response.json().catch(() => ({}));
@@ -28,40 +34,55 @@ function formatDate(value) {
     }).format(date);
 }
 
+function createSectionSlug(name, sections) {
+    const base = slugifyPageTitle(name) || 'section';
+    const usedSlugs = new Set(sections.map(({ slug }) => slug));
+    let slug = base;
+    let suffix = 2;
+    while (usedSlugs.has(slug)) slug = `${base}-${suffix++}`;
+    return slug;
+}
+
 export default function SiteMaterialsPage() {
     const navigate = useAppNavigate();
+    const sectionDialogRef = useRef(null);
     const [filter, setFilter] = useState('all');
     const [materials, setMaterials] = useState([]);
     const [sections, setSections] = useState([]);
     const [sectionId, setSectionId] = useState('');
+    const [sectionDialog, setSectionDialog] = useState(null);
     const [sectionName, setSectionName] = useState('');
-    const [sectionSlug, setSectionSlug] = useState('');
-    const [sectionSortOrder, setSectionSortOrder] = useState(0);
-    const [newSectionName, setNewSectionName] = useState('');
-    const [newSectionSlug, setNewSectionSlug] = useState('');
+    const [sectionSaving, setSectionSaving] = useState(false);
     const [sectionError, setSectionError] = useState('');
     const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
     const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
-        setSectionId(new URLSearchParams(window.location.search).get('sectionId') || '');
-    }, []);
+        const dialog = sectionDialogRef.current;
+        if (!dialog) return;
+        if (sectionDialog && !dialog.open) dialog.showModal();
+        else if (!sectionDialog && dialog.open) dialog.close();
+    }, [sectionDialog]);
 
     useEffect(() => {
         const controller = new AbortController();
         setStatus('loading');
         setError('');
-        Promise.all([fetch('/api/site/material-sections', { signal: controller.signal }), fetch('/api/site/materials', { signal: controller.signal })])
+        Promise.all([
+            fetch('/api/site/material-sections', { signal: controller.signal }),
+            fetch('/api/site/materials', { signal: controller.signal }),
+        ])
             .then(async ([sectionsResponse, materialsResponse]) => {
                 if (!sectionsResponse.ok) throw new Error(await responseError(sectionsResponse, 'Не удалось загрузить разделы'));
                 if (!materialsResponse.ok) throw new Error(await responseError(materialsResponse, 'Не удалось загрузить материалы'));
                 return Promise.all([sectionsResponse.json(), materialsResponse.json()]);
             })
             .then(([sectionResult, materialResult]) => {
-                setSections(Array.isArray(sectionResult) ? sectionResult : []);
+                const nextSections = Array.isArray(sectionResult) ? sectionResult : [];
+                setSections(nextSections);
                 setMaterials(Array.isArray(materialResult) ? materialResult : []);
-                setSectionId((current) => current && sectionResult.some(({ id }) => id === current) ? current : sectionResult[0]?.id || '');
+                setSectionId((current) => current && nextSections.some(({ id }) => id === current) ? current : '');
                 setStatus('success');
             })
             .catch((loadError) => {
@@ -71,39 +92,78 @@ export default function SiteMaterialsPage() {
     }, []);
 
     const selectedSection = sections.find(({ id }) => id === sectionId);
-    const sectionDirty = Boolean(selectedSection && (
-        sectionName !== selectedSection.name
-        || sectionSlug !== selectedSection.slug
-        || Number(sectionSortOrder) !== selectedSection.sortOrder
-    )) || Boolean(newSectionName || newSectionSlug);
-
-    useEffect(() => {
-        setSectionName(selectedSection?.name || '');
-        setSectionSlug(selectedSection?.slug || '');
-        setSectionSortOrder(selectedSection?.sortOrder || 0);
-    }, [sectionId, sections]);
-
+    const tabs = useMemo(() => [
+        { id: '', label: 'Все' },
+        ...sections.map(({ id, name }) => ({ id, label: name })),
+    ], [sections]);
+    const activeTabIndex = Math.max(0, tabs.findIndex(({ id }) => id === sectionId));
     const visibleMaterials = useMemo(
-        () => filter === 'all' ? materials.filter((material) => material.sectionId === sectionId) : materials.filter((material) => material.sectionId === sectionId && material.status === filter),
+        () => materials.filter((material) =>
+            (!sectionId || material.sectionId === sectionId)
+            && (filter === 'all' || material.status === filter)
+        ),
         [materials, filter, sectionId],
     );
 
-    const actions = useMemo(() => <Button variant="primary" aria-label="Новый материал" onClick={() => navigate?.('/admin/materials/new')}><Icon name="add" /> <span>Новый материал</span></Button>, [navigate]);
+    function openSectionDialog(section = null) {
+        setSectionError('');
+        setSectionName(section?.name ?? '');
+        setSectionDialog({ id: section?.id ?? null });
+    }
 
-    async function saveSection(event, id = null) {
-        event.preventDefault(); setSectionError('');
+    function closeSectionDialog() {
+        if (sectionSaving) return;
+        setSectionDialog(null);
+        setSectionError('');
+    }
+
+    async function saveSection(event) {
+        event.preventDefault();
+        if (!sectionDialog || sectionSaving) return;
+        const name = sectionName.trim();
+        if (!name) return;
+        setSectionSaving(true);
+        setSectionError('');
         try {
-            const response = await fetch(id ? `/api/site/material-sections/${id}` : '/api/site/material-sections', { method: id ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(id ? { name: sectionName, slug: sectionSlug, sortOrder: Number(sectionSortOrder) } : { name: newSectionName, slug: newSectionSlug, sortOrder: sections.length }) });
+            const id = sectionDialog.id;
+            const body = id
+                ? { name }
+                : { name, slug: createSectionSlug(name, sections), sortOrder: Math.max(-1, ...sections.map(({ sortOrder }) => sortOrder)) + 1 };
+            const response = await fetch(id ? `/api/site/material-sections/${id}` : '/api/site/material-sections', {
+                method: id ? 'PATCH' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось сохранить раздел'));
-            const saved = await response.json(); setSections((current) => id ? current.map((item) => item.id === id ? saved : item) : [...current, saved]); setSectionId(saved.id); setNewSectionName(''); setNewSectionSlug('');
-        } catch (saveError) { setSectionError(saveError.message); }
+            const saved = await response.json();
+            setSections((current) => id
+                ? current.map((item) => item.id === id ? saved : item)
+                : [...current, saved]);
+            setSectionId(saved.id);
+            setSectionDialog(null);
+        } catch (saveError) {
+            setSectionError(saveError.message);
+        } finally {
+            setSectionSaving(false);
+        }
     }
 
     async function deleteSection() {
-        const section = sections.find(({ id }) => id === sectionId);
-        if (!section || !window.confirm(`Удалить раздел «${section.name}»?`)) return;
-        try { const response = await fetch(`/api/site/material-sections/${section.id}`, { method: 'DELETE' }); if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить раздел')); setSections((current) => current.filter(({ id }) => id !== section.id)); setSectionId(sections.find(({ id }) => id !== section.id)?.id || ''); }
-        catch (deleteError) { setSectionError(deleteError.message); }
+        const section = sections.find(({ id }) => id === sectionDialog?.id);
+        if (!section || sectionSaving || !window.confirm(`Удалить раздел «${section.name}»?`)) return;
+        setSectionSaving(true);
+        setSectionError('');
+        try {
+            const response = await fetch(`/api/site/material-sections/${section.id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить раздел'));
+            setSections((current) => current.filter(({ id }) => id !== section.id));
+            setSectionId('');
+            setSectionDialog(null);
+        } catch (deleteError) {
+            setSectionError(deleteError.message);
+        } finally {
+            setSectionSaving(false);
+        }
     }
 
     async function deleteMaterial(material) {
@@ -125,42 +185,34 @@ export default function SiteMaterialsPage() {
         <SiteSettingsLayout
             section="materials"
             title="Материалы"
-            actions={actions}
-            isDirty={sectionDirty}
             status={status}
             errorMessage={error || 'Не удалось загрузить материалы.'}
         >
             <div className={styles.content}>
-                <p>Разделы и опубликованные материалы текущего сайта.</p>
-                <AdminPanel className={styles.filterBar}>
-                    <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                        <span>Раздел</span>
-                        <select value={sectionId} onChange={(event) => setSectionId(event.target.value)}>
-                            {sections.map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}
-                        </select>
-                    </label>
-                    {sectionId && <Button variant="compact" onClick={deleteSection}>Удалить раздел</Button>}
-                    {selectedSection && <form onSubmit={(event) => saveSection(event, selectedSection.id)} className={styles.toolbar}>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Название раздела</span><input value={sectionName} onChange={(event) => setSectionName(event.target.value)} required maxLength="200" /></label>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Внутренний slug</span><input value={sectionSlug} onChange={(event) => setSectionSlug(event.target.value)} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required /></label>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Порядок</span><input type="number" value={sectionSortOrder} onChange={(event) => setSectionSortOrder(event.target.value)} /></label>
-                        <Button type="submit" variant="secondary">Сохранить раздел</Button>
-                    </form>}
-                    <form onSubmit={saveSection} className={styles.toolbar}>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Новый раздел</span><input value={newSectionName} onChange={(event) => setNewSectionName(event.target.value)} placeholder="Название" required /></label>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Внутренний slug</span><input value={newSectionSlug} onChange={(event) => setNewSectionSlug(event.target.value)} pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required /></label>
-                        <Button type="submit" variant="secondary"><Icon name="add" /> Добавить раздел</Button>
-                    </form>
-                    {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
-                </AdminPanel>
-                <AdminPanel className={styles.filterBar}>
-                    <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                        <span>Показать</span>
+                <div className={styles.sectionBar}>
+                    <div className={styles.tabsViewport}>
+                        <Tabs
+                            className={styles.sectionTabs}
+                            items={tabs}
+                            activeIndex={activeTabIndex}
+                            ariaLabel="Разделы материалов"
+                            onSelect={(_, item) => setSectionId(item.id)}
+                        />
+                    </div>
+                    {selectedSection && <Button variant="iconCompact" title="Редактировать раздел" aria-label={`Редактировать раздел «${selectedSection.name}»`} onClick={() => openSectionDialog(selectedSection)}><Icon name="edit" size={18} /></Button>}
+                    <Button variant="iconCompact" title="Создать раздел" aria-label="Создать раздел" onClick={() => openSectionDialog()}><Icon name="add" size={18} /></Button>
+                </div>
+
+                <div className={styles.tableToolbar}>
+                    <label className={`${fieldStyles.field} ${compactStyles.field} ${compactStyles.compact} ${styles.statusFilter}`}>
+                        <span>Статус</span>
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
                         </select>
                     </label>
-                </AdminPanel>
+                    {selectedSection && <Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new?sectionId=${encodeURIComponent(selectedSection.id)}`)}><Icon name="add" /> Добавить материал</Button>}
+                </div>
+
                 {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
                 <AdminPanel className={styles.tableCard} noPadding>
                     <div className={styles.tableScroll}>
@@ -172,18 +224,41 @@ export default function SiteMaterialsPage() {
                                 {visibleMaterials.map((material) => <tr key={material.id}>
                                     <td><strong>{material.title}</strong><small>/{material.slug}</small></td>
                                     <td>{formatDate(material.updatedAt)}</td>
-                                    <td><span className={`${styles.status} ${styles[`status${material.status}`]}`}>{STATUS_LABELS[material.status] || material.status}</span></td>
+                                    <td><StatusBadge tone={STATUS_TONES[material.status]}>{STATUS_LABELS[material.status] || material.status}</StatusBadge></td>
                                     <td className={styles.actions}>
-                                        <Button variant="compact" title="Редактировать материал" onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
-                                        <Button variant="compact" title="Удалить материал" onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
+                                        <Button variant="compact" title="Редактировать материал" aria-label={`Редактировать материал «${material.title}»`} onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
+                                        <Button variant="compact" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
                                     </td>
                                 </tr>)}
-                                {!visibleMaterials.length && <tr><td className={styles.empty} colSpan="4">{materials.length ? 'Материалов в этом фильтре нет.' : 'Материалов пока нет.'}</td></tr>}
+                                {!visibleMaterials.length && <tr><td className={styles.empty} colSpan="4">
+                                    {!materials.length ? 'Материалов пока нет.' : filter !== 'all' ? 'Материалов с таким статусом нет.' : sectionId ? 'В этом разделе пока нет материалов.' : 'Материалов нет.'}
+                                </td></tr>}
                             </tbody>
                         </table>
                     </div>
                 </AdminPanel>
             </div>
+
+            <dialog
+                ref={sectionDialogRef}
+                className={dialogStyles.dialog}
+                aria-labelledby="material-section-dialog-title"
+                onCancel={(event) => { event.preventDefault(); closeSectionDialog(); }}
+            >
+                <h2 id="material-section-dialog-title">{sectionDialog?.id ? 'Редактировать раздел' : 'Новый раздел'}</h2>
+                <form className={styles.sectionForm} onSubmit={saveSection}>
+                    <label className={fieldStyles.field}>
+                        <span>Название</span>
+                        <input value={sectionName} onChange={(event) => setSectionName(event.target.value)} required maxLength="200" autoFocus />
+                    </label>
+                    {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
+                    <div className={styles.sectionFormActions}>
+                        {sectionDialog?.id && <Button className={styles.deleteSectionAction} type="button" variant="danger" onClick={deleteSection} disabled={sectionSaving}>Удалить раздел</Button>}
+                        <Button type="button" variant="secondary" onClick={closeSectionDialog} disabled={sectionSaving}>Отмена</Button>
+                        <Button type="submit" variant="primary" disabled={sectionSaving}>{sectionSaving ? 'Сохранение…' : 'Сохранить'}</Button>
+                    </div>
+                </form>
+            </dialog>
         </SiteSettingsLayout>
     );
 }

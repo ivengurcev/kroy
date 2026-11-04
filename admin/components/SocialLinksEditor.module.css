@@ -63,7 +63,7 @@
 .menu {
     position: absolute;
     z-index: 10;
-    top: calc(var(--control-height-sm) + var(--space-3));
+    top: calc(var(--control-height-md) + var(--space-3));
     right: var(--space-2);
     display: grid;
     min-width: 205px;
@@ -76,7 +76,7 @@
 
 .menu button {
     justify-content: flex-start;
-    min-height: var(--control-height-sm);
+    min-height: var(--control-height-md);
     border-color: transparent;
 }
 
@@ -114,7 +114,7 @@
 .preview { min-width: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: var(--font-size-sm); }
 .error { margin: 0; color: var(--color-error-text); font-size: var(--font-size-sm); }
 .form > button,
-.addButton { justify-self: start; min-height: var(--control-height-sm); }
+.addButton { justify-self: start; min-height: var(--control-height-md); }
 
 @media (max-width: 600px) {
     .form { padding: var(--space-2); }
