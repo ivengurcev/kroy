@@ -78,7 +78,12 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
 
     return (
         <fieldset className={styles.listField}>
-            <legend>{label}</legend>
+            <legend className={styles.listHeader}>
+                <span>{label}</span>
+                <Button variant="iconCompact" title={`Добавить ${itemLabel.toLowerCase()}`} aria-label={`Добавить ${itemLabel.toLowerCase()}`} onClick={addItem}>
+                    <Icon name="add" size={18} />
+                </Button>
+            </legend>
             <div className={styles.items}>
                 {items.map((item, index) => {
                     const summary = item?.title ?? item?.name ?? '';
@@ -87,9 +92,9 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
                             <header className={styles.itemHeader}>
                                 <strong>{itemLabel} {index + 1}{summary ? ` · ${summary}` : ''}</strong>
                                 <div className={styles.actions}>
-                                    <Button variant="iconAction" title={`Переместить ${itemLabel.toLowerCase()} вверх`} aria-label={`Переместить ${itemLabel.toLowerCase()} вверх`} disabled={index === 0} onClick={() => moveItem(index, -1)}><Icon name="up" /></Button>
-                                    <Button variant="iconAction" title={`Переместить ${itemLabel.toLowerCase()} вниз`} aria-label={`Переместить ${itemLabel.toLowerCase()} вниз`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Icon name="down" /></Button>
-                                    <Button variant="iconAction" title={`Удалить ${itemLabel.toLowerCase()}`} aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => removeItem(index)}><Icon name="delete" /></Button>
+                                    <Button variant="iconCompact" title={`Переместить ${itemLabel.toLowerCase()} вверх`} aria-label={`Переместить ${itemLabel.toLowerCase()} вверх`} disabled={index === 0} onClick={() => moveItem(index, -1)}><Icon name="up" size={18} /></Button>
+                                    <Button variant="iconCompact" title={`Переместить ${itemLabel.toLowerCase()} вниз`} aria-label={`Переместить ${itemLabel.toLowerCase()} вниз`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Icon name="down" size={18} /></Button>
+                                    <Button variant="iconCompact" title={`Удалить ${itemLabel.toLowerCase()}`} aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => removeItem(index)}><Icon name="delete" size={18} /></Button>
                                 </div>
                             </header>
                             <div className={styles.editor}>
@@ -101,9 +106,6 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
                     );
                 })}
             </div>
-            <Button className={styles.addButton} title={`Добавить ${itemLabel.toLowerCase()}`} onClick={addItem}>
-                <Icon name="add" /> Добавить {itemLabel.toLowerCase()}
-            </Button>
         </fieldset>
     );
 }

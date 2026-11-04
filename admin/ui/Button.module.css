@@ -43,7 +43,7 @@
     padding: 0 var(--space-3);
 }
 
-.iconAction {
+.iconCompact {
     width: 34px;
     min-width: 34px;
     height: 34px;

@@ -8,9 +8,18 @@
 }
 
 .listField legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
     padding: 0;
     color: var(--color-text-secondary);
     font-weight: 600;
+}
+
+.listHeader span {
+    min-width: 0;
 }
 
 .items {
@@ -21,7 +30,6 @@
 .listItem {
     min-width: 0;
     padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--color-border);
 }
 
 .itemHeader {
@@ -52,11 +60,6 @@
     margin-left: var(--space-2);
     padding-left: var(--space-2);
     border-left: 1px solid var(--color-border);
-}
-
-.addButton {
-    justify-self: start;
-    min-height: var(--control-height-sm);
 }
 
 @media (max-width: 600px) {

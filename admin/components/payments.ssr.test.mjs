@@ -8,7 +8,6 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { getPaymentProvider, describePaymentProvider } from '../../server/payments/providers.mjs';
-import ApplicationContext from '@vyaz/core/Context.js';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.payments-test-${randomUUID()}.mjs`, import.meta.url));
@@ -61,7 +60,7 @@ test('payment fields render the provider schema and send edited settings without
 });
 
 test('site settings expose a Payments route without a duplicate section menu and the payments page renders a loading state on SSR', () => {
-    assert.equal(components.SITE_SETTINGS_SECTIONS.find(({ id }) => id === 'payments').path, '/admin/site/payments');
+    assert.equal(components.SITE_SETTINGS_SECTIONS.find(({ id }) => id === 'payments').path, '/admin/payments');
     const html = renderToString(createElement(components.SitePaymentsPage));
     assert.match(html, /Загрузка/);
     const layout = renderToString(createElement(components.SiteSettingsLayout, { section: 'payments', title: 'Платежи', status: 'success' }));
@@ -73,15 +72,11 @@ test('materials page renders on SSR without browser globals', () => {
     assert.doesNotThrow(() => renderToString(createElement(components.SiteMaterialsPage)));
 });
 
-test('admin sidebar renders on SSR and selects contact settings from application search', () => {
-    const html = renderToString(createElement(
-        ApplicationContext.Provider,
-        { value: { search: '?section=contacts' } },
-        createElement(components.AdminSidebar, { pathname: '/admin/site' }),
-    ));
+test('admin sidebar renders on SSR and selects contacts by pathname', () => {
+    const html = renderToString(createElement(components.AdminSidebar, { pathname: '/admin/contacts' }));
 
-    assert.match(html, /href="\/admin\/site\?section=contacts"[^>]*aria-current="page"/);
-    assert.doesNotMatch(html, /href="\/admin\/site"[^>]*aria-current="page"/);
+    assert.match(html, /href="\/admin\/contacts"[^>]*aria-current="page"/);
+    assert.doesNotMatch(html, /\?section=/);
 });
 
 test('catalog admin and public product cards still render names, descriptions and ruble prices without purchase links', () => {

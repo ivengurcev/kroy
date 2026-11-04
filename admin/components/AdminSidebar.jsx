@@ -1,29 +1,24 @@
-import { useContext } from 'react';
-import ApplicationContext from '@vyaz/core/Context.js';
 import Icon from '../ui/Icon.jsx';
 import styles from './AdminSidebar.module.css';
 
 const groups = [
     { label: 'Основное', items: [
-        { label: 'Страницы', path: '/admin/pages', icon: 'pages', match: (path) => path === '/admin' || path === '/admin/pages' || /^\/admin\/pages\/[^/]+$/.test(path) },
+        { label: 'Страницы', path: '/admin/pages', icon: 'pages', match: (path) => path === '/admin' || path === '/admin/pages' || path.startsWith('/admin/pages/') },
     ] },
     { label: 'Содержимое', items: [
-        { label: 'Материалы', path: '/admin/site/materials', icon: 'materials', match: (path) => path.startsWith('/admin/site/materials') },
-        { label: 'Каталог', path: '/admin/site/catalog', icon: 'catalog', match: (path) => path === '/admin/site/catalog' },
-        { label: 'Отзывы', path: '/admin/site/reviews', icon: 'reviews', match: (path) => path === '/admin/site/reviews' },
+        { label: 'Материалы', path: '/admin/materials', icon: 'materials', match: (path) => path === '/admin/materials' || path.startsWith('/admin/materials/') },
+        { label: 'Каталог', path: '/admin/catalog', icon: 'catalog', match: (path) => path === '/admin/catalog' },
+        { label: 'Отзывы', path: '/admin/reviews', icon: 'reviews', match: (path) => path === '/admin/reviews' },
     ] },
     { label: 'Настройки', items: [
-        { label: 'Оформление', path: '/admin/site', icon: 'sun', match: (path, search) => path === '/admin/site' && search.get('section') !== 'contacts' },
-        { label: 'Контакты', path: '/admin/site?section=contacts', icon: 'phone', match: (path, search) => path === '/admin/site' && search.get('section') === 'contacts' },
-        { label: 'Платежи', path: '/admin/site/payments', icon: 'payments', match: (path) => path === '/admin/site/payments' },
-        { label: 'SEO', icon: 'seo', disabled: true },
+        { label: 'Оформление', path: '/admin/appearance', icon: 'sun', match: (path) => path === '/admin/appearance' },
+        { label: 'Контакты', path: '/admin/contacts', icon: 'phone', match: (path) => path === '/admin/contacts' },
+        { label: 'Платежи', path: '/admin/payments', icon: 'payments', match: (path) => path === '/admin/payments' },
+        { label: 'SEO', path: '/admin/seo', icon: 'seo', match: (path) => path === '/admin/seo' },
     ] },
 ];
 
 export default function AdminSidebar({ pathname, collapsed, mobileOpen, onNavigate }) {
-    const { search = '' } = useContext(ApplicationContext) || {};
-    const searchParams = new URLSearchParams(search);
-
     return (
         <>
             {mobileOpen && <button className={styles.backdrop} type="button" aria-label="Закрыть меню" onClick={onNavigate} />}
@@ -33,7 +28,7 @@ export default function AdminSidebar({ pathname, collapsed, mobileOpen, onNaviga
                         <section className={styles.group} key={group.label} aria-label={group.label}>
                             <h2>{group.label}</h2>
                             {group.items.map((item) => {
-                                const active = item.match?.(pathname, searchParams);
+                                const active = item.match?.(pathname);
                                 const className = `${styles.item} ${active ? styles.active : ''}`;
                                 return item.disabled ? (
                                     <button className={`${className} ${styles.disabled}`} type="button" disabled key={item.label} title={`${item.label} — скоро`}>

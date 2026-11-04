@@ -1,14 +1,14 @@
 import AdminPageShell from './AdminPageShell.jsx';
 
 export const SITE_SETTINGS_SECTIONS = [
-    { id: 'overview', label: 'Главное', icon: 'home' },
-    { id: 'appearance', label: 'Оформление', icon: 'sun' },
-    { id: 'contacts', label: 'Контакты', icon: 'phone' },
-    { id: 'catalog', label: 'Каталог', icon: 'catalog', path: '/admin/site/catalog' },
-    { id: 'payments', label: 'Платежи', icon: 'payments', path: '/admin/site/payments' },
-    { id: 'reviews', label: 'Отзывы', icon: 'reviews', path: '/admin/site/reviews' },
-    { id: 'materials', label: 'Материалы', icon: 'materials', path: '/admin/site/materials' },
-    { id: 'seo', label: 'SEO', icon: 'seo' },
+    { id: 'overview', label: 'Главное', icon: 'home', path: '/admin/overview' },
+    { id: 'appearance', label: 'Оформление', icon: 'sun', path: '/admin/appearance' },
+    { id: 'contacts', label: 'Контакты', icon: 'phone', path: '/admin/contacts' },
+    { id: 'catalog', label: 'Каталог', icon: 'catalog', path: '/admin/catalog' },
+    { id: 'payments', label: 'Платежи', icon: 'payments', path: '/admin/payments' },
+    { id: 'reviews', label: 'Отзывы', icon: 'reviews', path: '/admin/reviews' },
+    { id: 'materials', label: 'Материалы', icon: 'materials', path: '/admin/materials' },
+    { id: 'seo', label: 'SEO', icon: 'seo', path: '/admin/seo' },
 ];
 
 export default function SiteSettingsLayout({

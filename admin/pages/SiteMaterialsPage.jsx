@@ -88,7 +88,7 @@ export default function SiteMaterialsPage() {
         [materials, filter, sectionId],
     );
 
-    const actions = useMemo(() => <Button variant="primary" aria-label="Новый материал" onClick={() => navigate?.('/admin/site/materials/new')}><Icon name="add" /> <span>Новый материал</span></Button>, [navigate]);
+    const actions = useMemo(() => <Button variant="primary" aria-label="Новый материал" onClick={() => navigate?.('/admin/materials/new')}><Icon name="add" /> <span>Новый материал</span></Button>, [navigate]);
 
     async function saveSection(event, id = null) {
         event.preventDefault(); setSectionError('');
@@ -174,7 +174,7 @@ export default function SiteMaterialsPage() {
                                     <td>{formatDate(material.updatedAt)}</td>
                                     <td><span className={`${styles.status} ${styles[`status${material.status}`]}`}>{STATUS_LABELS[material.status] || material.status}</span></td>
                                     <td className={styles.actions}>
-                                        <Button variant="compact" title="Редактировать материал" onClick={() => navigate?.(`/admin/site/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
+                                        <Button variant="compact" title="Редактировать материал" onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
                                         <Button variant="compact" title="Удалить материал" onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
                                     </td>
                                 </tr>)}

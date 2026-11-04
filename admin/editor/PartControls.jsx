@@ -16,9 +16,9 @@ export default function PartControls({
     return (
         <div className={`${styles.controls} ${className}`} data-editor-control>
             <Button
-                className={styles.editAction}
-                variant="compact"
+                variant="iconCompact"
                 title={isEditing ? 'Закрыть редактор запчасти' : 'Редактировать свойства запчасти'}
+                aria-label={isEditing ? 'Закрыть редактор запчасти' : 'Редактировать свойства запчасти'}
                 onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -26,11 +26,10 @@ export default function PartControls({
                     else onEdit(partId);
                 }}
             >
-                <Icon name={isEditing ? 'close' : 'edit'} />
-                {isEditing ? 'Закрыть' : 'Редактировать'}
+                <Icon name={isEditing ? 'close' : 'edit'} size={18} />
             </Button>
             <Button
-                variant="iconAction"
+                variant="iconCompact"
                 aria-label="Переместить запчасть вверх"
                 title="Переместить запчасть вверх"
                 disabled={isFirst}
@@ -40,10 +39,10 @@ export default function PartControls({
                     onMove(partId, -1);
                 }}
             >
-                <Icon name="up" />
+                <Icon name="up" size={18} />
             </Button>
             <Button
-                variant="iconAction"
+                variant="iconCompact"
                 aria-label="Переместить запчасть вниз"
                 title="Переместить запчасть вниз"
                 disabled={isLast}
@@ -53,10 +52,10 @@ export default function PartControls({
                     onMove(partId, 1);
                 }}
             >
-                <Icon name="down" />
+                <Icon name="down" size={18} />
             </Button>
             <Button
-                variant="iconAction"
+                variant="iconCompact"
                 aria-label="Удалить запчасть"
                 title="Удалить запчасть"
                 onClick={(event) => {
@@ -65,7 +64,7 @@ export default function PartControls({
                     onRemove(partId);
                 }}
             >
-                <Icon name="delete" />
+                <Icon name="delete" size={18} />
             </Button>
         </div>
     );

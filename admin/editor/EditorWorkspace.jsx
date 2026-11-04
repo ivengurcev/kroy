@@ -24,7 +24,7 @@ function StickyPartHeader({ children }) {
 
         let observer;
         const update = () => {
-            const panelLeft = panel.getBoundingClientRect().left;
+            const panelLeft = panel.getBoundingClientRect().left + panel.clientLeft;
             const mainLeft = main.getBoundingClientRect().left;
             header.style.setProperty('--admin-sticky-breakout-left', `${Math.max(0, panelLeft - mainLeft)}px`);
             header.style.setProperty('--admin-sticky-main-left', `${mainLeft}px`);

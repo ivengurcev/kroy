@@ -1,4 +1,4 @@
-.panel { display: grid; gap: var(--space-4); min-width: 0; padding: var(--space-5); }
+.panel { display: grid; min-width: 0; padding: var(--space-5); }
 .header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .header h2 { margin: 0; font-size: var(--font-size-lg); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }

@@ -34,12 +34,15 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin/pages` | Список и создание страниц |
 | `/admin/pages/trash` | Корзина и восстановление |
 | `/admin/pages/:pageId` | Редактор страницы по UUID |
-| `/admin/site` | Оформление и настройки сайта |
-| `/admin/site/catalog` | Каталог |
-| `/admin/site/payments` | Платёжная интеграция |
-| `/admin/site/reviews` | Модерация отзывов |
-| `/admin/site/materials` | Разделы и материалы |
-| `/admin/site/materials/new`, `/admin/site/materials/:id` | Создание и редактирование материала |
+| `/admin/appearance` | Оформление сайта |
+| `/admin/overview` | Общие сведения о сайте |
+| `/admin/contacts` | Контакты сайта |
+| `/admin/catalog` | Каталог |
+| `/admin/payments` | Платёжная интеграция |
+| `/admin/reviews` | Модерация отзывов |
+| `/admin/materials` | Разделы и материалы |
+| `/admin/materials/new`, `/admin/materials/:id` | Создание и редактирование материала |
+| `/admin/seo` | SEO-настройки (пока заглушка) |
 | `/admin/preview?path=...` | Сохранённый сайт до публикации |
 | `/auth/signin`, `/auth/signout` | Вход и выход Auth.js |
 

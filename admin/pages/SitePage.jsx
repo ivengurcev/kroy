@@ -160,7 +160,7 @@ function SeoPlaceholder() {
 }
 
 export default function SitePage() {
-    const { pathname, search } = useContext(ApplicationContext) || {};
+    const { pathname } = useContext(ApplicationContext) || {};
     const [section, setSection] = useState('appearance');
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
@@ -179,11 +179,9 @@ export default function SitePage() {
         return () => controller.abort();
     }, []);
     useEffect(() => {
-        const next = pathname === '/admin/site/catalog'
-            ? 'catalog'
-            : new URLSearchParams(search).get('section') || 'appearance';
-        setSection(SITE_SETTINGS_SECTIONS.some(({ id, path }) => id === next && !path) ? next : 'appearance');
-    }, [pathname, search]);
+        const next = SITE_SETTINGS_SECTIONS.find(({ path }) => path === pathname)?.id ?? 'appearance';
+        setSection(next);
+    }, [pathname]);
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const catalogDirty = Boolean(catalog && savedCatalog && JSON.stringify(catalog) !== JSON.stringify(savedCatalog));

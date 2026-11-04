@@ -63,7 +63,7 @@ export default function SiteMaterialEditorPage() {
     }, []);
 
     useEffect(() => {
-        const match = pathname.match(/^\/admin\/site\/materials(?:\/([^/]+))?/);
+        const match = pathname.match(/^\/admin\/materials(?:\/([^/]+))?/);
         const nextId = match?.[1] && match[1] !== 'new' ? match[1] : null;
         setMaterialId(nextId);
     }, [pathname]);
@@ -155,7 +155,7 @@ export default function SiteMaterialEditorPage() {
             }
             if (!materialId && result.id) {
                 skipLoadId.current = result.id;
-                navigate?.(`/admin/site/materials/${result.id}`, { replace: true, skipGuard: true });
+                navigate?.(`/admin/materials/${result.id}`, { replace: true, skipGuard: true });
                 setMaterialId(result.id);
             }
         } catch (saveError) {
@@ -169,7 +169,7 @@ export default function SiteMaterialEditorPage() {
         try {
             const response = await fetch(`/api/site/materials/${materialId}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить материал'));
-            navigate?.('/admin/site/materials', { skipGuard: true });
+            navigate?.('/admin/materials', { skipGuard: true });
         } catch (deleteError) {
             setFormError(deleteError.message);
         }
@@ -178,7 +178,7 @@ export default function SiteMaterialEditorPage() {
     const imageUrl = material?.coverMediaId ? `/api/media/${material.coverMediaId}` : '';
     const editorValue = useMemo(() => material?.content || EMPTY_CONTENT, [material?.content]);
     const title = materialId ? 'Редактирование материала' : 'Новый материал';
-    const actions = useMemo(() => <Button type="button" variant="secondary" aria-label="К списку материалов" onClick={() => navigate?.('/admin/site/materials')}><Icon name="back" /> <span>К списку</span></Button>, [navigate]);
+    const actions = useMemo(() => <Button type="button" variant="secondary" aria-label="К списку материалов" onClick={() => navigate?.('/admin/materials')}><Icon name="back" /> <span>К списку</span></Button>, [navigate]);
 
     return (
         <SiteSettingsLayout
