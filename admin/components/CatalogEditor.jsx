@@ -1,89 +1,262 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
+import StatusBadge from '../ui/StatusBadge.jsx';
 import ImageField from '../editor/ImageField.jsx';
-import compactStyles from '../ui/CompactForm.module.css';
+import fieldStyles from '../editor/Field.module.css';
 import styles from './CatalogEditor.module.css';
 
+const UNCATEGORIZED = '__uncategorized__';
+
 function id() { return globalThis.crypto?.randomUUID?.() ?? `local-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
-function emptyProduct(categoryId = null) { return { id: id(), categoryId, name: '', description: '', mediaId: null, price: '0.00', type: 'service', sortOrder: 0, status: 'published' }; }
-function emptyCategory() { return { id: id(), name: 'Новая категория', sortOrder: 0 }; }
+function emptyProduct(categoryId, sortOrder) { return { id: id(), categoryId, name: '', description: '', mediaId: null, price: '0.00', type: 'service', sortOrder, status: 'published' }; }
+function emptyCategory(sortOrder) { return { id: id(), name: '', sortOrder }; }
+function bySortOrder(items) { return [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)); }
+function nextSortOrder(items) { return Math.max(-1, ...items.map(({ sortOrder }) => sortOrder ?? -1)) + 1; }
 
 export default function CatalogEditor({ value, onChange }) {
     const catalog = value ?? { categories: [], products: [] };
-    const [collapsed, setCollapsed] = useState({});
-    const [selection, setSelection] = useState(null);
-    const [menu, setMenu] = useState(null);
-    const menuRef = useRef(null);
-    const selectedProduct = selection?.type === 'product' ? catalog.products.find((item) => item.id === selection.id) : null;
-    const selectedCategory = selection?.type === 'category' ? catalog.categories.find((item) => item.id === selection.id) : null;
-    const uncategorized = catalog.products.filter((item) => !item.categoryId);
-    const productsIn = (categoryId) => catalog.products.filter((item) => item.categoryId === categoryId);
+    const [activeCategoryId, setActiveCategoryId] = useState(null);
+    const [dialog, setDialog] = useState(null);
+    const [dialogDraft, setDialogDraft] = useState(null);
+    const [dialogError, setDialogError] = useState('');
+    const dialogRef = useRef(null);
 
     useEffect(() => {
-        if (!menu) return undefined;
-        function close(event) { if (!menuRef.current?.contains(event.target)) setMenu(null); }
-        function closeEscape(event) { if (event.key === 'Escape') setMenu(null); }
-        document.addEventListener('pointerdown', close, true);
-        document.addEventListener('keydown', closeEscape);
-        return () => { document.removeEventListener('pointerdown', close, true); document.removeEventListener('keydown', closeEscape); };
-    }, [menu]);
+        const element = dialogRef.current;
+        if (!element) return;
+        if (dialog && !element.open) element.showModal();
+        else if (!dialog && element.open) element.close();
+    }, [dialog]);
+
+    const categories = useMemo(() => bySortOrder(catalog.categories), [catalog.categories]);
+    const selectedCategoryId = categories.some(({ id: categoryId }) => categoryId === activeCategoryId)
+        ? activeCategoryId
+        : categories[0]?.id ?? UNCATEGORIZED;
+    const selectedCategory = categories.find(({ id: categoryId }) => categoryId === selectedCategoryId);
+    const uncategorized = selectedCategoryId === UNCATEGORIZED;
+    const products = useMemo(() => bySortOrder(catalog.products.filter((product) => uncategorized
+        ? !product.categoryId
+        : product.categoryId === selectedCategoryId)), [catalog.products, selectedCategoryId, uncategorized]);
+    const dialogDirty = Boolean(dialog && dialogDraft && JSON.stringify(dialogDraft) !== JSON.stringify(dialog.initial));
 
     function update(change) { onChange({ ...catalog, ...change }); }
-    function updateProduct(idValue, change) { update({ products: catalog.products.map((item) => item.id === idValue ? { ...item, ...change } : item) }); }
-    function updateCategory(idValue, change) { update({ categories: catalog.categories.map((item) => item.id === idValue ? { ...item, ...change } : item) }); }
-    function addCategory() { const category = emptyCategory(); update({ categories: [...catalog.categories, category] }); setSelection({ type: 'category', id: category.id }); }
-    function addProduct(categoryId = null) { const product = emptyProduct(categoryId); update({ products: [...catalog.products, product] }); setSelection({ type: 'product', id: product.id }); setMenu(null); }
-    function removeProduct(idValue) { update({ products: catalog.products.filter((item) => item.id !== idValue) }); setSelection(null); setMenu(null); }
-    function removeCategory(idValue) { update({ categories: catalog.categories.filter((item) => item.id !== idValue), products: catalog.products.map((item) => item.categoryId === idValue ? { ...item, categoryId: null } : item) }); setSelection(null); setMenu(null); }
+
+    function openCategory(category = null) {
+        const draft = category ? { ...category } : emptyCategory(nextSortOrder(categories));
+        setDialogDraft(draft);
+        setDialogError('');
+        setDialog({ type: 'category', mode: category ? 'edit' : 'create', id: category?.id ?? null, initial: { ...draft } });
+    }
+
+    function openProduct(product = null) {
+        const nextCategoryId = uncategorized ? null : selectedCategoryId;
+        const nextOrder = nextSortOrder(products);
+        const draft = product ? { ...product } : emptyProduct(nextCategoryId, nextOrder);
+        setDialogDraft(draft);
+        setDialogError('');
+        setDialog({ type: 'product', mode: product ? 'edit' : 'create', id: product?.id ?? null, initial: { ...draft } });
+    }
+
+    function closeDialog(force = false) {
+        if (!force && dialogDirty && !window.confirm('Отменить изменения? Несохранённые данные формы будут потеряны.')) return;
+        setDialog(null);
+        setDialogDraft(null);
+        setDialogError('');
+    }
+
+    function handleDialogCancel(event) {
+        event.preventDefault();
+        closeDialog();
+    }
+
+    function saveDialog(event) {
+        event.preventDefault();
+        if (!dialog || !dialogDraft) return;
+        const name = dialogDraft.name.trim();
+        if (!name) {
+            setDialogError(dialog.type === 'category' ? 'Укажите название раздела.' : 'Укажите название товара.');
+            return;
+        }
+
+        if (dialog.type === 'category') {
+            const category = { ...dialogDraft, name };
+            update({ categories: dialog.mode === 'create'
+                ? [...catalog.categories, category]
+                : catalog.categories.map((item) => item.id === dialog.id ? category : item) });
+            setActiveCategoryId(category.id);
+        } else {
+            let product = { ...dialogDraft, name };
+            if (dialog.mode === 'create' || product.categoryId !== dialog.initial.categoryId) {
+                const targetProducts = catalog.products.filter((item) => (item.categoryId || null) === (product.categoryId || null) && item.id !== product.id);
+                product = { ...product, sortOrder: nextSortOrder(targetProducts) };
+            }
+            update({ products: dialog.mode === 'create'
+                ? [...catalog.products, product]
+                : catalog.products.map((item) => item.id === dialog.id ? product : item) });
+            setActiveCategoryId(product.categoryId || UNCATEGORIZED);
+        }
+
+        closeDialog(true);
+    }
+
+    function deleteCategory(category) {
+        if (!window.confirm(`Удалить раздел «${category.name}»? Его товары перейдут в «Без раздела».`)) return;
+        update({
+            categories: catalog.categories.filter(({ id: categoryId }) => categoryId !== category.id),
+            products: catalog.products.map((product) => product.categoryId === category.id ? { ...product, categoryId: null } : product),
+        });
+        if (selectedCategoryId === category.id) {
+            setActiveCategoryId(categories.find(({ id: categoryId }) => categoryId !== category.id)?.id ?? UNCATEGORIZED);
+        }
+    }
+
+    function deleteProduct(product) {
+        if (!window.confirm(`Удалить «${product.name || 'товар'}»?`)) return;
+        update({ products: catalog.products.filter(({ id: productId }) => productId !== product.id) });
+    }
+
+    function moveCategory(category, direction) {
+        const index = categories.findIndex(({ id: categoryId }) => categoryId === category.id);
+        const target = index + direction;
+        if (target < 0 || target >= categories.length) return;
+        const next = [...categories];
+        [next[index], next[target]] = [next[target], next[index]];
+        update({ categories: next.map((item, itemIndex) => ({ ...item, sortOrder: itemIndex })) });
+    }
+
     function moveProduct(product, direction) {
-        const list = productsIn(product.categoryId); const index = list.findIndex((item) => item.id === product.id); const target = index + direction;
-        if (target < 0 || target >= list.length) return;
-        const reordered = [...list]; [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-        const order = new Map(reordered.map((item, itemIndex) => [item.id, itemIndex]));
-        update({ products: catalog.products.map((item) => order.has(item.id) ? { ...item, sortOrder: order.get(item.id) } : item) }); setMenu(null);
-    }
-    function moveCategory(index, direction) {
-        const target = index + direction; if (target < 0 || target >= catalog.categories.length) return;
-        const categories = [...catalog.categories]; [categories[index], categories[target]] = [categories[target], categories[index]];
-        update({ categories: categories.map((item, itemIndex) => ({ ...item, sortOrder: itemIndex })) }); setMenu(null);
-    }
-    function actionsMenu(key, children) { return menu === key ? <div className={styles.menu} ref={menuRef} role="menu">{children}</div> : null; }
-
-    function treeProduct(product, index, list) {
-        const key = `product:${product.id}`;
-        return <div className={styles.productRow} key={product.id}>
-            <button className={`${styles.treeItem} ${selection?.id === product.id ? styles.selected : ''}`} type="button" onClick={() => { setSelection({ type: 'product', id: product.id }); setMenu(null); }}><span>{product.name || 'Новый товар/услуга'}</span><small>{product.status === 'hidden' ? 'Скрыт' : product.price} ₽</small></button>
-            <Button className={styles.menuTrigger} variant="compact" aria-label="Действия с товаром" title="Действия с товаром" aria-haspopup="menu" aria-expanded={menu === key} onClick={() => setMenu(menu === key ? null : key)}><Icon name="more" /></Button>
-            {actionsMenu(key, <><Button role="menuitem" title="Переместить выше" disabled={!index} onClick={() => moveProduct(product, -1)}><Icon name="up" /> Выше</Button><Button role="menuitem" title="Переместить ниже" disabled={index === list.length - 1} onClick={() => moveProduct(product, 1)}><Icon name="down" /> Ниже</Button><Button role="menuitem" title="Удалить товар" onClick={() => removeProduct(product.id)}><Icon name="delete" /> Удалить</Button></>)}
-        </div>;
-    }
-
-    function treeCategory(category, index) {
-        const key = `category:${category.id}`;
-        return <div className={styles.group} key={category.id}>
-            <div className={styles.categoryRow}>
-                <button className={styles.toggle} type="button" aria-label={collapsed[category.id] ? 'Развернуть категорию' : 'Свернуть категорию'} onClick={() => setCollapsed((current) => ({ ...current, [category.id]: !current[category.id] }))}>{collapsed[category.id] ? '▸' : '▾'}</button>
-                <button className={`${styles.categoryName} ${selection?.id === category.id ? styles.selected : ''}`} type="button" onClick={() => { setSelection({ type: 'category', id: category.id }); setMenu(null); }}>{category.name || 'Без названия'} <small>{productsIn(category.id).length}</small></button>
-                <Button className={styles.addItem} variant="compact" aria-label={`Добавить товар в категорию ${category.name || 'без названия'}`} title="Добавить товар в категорию" onClick={() => addProduct(category.id)}><Icon name="add" size={16} /></Button>
-                <Button className={styles.menuTrigger} variant="compact" aria-label="Действия с категорией" title="Действия с категорией" aria-haspopup="menu" aria-expanded={menu === key} onClick={() => setMenu(menu === key ? null : key)}><Icon name="more" /></Button>
-                {actionsMenu(key, <><Button role="menuitem" title="Переместить выше" disabled={!index} onClick={() => moveCategory(index, -1)}><Icon name="up" /> Выше</Button><Button role="menuitem" title="Переместить ниже" disabled={index === catalog.categories.length - 1} onClick={() => moveCategory(index, 1)}><Icon name="down" /> Ниже</Button><Button role="menuitem" title="Удалить категорию" onClick={() => removeCategory(category.id)}><Icon name="delete" /> Удалить</Button></>)}
-            </div>
-            {!collapsed[category.id] && <div className={styles.children}>{productsIn(category.id).map((product, productIndex, list) => treeProduct(product, productIndex, list))}</div>}
-        </div>;
+        const index = products.findIndex(({ id: productId }) => productId === product.id);
+        const target = index + direction;
+        if (target < 0 || target >= products.length) return;
+        const next = [...products];
+        [next[index], next[target]] = [next[target], next[index]];
+        const order = new Map(next.map((item, itemIndex) => [item.id, itemIndex]));
+        update({ products: catalog.products.map((item) => order.has(item.id) ? { ...item, sortOrder: order.get(item.id) } : item) });
     }
 
     return <div className={styles.catalog}>
-        <div className={styles.toolbar}><Button onClick={addCategory}><Icon name="add" /> Добавить категорию</Button><Button onClick={() => addProduct()}><Icon name="add" /> Добавить товар/услугу</Button></div>
-        <div className={`${styles.layout} ${selection ? styles.hasSelection : ''}`}>
-            <AdminPanel className={styles.tree}>{catalog.categories.map(treeCategory)}<div className={styles.group}><div className={styles.categoryRow}><span className={styles.toggle} aria-hidden="true">•</span><strong className={styles.categoryName}>Без категории <small>{uncategorized.length}</small></strong></div>{uncategorized.length > 0 && <div className={styles.children}>{uncategorized.map((product, productIndex, list) => treeProduct(product, productIndex, list))}</div>}</div></AdminPanel>
-            <AdminPanel className={styles.editor}>
-                {selection && <Button className={styles.backButton} variant="compact" onClick={() => setSelection(null)}><Icon name="back" /> Назад к каталогу</Button>}
-                {selectedCategory && <><h2>Категория</h2><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Название</span><input value={selectedCategory.name} onChange={(event) => updateCategory(selectedCategory.id, { name: event.target.value })} /></label><Button variant="danger" onClick={() => removeCategory(selectedCategory.id)}><Icon name="delete" /> Удалить категорию</Button></>}
-                {selectedProduct && <><h2>Товар/услуга</h2><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Название</span><input value={selectedProduct.name} onChange={(event) => updateProduct(selectedProduct.id, { name: event.target.value })} /></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.long}`}><span>Описание</span><textarea rows="4" value={selectedProduct.description} onChange={(event) => updateProduct(selectedProduct.id, { description: event.target.value })} /></label><ImageField label="Изображение" value={selectedProduct.mediaId ? `/api/media/${selectedProduct.mediaId}` : ''} aspectRatio="4:3" maxWidth={1200} onChange={(url) => updateProduct(selectedProduct.id, { mediaId: url.split('/').pop() || null })} /><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Цена, ₽</span><input inputMode="decimal" value={selectedProduct.price} onChange={(event) => updateProduct(selectedProduct.id, { price: event.target.value })} /></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Тип позиции</span><select value={selectedProduct.type} onChange={(event) => updateProduct(selectedProduct.id, { type: event.target.value })}><option value="service">Услуга</option><option value="goods">Товар</option></select></label><label className={`${styles.field} ${compactStyles.field} ${compactStyles.compact}`}><span>Категория</span><select value={selectedProduct.categoryId ?? ''} onChange={(event) => updateProduct(selectedProduct.id, { categoryId: event.target.value || null })}><option value="">Без категории</option>{catalog.categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label><label className={`${styles.checkbox} ${compactStyles.checkbox}`}><input type="checkbox" checked={selectedProduct.status === 'published'} onChange={(event) => updateProduct(selectedProduct.id, { status: event.target.checked ? 'published' : 'hidden' })} /> Опубликован</label><div className={styles.editorActions}><Button variant="danger" onClick={() => removeProduct(selectedProduct.id)}><Icon name="delete" /> Удалить</Button><Button onClick={() => setSelection(null)}>Готово</Button></div></>}
-                {!selectedCategory && !selectedProduct && <p className={styles.empty}>Выберите категорию или товар.</p>}
+        <div className={styles.layout}>
+            <AdminPanel title="Разделы" className={styles.categoryPanel}>
+                <div className={styles.categoryList} role="group" aria-label="Разделы каталога">
+                    {categories.map((category, index) => <div className={`${styles.categoryRow} ${selectedCategoryId === category.id ? styles.categoryActive : ''}`} key={category.id}>
+                        <button className={styles.categorySelect} type="button" aria-current={selectedCategoryId === category.id ? 'true' : undefined} onClick={() => setActiveCategoryId(category.id)}>
+                            <span>{category.name || 'Без названия'}</span>
+                            <small>{catalog.products.filter(({ categoryId }) => categoryId === category.id).length}</small>
+                        </button>
+                        <div className={styles.categoryActions}>
+                            <Button variant="iconCompact" title="Переместить раздел выше" aria-label={`Переместить «${category.name}» выше`} disabled={index === 0} onClick={() => moveCategory(category, -1)}><Icon name="up" size={18} /></Button>
+                            <Button variant="iconCompact" title="Переместить раздел ниже" aria-label={`Переместить «${category.name}» ниже`} disabled={index === categories.length - 1} onClick={() => moveCategory(category, 1)}><Icon name="down" size={18} /></Button>
+                            <Button variant="iconCompact" title="Редактировать раздел" aria-label={`Редактировать раздел «${category.name}»`} onClick={() => openCategory(category)}><Icon name="edit" size={18} /></Button>
+                            <Button variant="iconCompact" title="Удалить раздел" aria-label={`Удалить раздел «${category.name}»`} onClick={() => deleteCategory(category)}><Icon name="delete" size={18} /></Button>
+                        </div>
+                    </div>)}
+                    <div className={`${styles.categoryRow} ${uncategorized ? styles.categoryActive : ''}`}>
+                        <button className={styles.categorySelect} type="button" aria-current={uncategorized ? 'true' : undefined} onClick={() => setActiveCategoryId(UNCATEGORIZED)}>
+                            <span>Без раздела</span>
+                            <small>{catalog.products.filter(({ categoryId }) => !categoryId).length}</small>
+                        </button>
+                    </div>
+                </div>
+                <Button className={styles.addCategory} size="compact" onClick={() => openCategory()}><Icon name="add" size={18} /> Добавить раздел</Button>
+            </AdminPanel>
+
+            <AdminPanel className={styles.productPanel} noPadding>
+                <div className={styles.productHeading}>
+                    <h2>{selectedCategory?.name || 'Без раздела'}</h2>
+                    <Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" size={18} /> Добавить товар</Button>
+                </div>
+                <div className={styles.tableViewport}>
+                    <table className={styles.table}>
+                        <thead><tr><th>Название</th><th>Тип</th><th>Цена</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr></thead>
+                        <tbody>
+                            {products.map((product, index) => <tr key={product.id}>
+                                <td>
+                                    <button className={styles.productTitle} type="button" onClick={() => openProduct(product)}>{product.name || 'Без названия'}</button>
+                                    <div className={styles.mobileMeta}>
+                                        <span>{product.type === 'goods' ? 'Товар' : 'Услуга'}</span>
+                                        <span>{product.price} ₽</span>
+                                        <StatusBadge tone={product.status === 'hidden' ? 'warning' : 'success'}>{product.status === 'hidden' ? 'Скрыт' : 'Опубликован'}</StatusBadge>
+                                    </div>
+                                </td>
+                                <td className={styles.desktopMeta}>{product.type === 'goods' ? 'Товар' : 'Услуга'}</td>
+                                <td className={styles.desktopMeta}>{product.price} ₽</td>
+                                <td className={styles.desktopMeta}><StatusBadge tone={product.status === 'hidden' ? 'warning' : 'success'}>{product.status === 'hidden' ? 'Скрыт' : 'Опубликован'}</StatusBadge></td>
+                                <td className={styles.productActions}>
+                                    <Button variant="iconCompact" title="Переместить выше" aria-label={`Переместить «${product.name}» выше`} disabled={index === 0} onClick={() => moveProduct(product, -1)}><Icon name="up" size={18} /></Button>
+                                    <Button variant="iconCompact" title="Переместить ниже" aria-label={`Переместить «${product.name}» ниже`} disabled={index === products.length - 1} onClick={() => moveProduct(product, 1)}><Icon name="down" size={18} /></Button>
+                                    <Button variant="iconCompact" title="Удалить товар" aria-label={`Удалить «${product.name}»`} onClick={() => deleteProduct(product)}><Icon name="delete" size={18} /></Button>
+                                </td>
+                            </tr>)}
+                            {!products.length && <tr><td className={styles.empty} colSpan="5">В этом разделе пока нет товаров.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
             </AdminPanel>
         </div>
+
+        <dialog
+            ref={dialogRef}
+            className={`${styles.dialog} ${dialog?.type === 'product' ? styles.productDialog : ''}`}
+            aria-labelledby="catalog-dialog-title"
+            onCancel={handleDialogCancel}
+            onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }}
+        >
+            {dialog && dialogDraft && <form className={styles.dialogForm} onSubmit={saveDialog}>
+                <header className={styles.dialogHeader}>
+                    <h2 id="catalog-dialog-title">{dialog.type === 'category'
+                        ? dialog.mode === 'create' ? 'Новый раздел' : 'Редактировать раздел'
+                        : dialog.mode === 'create' ? 'Новый товар' : 'Редактировать товар'}</h2>
+                </header>
+
+                {dialog.type === 'category' ? <div className={styles.dialogBody}>
+                    <label className={fieldStyles.field}>
+                        <span>Название</span>
+                        <input autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                    </label>
+                    {dialogError && <p className={styles.dialogError} role="alert">{dialogError}</p>}
+                </div> : <div className={`${styles.dialogBody} ${styles.productForm}`}>
+                    <label className={`${fieldStyles.field} ${styles.fullField}`}>
+                        <span>Название</span>
+                        <input autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                    </label>
+                    <label className={fieldStyles.field}>
+                        <span>Цена, ₽</span>
+                        <input inputMode="decimal" value={dialogDraft.price} onChange={(event) => setDialogDraft((current) => ({ ...current, price: event.target.value }))} />
+                    </label>
+                    <label className={fieldStyles.field}>
+                        <span>Тип позиции</span>
+                        <select value={dialogDraft.type} onChange={(event) => setDialogDraft((current) => ({ ...current, type: event.target.value }))}>
+                            <option value="service">Услуга</option><option value="goods">Товар</option>
+                        </select>
+                    </label>
+                    <label className={fieldStyles.field}>
+                        <span>Раздел</span>
+                        <select value={dialogDraft.categoryId ?? ''} onChange={(event) => setDialogDraft((current) => ({ ...current, categoryId: event.target.value || null }))}>
+                            <option value="">Без раздела</option>
+                            {categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
+                        </select>
+                    </label>
+                    <label className={`${fieldStyles.field} ${styles.checkboxField}`}>
+                        <input type="checkbox" checked={dialogDraft.status === 'published'} onChange={(event) => setDialogDraft((current) => ({ ...current, status: event.target.checked ? 'published' : 'hidden' }))} />
+                        <span>Опубликован</span>
+                    </label>
+                    <label className={`${fieldStyles.field} ${styles.fullField}`}>
+                        <span>Описание</span>
+                        <textarea rows="5" value={dialogDraft.description} onChange={(event) => setDialogDraft((current) => ({ ...current, description: event.target.value }))} />
+                    </label>
+                    <div className={styles.fullField}>
+                        <ImageField label="Изображение" value={dialogDraft.mediaId ? `/api/media/${dialogDraft.mediaId}` : ''} aspectRatio="4:3" maxWidth={1200} onChange={(url) => setDialogDraft((current) => ({ ...current, mediaId: url.split('/').pop() || null }))} />
+                    </div>
+                    {dialogError && <p className={`${styles.dialogError} ${styles.fullField}`} role="alert">{dialogError}</p>}
+                </div>}
+
+                <footer className={styles.dialogActions}>
+                    <Button variant="secondary" onClick={() => closeDialog()}>Отмена</Button>
+                    <Button type="submit" variant="primary">Сохранить</Button>
+                </footer>
+            </form>}
+        </dialog>
     </div>;
 }

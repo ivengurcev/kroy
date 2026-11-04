@@ -2,6 +2,7 @@
 .pageCanvas { display: grid; min-width: 0; min-height: 0; align-content: start; gap: var(--space-2); }
 .workspaceMessage, .insertionPoint, .previewPart { width: 100%; max-width: var(--admin-content-max); margin-inline: auto; }
 .previewPart { position: relative; grid-template-columns: minmax(0, 1fr); }
+.workspace .previewPart { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .partContent { width: 100%; min-width: 0; max-width: 100%; pointer-events: none; }
 .stickySentinel { position: absolute; top: 0; width: 1px; height: 1px; pointer-events: none; }
 .partHeader {
