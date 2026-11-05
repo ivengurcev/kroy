@@ -2,8 +2,8 @@ import { useState } from 'react';
 import styles from './services.module.css';
 import Section from '../../runtime/Section.jsx';
 
-function Category({ category }) {
-    const [isOpen, setIsOpen] = useState(true);
+function Category({ category, defaultExpanded }) {
+    const [isOpen, setIsOpen] = useState(defaultExpanded);
     const items = category.items;
 
     return (
@@ -38,9 +38,13 @@ function Category({ category }) {
  * @kroy-title Услуги
  * @kroy-category Контент
  * @kroy-contract services
+ *
+ * @param {object} props
+ * @param {boolean} [props.defaultExpanded=false] - Разделы раскрыты по умолчанию
  */
-export default function Services({ data }) {
+export default function Services({ data, options = {} }) {
     const { title, eyebrow, categories } = data;
+    const defaultExpanded = options.defaultExpanded === true;
 
     return (
         <Section className={styles.servicesContainer}>
@@ -52,7 +56,11 @@ export default function Services({ data }) {
 
                 <div className={styles.categories}>
                     {categories.map((category, index) => (
-                        <Category category={category} key={`${category?.title ?? ''}-${index}`} />
+                        <Category
+                            category={category}
+                            defaultExpanded={defaultExpanded}
+                            key={`${category?.title ?? ''}-${index}-${defaultExpanded}`}
+                        />
                     ))}
                 </div>
             </div>
