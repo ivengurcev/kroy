@@ -3,6 +3,8 @@ import test from 'node:test';
 import { pool } from '../../db/client.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './sitePayments.mjs';
 
+process.env.PAYMENT_ENCRYPTION_KEY = 'test-only-encryption-key-at-least-32-characters';
+
 function context(provider = 'prodamus', body = {}) {
     return {
         req: { header: () => 'site.localhost', param: () => provider, async json() { return body; } },
@@ -45,10 +47,10 @@ test('private API lists registered providers, saves normalized settings and acti
     const initial = await getSitePayments(context());
     assert.equal(initial.status, 200);
     assert.equal(initial.value.providers.length, 1);
-    assert.deepEqual(initial.value.providers[0].settings, { payformDomain: '' });
-    const saved = await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'EXAMPLE.payform.ru' } }));
+    assert.deepEqual(initial.value.providers[0].settings, { payformDomain: '', testMode: false });
+    const saved = await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'EXAMPLE.payform.ru', secretKey: 'TEST_KEY' } }));
     assert.equal(saved.status, 200);
-    assert.deepEqual(saved.value.providers[0].settings, { payformDomain: 'example.payform.ru' });
+    assert.deepEqual(saved.value.providers[0].settings, { payformDomain: 'example.payform.ru', testMode: false });
     const active = await patchSitePaymentActivation(context('prodamus', { isActive: true }));
     assert.equal(active.value.providers[0].isActive, true);
     const disabled = await patchSitePaymentActivation(context('prodamus', { isActive: false }));
@@ -113,7 +115,7 @@ test('deleting a saved active secret deactivates the integration, never exposes 
         assert.equal(result.value.providers[0].fields.secretKey.configured, false);
         assert.equal(result.value.providers[0].settings.secretKey, undefined);
         assert.doesNotMatch(JSON.stringify(result), /PRIVATE_SENTINEL/);
-        assert.deepEqual(result.value.providers[0].settings, { payformDomain: 'example.payform.ru' });
+        assert.deepEqual(result.value.providers[0].settings, { payformDomain: 'example.payform.ru', testMode: false });
     }
 });
 

@@ -29,7 +29,7 @@ test('validates and normalizes Prodamus domains without credentials, paths or un
 test('exposes only explicitly readable settings in the private admin descriptor, never raw provider settings', () => {
     const provider = getPaymentProvider('prodamus');
     const descriptor = describePaymentProvider(provider, { settings: { payformDomain: 'example.payform.ru', secretToken: 'PRIVATE_SENTINEL' }, isActive: true });
-    assert.deepEqual(descriptor.settings, { payformDomain: 'example.payform.ru' });
+    assert.deepEqual(descriptor.settings, { payformDomain: 'example.payform.ru', testMode: false });
     assert.equal(JSON.stringify(descriptor).includes('PRIVATE_SENTINEL'), false);
     const testDefinition = { ...provider, fields: { ...provider.fields, secretToken: { label: 'Token', type: 'password', default: 'PRIVATE_DEFAULT', required: true } } };
     const redacted = describePaymentProvider(testDefinition, { settings: { secretToken: 'PRIVATE_SENTINEL' } });

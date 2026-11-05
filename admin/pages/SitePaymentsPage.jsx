@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import PaymentIntegrationEditor from '../components/PaymentIntegrationEditor.jsx';
+import OrderNotificationSettings from '../components/OrderNotificationSettings.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Button from '../ui/Button.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
@@ -20,11 +21,13 @@ export default function SitePaymentsPage() {
     const [saveStatus, setSaveStatus] = useState('idle');
     const [action, setAction] = useState(null);
     const [error, setError] = useState('');
+    const [webhookUrl, setWebhookUrl] = useState('');
     const provider = providers.find((item) => item.provider === selected);
     const active = providers.find((item) => item.isActive);
     const dirty = Boolean(provider && JSON.stringify(draft) !== JSON.stringify(provider.settings));
 
     useEffect(() => {
+        setWebhookUrl(`${window.location.origin}/api/payments/prodamus/webhook`);
         const controller = new AbortController();
         fetch('/api/site/payments', { signal: controller.signal })
             .then(readPayments)
@@ -93,6 +96,16 @@ export default function SitePaymentsPage() {
                 </select>
             </label>
             {provider && <>
+                <div>
+                    <h2>Подключение Prodamus</h2>
+                    <ol>
+                        <li>Укажите URL вашей платёжной страницы и секретный ключ из настроек Prodamus, сохраните настройки и активируйте подключение.</li>
+                        <li>В кабинете Prodamus в поле «URL адреса для уведомлений» укажите адрес ниже. Собственный sys для подключения не требуется.</li>
+                        <li>Рекомендуем сделать телефон и email обязательными на стороне Prodamus. Покупатель вводит их на платёжной странице.</li>
+                    </ol>
+                    <label className={compactStyles.field}><span>URL webhook</span><input readOnly value={webhookUrl} onFocus={(event) => event.target.select()} /></label>
+                    <p>Тестовый режим создаёт отдельные тестовые заказы. Для проверки используйте тестовые карты Prodamus и отдельную демо-форму; не включайте деморежим в кабинете боевой формы.</p>
+                </div>
                 <PaymentIntegrationEditor provider={provider} settings={draft} disabled={Boolean(action)} onChange={(settings) => { setDraft(settings); setSaveStatus('idle'); }} onDeleteSecretKey={() => performAction('delete-secret')} />
                 <div className={styles.actions}>
                     <Button variant="primary" disabled={!dirty || Boolean(action)} onClick={() => performAction('save')}>
@@ -105,6 +118,7 @@ export default function SitePaymentsPage() {
                 {dirty && <p className={styles.hint}>Сохраните настройки перед активацией.</p>}
             </>}
             {error && <p className={styles.error} role="alert">{error}</p>}
+            <OrderNotificationSettings />
         </AdminPanel>
     </SiteSettingsLayout>;
 }

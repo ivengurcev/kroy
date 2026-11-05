@@ -102,9 +102,9 @@ export async function setCatalog(siteId, value) {
     return getCatalog(siteId);
 }
 
-export async function getProductForPayment(siteId, productId) {
-    const { rows: [product] } = await pool.query(
-        "SELECT id, name, price, type FROM products WHERE site_id = $1 AND id = $2 AND status = 'published'",
+export async function getProductForPayment(siteId, productId, client = pool) {
+    const { rows: [product] } = await client.query(
+        `SELECT id, name, price, type FROM products WHERE site_id = $1 AND id = $2 AND status = 'published'${client === pool ? '' : ' FOR SHARE'}`,
         [siteId, productId],
     );
     return product ?? null;

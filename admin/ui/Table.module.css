@@ -1,0 +1,6 @@
+.viewport { min-width: 0; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border-subtle); text-align: left; vertical-align: middle; }
+.table th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table td small { display: block; margin-top: var(--space-1); color: var(--color-text-secondary); }

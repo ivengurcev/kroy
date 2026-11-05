@@ -23,9 +23,9 @@ test('PostgreSQL enforces one active provider under concurrent switching and pre
             siteIds.push(site.id);
         }
         const [siteA, siteB] = siteIds;
-        await savePaymentIntegration(siteA, 'prodamus', { payformDomain: 'a.payform.ru' });
-        await savePaymentIntegration(siteA, 'test-second', { payformDomain: 'second.payform.ru' });
-        await savePaymentIntegration(siteB, 'prodamus', { payformDomain: 'b.payform.ru' });
+        await savePaymentIntegration(siteA, 'prodamus', { payformDomain: 'a.payform.ru', secretKey: 'TEST_A' });
+        await savePaymentIntegration(siteA, 'test-second', { payformDomain: 'second.payform.ru', secretKey: 'TEST_SECOND' });
+        await savePaymentIntegration(siteB, 'prodamus', { payformDomain: 'b.payform.ru', secretKey: 'TEST_B' });
         await setPaymentIntegrationActive(siteB, 'prodamus', true, validate);
         await Promise.all([
             setPaymentIntegrationActive(siteA, 'prodamus', true, validate),

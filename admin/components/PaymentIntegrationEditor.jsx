@@ -9,12 +9,12 @@ export default function PaymentIntegrationEditor({ provider, settings, disabled,
                 <span>{field.label}</span>
                 <input
                     type={field.type}
-                    value={settings[name] ?? ''}
+                    {...(field.type === 'checkbox' ? { checked: settings[name] === true } : { value: settings[name] ?? '' })}
                     placeholder={field.configured ? 'Ключ сохранён; оставьте поле пустым, чтобы не менять' : field.placeholder}
                     autoComplete={field.type === 'password' ? 'new-password' : undefined}
                     required={field.required}
                     disabled={disabled}
-                    onChange={(event) => onChange({ ...settings, [name]: event.target.value })}
+                    onChange={(event) => onChange({ ...settings, [name]: field.type === 'checkbox' ? event.target.checked : event.target.value })}
                 />
             </label>
             {name === 'secretKey' && field.configured && <div className={styles.secretActions}>

@@ -1,0 +1,11 @@
+.dialog { width: min(80vw, var(--admin-content-max)); max-width: calc(100vw - var(--space-4)); max-height: calc(100dvh - var(--space-8)); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-panel); }
+.dialog::backdrop { background: rgb(32 51 48 / 45%); }
+.layout { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: calc(100dvh - var(--space-8)); }
+.header { padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--color-border-subtle); }
+.header h2 { margin: 0; font-size: var(--font-size-xl); }
+.body { min-height: 0; padding: var(--space-6); overflow: auto; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border-subtle); }
+@media (max-width: 600px) {
+    .dialog { width: calc(100vw - var(--space-4)); }
+    .header, .body, .actions { padding: var(--space-4); }
+}

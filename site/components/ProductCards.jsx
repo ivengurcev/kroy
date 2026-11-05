@@ -14,7 +14,7 @@ export function ProductCard({ product, paymentEnabled }) {
         <div className={styles.body}><h3>{product.name}</h3>{product.description && <p>{product.description}</p>}<div className={styles.footer}>
             <strong>{product.price} ₽</strong>
             {paymentEnabled && Number(product.price) > 0 && <button className={styles.buy} type="button" disabled={loading} onClick={start.current}>
-                {loading ? 'Переход к оплате…' : 'Купить'}
+                {loading ? 'Переход к оплате…' : product.type === 'service' ? 'Оплатить консультацию' : 'Купить'}
             </button>}
         </div>{error && <p className={styles.error} role="alert">{error}</p>}</div>
     </article>;

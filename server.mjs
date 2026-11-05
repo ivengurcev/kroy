@@ -17,6 +17,7 @@ import { getSiteContactSettings, patchSiteContactSettings } from './server/api/s
 import { getSiteCatalog, patchSiteCatalog } from './server/api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
 import { getPaymentStatus, postPaymentStart } from './server/api/checkout.mjs';
+import { getSiteOrders, getSiteOrder, postCompleteOrder, getPublicOrderStatus, postProdamusWebhook, getOrderNotifications, patchOrderNotifications } from './server/api/orders.mjs';
 import { deleteSiteReview, getSiteReviews, patchSiteReview, postReview, postSiteReview } from './server/api/reviews.mjs';
 import { deleteSiteMaterial, getSiteMaterial, getSiteMaterials, patchSiteMaterial, postSiteMaterial } from './server/api/materials.mjs';
 import { deleteSiteMaterialSection, getSiteMaterialSections, patchSiteMaterialSection, postSiteMaterialSection } from './server/api/materialSections.mjs';
@@ -64,6 +65,13 @@ await createApp({
             disableSSR: true,
             title: 'Платежи Oysite',
             component: './admin/pages/SitePaymentsPage.jsx',
+        },
+        {
+            path: '/admin/orders',
+            isPrivate: true,
+            disableSSR: true,
+            title: 'Заказы Oysite',
+            component: './admin/pages/SiteOrdersPage.jsx',
         },
         {
             path: '/admin/reviews',
@@ -137,6 +145,13 @@ await createApp({
         },
     ],
     api: [
+        ['/payments/prodamus/webhook', { method: 'POST' }, postProdamusWebhook],
+        ['/payments/orders/:token', { method: 'GET' }, getPublicOrderStatus],
+        ['/site/orders', { method: 'GET', private: true }, getSiteOrders],
+        ['/site/orders/:id', { method: 'GET', private: true }, getSiteOrder],
+        ['/site/orders/:id/complete', { method: 'POST', private: true }, postCompleteOrder],
+        ['/site/order-notifications', { method: 'GET', private: true }, getOrderNotifications],
+        ['/site/order-notifications', { method: 'PATCH', private: true }, patchOrderNotifications],
         [
             '/payments/status',
             { method: 'GET' },

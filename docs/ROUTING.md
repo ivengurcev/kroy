@@ -39,6 +39,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin/contacts` | Контакты сайта |
 | `/admin/catalog` | Каталог |
 | `/admin/payments` | Платёжная интеграция |
+| `/admin/orders` | Заказы текущего сайта, подробности в модальном окне |
 | `/admin/reviews` | Модерация отзывов |
 | `/admin/materials` | Разделы и материалы |
 | `/admin/materials/new`, `/admin/materials/:id` | Создание и редактирование материала |
@@ -64,6 +65,9 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `GET /site/settings` | Общие данные настроек |
 | `GET/PATCH /site/theme`, `GET/PATCH /site/contact` | Тема и контакты |
 | `GET/PATCH /site/catalog` | Категории и позиции каталога |
+| `GET /site/orders`, `GET /site/orders/:id` | Заказы текущего сайта и подробности |
+| `POST /site/orders/:id/complete` | Отметить оплаченный заказ выполненным |
+| `GET/PATCH /site/order-notifications` | Адрес уведомлений о заказах |
 | `GET /site/reviews`, `POST /site/reviews`, `PATCH/DELETE /site/reviews/:id` | Управление отзывами; GET допускает status |
 | `GET/POST /site/material-sections`, `PATCH/DELETE /site/material-sections/:id` | Разделы материалов |
 | `GET/POST /site/materials`, `GET/PATCH/DELETE /site/materials/:id` | Материалы; список допускает `sectionId` |
@@ -83,6 +87,8 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `POST /api/reviews` | Отправка отзыва в pending; JSON или multipart с фото |
 | `GET /api/payments/status` | Готовность оплаты без раскрытия настроек |
 | `POST /api/payments/start` | Старт оплаты по productId |
+| `POST /api/payments/prodamus/webhook` | Подтверждение платежа с проверкой Sign |
+| `GET /api/payments/orders/:token` | Публичное состояние заказа без контактов покупателя |
 
 ## Публичные страницы и история адресов
 

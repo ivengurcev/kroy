@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from '../styles/SiteTheme.module.css';
+import PaymentResult from '../payments/PaymentResult.jsx';
 
 function getPaletteStyle(theme, palette) {
     if (!theme || !['light', 'dark'].includes(palette)) return undefined;
@@ -21,5 +22,5 @@ export default function SiteRoot({ children, tokens, theme }) {
         return () => media.removeEventListener('change', update);
     }, [mode]);
 
-    return <div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}>{children}</div>;
+    return <div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}><PaymentResult />{children}</div>;
 }

@@ -8,6 +8,7 @@ const groups = [
     { label: 'Содержимое', items: [
         { label: 'Материалы', path: '/admin/materials', icon: 'materials', match: (path) => path === '/admin/materials' || path.startsWith('/admin/materials/') },
         { label: 'Каталог', path: '/admin/catalog', icon: 'catalog', match: (path) => path === '/admin/catalog' },
+        { label: 'Заказы', path: '/admin/orders', icon: 'payments', match: (path) => path === '/admin/orders' },
         { label: 'Отзывы', path: '/admin/reviews', icon: 'reviews', match: (path) => path === '/admin/reviews' },
     ] },
     { label: 'Настройки', items: [

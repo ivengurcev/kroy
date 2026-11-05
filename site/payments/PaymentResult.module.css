@@ -1,0 +1,3 @@
+.result { max-width: var(--site-container-max); margin: var(--site-space-4) auto; padding: var(--site-space-4); border-radius: var(--site-radius-base); color: var(--site-color-text); background: var(--site-color-section-bg); overflow-wrap: anywhere; }
+.result h2 { margin-top: 0; }
+.result button { padding: var(--site-space-2) var(--site-space-4); border: 0; border-radius: var(--site-radius-base); color: var(--site-color-bg); font: inherit; background: var(--site-color-accent); cursor: pointer; }

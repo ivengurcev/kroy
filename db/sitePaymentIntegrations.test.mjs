@@ -4,6 +4,8 @@ import { pool } from './client.mjs';
 import { getPaymentIntegrations, savePaymentIntegration, setPaymentIntegrationActive, deletePaymentSecretKey } from './sitePaymentIntegrations.mjs';
 import { getPaymentProvider, PaymentSettingsError } from '../server/payments/providers.mjs';
 
+process.env.PAYMENT_ENCRYPTION_KEY = 'test-only-encryption-key-at-least-32-characters';
+
 function database(t) {
     let rows = [];
     let snapshot;
@@ -56,10 +58,10 @@ const validate = getPaymentProvider('prodamus').normalizeSettings;
 
 test('isolates settings by site and keeps several provider records when switching and disabling', async (t) => {
     const fixture = database(t);
-    await savePaymentIntegration('site-a', 'prodamus', { payformDomain: 'a.payform.ru' });
+    await savePaymentIntegration('site-a', 'prodamus', { payformDomain: 'a.payform.ru', secretKey: 'TEST_A' });
     // A second provider is test data for the generic storage, not a registered production integration.
-    await savePaymentIntegration('site-a', 'test-second', { payformDomain: 'second.payform.ru' });
-    await savePaymentIntegration('site-b', 'prodamus', { payformDomain: 'b.payform.ru' });
+    await savePaymentIntegration('site-a', 'test-second', { payformDomain: 'second.payform.ru', secretKey: 'TEST_SECOND' });
+    await savePaymentIntegration('site-b', 'prodamus', { payformDomain: 'b.payform.ru', secretKey: 'TEST_B' });
     await setPaymentIntegrationActive('site-b', 'prodamus', true, validate);
     await setPaymentIntegrationActive('site-a', 'prodamus', true, validate);
     await setPaymentIntegrationActive('site-a', 'test-second', true, validate);
@@ -78,7 +80,7 @@ test('isolates settings by site and keeps several provider records when switchin
 
 test('failed activation rolls back without disabling the currently active provider', async (t) => {
     const fixture = database(t);
-    await savePaymentIntegration('site', 'prodamus', { payformDomain: 'ok.payform.ru' });
+    await savePaymentIntegration('site', 'prodamus', { payformDomain: 'ok.payform.ru', secretKey: 'TEST_KEY' });
     await setPaymentIntegrationActive('site', 'prodamus', true, validate);
     await savePaymentIntegration('site', 'test-invalid', {});
     await assert.rejects(setPaymentIntegrationActive('site', 'test-invalid', true, validate), PaymentSettingsError);

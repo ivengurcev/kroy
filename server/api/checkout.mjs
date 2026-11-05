@@ -24,7 +24,9 @@ export async function postPaymentStart(c) {
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Сайт не найден.' }, 404, NO_STORE);
-        return c.json({ url: await startPayment(site.id, body.productId) }, 200, NO_STORE);
+        const origin = new URL(c.req.url);
+        if (process.env.NODE_ENV === 'production') origin.protocol = 'https:';
+        return c.json({ url: await startPayment(site.id, body.productId, origin.origin) }, 200, NO_STORE);
     } catch (error) {
         if (error instanceof PaymentError) return c.json({ error: error.message }, error.status, NO_STORE);
         // Do not log upstream errors: they can contain signed request data or merchant secrets.

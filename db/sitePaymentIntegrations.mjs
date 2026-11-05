@@ -1,8 +1,11 @@
 import { pool } from './client.mjs';
 import { PaymentSettingsError } from '../server/payments/providers.mjs';
+import { decryptPaymentSecret, encryptPaymentSecret } from '../server/payments/secrets.mjs';
 
 function mapIntegration(row) {
-    return { provider: row.provider, settings: row.settings, isActive: row.is_active };
+    const settings = { ...row.settings };
+    if (settings.secretKey) settings.secretKey = decryptPaymentSecret(settings.secretKey);
+    return { provider: row.provider, settings, isActive: row.is_active };
 }
 
 export async function getPaymentIntegrations(siteId) {
@@ -18,12 +21,15 @@ export async function savePaymentIntegration(siteId, provider, settings) {
     try {
         await client.query('BEGIN');
         await client.query('SELECT id FROM sites WHERE id = $1 FOR UPDATE', [siteId]);
+        const { rows: [current] } = await client.query('SELECT settings FROM site_payment_integrations WHERE site_id = $1 AND provider = $2', [siteId, provider]);
+        const nextSettings = { ...current?.settings, ...settings };
+        if (nextSettings.secretKey) nextSettings.secretKey = encryptPaymentSecret(decryptPaymentSecret(nextSettings.secretKey));
         const { rows: [saved] } = await client.query(
             `INSERT INTO site_payment_integrations (site_id, provider, settings)
              VALUES ($1, $2, $3::jsonb)
              ON CONFLICT (site_id, provider) DO UPDATE SET settings = site_payment_integrations.settings || EXCLUDED.settings
              RETURNING provider, settings, is_active`,
-            [siteId, provider, JSON.stringify(settings)],
+            [siteId, provider, JSON.stringify(nextSettings)],
         );
         await client.query('COMMIT');
         return mapIntegration(saved);
@@ -46,7 +52,8 @@ export async function setPaymentIntegrationActive(siteId, provider, isActive, va
                 [siteId, provider],
             );
             if (!current) throw new PaymentSettingsError('Сначала сохраните настройки платёжной системы.');
-            validateSettings(current.settings);
+            const settings = validateSettings(mapIntegration({ ...current, provider }).settings);
+            if (!settings.secretKey) throw new PaymentSettingsError('Сначала сохраните секретный ключ.');
             await client.query(
                 'UPDATE site_payment_integrations SET is_active = FALSE WHERE site_id = $1 AND provider <> $2 AND is_active',
                 [siteId, provider],

@@ -100,6 +100,70 @@ CREATE TABLE public.media (
 
 
 --
+-- Name: order_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_items (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    order_id uuid NOT NULL,
+    product_id uuid,
+    name text NOT NULL,
+    type text NOT NULL,
+    unit_price numeric(12,2) NOT NULL,
+    quantity integer NOT NULL,
+    sort_order integer DEFAULT 0 NOT NULL,
+    CONSTRAINT order_items_quantity_check CHECK ((quantity > 0)),
+    CONSTRAINT order_items_type_check CHECK ((type = ANY (ARRAY['service'::text, 'goods'::text]))),
+    CONSTRAINT order_items_unit_price_check CHECK ((unit_price > (0)::numeric))
+);
+
+
+--
+-- Name: order_notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_notifications (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    order_id uuid NOT NULL,
+    event text NOT NULL,
+    payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    sent_at timestamp with time zone,
+    CONSTRAINT order_notifications_event_check CHECK ((event = 'order.paid'::text))
+);
+
+
+--
+-- Name: orders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.orders (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    public_token text NOT NULL,
+    items_total numeric(12,2) NOT NULL,
+    currency text DEFAULT 'RUB'::text NOT NULL,
+    payment_status text DEFAULT 'pending'::text NOT NULL,
+    fulfillment_status text DEFAULT 'pending'::text NOT NULL,
+    customer_phone text,
+    customer_email text,
+    customer_extra text,
+    is_test boolean DEFAULT false NOT NULL,
+    site_origin text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    paid_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    CONSTRAINT orders_check CHECK (((payment_status = 'paid'::text) = (paid_at IS NOT NULL))),
+    CONSTRAINT orders_check1 CHECK (((fulfillment_status = 'completed'::text) = (completed_at IS NOT NULL))),
+    CONSTRAINT orders_check2 CHECK (((fulfillment_status <> 'completed'::text) OR (payment_status = 'paid'::text))),
+    CONSTRAINT orders_currency_check CHECK ((currency = 'RUB'::text)),
+    CONSTRAINT orders_fulfillment_status_check CHECK ((fulfillment_status = ANY (ARRAY['pending'::text, 'completed'::text]))),
+    CONSTRAINT orders_items_total_check CHECK ((items_total > (0)::numeric)),
+    CONSTRAINT orders_payment_status_check CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text])))
+);
+
+
+--
 -- Name: pages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -118,6 +182,31 @@ CREATE TABLE public.pages (
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
     CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['materials'::text, 'products'::text, 'reviews'::text])) AND (((data_source = 'materials'::text) AND (material_section_id IS NOT NULL)) OR ((data_source = ANY (ARRAY['products'::text, 'reviews'::text])) AND (material_section_id IS NULL))) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
+);
+
+
+--
+-- Name: payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.payments (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    order_id uuid NOT NULL,
+    provider text NOT NULL,
+    merchant_domain text NOT NULL,
+    external_id text,
+    status text DEFAULT 'pending'::text NOT NULL,
+    provider_status text,
+    amount numeric(12,2) NOT NULL,
+    currency text NOT NULL,
+    is_test boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    confirmed_at timestamp with time zone,
+    CONSTRAINT payments_amount_check CHECK ((amount > (0)::numeric)),
+    CONSTRAINT payments_check CHECK (((status = 'succeeded'::text) = (confirmed_at IS NOT NULL))),
+    CONSTRAINT payments_currency_check CHECK ((currency = 'RUB'::text)),
+    CONSTRAINT payments_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'succeeded'::text, 'failed'::text])))
 );
 
 
@@ -233,6 +322,7 @@ CREATE TABLE public.sites (
     theme_mode text DEFAULT 'light'::text NOT NULL,
     theme_overrides jsonb DEFAULT '{}'::jsonb NOT NULL,
     contact_settings jsonb DEFAULT '{"hours": "", "phone": "", "address": "", "socials": [], "latitude": null, "longitude": null}'::jsonb NOT NULL,
+    order_notification_email text,
     CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
     CONSTRAINT sites_theme_overrides_check CHECK ((jsonb_typeof(theme_overrides) = 'object'::text))
@@ -327,6 +417,54 @@ ALTER TABLE ONLY public.media
 
 
 --
+-- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: order_notifications order_notifications_order_id_event_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_notifications
+    ADD CONSTRAINT order_notifications_order_id_event_key UNIQUE (order_id, event);
+
+
+--
+-- Name: order_notifications order_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_notifications
+    ADD CONSTRAINT order_notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: orders orders_public_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_public_token_key UNIQUE (public_token);
+
+
+--
+-- Name: orders orders_site_id_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_site_id_id_key UNIQUE (site_id, id);
+
+
+--
 -- Name: pages pages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -348,6 +486,30 @@ ALTER TABLE ONLY public.pages
 
 ALTER TABLE ONLY public.pages
     ADD CONSTRAINT pages_site_id_path_key UNIQUE (site_id, path);
+
+
+--
+-- Name: payments payments_order_id_provider_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_order_id_provider_key UNIQUE (order_id, provider);
+
+
+--
+-- Name: payments payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: payments payments_provider_merchant_domain_external_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_provider_merchant_domain_external_id_key UNIQUE (provider, merchant_domain, external_id);
 
 
 --
@@ -450,6 +612,20 @@ CREATE INDEX material_sections_site_order_idx ON public.material_sections USING 
 --
 
 CREATE INDEX materials_section_published_idx ON public.materials USING btree (site_id, section_id, published_at DESC, slug) WHERE (status = 'published'::text);
+
+
+--
+-- Name: order_items_order_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX order_items_order_idx ON public.order_items USING btree (order_id, sort_order, id);
+
+
+--
+-- Name: orders_site_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX orders_site_created_idx ON public.orders USING btree (site_id, created_at DESC, id);
 
 
 --
@@ -557,6 +733,30 @@ ALTER TABLE ONLY public.media
 
 
 --
+-- Name: order_items order_items_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_items
+    ADD CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
+
+
+--
+-- Name: order_notifications order_notifications_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_notifications
+    ADD CONSTRAINT order_notifications_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
+
+
+--
+-- Name: orders orders_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
 -- Name: pages pages_detail_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -578,6 +778,14 @@ ALTER TABLE ONLY public.pages
 
 ALTER TABLE ONLY public.pages
     ADD CONSTRAINT pages_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
+
+
+--
+-- Name: payments payments_site_id_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_site_id_order_id_fkey FOREIGN KEY (site_id, order_id) REFERENCES public.orders(site_id, id) ON DELETE CASCADE;
 
 
 --
@@ -697,4 +905,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611010002'),
     ('202611010003'),
     ('202611020000'),
-    ('202611020001');
+    ('202611020001'),
+    ('202611050001');

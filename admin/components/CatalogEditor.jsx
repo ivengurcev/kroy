@@ -31,13 +31,13 @@ export default function CatalogEditor({ value, onChange }) {
     }, [dialog]);
 
     const categories = useMemo(() => bySortOrder(catalog.categories), [catalog.categories]);
-    const selectedCategoryId = categories.some(({ id: categoryId }) => categoryId === activeCategoryId)
+    const selectedCategoryId = activeCategoryId === UNCATEGORIZED || categories.some(({ id: categoryId }) => categoryId === activeCategoryId)
         ? activeCategoryId
         : categories[0]?.id ?? UNCATEGORIZED;
     const selectedCategory = categories.find(({ id: categoryId }) => categoryId === selectedCategoryId);
     const uncategorized = selectedCategoryId === UNCATEGORIZED;
     const products = useMemo(() => bySortOrder(catalog.products.filter((product) => uncategorized
-        ? !product.categoryId
+        ? product.categoryId == null
         : product.categoryId === selectedCategoryId)), [catalog.products, selectedCategoryId, uncategorized]);
     const dialogDirty = Boolean(dialog && dialogDraft && JSON.stringify(dialogDraft) !== JSON.stringify(dialog.initial));
 
@@ -95,7 +95,6 @@ export default function CatalogEditor({ value, onChange }) {
             update({ products: dialog.mode === 'create'
                 ? [...catalog.products, product]
                 : catalog.products.map((item) => item.id === dialog.id ? product : item) });
-            setActiveCategoryId(product.categoryId || UNCATEGORIZED);
         }
 
         closeDialog(true);
@@ -117,37 +116,17 @@ export default function CatalogEditor({ value, onChange }) {
         update({ products: catalog.products.filter(({ id: productId }) => productId !== product.id) });
     }
 
-    function moveCategory(category, direction) {
-        const index = categories.findIndex(({ id: categoryId }) => categoryId === category.id);
-        const target = index + direction;
-        if (target < 0 || target >= categories.length) return;
-        const next = [...categories];
-        [next[index], next[target]] = [next[target], next[index]];
-        update({ categories: next.map((item, itemIndex) => ({ ...item, sortOrder: itemIndex })) });
-    }
-
-    function moveProduct(product, direction) {
-        const index = products.findIndex(({ id: productId }) => productId === product.id);
-        const target = index + direction;
-        if (target < 0 || target >= products.length) return;
-        const next = [...products];
-        [next[index], next[target]] = [next[target], next[index]];
-        const order = new Map(next.map((item, itemIndex) => [item.id, itemIndex]));
-        update({ products: catalog.products.map((item) => order.has(item.id) ? { ...item, sortOrder: order.get(item.id) } : item) });
-    }
-
     return <div className={styles.catalog}>
-        <div className={styles.layout}>
-            <AdminPanel title="Разделы" className={styles.categoryPanel}>
+        <AdminPanel className={styles.layout} noPadding>
+            <div className={styles.categoryPanel}>
+                <h2 className={styles.categoryHeading}>Разделы каталога</h2>
                 <div className={styles.categoryList} role="group" aria-label="Разделы каталога">
-                    {categories.map((category, index) => <div className={`${styles.categoryRow} ${selectedCategoryId === category.id ? styles.categoryActive : ''}`} key={category.id}>
+                    {categories.map((category) => <div className={`${styles.categoryRow} ${selectedCategoryId === category.id ? styles.categoryActive : ''}`} key={category.id}>
                         <button className={styles.categorySelect} type="button" aria-current={selectedCategoryId === category.id ? 'true' : undefined} onClick={() => setActiveCategoryId(category.id)}>
-                            <span>{category.name || 'Без названия'}</span>
+                            <span title={category.name}>{category.name || 'Без названия'}</span>
                             <small>{catalog.products.filter(({ categoryId }) => categoryId === category.id).length}</small>
                         </button>
                         <div className={styles.categoryActions}>
-                            <Button variant="iconCompact" title="Переместить раздел выше" aria-label={`Переместить «${category.name}» выше`} disabled={index === 0} onClick={() => moveCategory(category, -1)}><Icon name="up" size={18} /></Button>
-                            <Button variant="iconCompact" title="Переместить раздел ниже" aria-label={`Переместить «${category.name}» ниже`} disabled={index === categories.length - 1} onClick={() => moveCategory(category, 1)}><Icon name="down" size={18} /></Button>
                             <Button variant="iconCompact" title="Редактировать раздел" aria-label={`Редактировать раздел «${category.name}»`} onClick={() => openCategory(category)}><Icon name="edit" size={18} /></Button>
                             <Button variant="iconCompact" title="Удалить раздел" aria-label={`Удалить раздел «${category.name}»`} onClick={() => deleteCategory(category)}><Icon name="delete" size={18} /></Button>
                         </div>
@@ -155,23 +134,23 @@ export default function CatalogEditor({ value, onChange }) {
                     <div className={`${styles.categoryRow} ${uncategorized ? styles.categoryActive : ''}`}>
                         <button className={styles.categorySelect} type="button" aria-current={uncategorized ? 'true' : undefined} onClick={() => setActiveCategoryId(UNCATEGORIZED)}>
                             <span>Без раздела</span>
-                            <small>{catalog.products.filter(({ categoryId }) => !categoryId).length}</small>
+                            <small>{catalog.products.filter(({ categoryId }) => categoryId == null).length}</small>
                         </button>
                     </div>
                 </div>
-                <Button className={styles.addCategory} size="compact" onClick={() => openCategory()}><Icon name="add" size={18} /> Добавить раздел</Button>
-            </AdminPanel>
+                <button type="button" className={styles.addCategory} onClick={() => openCategory()}><Icon name="add" size={18} /> Добавить раздел</button>
+            </div>
 
-            <AdminPanel className={styles.productPanel} noPadding>
+            <div className={styles.productPanel}>
                 <div className={styles.productHeading}>
-                    <h2>{selectedCategory?.name || 'Без раздела'}</h2>
-                    <Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" size={18} /> Добавить товар</Button>
+                    <div><h2>{selectedCategory?.name || 'Без раздела'}</h2><small>Товаров: {products.length}</small></div>
+                    {!uncategorized && <Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" size={18} /> Добавить товар</Button>}
                 </div>
                 <div className={styles.tableViewport}>
                     <table className={styles.table}>
                         <thead><tr><th>Название</th><th>Тип</th><th>Цена</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr></thead>
                         <tbody>
-                            {products.map((product, index) => <tr key={product.id}>
+                            {products.map((product) => <tr key={product.id}>
                                 <td>
                                     <button className={styles.productTitle} type="button" onClick={() => openProduct(product)}>{product.name || 'Без названия'}</button>
                                     <div className={styles.mobileMeta}>
@@ -184,8 +163,7 @@ export default function CatalogEditor({ value, onChange }) {
                                 <td className={styles.desktopMeta}>{product.price} ₽</td>
                                 <td className={styles.desktopMeta}><StatusBadge tone={product.status === 'hidden' ? 'warning' : 'success'}>{product.status === 'hidden' ? 'Скрыт' : 'Опубликован'}</StatusBadge></td>
                                 <td className={styles.productActions}>
-                                    <Button variant="iconCompact" title="Переместить выше" aria-label={`Переместить «${product.name}» выше`} disabled={index === 0} onClick={() => moveProduct(product, -1)}><Icon name="up" size={18} /></Button>
-                                    <Button variant="iconCompact" title="Переместить ниже" aria-label={`Переместить «${product.name}» ниже`} disabled={index === products.length - 1} onClick={() => moveProduct(product, 1)}><Icon name="down" size={18} /></Button>
+                                    <Button variant="iconCompact" title="Редактировать товар" aria-label={`Редактировать «${product.name}»`} onClick={() => openProduct(product)}><Icon name="edit" size={18} /></Button>
                                     <Button variant="iconCompact" title="Удалить товар" aria-label={`Удалить «${product.name}»`} onClick={() => deleteProduct(product)}><Icon name="delete" size={18} /></Button>
                                 </td>
                             </tr>)}
@@ -193,8 +171,8 @@ export default function CatalogEditor({ value, onChange }) {
                         </tbody>
                     </table>
                 </div>
-            </AdminPanel>
-        </div>
+            </div>
+        </AdminPanel>
 
         <dialog
             ref={dialogRef}

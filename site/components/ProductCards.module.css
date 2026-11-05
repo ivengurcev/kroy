@@ -5,7 +5,7 @@
 .body h3, .body p { margin: 0; }
 .body h3 { font-family: var(--site-font-heading); font-size: 1.25rem; font-weight: 500; }
 .body p { color: var(--site-color-text-secondary); line-height: 1.5; }
-.footer { display: flex; gap: var(--site-space-3); align-items: center; justify-content: space-between; margin-top: var(--site-space-2); }
+.footer { display: flex; flex-wrap: wrap; gap: var(--site-space-3); align-items: center; justify-content: space-between; margin-top: var(--site-space-2); }
 .footer strong { font-size: 1.1rem; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .grid { grid-template-columns: minmax(0, 1fr); } }

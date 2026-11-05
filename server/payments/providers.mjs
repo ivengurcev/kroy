@@ -5,7 +5,7 @@ export class PaymentSettingsError extends Error {}
 function normalizeProdamusSettings(settings) {
     if (!settings || typeof settings !== 'object' || Array.isArray(settings)
         || !Object.hasOwn(settings, 'payformDomain')
-        || Object.keys(settings).some((key) => !['payformDomain', 'secretKey'].includes(key))) {
+        || Object.keys(settings).some((key) => !['payformDomain', 'secretKey', 'testMode'].includes(key))) {
         throw new PaymentSettingsError('Укажите адрес платёжной формы Prodamus.');
     }
     let payformDomain;
@@ -15,7 +15,8 @@ function normalizeProdamusSettings(settings) {
         throw new PaymentSettingsError('Некорректный секретный ключ.');
     }
     const secretKey = settings.secretKey?.trim();
-    return { payformDomain, ...(secretKey ? { secretKey } : {}) };
+    if (settings.testMode !== undefined && typeof settings.testMode !== 'boolean') throw new PaymentSettingsError('Некорректный режим оплаты.');
+    return { payformDomain, ...(secretKey ? { secretKey } : {}), ...(settings.testMode !== undefined ? { testMode: settings.testMode } : {}) };
 }
 
 export const paymentProviders = {
@@ -29,6 +30,7 @@ export const paymentProviders = {
                 default: '', placeholder: 'example.payform.ru', readable: true,
             },
             secretKey: { label: 'Секретный ключ', type: 'password', required: false, default: '', readable: false },
+            testMode: { label: 'Тестовый режим (demo_mode)', type: 'checkbox', default: false, readable: true },
         },
         normalizeSettings: normalizeProdamusSettings,
     },

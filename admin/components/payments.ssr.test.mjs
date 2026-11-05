@@ -20,6 +20,8 @@ before(async () => {
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
                 export { default as AdminSidebar } from './admin/components/AdminSidebar.jsx';
                 export { default as SiteMaterialsPage } from './admin/pages/SiteMaterialsPage.jsx';
+                export { default as SiteOrdersPage } from './admin/pages/SiteOrdersPage.jsx';
+                export { default as PaymentResult } from './site/payments/PaymentResult.jsx';
                 export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
@@ -63,13 +65,20 @@ test('site settings expose a Payments route without a duplicate section menu and
     assert.equal(components.SITE_SETTINGS_SECTIONS.find(({ id }) => id === 'payments').path, '/admin/payments');
     const html = renderToString(createElement(components.SitePaymentsPage));
     assert.match(html, /Загрузка/);
-    const layout = renderToString(createElement(components.SiteSettingsLayout, { section: 'payments', title: 'Платежи', status: 'success' }));
-    assert.match(layout, /<h1>Платежи<\/h1>/);
+    const layout = renderToString(createElement(components.SiteSettingsLayout, { section: 'payments', title: 'Платежи', status: 'success' }, createElement('p', null, 'Платёжные настройки')));
+    assert.match(layout, /Платёжные настройки/);
     assert.doesNotMatch(layout, /Разделы настроек сайта/);
 });
 
 test('materials page renders on SSR without browser globals', () => {
     assert.doesNotThrow(() => renderToString(createElement(components.SiteMaterialsPage)));
+});
+
+test('orders and payment result render without browser globals and orders have standard SPA navigation', () => {
+    assert.match(renderToString(createElement(components.SiteOrdersPage)), /Загрузка/);
+    assert.equal(renderToString(createElement(components.PaymentResult)), '');
+    const sidebar = renderToString(createElement(components.AdminSidebar, { pathname: '/admin/orders' }));
+    assert.match(sidebar, /href="\/admin\/orders"[^>]*aria-current="page"/);
 });
 
 test('admin sidebar renders on SSR and selects contacts by pathname', () => {
