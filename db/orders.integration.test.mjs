@@ -48,10 +48,16 @@ test('orders: snapshot, tenant isolation, verified webhook, concurrent retries, 
         assert.equal(await completeOrder(siteA, order.id), false);
         await assert.rejects(createOrder(siteB, product.id, integration, 'https://b.example.test'));
 
-        const data = { order_num: order.id, order_id: '80001', domain: 'a.payform.ru', sum: '2000.00', currency: 'rub',
-            date: '2026-11-05T12:00:00+03:00', payment_status: 'success', customer_phone: '+79991234567', customer_email: 'buyer@example.test', customer_extra: 'Примечание' };
+        const data = { order_num: order.id, order_id: '80001', domain: 'a.payform.ru', sum: '2000.00',
+            date: '2026-11-05T12:00:00+03:00', payment_status: 'success', customer_phone: '+79991234567', customer_email: 'buyer@example.test', customer_extra: 'Примечание',
+            products: [{ name: 'Онлайн-консультация', price: '2000.00', quantity: '1', sum: '2000.00' }] };
+        function formEntries(body) {
+            return Object.entries(body).flatMap(([key, value]) => key === 'products'
+                ? value.flatMap((product, index) => Object.entries(product).map(([field, fieldValue]) => [`products[${index}][${field}]`, fieldValue]))
+                : [[key, value]]);
+        }
         function context(siteId, body, signature, params = {}) {
-            const encoded = new URLSearchParams(body);
+            const encoded = new URLSearchParams(formEntries(body));
             const request = new Request(`https://${siteId}.example.test/api/payments/prodamus/webhook`, {
                 method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Sign: signature || '' }, body: encoded,
             });
@@ -120,6 +126,16 @@ test('orders: snapshot, tenant isolation, verified webhook, concurrent retries, 
         const canceled = { ...duplicate, order_id: '80002', payment_status: 'order_canceled' };
         assert.equal((await postProdamusWebhook(context(siteA, canceled, signProdamusRequest(canceled, settings.secretKey)))).status, 200);
         assert.equal((await getOrder(siteA, second.id)).payments[0].status, 'failed');
+        assert.equal((await getOrder(siteA, second.id)).payments[0].externalId, null);
+        const retrySuccess = { ...duplicate, order_id: '80003', payment_status: 'success' };
+        assert.equal((await postProdamusWebhook(context(siteA, retrySuccess, signProdamusRequest(retrySuccess, settings.secretKey)))).status, 200);
+        const lateFailure = { ...canceled, payment_status: 'order_denied' };
+        assert.equal((await postProdamusWebhook(context(siteA, lateFailure, signProdamusRequest(lateFailure, settings.secretKey)))).status, 200);
+        const retriedOrder = await getOrder(siteA, second.id);
+        assert.equal(retriedOrder.paymentStatus, 'paid');
+        assert.equal(retriedOrder.payments[0].externalId, '80003');
+        assert.equal(retriedOrder.payments[0].status, 'succeeded');
+        assert.equal((await pool.query("SELECT count(*)::int AS count FROM order_notifications WHERE order_id = $1", [second.id])).rows[0].count, 1);
         assert.equal(await completeOrder(siteA, second.id), false);
         const testOrder = await createOrder(siteA, product.id, { ...integration, settings: { ...settings, testMode: true } }, 'https://a.example.test');
         const demo = { ...duplicate, order_num: testOrder.id, order_id: '80003', _param_oysite_test: '1', demo_mode: '1' };
@@ -139,7 +155,7 @@ test('orders: snapshot, tenant isolation, verified webhook, concurrent retries, 
         assert.equal((await postProdamusWebhook(jsonContext)).status, 200);
         const multipartContext = context(siteB, {}, otherSignature);
         const form = new FormData();
-        for (const [key, value] of Object.entries(otherData)) form.set(key, value);
+        for (const [key, value] of formEntries(otherData)) form.set(key, value);
         multipartContext.req.raw = new Request('https://b.example.test/api/payments/prodamus/webhook', { method: 'POST', headers: { Sign: otherSignature }, body: form });
         multipartContext.req.header = (name) => name.toLowerCase() === 'host' ? `${siteB}.example.test` : multipartContext.req.raw.headers.get(name);
         assert.equal((await postProdamusWebhook(multipartContext)).status, 200);

@@ -13,7 +13,7 @@ export function normalizeWebhook(data, settings, signature) {
     if (!isUuid(data.order_num) || !/^\d{1,30}$/.test(String(data.order_id))
         || !['success', 'order_canceled', 'order_denied'].includes(data.payment_status)
         || typeof data.sum !== 'string' || !/^\d{1,10}(?:\.\d{1,2})?$/.test(data.sum)
-        || typeof data.currency !== 'string' || data.currency.toLowerCase() !== 'rub'
+        || (data.currency !== undefined && (typeof data.currency !== 'string' || data.currency.toLowerCase() !== 'rub'))
         || data.subscription || data.payment_init === 'auto') {
         throw new PaymentError('Некорректное уведомление.', 400);
     }

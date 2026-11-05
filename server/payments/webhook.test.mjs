@@ -10,7 +10,7 @@ const payload = { order_num: '11111111-1111-4111-8111-111111111111', order_id: '
     customer_phone: '+79991234567', customer_email: 'buyer@example.org', customer_extra: 'Консультация',
     products: [{ name: 'Консультация', price: '2000.00', quantity: '1' }] };
 
-test('official bracket-form reconstructs products and verifies the complete payload, including contacts and attempts', () => {
+test('official bracket-form reconstructs products and accepts the official notification without currency', () => {
     const form = new URLSearchParams(Object.entries(payload).filter(([key]) => key !== 'products'));
     for (const [key, value] of Object.entries(payload.products[0])) form.set(`products[0][${key}]`, value);
     const data = parseProdamusForm(form.toString());
@@ -30,6 +30,17 @@ test('official bracket-form reconstructs products and verifies the complete payl
     assert.equal(verifyProdamusSignature(data, settings.secretKey, 'invalid'), false);
 });
 
+test('currency is optional, RUB is accepted, and another currency is rejected', () => {
+    for (const currency of [undefined, 'rub']) {
+        const data = { ...payload };
+        if (currency === undefined) delete data.currency;
+        else data.currency = currency;
+        assert.equal(normalizeWebhook(data, settings, signProdamusRequest(data, settings.secretKey)).currency, 'RUB');
+    }
+    const data = { ...payload, currency: 'usd' };
+    assert.throws(() => normalizeWebhook(data, settings, signProdamusRequest(data, settings.secretKey)), /уведомление/i);
+});
+
 test('rejects duplicate form keys, prototype pollution and scalar/object collisions', () => {
     for (const form of ['sum=1&sum=2', '__proto__[polluted]=1', 'products=foo&products[0][price]=2', 'products[constructor][name]=bad']) {
         assert.throws(() => parseProdamusForm(form));
@@ -38,7 +49,7 @@ test('rejects duplicate form keys, prototype pollution and scalar/object collisi
 });
 
 test('valid signature does not bypass domain, currency, amount, order number or recurring-payment validation', () => {
-    for (const change of [{ domain: 'other.payform.ru' }, { currency: 'usd' }, { currency: undefined }, { sum: '2000.001' },
+    for (const change of [{ domain: 'other.payform.ru' }, { currency: 'usd' }, { sum: '2000.001' },
         { sum: '-1' }, { order_num: 'unknown' }, { order_id: {} }, { payment_status: 'unknown' }, { subscription: { id: '1' } }, { date: 'invalid' }]) {
         const data = { ...payload, ...change };
         assert.throws(() => normalizeWebhook(data, settings, signProdamusRequest(data, settings.secretKey)));

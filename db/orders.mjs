@@ -91,12 +91,12 @@ export async function applyProdamusPayment(siteId, event) {
         if (payment.merchant_domain !== event.domain || order.items_total !== event.amount || payment.amount !== event.amount
             || order.currency !== event.currency || payment.currency !== event.currency
             || order.is_test !== event.isTest || payment.is_test !== event.isTest
-            || payment.external_id && payment.external_id !== event.externalId) {
+            || payment.status === 'succeeded' && event.status === 'success' && payment.external_id !== event.externalId) {
             throw new PaymentError('Уведомление не соответствует заказу.', 400);
         }
         if (payment.status !== 'succeeded') {
             const success = event.status === 'success';
-            await client.query(`UPDATE payments SET external_id = $3, status = $4, provider_status = $5,
+            await client.query(`UPDATE payments SET external_id = CASE WHEN $4 = 'succeeded' THEN $3 ELSE NULL END, status = $4, provider_status = $5,
                 confirmed_at = CASE WHEN $4 = 'succeeded' THEN $6::timestamptz ELSE NULL END
                 WHERE site_id = $1 AND id = $2`, [siteId, payment.id, event.externalId, success ? 'succeeded' : 'failed', event.status, event.paidAt]);
             if (success && order.payment_status !== 'paid') {
