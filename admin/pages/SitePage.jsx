@@ -9,7 +9,6 @@ import CatalogEditor from '../components/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
-import listStyles from '../components/AdminList.module.css';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
@@ -166,20 +165,18 @@ function SeoPlaceholder() {
 export default function SitePage() {
     const { pathname } = useContext(ApplicationContext) || {};
     const [section, setSection] = useState('appearance');
-    const [catalogDialogDirty, setCatalogDialogDirty] = useState(false);
-    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
+    const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
         Promise.all([
             fetch('/api/site/theme', { signal: controller.signal }),
             fetch('/api/site/settings', { signal: controller.signal }),
-            fetch('/api/site/catalog', { signal: controller.signal }),
-        ]).then(async ([themeResponse, siteResponse, catalogResponse]) => {
-            if (!themeResponse.ok || !siteResponse.ok || !catalogResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
-            return Promise.all([themeResponse.json(), siteResponse.json(), catalogResponse.json()]);
-        }).then(([themeResult, siteResult, catalogResult]) => {
+        ]).then(async ([themeResponse, siteResponse]) => {
+            if (!themeResponse.ok || !siteResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
+            return Promise.all([themeResponse.json(), siteResponse.json()]);
+        }).then(([themeResult, siteResult]) => {
             const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
-            setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setSavedCatalog(catalogResult); setCatalog(catalogResult); setStatus('success');
+            setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
         }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
         return () => controller.abort();
     }, []);
@@ -189,8 +186,7 @@ export default function SitePage() {
     }, [pathname]);
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
-    const catalogDirty = Boolean(catalog && savedCatalog && JSON.stringify(catalog) !== JSON.stringify(savedCatalog));
-    const dirty = themeDirty || contactsDirty || catalogDirty || catalogDialogDirty;
+    const dirty = themeDirty || contactsDirty;
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
@@ -203,7 +199,6 @@ export default function SitePage() {
         const contactForm = document.getElementById('contact-form');
         const requestTheme = themeDirty ? cloneSettings(draft) : null;
         const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
-        const requestCatalog = catalogDirty ? catalog : null;
         const themeFingerprint = requestTheme && JSON.stringify(requestTheme);
         const contactsFingerprint = requestContacts && JSON.stringify(requestContacts);
         setSaveStatus('saving'); setError('');
@@ -220,12 +215,6 @@ export default function SitePage() {
                 const result = await response.json();
                 setSavedContacts(result); setContacts((current) => JSON.stringify(current) === contactsFingerprint ? result : current);
             }
-            if (requestCatalog) {
-                const response = await apiRequest('/api/site/catalog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestCatalog) });
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error('Не удалось сохранить каталог. Проверьте названия, цены и изображения позиций.');
-                setSavedCatalog(result); setCatalog((current) => JSON.stringify(current) === JSON.stringify(requestCatalog) ? result : current);
-            }
             setSaveStatus('success');
         } catch { setError('Не удалось сохранить настройки. Проверьте поля и повторите попытку.'); setSaveStatus('error'); }
     }
@@ -233,12 +222,11 @@ export default function SitePage() {
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
     const saveAction = section === 'contacts' || section === 'appearance'
         ? () => document.getElementById(section === 'contacts' ? 'contact-form' : 'appearance-form')?.requestSubmit()
-        : section === 'catalog' ? save : undefined;
+        : undefined;
     return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : undefined}>
-        {section === 'catalog' && <div><Button variant="primary" size="compact" disabled={!catalogDirty || saveStatus === 'saving' || catalogDialogDirty} onClick={save}><Icon name="save" /> {saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить каталог'}</Button>{catalogDirty ? <span role="status"> Есть несохранённые изменения</span> : saveStatus === 'success' && <span role="status"> Каталог сохранён</span>}</div>}
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
-        {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={(next) => { clearSaveError(); setCatalog(next); }} onDraftDirtyChange={setCatalogDialogDirty} />}
+        {section === 'catalog' && <CatalogEditor />}
         {section === 'seo' && <SeoPlaceholder />}
         {section === 'appearance' && draft && selectedTheme && <ValidatedForm id="appearance-form" className={styles.content} onSubmit={(event) => { event.preventDefault(); save(); }}>
             <AdminPanel className={styles.panel}>
@@ -261,6 +249,6 @@ export default function SitePage() {
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
             </AdminPanel>
         </ValidatedForm>}
-        {error && status === 'success' && <p className={section === 'catalog' ? listStyles.error : styles.error} role="alert">{error}</p>}
+        {error && status === 'success' && <p className={styles.error} role="alert">{error}</p>}
     </SiteSettingsLayout>;
 }

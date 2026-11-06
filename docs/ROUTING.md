@@ -65,6 +65,8 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `GET /site/settings` | Общие данные настроек |
 | `GET/PATCH /site/theme`, `GET/PATCH /site/contact` | Тема и контакты |
 | `GET/PATCH /site/catalog` | Категории и позиции каталога |
+| `GET/POST /site/catalog/categories`, `PATCH/DELETE /site/catalog/categories/:id` | Разделы каталога |
+| `GET/POST /site/catalog/products`, `PATCH/DELETE /site/catalog/products/:id` | Позиции каталога; GET поддерживает categoryId, search, type, status, limit и offset, возвращает total |
 | `GET /site/orders`, `GET /site/orders/:id` | Заказы текущего сайта и подробности |
 | `POST /site/orders/:id/complete` | Отметить оплаченный заказ выполненным |
 | `GET/PATCH /site/order-notifications` | Адрес уведомлений о заказах |

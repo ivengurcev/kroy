@@ -118,20 +118,13 @@ test('list pagination handles filtering, shrinking lists and page boundaries', (
     assert.equal((html.match(/disabled/g) || []).length, 2);
 });
 
-test('catalog composes its own sections and editor with shared list controls and pagination', () => {
-    const products = Array.from({ length: 51 }, (_, index) => ({
-        id: `product-${index}`, name: `Позиция ${index}`, description: '', categoryId: 'category',
-        sortOrder: index, price: '100.00', type: 'service', status: 'published',
-    }));
-    const html = renderToString(createElement(components.CatalogEditor, {
-        value: { categories: [{ id: 'category', name: 'Консультации' }], products },
-    }));
-    assert.match(html, /Разделы каталога|Консультации/);
+test('catalog editor uses server-loaded list controls and pagination', () => {
+    const html = renderToString(createElement(components.CatalogEditor));
+    assert.match(html, /Разделы каталога/);
     assert.match(html, /Поиск/);
     assert.match(html, /Добавить товар\/услугу/);
-    assert.match(html, /Позиция 49/);
-    assert.doesNotMatch(html, /Позиция 50/);
-    assert.match(html, /Всего: 51/);
+    assert.match(html, /Загрузка товаров/);
+    assert.doesNotMatch(html, /Позиция/);
     assert.doesNotMatch(html, /<footer/);
 });
 
@@ -149,7 +142,7 @@ test('admin sidebar renders on SSR and selects contacts by pathname', () => {
     assert.doesNotMatch(html, /\?section=/);
 });
 
-test('catalog admin and public product cards still render names, descriptions and ruble prices without purchase links', () => {
+test('public product cards still render names, descriptions and ruble prices without purchase links', () => {
     const product = { id: 'product', name: 'Service', description: 'Description', price: '120.00', type: 'service', status: 'published' };
     const html = renderToString(createElement(components.ProductCards, { products: [product] }));
     assert.match(html, /Service/);
@@ -157,7 +150,8 @@ test('catalog admin and public product cards still render names, descriptions an
     assert.match(html, /120.00/);
     assert.match(html, /₽/);
     assert.doesNotMatch(html, /<a\b|Купить/);
-    assert.match(renderToString(createElement(components.CatalogEditor, { value: { categories: [], products: [product] } })), /Service/);
+    assert.match(renderToString(createElement(components.CatalogEditor)), /Загрузка товаров/);
+    assert.doesNotMatch(renderToString(createElement(components.CatalogEditor, { value: { categories: [], products: [product] } })), /Service/);
 });
 
 test('product card shows Buy only with available payments and positive price; initial SSR stays identical without readiness', () => {

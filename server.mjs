@@ -14,7 +14,7 @@ import restorePage from './server/api/restorePage.mjs';
 import { getSiteThemeSettings, patchSiteTheme } from './server/api/siteTheme.mjs';
 import getSiteSettings from './server/api/siteSettings.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './server/api/siteContact.mjs';
-import { getSiteCatalog, patchSiteCatalog } from './server/api/siteCatalog.mjs';
+import { deleteSiteCatalogCategory, deleteSiteCatalogProduct, getSiteCatalog, getSiteCatalogCategories, getSiteCatalogProducts, patchSiteCatalog, saveSiteCatalogCategory, saveSiteCatalogProduct } from './server/api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
 import { getPaymentStatus, postPaymentStart } from './server/api/checkout.mjs';
 import { getSiteOrders, getSiteOrder, postCompleteOrder, getPublicOrderStatus, postProdamusWebhook, getOrderNotifications, patchOrderNotifications } from './server/api/orders.mjs';
@@ -252,6 +252,14 @@ await createApp({
             { method: 'PATCH', private: true },
             patchSiteCatalog,
         ],
+        ['/site/catalog/categories', { method: 'GET', private: true }, getSiteCatalogCategories],
+        ['/site/catalog/categories', { method: 'POST', private: true }, saveSiteCatalogCategory],
+        ['/site/catalog/categories/:id', { method: 'PATCH', private: true }, saveSiteCatalogCategory],
+        ['/site/catalog/categories/:id', { method: 'DELETE', private: true }, deleteSiteCatalogCategory],
+        ['/site/catalog/products', { method: 'GET', private: true }, getSiteCatalogProducts],
+        ['/site/catalog/products', { method: 'POST', private: true }, saveSiteCatalogProduct],
+        ['/site/catalog/products/:id', { method: 'PATCH', private: true }, saveSiteCatalogProduct],
+        ['/site/catalog/products/:id', { method: 'DELETE', private: true }, deleteSiteCatalogProduct],
         [
             '/site/payments',
             { method: 'GET', private: true },
