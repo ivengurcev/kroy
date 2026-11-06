@@ -10,6 +10,7 @@ import { publicationStateLabel, publicationBlocked } from '../editor/actionState
 export default function AdminHeader({
     mode = 'editor',
     title = '',
+    list = false,
     page = {},
     isDirty = false,
     saveStatus = 'idle',
@@ -170,7 +171,7 @@ export default function AdminHeader({
                             else onToggleSidebar?.();
                         }}
                     ><Icon name="menu" size={23} /></Button>
-                    <AdminPageHeader title={headerTitle} />
+                    {!list && <AdminPageHeader title={headerTitle} />}
                 </div>
 
                 <div className={styles.rightGroup}>

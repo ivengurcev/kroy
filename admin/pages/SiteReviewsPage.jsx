@@ -7,6 +7,9 @@ import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import styles from './SiteReviewsPage.module.css';
+import Table from '../ui/Table.jsx';
+import { AdminListToolbar, AdminListField, Pagination, useListPage } from '../components/AdminList.jsx';
+import listStyles from '../components/AdminList.module.css';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError } from '../ui/formValidation.mjs';
 
@@ -103,6 +106,7 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
 
 export default function SiteReviewsPage() {
     const [filter, setFilter] = useState('all');
+    const [search, setSearch] = useState('');
     const [reviews, setReviews] = useState([]);
     const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
@@ -116,7 +120,9 @@ export default function SiteReviewsPage() {
         setForm(emptyReview());
         setFormError('');
     }, []);
-    const actions = useMemo(() => <Button variant="primary" aria-label="Добавить отзыв" onClick={openCreate} disabled={hasForm}><Icon name="add" /> <span>Добавить отзыв</span></Button>, [hasForm, openCreate]);
+    const actions = useMemo(() => <Button variant="primary" size="compact" aria-label="Добавить отзыв" onClick={openCreate} disabled={hasForm}><Icon name="add" /> <span>Добавить отзыв</span></Button>, [hasForm, openCreate]);
+    const visibleReviews = reviews.filter((review) => `${review.authorName} ${review.authorSubtitle || ''} ${review.text}`.toLocaleLowerCase('ru').includes(search.trim().toLocaleLowerCase('ru')));
+    const page = useListPage(visibleReviews, `${filter}:${search}`);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -183,40 +189,36 @@ export default function SiteReviewsPage() {
         <SiteSettingsLayout
             section="reviews"
             title="Отзывы"
-            actions={actions}
+            list
             isDirty={Boolean(form)}
             status={status}
             errorMessage={error || 'Не удалось загрузить отзывы.'}
         >
             <div className={styles.content}>
-                <p>Управление отзывами текущего сайта.</p>
-                <AdminPanel className={styles.filterBar}>
-                    <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                        <span>Показать</span>
+                <AdminListToolbar actions={actions}>
+                    <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Автор или текст" /></AdminListField>
+                    <AdminListField label="Статус">
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
                         </select>
-                    </label>
-                </AdminPanel>
+                    </AdminListField>
+                </AdminListToolbar>
                 {form && <ReviewForm review={form} editing={Boolean(form.id)} busy={saving} error={formError} onChange={(next) => { setForm(next); setFormError(''); }} onSubmit={saveReview} onCancel={() => setForm(null)} />}
-                {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
-                <AdminPanel className={styles.tableCard} noPadding>
-                    <div className={styles.tableScroll}>
-                        <table className={styles.table}>
+                {error && status === 'success' && <p className={listStyles.error} role="alert">{error}</p>}
+                        <Table className={listStyles.table} aria-label="Отзывы">
                             <thead><tr><th>Дата</th><th>Автор</th><th>Текст</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr></thead>
                             <tbody>
-                                {reviews.map((review) => <tr key={review.id}>
+                                {page.items.map((review) => <tr key={review.id}>
                                     <td>{formatDate(review.reviewDate)}</td>
                                     <td><strong>{review.authorName}</strong>{review.authorSubtitle && <small>{review.authorSubtitle}</small>}</td>
                                     <td className={styles.reviewText} title={review.text}>{review.text}</td>
                                     <td><StatusBadge tone={review.status === 'rejected' ? 'error' : review.status === 'pending' ? 'warning' : 'success'}>{STATUS_LABELS[review.status] || review.status}</StatusBadge></td>
                                     <td className={styles.actions}><Button variant="compact" title="Редактировать отзыв" onClick={() => openEdit(review)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button><Button variant="compact" title="Удалить отзыв" onClick={() => deleteReview(review)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button></td>
                                 </tr>)}
-                            {!reviews.length && <tr><td className={styles.empty} colSpan="5">Отзывов пока нет.</td></tr>}
+                            {!visibleReviews.length && <tr><td className={listStyles.state} colSpan="5">{search || filter !== 'all' ? 'По заданным условиям ничего не найдено.' : 'Отзывов пока нет.'}</td></tr>}
                             </tbody>
-                        </table>
-                    </div>
-                </AdminPanel>
+                        </Table>
+                <Pagination {...page.pagination} />
             </div>
         </SiteSettingsLayout>
     );

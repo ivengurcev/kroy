@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import AdminPanel from '../ui/AdminPanel.jsx';
+import Table from '../ui/Table.jsx';
+import { AdminListToolbar, AdminListField, Pagination, useListPage } from './AdminList.jsx';
+import listStyles from './AdminList.module.css';
 import Icon from '../ui/Icon.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import ImageField from '../editor/ImageField.jsx';
@@ -19,6 +21,9 @@ function nextSortOrder(items) { return Math.max(-1, ...items.map(({ sortOrder })
 export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
     const catalog = value ?? { categories: [], products: [] };
     const [activeCategoryId, setActiveCategoryId] = useState(null);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
     const [dialog, setDialog] = useState(null);
     const [dialogDraft, setDialogDraft] = useState(null);
     const [dialogError, setDialogError] = useState('');
@@ -41,6 +46,8 @@ export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
         ? product.categoryId == null
         : product.categoryId === selectedCategoryId)), [catalog.products, selectedCategoryId, uncategorized]);
     const dialogDirty = Boolean(dialog && dialogDraft && JSON.stringify(dialogDraft) !== JSON.stringify(dialog.initial));
+    const visibleProducts = products.filter((product) => (!filter || product.status === filter) && (!typeFilter || product.type === typeFilter) && `${product.name} ${product.description}`.toLocaleLowerCase('ru').includes(search.trim().toLocaleLowerCase('ru')));
+    const page = useListPage(visibleProducts, `${selectedCategoryId}:${search}:${filter}:${typeFilter}`);
     useEffect(() => { onDraftDirtyChange?.(dialogDirty); }, [dialogDirty, onDraftDirtyChange]);
 
     function update(change) { onChange({ ...catalog, ...change }); }
@@ -119,7 +126,7 @@ export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
     }
 
     return <div className={styles.catalog}>
-        <AdminPanel className={styles.layout} noPadding>
+        <div className={styles.layout}>
             <div className={styles.categoryPanel}>
                 <h2 className={styles.categoryHeading}>Разделы каталога</h2>
                 <div className={styles.categoryList} role="group" aria-label="Разделы каталога">
@@ -146,13 +153,16 @@ export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
             <div className={styles.productPanel}>
                 <div className={styles.productHeading}>
                     <div><h2>{selectedCategory?.name || 'Без раздела'}</h2><small>Товаров: {products.length}</small></div>
-                    {!uncategorized && <Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" size={18} /> Добавить товар</Button>}
                 </div>
-                <div className={styles.tableViewport}>
-                    <table className={styles.table}>
+                <AdminListToolbar actions={<Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" size={18} /> Добавить товар/услугу</Button>}>
+                    <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название или описание" /></AdminListField>
+                    <AdminListField label="Статус"><select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="">Все статусы</option><option value="published">Опубликованные</option><option value="hidden">Скрытые</option></select></AdminListField>
+                    <AdminListField label="Тип"><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option value="">Все типы</option><option value="goods">Товары</option><option value="service">Услуги</option></select></AdminListField>
+                </AdminListToolbar>
+                    <Table className={styles.table} aria-label="Товары и услуги">
                         <thead><tr><th>Название</th><th>Тип</th><th>Цена</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr></thead>
                         <tbody>
-                            {products.map((product) => <tr key={product.id}>
+                            {page.items.map((product) => <tr key={product.id}>
                                 <td>
                                     <button className={styles.productTitle} type="button" onClick={() => openProduct(product)}>{product.name || 'Без названия'}</button>
                                     <div className={styles.mobileMeta}>
@@ -169,12 +179,12 @@ export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
                                     <Button variant="iconCompact" title="Удалить товар" aria-label={`Удалить «${product.name}»`} onClick={() => deleteProduct(product)}><Icon name="delete" size={18} /></Button>
                                 </td>
                             </tr>)}
-                            {!products.length && <tr><td className={styles.empty} colSpan="5">В этом разделе пока нет товаров.</td></tr>}
+                            {!visibleProducts.length && <tr><td className={listStyles.state} colSpan="5">{search || filter || typeFilter ? 'По заданным условиям ничего не найдено.' : 'В этом разделе пока нет товаров.'}</td></tr>}
                         </tbody>
-                    </table>
-                </div>
+                    </Table>
+                <Pagination {...page.pagination} />
             </div>
-        </AdminPanel>
+        </div>
 
         <dialog
             ref={dialogRef}

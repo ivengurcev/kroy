@@ -13,6 +13,7 @@ export const SITE_SETTINGS_SECTIONS = [
 
 export default function SiteSettingsLayout({
     title,
+    list = false,
     actions,
     status,
     errorMessage,
@@ -26,6 +27,7 @@ export default function SiteSettingsLayout({
     return (
         <AdminPageShell
             title={title}
+            list={list}
             actions={actions}
             headerMode="site"
             status={status}

@@ -1,10 +1,8 @@
-.content { display: grid; gap: var(--space-4); max-width: var(--admin-content-max); min-width: 0; margin: 0 auto; }
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.content { display: grid; gap: var(--space-3); min-width: 0; }
 .orderRow { cursor: pointer; }
 .orderRow:hover { background: var(--color-primary-soft); }
 .orderLink { padding: 0; border: 0; color: var(--color-primary); font: inherit; text-align: left; background: transparent; cursor: pointer; }
 .orderLink:hover { text-decoration: underline; }
-.empty { padding: var(--space-6); color: var(--color-text-secondary); text-align: center; }
 .details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-5); margin: 0 0 var(--space-6); }
 .details dt { color: var(--color-text-secondary); }
 .details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }

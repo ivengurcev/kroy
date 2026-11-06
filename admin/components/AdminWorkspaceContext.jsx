@@ -16,7 +16,7 @@ export function useAdminHeader(config) {
             onSave: (...args) => configRef.current.onSave?.(...args),
             onPageDetailsChange: (...args) => configRef.current.onPageDetailsChange?.(...args),
         });
-    }, [workspace, config.mode, config.title, config.page?.id, config.page?.path, config.isDirty, config.loadStatus, config.saveStatus, config.actions]);
+    }, [workspace, config.mode, config.title, config.list, config.page?.id, config.page?.path, config.isDirty, config.loadStatus, config.saveStatus, config.actions]);
 
     return workspace;
 }

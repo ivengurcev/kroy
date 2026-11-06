@@ -12,6 +12,7 @@ import styles from './SiteMaterialEditorPage.module.css';
 import useAutoSlug from '../editor/useAutoSlug.jsx';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError, showFieldErrors } from '../ui/formValidation.mjs';
+import ActionFooter from '../components/ActionFooter.jsx';
 
 const EMPTY_CONTENT = {
     root: {
@@ -48,10 +49,10 @@ async function responseError(response, fallback) {
 }
 
 export function MaterialActions({ materialId, dirty, saveStatus, onDelete }) {
-    return <>
+    return <ActionFooter isDirty={dirty} saveStatus={saveStatus}>
         {materialId && <Button type="button" variant="danger" onClick={onDelete} disabled={saveStatus === 'saving'}><Icon name="delete" /> Удалить</Button>}
         <Button type="submit" form="material-form" variant="primary" disabled={!dirty || saveStatus === 'saving'}><Icon name="save" /> Сохранить</Button>
-    </>;
+    </ActionFooter>;
 }
 
 export default function SiteMaterialEditorPage() {
@@ -208,8 +209,6 @@ export default function SiteMaterialEditorPage() {
             errorMessage={error || 'Не удалось загрузить материал.'}
             isDirty={dirty}
             saveStatus={saveStatus}
-            onSave={() => document.getElementById('material-form')?.requestSubmit()}
-            footerActions={<MaterialActions materialId={materialId} dirty={dirty} saveStatus={saveStatus} onDelete={deleteCurrentMaterial} />}
         >
             {material && <AdminPanel as="form" id="material-form" className={styles.form} onSubmit={saveMaterial}>
                 <fieldset className={styles.fields} disabled={!materialId && saveStatus === 'saving'}>
@@ -260,6 +259,7 @@ export default function SiteMaterialEditorPage() {
                 </fieldset>
                 {formError && <p className={styles.formError} role="alert">{formError}</p>}
             </AdminPanel>}
+            <MaterialActions materialId={materialId} dirty={dirty} saveStatus={saveStatus} onDelete={deleteCurrentMaterial} />
         </SiteSettingsLayout>
     );
 }

@@ -9,6 +9,7 @@ import CatalogEditor from '../components/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
+import listStyles from '../components/AdminList.module.css';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
@@ -233,7 +234,8 @@ export default function SitePage() {
     const saveAction = section === 'contacts' || section === 'appearance'
         ? () => document.getElementById(section === 'contacts' ? 'contact-form' : 'appearance-form')?.requestSubmit()
         : section === 'catalog' ? save : undefined;
-    return <SiteSettingsLayout title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : undefined}>
+    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : undefined}>
+        {section === 'catalog' && <div><Button variant="primary" size="compact" disabled={!catalogDirty || saveStatus === 'saving' || catalogDialogDirty} onClick={save}><Icon name="save" /> {saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить каталог'}</Button>{catalogDirty ? <span role="status"> Есть несохранённые изменения</span> : saveStatus === 'success' && <span role="status"> Каталог сохранён</span>}</div>}
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
         {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={(next) => { clearSaveError(); setCatalog(next); }} onDraftDirtyChange={setCatalogDialogDirty} />}
@@ -259,6 +261,6 @@ export default function SitePage() {
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
             </AdminPanel>
         </ValidatedForm>}
-        {error && status === 'success' && <p className={styles.error} role="alert">{error}</p>}
+        {error && status === 'success' && <p className={section === 'catalog' ? listStyles.error : styles.error} role="alert">{error}</p>}
     </SiteSettingsLayout>;
 }

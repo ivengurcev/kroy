@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import AdminPageShell from '../components/AdminPageShell.jsx';
-import AdminPanel from '../ui/AdminPanel.jsx';
+import { AdminListToolbar, AdminListField, Pagination } from '../components/AdminList.jsx';
+import listStyles from '../components/AdminList.module.css';
 import Button from '../ui/Button.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import Table from '../ui/Table.jsx';
 import Modal from '../ui/Modal.jsx';
-import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SiteOrdersPage.module.css';
 
 const date = (value) => value ? new Date(value).toLocaleString('ru-RU') : '—';
@@ -67,29 +67,25 @@ export default function SiteOrdersPage() {
         finally { setBusy(false); }
     }
 
-    return <AdminPageShell title="Заказы" status={status} errorMessage={error}>
+    return <AdminPageShell title="Заказы" list status={status} errorMessage={error}>
         <div className={styles.content}>
-            <AdminPanel><div className={styles.toolbar}>
-                <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Статус заказа</span>
+            <AdminListToolbar actions={<Button size="compact" onClick={() => setRevision((value) => value + 1)}>Обновить</Button>}>
+                <AdminListField label="Статус заказа">
                     <select value={filter} onChange={(event) => { setFilter(event.target.value); setOffset(0); }}>
                         <option value="">Все заказы</option><option value="pending">Ожидает оплаты</option><option value="paid">Оплачен</option><option value="completed">Выполнен</option>
                     </select>
-                </label>
-                <Button onClick={() => setRevision((value) => value + 1)}>Обновить</Button>
-            </div></AdminPanel>
-            <AdminPanel noPadding>
-                <Table aria-label="Заказы текущего сайта">
+                </AdminListField>
+            </AdminListToolbar>
+                <Table className={listStyles.table} aria-label="Заказы текущего сайта">
                     <thead><tr><th>Дата</th><th>Заказ / услуга</th><th>Покупатель</th><th>Сумма</th><th>Статус</th></tr></thead>
                     <tbody>{orders.map((item) => <tr key={item.id} className={styles.orderRow} onClick={() => setSelected(item.id)}>
                         <td>{date(item.createdAt)}</td>
                         <td><button className={styles.orderLink} type="button" onClick={(event) => { event.stopPropagation(); setSelected(item.id); }}>{item.name}</button><small>№ {item.id}</small>{item.isTest && <StatusBadge tone="warning">Тестовый</StatusBadge>}</td>
                         <td>{item.customerEmail || 'Контакты пока неизвестны'}<small>{item.customerPhone}</small></td>
                         <td>{money(item.total, item.currency)}</td><td><OrderStatus order={item} /></td>
-                    </tr>)}</tbody>
+                    </tr>)}{!orders.length && <tr><td className={listStyles.state} colSpan="5">{filter ? 'По заданным условиям ничего не найдено.' : 'Заказов пока нет.'}</td></tr>}</tbody>
                 </Table>
-                {!orders.length && <p className={styles.empty}>Заказов пока нет.</p>}
-            </AdminPanel>
-            <div className={styles.toolbar}><Button disabled={!offset} onClick={() => setOffset((value) => Math.max(0, value - 50))}>Назад</Button><Button disabled={!hasMore} onClick={() => setOffset((value) => value + 50)}>Далее</Button></div>
+            <Pagination page={offset / 50} hasNext={hasMore} onChange={(page) => setOffset(page * 50)} />
         </div>
         {selected && <Modal title="Подробности заказа" busy={busy} onClose={() => setSelected(null)} actions={<>
             <Button disabled={busy} onClick={() => setSelected(null)}>Закрыть</Button>

@@ -1,1 +1,2 @@
 .heading { min-width: 0; flex: 1 1 auto; overflow: hidden; margin: 0; color: #27332f; font-size: 16px; font-weight: 600; letter-spacing: -.015em; text-overflow: ellipsis; white-space: nowrap; }
+.compact { display: flex; align-items: center; min-height: 48px; margin: 0; font-size: 20px; font-weight: var(--font-weight-bold); overflow-wrap: anywhere; }

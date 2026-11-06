@@ -1,4 +1,4 @@
-import { createMaterialSection, deleteMaterialSection, getMaterialSections, getMaterialSection, hasMaterialSectionReferences, updateMaterialSection } from '../../db/materialSections.mjs';
+import { countSectionMaterials, createMaterialSection, deleteMaterialSection, getMaterialSections, getMaterialSection, hasMaterialSectionReferences, updateMaterialSection } from '../../db/materialSections.mjs';
 import getCurrentSite from './siteContext.mjs';
 import { pool } from '../../db/client.mjs';
 import isUuid from './isUuid.mjs';
@@ -94,9 +94,14 @@ export async function deleteSiteMaterialSection(c) {
             await client.query('ROLLBACK');
             return c.json({ error: 'Material section not found' }, 404);
         }
+        const materialCount = await countSectionMaterials(site.id, id, client);
+        if (materialCount > 0) {
+            await client.query('ROLLBACK');
+            return c.json({ error: `Нельзя удалить раздел: в нём материалов — ${materialCount}. Сначала перенесите или удалите их.`, materialCount }, 409);
+        }
         if (await hasMaterialSectionReferences(site.id, id, client)) {
             await client.query('ROLLBACK');
-            return c.json({ error: 'Material section is in use' }, 409);
+            return c.json({ error: 'Нельзя удалить раздел: он используется страницами сайта. Сначала уберите ссылки на него.', materialCount: 0 }, 409);
         }
         await deleteMaterialSection(site.id, id, client);
         await client.query('COMMIT');

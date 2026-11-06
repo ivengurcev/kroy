@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import AdminPanel from '../ui/AdminPanel.jsx';
+import Table from '../ui/Table.jsx';
+import { AdminListToolbar, AdminListField, Pagination, useListPage } from '../components/AdminList.jsx';
+import listStyles from '../components/AdminList.module.css';
 import Icon from '../ui/Icon.jsx';
-import Tabs from '../ui/Tabs.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
-import compactStyles from '../ui/CompactForm.module.css';
 import fieldStyles from '../editor/Field.module.css';
 import dialogStyles from '../components/PageDetailsDialog.module.css';
 import styles from './SiteMaterialsPage.module.css';
@@ -24,7 +24,8 @@ const STATUS_LABELS = { draft: 'Черновик', published: 'Опублико�
 const STATUS_TONES = { draft: 'warning', published: 'success' };
 
 async function responseError(response, fallback) {
-    return response.status === 409 ? 'Раздел используется материалами или страницами. Сначала уберите ссылки на него.' : fallback;
+    const result = await response.json().catch(() => ({}));
+    return result.error || fallback;
 }
 
 function formatDate(value) {
@@ -49,6 +50,7 @@ export default function SiteMaterialsPage() {
     const navigate = useAppNavigate();
     const sectionDialogRef = useRef(null);
     const [filter, setFilter] = useState('all');
+    const [search, setSearch] = useState('');
     const [materials, setMaterials] = useState([]);
     const [sections, setSections] = useState([]);
     const [sectionId, setSectionId] = useState('');
@@ -98,14 +100,15 @@ export default function SiteMaterialsPage() {
         { id: '', label: 'Все' },
         ...sections.map(({ id, name }) => ({ id, label: name })),
     ], [sections]);
-    const activeTabIndex = Math.max(0, tabs.findIndex(({ id }) => id === sectionId));
     const visibleMaterials = useMemo(
         () => materials.filter((material) =>
             (!sectionId || material.sectionId === sectionId)
             && (filter === 'all' || material.status === filter)
+            && `${material.title} ${material.slug}`.toLocaleLowerCase('ru').includes(search.trim().toLocaleLowerCase('ru'))
         ),
-        [materials, filter, sectionId],
+        [materials, filter, sectionId, search],
     );
+    const page = useListPage(visibleMaterials, `${sectionId}:${filter}:${search}`);
 
     function openSectionDialog(section = null) {
         setSectionError('');
@@ -151,10 +154,10 @@ export default function SiteMaterialsPage() {
         }
     }
 
-    async function deleteSection() {
-        const section = sections.find(({ id }) => id === sectionDialog?.id);
+    async function deleteSection(section) {
         if (!section || sectionSaving || !window.confirm(`Удалить раздел «${section.name}»?`)) return;
         setSectionSaving(true);
+        setError('');
         setSectionError('');
         try {
             const response = await apiRequest(`/api/site/material-sections/${section.id}`, { method: 'DELETE' });
@@ -163,7 +166,7 @@ export default function SiteMaterialsPage() {
             setSectionId('');
             setSectionDialog(null);
         } catch (deleteError) {
-            setSectionError(deleteError.message);
+            setError(deleteError.message);
         } finally {
             setSectionSaving(false);
         }
@@ -190,6 +193,7 @@ export default function SiteMaterialsPage() {
         <SiteSettingsLayout
             section="materials"
             title="Материалы"
+            list
             status={status}
             isDirty={Boolean(sectionDialog && sectionName !== (sections.find(({ id }) => id === sectionDialog.id)?.name || ''))}
             saveStatus={sectionSaving ? 'saving' : 'idle'}
@@ -198,37 +202,36 @@ export default function SiteMaterialsPage() {
             <div className={styles.content}>
                 <div className={styles.sectionBar}>
                     <div className={styles.tabsViewport}>
-                        <Tabs
-                            className={styles.sectionTabs}
-                            items={tabs}
-                            activeIndex={activeTabIndex}
-                            ariaLabel="Разделы материалов"
-                            onSelect={(_, item) => setSectionId(item.id)}
-                        />
+                        <nav className={styles.sectionTabs} aria-label="Разделы материалов">
+                            {tabs.map((tab) => <div className={styles.tab} key={tab.id} data-active={tab.id === sectionId || undefined}>
+                                <button type="button" aria-current={tab.id === sectionId ? 'page' : undefined} onClick={() => setSectionId(tab.id)}>{tab.label}</button>
+                                {tab.id && tab.id === sectionId && <details className={styles.sectionMenu}>
+                                    <summary aria-label={`Действия раздела «${tab.label}»`}><Icon name="settings" size={18} /></summary>
+                                    <div><Button variant="compact" onClick={(event) => { event.currentTarget.closest('details').open = false; openSectionDialog(selectedSection); }}>Переименовать</Button>
+                                        <Button variant="compact" disabled={sectionSaving} onClick={(event) => { event.currentTarget.closest('details').open = false; deleteSection(selectedSection); }}>Удалить</Button></div>
+                                </details>}
+                            </div>)}
+                            <Button variant="compact" onClick={() => openSectionDialog()}><Icon name="add" size={18} /> Раздел</Button>
+                        </nav>
                     </div>
-                    {selectedSection && <Button variant="iconCompact" title="Редактировать раздел" aria-label={`Редактировать раздел «${selectedSection.name}»`} onClick={() => openSectionDialog(selectedSection)}><Icon name="edit" size={18} /></Button>}
-                    <Button variant="iconCompact" title="Создать раздел" aria-label="Создать раздел" onClick={() => openSectionDialog()}><Icon name="add" size={18} /></Button>
                 </div>
 
-                <div className={styles.tableToolbar}>
-                    <label className={`${fieldStyles.field} ${compactStyles.field} ${compactStyles.compact} ${styles.statusFilter}`}>
-                        <span>Статус</span>
+                <AdminListToolbar actions={<Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new${sectionId ? `?sectionId=${encodeURIComponent(sectionId)}` : ''}`)}><Icon name="add" /> Добавить материал</Button>}>
+                    <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название или адрес" /></AdminListField>
+                    <AdminListField label="Статус">
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
                         </select>
-                    </label>
-                    {selectedSection && <Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new?sectionId=${encodeURIComponent(selectedSection.id)}`)}><Icon name="add" /> Добавить материал</Button>}
-                </div>
+                    </AdminListField>
+                </AdminListToolbar>
 
-                {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
-                <AdminPanel className={styles.tableCard} noPadding>
-                    <div className={styles.tableScroll}>
-                        <table className={styles.table}>
+                {error && status === 'success' && <p className={listStyles.error} role="alert">{error}</p>}
+                        <Table className={listStyles.table} aria-label="Материалы">
                             <thead>
                                 <tr><th>Название</th><th>Изменено</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr>
                             </thead>
                             <tbody>
-                                {visibleMaterials.map((material) => <tr key={material.id}>
+                                {page.items.map((material) => <tr key={material.id}>
                                     <td><strong>{material.title}</strong><small>/{material.slug}</small></td>
                                     <td>{formatDate(material.updatedAt)}</td>
                                     <td><StatusBadge tone={STATUS_TONES[material.status]}>{STATUS_LABELS[material.status] || material.status}</StatusBadge></td>
@@ -237,13 +240,12 @@ export default function SiteMaterialsPage() {
                                         <Button variant="compact" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
                                     </td>
                                 </tr>)}
-                                {!visibleMaterials.length && <tr><td className={styles.empty} colSpan="4">
-                                    {!materials.length ? 'Материалов пока нет.' : filter !== 'all' ? 'Материалов с таким статусом нет.' : sectionId ? 'В этом разделе пока нет материалов.' : 'Материалов нет.'}
+                                {!visibleMaterials.length && <tr><td className={listStyles.state} colSpan="4">
+                                    {search || filter !== 'all' ? 'По заданным условиям ничего не найдено.' : sectionId ? 'В этом разделе пока нет материалов.' : 'Материалов пока нет.'}
                                 </td></tr>}
                             </tbody>
-                        </table>
-                    </div>
-                </AdminPanel>
+                        </Table>
+                <Pagination {...page.pagination} />
             </div>
 
             <dialog
@@ -252,7 +254,7 @@ export default function SiteMaterialsPage() {
                 aria-labelledby="material-section-dialog-title"
                 onCancel={(event) => { event.preventDefault(); closeSectionDialog(); }}
             >
-                <h2 id="material-section-dialog-title">{sectionDialog?.id ? 'Редактировать раздел' : 'Новый раздел'}</h2>
+                <h2 id="material-section-dialog-title">{sectionDialog?.id ? 'Переименовать раздел' : 'Новый раздел'}</h2>
                 <ValidatedForm className={styles.sectionForm} onSubmit={saveSection}>
                     <label className={fieldStyles.field}>
                         <span>Название</span>
@@ -260,7 +262,6 @@ export default function SiteMaterialsPage() {
                     </label>
                     {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
                     <div className={styles.sectionFormActions}>
-                        {sectionDialog?.id && sections.find(({ id }) => id === sectionDialog.id)?.canDelete === true && <Button className={styles.deleteSectionAction} type="button" variant="danger" onClick={deleteSection} disabled={sectionSaving}>Удалить раздел</Button>}
                         <Button type="button" variant="secondary" onClick={closeSectionDialog} disabled={sectionSaving}>Отмена</Button>
                         <Button type="submit" variant="primary" disabled={sectionSaving}>{sectionSaving ? 'Сохранение…' : 'Сохранить'}</Button>
                     </div>

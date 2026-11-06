@@ -77,6 +77,14 @@ export async function hasMaterialSectionReferences(siteId, id, client = pool) {
     return row?.is_referenced === true;
 }
 
+export async function countSectionMaterials(siteId, id, client = pool) {
+    const { rows: [row] } = await client.query(
+        'SELECT count(*)::integer AS count FROM materials WHERE site_id = $1 AND section_id = $2',
+        [siteId, id],
+    );
+    return row.count;
+}
+
 export async function deleteMaterialSection(siteId, id, client = pool) {
     const { rowCount } = await client.query(
         'DELETE FROM material_sections WHERE site_id = $1 AND id = $2',

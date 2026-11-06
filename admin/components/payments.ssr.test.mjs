@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test, { before, after } from 'node:test';
-import { createElement, useState } from 'react';
+import { createElement, Fragment, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { build } from 'esbuild';
 import { transform } from '@svgr/core';
@@ -20,7 +20,9 @@ before(async () => {
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
                 export { default as AdminSidebar } from './admin/components/AdminSidebar.jsx';
                 export { default as SiteMaterialsPage } from './admin/pages/SiteMaterialsPage.jsx';
-                export { default as SiteOrdersPage } from './admin/pages/SiteOrdersPage.jsx';
+                 export { default as SiteOrdersPage } from './admin/pages/SiteOrdersPage.jsx';
+                 export { default as SiteReviewsPage } from './admin/pages/SiteReviewsPage.jsx';
+                 export { Pagination, useListPage } from './admin/components/AdminList.jsx';
                 export { default as PaymentResult } from './site/payments/PaymentResult.jsx';
                 export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';
                 export { default as ActionFooter } from './admin/components/ActionFooter.jsx';
@@ -80,6 +82,57 @@ test('site settings expose a Payments route without a duplicate section menu and
 
 test('materials page renders on SSR without browser globals', () => {
     assert.doesNotThrow(() => renderToString(createElement(components.SiteMaterialsPage)));
+});
+
+test('list layouts keep compact titles and common states in the workspace without save footers', () => {
+    for (const title of ['Материалы', 'Каталог', 'Заказы', 'Отзывы']) {
+        for (const status of ['loading', 'error', 'success']) {
+            const html = renderToString(createElement(components.AdminPageShell, {
+                title, list: true, status, errorMessage: 'Ошибка загрузки', isDirty: true, onSave() {},
+            }, 'Список'));
+            assert.match(html, new RegExp(`<h1[^>]*>${title}</h1>`));
+            assert.doesNotMatch(html, /<footer|Сохранить/);
+            assert.ok(html.includes(status === 'loading' ? 'Загрузка' : status === 'error' ? 'Ошибка загрузки' : 'Список'));
+        }
+        const header = renderToString(createElement(components.AdminHeader, { title, list: true }));
+        assert.doesNotMatch(header, /<h1/);
+        assert.match(header, /Опубликовать|Предпросмотр/);
+    }
+    assert.match(renderToString(createElement(components.SiteReviewsPage)), /Загрузка/);
+});
+
+test('list pagination handles filtering, shrinking lists and page boundaries', () => {
+    const seen = [];
+    function Probe() {
+        const [stage, setStage] = useState(0);
+        const items = Array.from({ length: stage >= 3 ? 2 : 51 }, (_, index) => index);
+        const page = components.useListPage(items, stage >= 2 ? 'filtered' : 'all');
+        seen.push([page.pagination.page, page.items.length, page.pagination.hasNext]);
+        if (stage === 0) { page.pagination.onChange(1); setStage(1); }
+        if (stage === 1) setStage(2);
+        if (stage === 2) { page.pagination.onChange(1); setStage(3); }
+        return createElement(components.Pagination, page.pagination);
+    }
+    const html = renderToString(createElement(Probe));
+    assert.deepEqual(seen, [[0, 50, true], [1, 1, false], [0, 50, true], [0, 2, false]]);
+    assert.equal((html.match(/disabled/g) || []).length, 2);
+});
+
+test('catalog composes its own sections and editor with shared list controls and pagination', () => {
+    const products = Array.from({ length: 51 }, (_, index) => ({
+        id: `product-${index}`, name: `Позиция ${index}`, description: '', categoryId: 'category',
+        sortOrder: index, price: '100.00', type: 'service', status: 'published',
+    }));
+    const html = renderToString(createElement(components.CatalogEditor, {
+        value: { categories: [{ id: 'category', name: 'Консультации' }], products },
+    }));
+    assert.match(html, /Разделы каталога|Консультации/);
+    assert.match(html, /Поиск/);
+    assert.match(html, /Добавить товар\/услугу/);
+    assert.match(html, /Позиция 49/);
+    assert.doesNotMatch(html, /Позиция 50/);
+    assert.match(html, /Всего: 51/);
+    assert.doesNotMatch(html, /<footer/);
 });
 
 test('orders and payment result render without browser globals and orders have standard SPA navigation', () => {
@@ -154,6 +207,18 @@ test('saved-key deletion button is visible only for a configured key and require
 test('action footer is absent without local actions and represents all form states', () => {
     assert.equal(renderToString(createElement(components.ActionFooter)), '');
     assert.equal(renderToString(createElement(components.ActionFooter, null, [])), '');
+    assert.equal(renderToString(createElement(components.ActionFooter, null,
+        createElement('button', { disabled: true }, 'Сохранить'))), '');
+    assert.equal(renderToString(createElement(components.ActionFooter, null,
+        createElement(Fragment, null, createElement('button', { disabled: true }, 'Сохранить')))), '');
+    assert.equal(renderToString(createElement(components.ActionFooter, null,
+        createElement('button', { 'aria-disabled': 'true' }, 'Сохранить'))), '');
+    const mixed = renderToString(createElement(components.ActionFooter, null,
+        createElement('button', { disabled: true }, 'Сохранить'),
+        createElement('button', null, 'Удалить')));
+    assert.match(mixed, /<footer/);
+    assert.match(mixed, /Удалить/);
+    assert.doesNotMatch(mixed, /Сохранить|disabled/);
     for (const [isDirty, saveStatus, label] of [[false, 'idle', 'Сохранено'], [true, 'idle', 'Есть несохранённые изменения'], [true, 'saving', 'Сохранение...'], [true, 'error', 'Ошибка сохранения'], [false, 'success', 'Сохранено']]) {
         const html = renderToString(createElement(components.ActionFooter, { isDirty, saveStatus }, createElement('button', null, 'Сохранить')));
         assert.match(html, /<footer/);
@@ -164,7 +229,8 @@ test('action footer is absent without local actions and represents all form stat
 test('lists have no footer, settings have one save action enabled only for changes', () => {
     const render = (props) => renderToString(createElement(components.AdminPageShell, { status: 'success', ...props }, createElement('p', null, 'Контент')));
     assert.doesNotMatch(render({ title: 'Список' }), /<footer|Сохранить/);
-    assert.match(render({ onSave() {} }), /disabled=""[^>]*>.*?Сохранить/s);
+    assert.doesNotMatch(render({ onSave() {} }), /<footer|Сохранить/);
+    assert.doesNotMatch(render({ onSave() {}, isDirty: true, saveStatus: 'saving' }), /<footer|Сохранить/);
     const dirty = render({ onSave() {}, isDirty: true });
     assert.equal((dirty.match(/Сохранить/g) || []).length, 1);
     assert.doesNotMatch(dirty, /disabled/);
@@ -178,6 +244,13 @@ test('page footer preserves main-page deletion restriction and has one Save butt
     assert.equal((main.match(/> Сохранить</g) || []).length, 1);
     const ordinary = renderToString(createElement(components.AdminShell, { ...props, page: { ...props.page, path: '/other' } }));
     assert.match(ordinary, /> Удалить</);
+    const savedMain = renderToString(createElement(components.AdminShell, { ...props, isDirty: false }));
+    assert.doesNotMatch(savedMain, /<footer|> Сохранить</);
+    const savedOrdinary = renderToString(createElement(components.AdminShell, { ...props, isDirty: false, page: { ...props.page, path: '/other' } }));
+    assert.match(savedOrdinary, /> Удалить</);
+    assert.doesNotMatch(savedOrdinary, /> Сохранить</);
+    const saving = renderToString(createElement(components.AdminShell, { ...props, saveStatus: 'saving', page: { ...props.page, path: '/other' } }));
+    assert.doesNotMatch(saving, /<footer|> Сохранить<|> Удалить</);
 });
 
 test('material actions never publish and do not offer deletion before creation', () => {
@@ -186,9 +259,10 @@ test('material actions never publish and do not offer deletion before creation',
     assert.match(fresh, /form="material-form"/);
     const existing = renderToString(createElement(components.MaterialActions, { materialId: 'material', dirty: false, saveStatus: 'success' }));
     assert.match(existing, /Удалить/);
-    assert.match(existing, /disabled/);
+    assert.doesNotMatch(existing, /disabled|Сохранить/);
     assert.doesNotMatch(existing, /Опубликовать/);
-    assert.equal((existing.match(/Сохранить/g) || []).length, 1);
+    assert.equal(renderToString(createElement(components.MaterialActions, { dirty: false, saveStatus: 'idle' })), '');
+    assert.equal(renderToString(createElement(components.MaterialActions, { materialId: 'material', dirty: true, saveStatus: 'saving' })), '');
 });
 
 test('header has global actions only and blocks publication while the current form is dirty or saving', () => {

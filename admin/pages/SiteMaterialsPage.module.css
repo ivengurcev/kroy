@@ -1,59 +1,16 @@
-.content { display: grid; gap: var(--space-3); max-width: var(--admin-content-max); margin: 0 auto; }
-
-.sectionBar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    min-width: 0;
-    border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.tabsViewport {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: thin;
-}
-
-.sectionTabs {
-    width: max-content;
-    min-width: 100%;
-}
-
-.sectionTabs > button {
-    flex: 0 0 auto;
-    padding: var(--space-2) var(--space-3);
-    white-space: nowrap;
-}
-
-.tableToolbar {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-3);
-    min-width: 0;
-}
-
-.statusFilter { width: min(100%, 320px); }
-.statusFilter select { height: var(--control-height-md); padding: 0 var(--space-3); border-radius: var(--radius-sm); }
-
-.tableCard { overflow: hidden; }
-.tableScroll { overflow-x: auto; }
-.table { width: 100%; min-width: 680px; border-collapse: collapse; }
-.table th, .table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border-subtle); text-align: left; vertical-align: middle; }
-.table th { color: var(--color-text-secondary); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
-.table tbody tr:last-child td { border-bottom: 0; }
-.table td small { display: block; margin-top: var(--space-1); color: var(--color-text-secondary); }
+.content { display: grid; gap: var(--space-3); min-width: 0; }
+.sectionBar { min-width: 0; border-bottom: 1px solid var(--color-border-subtle); }
+.tabsViewport { min-width: 0; }
+.sectionTabs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+.tab { display: flex; align-items: center; min-height: 40px; border-bottom: 2px solid transparent; }
+.tab[data-active] { border-bottom-color: var(--color-primary); color: var(--color-primary); }
+.tab > button { padding: var(--space-2) var(--space-3); border: 0; color: inherit; font: inherit; background: transparent; cursor: pointer; }
+.sectionMenu { position: relative; }
+.sectionMenu summary { display: flex; padding: var(--space-2); cursor: pointer; list-style: none; }
+.sectionMenu summary::-webkit-details-marker { display: none; }
+.sectionMenu > div { position: absolute; z-index: 10; top: 100%; right: 0; display: grid; gap: var(--space-1); min-width: 160px; padding: var(--space-2); border: 1px solid var(--color-border); background: var(--color-surface); }
 .actions { display: flex; gap: var(--space-1); justify-content: flex-end; }
-.empty { padding-block: var(--space-8) !important; color: var(--color-text-secondary); text-align: center !important; }
 .actionError { margin: 0; color: var(--color-error-text); }
-.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
-
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .sectionForm { display: grid; gap: var(--space-3); min-width: 0; }
 .sectionFormActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
-.deleteSectionAction { margin-right: auto; }
-
-@media (max-width: 600px) {
-    .tableToolbar { align-items: stretch; flex-direction: column; }
-    .tableToolbar > button { align-self: flex-start; }
-}
