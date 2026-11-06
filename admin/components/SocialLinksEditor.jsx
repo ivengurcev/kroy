@@ -102,9 +102,9 @@ export default function SocialLinksEditor({ value, onChange }) {
                     const editorId = `social-link-editor-${index}`;
 
                     return (
-                        <div className={styles.item} key={`${type}-${index}`}>
+                        <div className={styles.item} data-validation-group key={`${type}-${index}`}>
                             <div className={styles.itemRow}>
-                                <Button className={styles.summary} aria-expanded={isExpanded} aria-controls={editorId} title={isExpanded ? 'Свернуть ссылку' : 'Редактировать ссылку'} onClick={() => setExpandedIndex(isExpanded ? null : index)}>
+                                <Button name={`socials.${index}`} data-validation-message={item.value && !previewLink ? 'Введите корректную HTTPS-ссылку или никнейм' : ''} className={styles.summary} aria-expanded={isExpanded} aria-controls={editorId} title={isExpanded ? 'Свернуть ссылку' : 'Редактировать ссылку'} onClick={() => setExpandedIndex(isExpanded ? null : index)}>
                                     <span className={styles.summaryText}>
                                         <strong>{item.name || socialLabel(type)}</strong>
                                         <small>{summaryValue(item, type)}</small>

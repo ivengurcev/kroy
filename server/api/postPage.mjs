@@ -8,6 +8,7 @@ import {
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import isUuid from "./isUuid.mjs";
+import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 
 export default async function postPage(c) {
   let body;
@@ -33,7 +34,7 @@ export default async function postPage(c) {
     || !["standard", "list"].includes(type)
     || (type === "list" ? !isPageDataSource(dataSource) || (dataSource === "materials" ? !isUuid(materialSectionId) : materialSectionId !== null) : dataSource !== null || materialSectionId !== null)
   ) {
-    return c.json({ error: "Invalid page" }, 400);
+    return c.json({ error: "Проверьте поля страницы", fields: pageFieldErrors(body) }, 400);
   }
 
   const hostname = getHostname(c);
@@ -63,13 +64,13 @@ export default async function postPage(c) {
     const siteId = sites[0].id;
     if (dataSource === "materials") {
       const { rowCount } = await client.query("SELECT 1 FROM material_sections WHERE id = $1 AND site_id = $2", [materialSectionId, siteId]);
-      if (!rowCount) { await client.query("ROLLBACK"); return c.json({ error: "Invalid material section" }, 400); }
+      if (!rowCount) { await client.query("ROLLBACK"); return c.json({ error: "Выберите раздел", fields: { materialSectionId: 'Выберите доступный раздел' } }, 400); }
     }
     const conflict = await findPageRouteConflict(client, siteId, body.path);
 
     if (conflict) {
       await client.query("ROLLBACK");
-      return c.json({ error: "Page already exists" }, 409);
+      return c.json({ error: "Такой адрес уже используется", fields: pageConflictFields() }, 409);
     }
 
     const { rows } = await client.query(
@@ -86,7 +87,7 @@ export default async function postPage(c) {
     await client?.query("ROLLBACK").catch(() => {});
 
     if (error.code === "23505") {
-      return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
+      return c.json({ error: 'Проверьте адрес и раздел', fields: pageConflictFields(error) }, 409);
     }
 
     console.error("Failed to create page", error);

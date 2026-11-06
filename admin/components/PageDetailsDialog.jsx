@@ -9,7 +9,7 @@ const tabs = [
     { label: 'Внешний вид', disabled: true },
 ];
 
-export default function PageDetailsDialog({ page, onSaved, onCancel }) {
+export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChange }) {
     const dialogRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,6 +37,7 @@ export default function PageDetailsDialog({ page, onSaved, onCancel }) {
                 cancelFirst
                 handleEscape={false}
                 onSubmittingChange={setIsSubmitting}
+                onDirtyChange={onDirtyChange}
                 onSaved={onSaved}
                 onCancel={onCancel}
             />

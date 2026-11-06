@@ -1,5 +1,6 @@
 import { getSiteContacts, normalizeSiteContacts, setSiteContacts } from '../../db/siteContacts.mjs';
 import getCurrentSite from './siteContext.mjs';
+import { normalizeSocialLink } from '../../shared/socialLinks.mjs';
 
 export async function getSiteContactSettings(c) {
     const site = await getCurrentSite(c);
@@ -27,7 +28,12 @@ export async function patchSiteContactSettings(c) {
         return c.json(await setSiteContacts(site.id, contacts));
     } catch (error) {
         if (/корректную HTTPS-ссылку/.test(error.message)) {
-            return c.json({ error: error.message }, 400);
+            const fields = {};
+            for (const [index, social] of (body.socials || []).entries()) {
+                try { normalizeSocialLink(social, { strict: true }); }
+                catch { fields[`socials.${index}`] = 'Введите корректную HTTPS-ссылку или никнейм'; }
+            }
+            return c.json({ error: 'Проверьте ссылки социальных сетей', fields }, 400);
         }
         console.error('Failed to save site contact settings', error);
         return c.json({ error: 'Internal server error' }, 500);

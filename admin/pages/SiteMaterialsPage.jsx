@@ -11,6 +11,9 @@ import dialogStyles from '../components/PageDetailsDialog.module.css';
 import styles from './SiteMaterialsPage.module.css';
 import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 import { slugifyPageTitle } from '../../shared/pageFields.mjs';
+import ValidatedForm from '../ui/ValidatedForm.jsx';
+import { apiRequest } from '../editor/apiRequest.mjs';
+import { formResponseError } from '../ui/formValidation.mjs';
 
 const FILTERS = [
     { value: 'all', label: 'Все статусы' },
@@ -21,8 +24,7 @@ const STATUS_LABELS = { draft: 'Черновик', published: 'Опублико�
 const STATUS_TONES = { draft: 'warning', published: 'success' };
 
 async function responseError(response, fallback) {
-    const result = await response.json().catch(() => ({}));
-    return result.error || `${fallback}: ${response.status}`;
+    return response.status === 409 ? 'Раздел используется материалами или страницами. Сначала уберите ссылки на него.' : fallback;
 }
 
 function formatDate(value) {
@@ -119,6 +121,7 @@ export default function SiteMaterialsPage() {
 
     async function saveSection(event) {
         event.preventDefault();
+        const form = event.currentTarget;
         if (!sectionDialog || sectionSaving) return;
         const name = sectionName.trim();
         if (!name) return;
@@ -129,12 +132,12 @@ export default function SiteMaterialsPage() {
             const body = id
                 ? { name }
                 : { name, slug: createSectionSlug(name, sections), sortOrder: Math.max(-1, ...sections.map(({ sortOrder }) => sortOrder)) + 1 };
-            const response = await fetch(id ? `/api/site/material-sections/${id}` : '/api/site/material-sections', {
+            const response = await apiRequest(id ? `/api/site/material-sections/${id}` : '/api/site/material-sections', {
                 method: id ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-            if (!response.ok) throw new Error(await responseError(response, 'Не удалось сохранить раздел'));
+            if (!response.ok) throw new Error(await formResponseError(response, form, 'Не удалось сохранить раздел. Проверьте название и повторите попытку.'));
             const saved = await response.json();
             setSections((current) => id
                 ? current.map((item) => item.id === id ? saved : item)
@@ -154,7 +157,7 @@ export default function SiteMaterialsPage() {
         setSectionSaving(true);
         setSectionError('');
         try {
-            const response = await fetch(`/api/site/material-sections/${section.id}`, { method: 'DELETE' });
+            const response = await apiRequest(`/api/site/material-sections/${section.id}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить раздел'));
             setSections((current) => current.filter(({ id }) => id !== section.id));
             setSectionId('');
@@ -171,9 +174,11 @@ export default function SiteMaterialsPage() {
         setDeletingId(material.id);
         setError('');
         try {
-            const response = await fetch(`/api/site/materials/${material.id}`, { method: 'DELETE' });
+            const response = await apiRequest(`/api/site/materials/${material.id}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить материал'));
             setMaterials((current) => current.filter(({ id }) => id !== material.id));
+            const sectionsResponse = await fetch('/api/site/material-sections');
+            if (sectionsResponse.ok) setSections(await sectionsResponse.json());
         } catch (deleteError) {
             setError(deleteError.message);
         } finally {
@@ -186,6 +191,8 @@ export default function SiteMaterialsPage() {
             section="materials"
             title="Материалы"
             status={status}
+            isDirty={Boolean(sectionDialog && sectionName !== (sections.find(({ id }) => id === sectionDialog.id)?.name || ''))}
+            saveStatus={sectionSaving ? 'saving' : 'idle'}
             errorMessage={error || 'Не удалось загрузить материалы.'}
         >
             <div className={styles.content}>
@@ -246,18 +253,18 @@ export default function SiteMaterialsPage() {
                 onCancel={(event) => { event.preventDefault(); closeSectionDialog(); }}
             >
                 <h2 id="material-section-dialog-title">{sectionDialog?.id ? 'Редактировать раздел' : 'Новый раздел'}</h2>
-                <form className={styles.sectionForm} onSubmit={saveSection}>
+                <ValidatedForm className={styles.sectionForm} onSubmit={saveSection}>
                     <label className={fieldStyles.field}>
                         <span>Название</span>
-                        <input value={sectionName} onChange={(event) => setSectionName(event.target.value)} required maxLength="200" autoFocus />
+                        <input name="name" value={sectionName} onChange={(event) => { setSectionName(event.target.value); setSectionError(''); }} required maxLength="200" autoFocus />
                     </label>
                     {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
                     <div className={styles.sectionFormActions}>
-                        {sectionDialog?.id && <Button className={styles.deleteSectionAction} type="button" variant="danger" onClick={deleteSection} disabled={sectionSaving}>Удалить раздел</Button>}
+                        {sectionDialog?.id && sections.find(({ id }) => id === sectionDialog.id)?.canDelete === true && <Button className={styles.deleteSectionAction} type="button" variant="danger" onClick={deleteSection} disabled={sectionSaving}>Удалить раздел</Button>}
                         <Button type="button" variant="secondary" onClick={closeSectionDialog} disabled={sectionSaving}>Отмена</Button>
                         <Button type="submit" variant="primary" disabled={sectionSaving}>{sectionSaving ? 'Сохранение…' : 'Сохранить'}</Button>
                     </div>
-                </form>
+                </ValidatedForm>
             </dialog>
         </SiteSettingsLayout>
     );

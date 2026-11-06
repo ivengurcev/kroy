@@ -23,7 +23,7 @@ function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, value));
 }
 
-export default function ImageField({ label, value, aspectRatio, maxWidth, onChange }) {
+export default function ImageField({ label, value, aspectRatio, maxWidth, onChange, name }) {
     const [status, setStatus] = useState('idle');
     const [crop, setCrop] = useState(null);
     const [zoom, setZoom] = useState(1);
@@ -211,7 +211,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
     const scale = crop ? displayScale() : 1;
 
     return (
-        <div className={styles.field}>
+        <div className={styles.field} data-validation-group>
             <span className={styles.label}>{label}</span>
             {imageUrl && <img className={styles.preview} src={imageUrl} alt="" />}
             <input
@@ -223,6 +223,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
                 onChange={selectImage}
             />
             <Button
+                name={name}
                 title={imageUrl ? 'Заменить изображение' : 'Загрузить изображение'}
                 disabled={status === 'uploading'}
                 onClick={() => inputRef.current?.click()}
@@ -235,7 +236,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
                         : 'Загрузить изображение'}
             </Button>
             <small className={styles.error} role={status === 'error' ? 'alert' : undefined}>
-                {status === 'error' && 'Не удалось обработать или загрузить изображение.'}
+                {status === 'error' && 'Не удалось загрузить изображение. Выберите файл повторно.'}
             </small>
 
             {crop && (

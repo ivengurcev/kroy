@@ -3,6 +3,9 @@ import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import styles from './PageDetailsForm.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
+import ValidatedForm from '../ui/ValidatedForm.jsx';
+import { formResponseError } from '../ui/formValidation.mjs';
+import { apiRequest } from '../editor/apiRequest.mjs';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -105,6 +108,7 @@ export default function PageDetailsForm({
 
     async function submit(event) {
         event.preventDefault();
+        const form = event.currentTarget;
 
         if (!isDirty || isSubmitting) return;
 
@@ -112,16 +116,15 @@ export default function PageDetailsForm({
         setFormError('');
 
         try {
-            const response = await fetch(`/api/pages/${page.id}`, {
+            const response = await apiRequest(`/api/pages/${page.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(isDetail ? { title, routeParam } : page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }),
             });
 
             if (!response.ok) {
-                const result = await response.json().catch(() => ({}));
                 setStatus('idle');
-                setFormError(result.error || errorMessage(response.status));
+                setFormError(await formResponseError(response, form, errorMessage(response.status)));
                 return;
             }
 
@@ -133,18 +136,20 @@ export default function PageDetailsForm({
     }
 
     return (
-        <form className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
+        <ValidatedForm className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
             {page.type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Источник данных</span>
                 <select value={dataSource} onChange={(event) => { setDataSource(event.target.value); if (event.target.value !== 'materials') setMaterialSectionId(''); }}>
                     <option value="materials">Материалы</option><option value="products">Товары</option><option value="reviews">Отзывы</option>
                 </select>
             </label>{dataSource === 'materials' && <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
-                <span>Раздел материалов</span><select value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required><option value="">Выберите раздел</option>{sections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+                <span>Раздел материалов</span><select name="materialSectionId" value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required><option value="">Выберите раздел</option>{sections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
             </label>}</>}
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
                 <span>{isDetail ? 'Параметр пути' : 'Путь'}</span>
                 <input
+                    name={isDetail ? 'routeParam' : 'path'}
+                    required
                     ref={pathInputRef}
                     value={isDetail ? routeParam : path}
                     disabled={isMainPage || isSubmitting}
@@ -154,6 +159,8 @@ export default function PageDetailsForm({
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, titleClassName)}>
                 <span>Название</span>
                 <input
+                    name="title"
+                    required
                     ref={titleInputRef}
                     value={title}
                     disabled={isSubmitting}
@@ -166,6 +173,6 @@ export default function PageDetailsForm({
             {showError && error && (
                 <div className={styles.error} role="alert">{error}</div>
             )}
-        </form>
+        </ValidatedForm>
     );
 }

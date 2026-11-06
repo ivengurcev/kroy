@@ -133,6 +133,12 @@ function ToolbarPlugin() {
     );
 }
 
+function EditablePlugin({ disabled }) {
+    const [editor] = useLexicalComposerContext();
+    useEffect(() => { editor.setEditable(!disabled); }, [editor, disabled]);
+    return null;
+}
+
 export default function MaterialEditor({ value, onChange, disabled = false }) {
     const [mounted, setMounted] = useState(false);
     const initialState = useRef(value ?? EMPTY_EDITOR_STATE);
@@ -156,9 +162,10 @@ export default function MaterialEditor({ value, onChange, disabled = false }) {
     return (
         <div className={`${styles.editor} ${disabled ? styles.disabled : ''}`}>
             <LexicalComposer initialConfig={initialConfig}>
+                <EditablePlugin disabled={disabled} />
                 <ToolbarPlugin />
                 <RichTextPlugin
-                    contentEditable={<ContentEditable className={styles.contentEditable} aria-label="Текст материала" />}
+                    contentEditable={<ContentEditable name="content" className={styles.contentEditable} aria-label="Текст материала" />}
                     placeholder={<div className={styles.placeholderText}>Начните писать материал…</div>}
                     ErrorBoundary={LexicalErrorBoundary}
                 />

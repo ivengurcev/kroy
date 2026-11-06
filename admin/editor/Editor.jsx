@@ -11,6 +11,7 @@ import AdminShell from '../components/AdminShell.jsx';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview } from './materialPreview.mjs';
+import { apiRequest } from './apiRequest.mjs';
 
 export default function Editor() {
     const { pathname, navigate } = useContext(ApplicationContext) || {};
@@ -133,7 +134,7 @@ export default function Editor() {
         setSaveStatus('saving');
 
         try {
-            const response = await fetch(`/api/pages/${page.id}`, {
+            const response = await apiRequest(`/api/pages/${page.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

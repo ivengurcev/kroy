@@ -82,3 +82,4 @@
 .theme * {
     box-sizing: border-box;
 }
+:global([aria-invalid="true"]) { border-color: #b42318 !important; outline-color: #b42318; scroll-margin-block: 100px 150px; }

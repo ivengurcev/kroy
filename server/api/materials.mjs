@@ -2,10 +2,10 @@ import { createMaterial, deleteMaterial, getMaterial, getMaterials, hasSiteMater
 import { pool } from '../../db/client.mjs';
 import getCurrentSite from './siteContext.mjs';
 import isUuid from './isUuid.mjs';
+import { materialFieldErrors, isValidMaterialSlug } from '../../shared/materialFields.mjs';
 
 const MATERIAL_FIELDS = new Set(['sectionId', 'slug', 'title', 'summary', 'content', 'coverMediaId', 'status']);
 const MATERIAL_STATUSES = new Set(['draft', 'published']);
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function isPlainObject(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
 
@@ -45,7 +45,7 @@ export function normalizeMaterialInput(body, { partial = false } = {}) {
     if (Object.hasOwn(body, 'slug')) {
         if (typeof body.slug !== 'string') return null;
         material.slug = body.slug.trim();
-        if (material.slug.length > 200 || !SLUG_PATTERN.test(material.slug)) return null;
+        if (!isValidMaterialSlug(material.slug)) return null;
     }
     if (Object.hasOwn(body, 'title')) {
         material.title = normalizeText(body.title, 300, { required: true });
@@ -80,6 +80,12 @@ export function isPublishableMaterial(material) {
     return material.status !== 'published' || isEditorState(material.content) && hasEditorText(material.content.root);
 }
 
+function inputFieldErrors(body, options) {
+    const fields = materialFieldErrors(body, options);
+    if (body?.content !== undefined && body.content !== null && !isEditorState(body.content)) fields.content = 'Не удалось прочитать текст материала. Обновите страницу и повторите ввод';
+    return fields;
+}
+
 async function readBody(c) { try { return await c.req.json(); } catch { return undefined; } }
 
 export async function getSiteMaterials(c) {
@@ -110,17 +116,19 @@ export async function getSiteMaterial(c) {
 }
 
 export async function postSiteMaterial(c) {
-    const material = normalizeMaterialInput(await readBody(c));
-    if (!material || !isPublishableMaterial(material)) return c.json({ error: 'Invalid material' }, 400);
+    const body = await readBody(c);
+    const material = normalizeMaterialInput(body);
+    if (!material) return c.json({ error: 'Проверьте поля материала', fields: inputFieldErrors(body) }, 400);
+    if (!isPublishableMaterial(material)) return c.json({ error: 'Добавьте текст материала', fields: { content: 'Добавьте текст материала или выберите статус «Черновик»' } }, 400);
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        if (!(await hasSiteMaterialSection(site.id, material.sectionId))) return c.json({ error: 'Invalid material section' }, 400);
-        if (material.coverMediaId !== null && !(await hasSiteMedia(site.id, material.coverMediaId))) return c.json({ error: 'Invalid cover media' }, 400);
+        if (!(await hasSiteMaterialSection(site.id, material.sectionId))) return c.json({ error: 'Выберите раздел', fields: { sectionId: 'Выберите доступный раздел' } }, 400);
+        if (material.coverMediaId !== null && !(await hasSiteMedia(site.id, material.coverMediaId))) return c.json({ error: 'Изображение недоступно', fields: { coverMediaId: 'Загрузите изображение повторно' } }, 400);
         const created = await createMaterial(site.id, material);
         return created ? c.json(created, 201) : c.json({ error: 'Invalid material section or cover media' }, 400);
     } catch (error) {
-        if (error.code === '23505') return c.json({ error: 'Material slug already exists in this section' }, 409);
+        if (error.code === '23505') return c.json({ error: 'Такой адрес уже используется', fields: { slug: 'Такой адрес уже используется' } }, 409);
         console.error('Failed to create material', error);
         return c.json({ error: 'Internal server error' }, 500);
     }
@@ -129,8 +137,9 @@ export async function postSiteMaterial(c) {
 export async function patchSiteMaterial(c) {
     const id = c.req.param('id');
     if (!isUuid(id)) return c.json({ error: 'Invalid UUID' }, 400);
-    const changes = normalizeMaterialInput(await readBody(c), { partial: true });
-    if (!changes) return c.json({ error: 'Invalid material' }, 400);
+    const body = await readBody(c);
+    const changes = normalizeMaterialInput(body, { partial: true });
+    if (!changes) return c.json({ error: 'Проверьте поля материала', fields: inputFieldErrors(body, { partial: true }) }, 400);
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
@@ -145,16 +154,16 @@ export async function patchSiteMaterial(c) {
             const next = { ...current, ...changes };
             if (!isPublishableMaterial(next)) {
                 await client.query('ROLLBACK');
-                return c.json({ error: 'Published material requires content' }, 400);
+                return c.json({ error: 'Добавьте текст материала', fields: { content: 'Добавьте текст материала или выберите статус «Черновик»' } }, 400);
             }
             if (changes.sectionId && !(await hasSiteMaterialSection(site.id, changes.sectionId, client))) {
                 await client.query('ROLLBACK');
-                return c.json({ error: 'Invalid material section' }, 400);
+                return c.json({ error: 'Выберите раздел', fields: { sectionId: 'Выберите доступный раздел' } }, 400);
             }
             if (changes.coverMediaId !== undefined && changes.coverMediaId !== null
                 && !(await hasSiteMedia(site.id, changes.coverMediaId, client))) {
                 await client.query('ROLLBACK');
-                return c.json({ error: 'Invalid cover media' }, 400);
+                return c.json({ error: 'Изображение недоступно', fields: { coverMediaId: 'Загрузите изображение повторно' } }, 400);
             }
             const updated = await updateMaterial(site.id, id, changes, client);
             if (!updated) {
@@ -168,7 +177,7 @@ export async function patchSiteMaterial(c) {
             throw error;
         } finally { client.release(); }
     } catch (error) {
-        if (error.code === '23505') return c.json({ error: 'Material slug already exists in this section' }, 409);
+        if (error.code === '23505') return c.json({ error: 'Такой адрес уже используется', fields: { slug: 'Такой адрес уже используется' } }, 409);
         console.error('Failed to update material', error);
         return c.json({ error: 'Internal server error' }, 500);
     }

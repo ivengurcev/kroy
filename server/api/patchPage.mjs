@@ -10,6 +10,7 @@ import {
 } from "../../shared/pageFields.mjs";
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
+import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -40,7 +41,7 @@ export default async function patchPage(c) {
     || (hasDataSource && !isPageDataSource(body.dataSource))
     || (hasMaterialSectionId && body.materialSectionId !== null && !isUuid(body.materialSectionId))
   ) {
-    return c.json({ error: "Invalid page" }, 400);
+    return c.json({ error: "Проверьте поля страницы", fields: pageFieldErrors(body) }, 400);
   }
 
   const hostname = getHostname(c);
@@ -97,7 +98,7 @@ export default async function patchPage(c) {
     if (page.page_type === "list" && nextDataSource === "materials") {
       if (!nextMaterialSectionId) {
         await client.query("ROLLBACK");
-        return c.json({ error: "Select a material section" }, 400);
+        return c.json({ error: "Выберите раздел", fields: { materialSectionId: 'Выберите раздел' } }, 400);
       }
       const { rowCount } = await client.query(
         "SELECT 1 FROM material_sections WHERE id = $1 AND site_id = $2",
@@ -105,7 +106,7 @@ export default async function patchPage(c) {
       );
       if (!rowCount) {
         await client.query("ROLLBACK");
-        return c.json({ error: "Invalid material section" }, 400);
+        return c.json({ error: "Выберите раздел", fields: { materialSectionId: 'Выберите доступный раздел' } }, 400);
       }
     }
     let nextPath = page.path;
@@ -128,7 +129,7 @@ export default async function patchPage(c) {
     } else if (hasPath) {
       if (!isValidPagePath(body.path)) {
         await client.query("ROLLBACK");
-        return c.json({ error: "Invalid page" }, 400);
+        return c.json({ error: "Проверьте путь страницы", fields: pageFieldErrors(body) }, 400);
       }
       pathChanged = body.path !== page.path;
       nextPath = body.path;
@@ -158,7 +159,7 @@ export default async function patchPage(c) {
       });
       if (conflict) {
         await client.query("ROLLBACK");
-        return c.json({ error: "Page already exists" }, 409);
+        return c.json({ error: "Такой адрес уже используется", fields: { [page.page_type === 'detail' ? 'routeParam' : 'path']: 'Такой адрес уже используется' } }, 409);
       }
     }
 
@@ -171,7 +172,7 @@ export default async function patchPage(c) {
       });
       if (conflict) {
         await client.query("ROLLBACK");
-        return c.json({ error: "Page already exists" }, 409);
+        return c.json({ error: "Такой адрес уже используется", fields: pageConflictFields() }, 409);
       }
     }
 

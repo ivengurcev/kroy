@@ -6,6 +6,7 @@ import StatusBadge from '../ui/StatusBadge.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import fieldStyles from '../editor/Field.module.css';
 import styles from './CatalogEditor.module.css';
+import ValidatedForm from '../ui/ValidatedForm.jsx';
 
 const UNCATEGORIZED = '__uncategorized__';
 
@@ -15,7 +16,7 @@ function emptyCategory(sortOrder) { return { id: id(), name: '', sortOrder }; }
 function bySortOrder(items) { return [...items].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)); }
 function nextSortOrder(items) { return Math.max(-1, ...items.map(({ sortOrder }) => sortOrder ?? -1)) + 1; }
 
-export default function CatalogEditor({ value, onChange }) {
+export default function CatalogEditor({ value, onChange, onDraftDirtyChange }) {
     const catalog = value ?? { categories: [], products: [] };
     const [activeCategoryId, setActiveCategoryId] = useState(null);
     const [dialog, setDialog] = useState(null);
@@ -40,6 +41,7 @@ export default function CatalogEditor({ value, onChange }) {
         ? product.categoryId == null
         : product.categoryId === selectedCategoryId)), [catalog.products, selectedCategoryId, uncategorized]);
     const dialogDirty = Boolean(dialog && dialogDraft && JSON.stringify(dialogDraft) !== JSON.stringify(dialog.initial));
+    useEffect(() => { onDraftDirtyChange?.(dialogDirty); }, [dialogDirty, onDraftDirtyChange]);
 
     function update(change) { onChange({ ...catalog, ...change }); }
 
@@ -181,7 +183,7 @@ export default function CatalogEditor({ value, onChange }) {
             onCancel={handleDialogCancel}
             onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }}
         >
-            {dialog && dialogDraft && <form className={styles.dialogForm} onSubmit={saveDialog}>
+            {dialog && dialogDraft && <ValidatedForm className={styles.dialogForm} onSubmit={saveDialog}>
                 <header className={styles.dialogHeader}>
                     <h2 id="catalog-dialog-title">{dialog.type === 'category'
                         ? dialog.mode === 'create' ? 'Новый раздел' : 'Редактировать раздел'
@@ -191,17 +193,17 @@ export default function CatalogEditor({ value, onChange }) {
                 {dialog.type === 'category' ? <div className={styles.dialogBody}>
                     <label className={fieldStyles.field}>
                         <span>Название</span>
-                        <input autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                        <input name="name" autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
                     </label>
                     {dialogError && <p className={styles.dialogError} role="alert">{dialogError}</p>}
                 </div> : <div className={`${styles.dialogBody} ${styles.productForm}`}>
                     <label className={`${fieldStyles.field} ${styles.fullField}`}>
                         <span>Название</span>
-                        <input autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                        <input name="name" autoFocus required maxLength="200" value={dialogDraft.name} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
                     </label>
                     <label className={fieldStyles.field}>
                         <span>Цена, ₽</span>
-                        <input inputMode="decimal" value={dialogDraft.price} onChange={(event) => setDialogDraft((current) => ({ ...current, price: event.target.value }))} />
+                        <input name="price" inputMode="decimal" pattern="[0-9]{1,10}([.,][0-9]{1,2})?" data-format-message="Укажите неотрицательную цену: до 10 цифр и двух знаков после точки" value={dialogDraft.price} onChange={(event) => setDialogDraft((current) => ({ ...current, price: event.target.value.replace(',', '.') }))} />
                     </label>
                     <label className={fieldStyles.field}>
                         <span>Тип позиции</span>
@@ -234,7 +236,7 @@ export default function CatalogEditor({ value, onChange }) {
                     <Button variant="secondary" onClick={() => closeDialog()}>Отмена</Button>
                     <Button type="submit" variant="primary">Сохранить</Button>
                 </footer>
-            </form>}
+            </ValidatedForm>}
         </dialog>
     </div>;
 }

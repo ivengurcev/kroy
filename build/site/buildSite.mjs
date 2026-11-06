@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, transform } from 'esbuild';
 import { isValidPagePath, isValidPageRoutePattern } from '../../shared/pageFields.mjs';
 import { pool } from '../../db/client.mjs';
+import { getSiteFingerprint } from '../../db/siteFingerprint.mjs';
 import { getThemeTokens } from '../../site/themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../../db/siteContacts.mjs';
 import { getCatalog } from '../../db/catalog.mjs';
@@ -123,6 +124,7 @@ try {
     }
 
     let site;
+    let sourceFingerprint;
     let pages;
     let allDetailTemplates;
     let detailTemplates;
@@ -150,6 +152,7 @@ try {
         if (!site) {
             throw new Error(`Сайт не найден: ${siteSlug}`);
         }
+        sourceFingerprint = await getSiteFingerprint(site.id, client);
 
         const domainsResult = await client.query(
             `SELECT hostname
@@ -280,6 +283,7 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
+    await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await generateSiteParts(renderPages, site.slug);
     const pageRegistry = createClientPageRegistry(renderPages);
     await writeFile(

@@ -5,6 +5,7 @@ import FormField from '../ui/FormField.jsx';
 import OysiteLogo from '../components/OysiteLogo.svg';
 import theme from '../styles/AdminTheme.module.css';
 import styles from './SignInPage.module.css';
+import ValidatedForm from '../ui/ValidatedForm.jsx';
 
 function readCallbackUrl() {
     const value = new URLSearchParams(window.location.search).get('callbackUrl');
@@ -81,7 +82,7 @@ export default function SignInPage() {
                 </div>
                 <p className={styles.subtitle}>Авторизуйтесь, чтобы управлять сайтом.</p>
 
-                <form className={styles.form} onSubmit={handleSubmit}>
+                <ValidatedForm className={styles.form} onSubmit={handleSubmit}>
                     <FormField label="Email">
                         <input
                             className={styles.input}
@@ -114,7 +115,7 @@ export default function SignInPage() {
                     <Button className={styles.submit} variant="primary" type="submit" disabled={pending}>
                         {pending ? 'Входим…' : 'Войти'}
                     </Button>
-                </form>
+                </ValidatedForm>
             </Card>
         </main>
     );

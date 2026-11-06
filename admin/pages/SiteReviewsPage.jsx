@@ -7,6 +7,8 @@ import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import styles from './SiteReviewsPage.module.css';
+import { apiRequest } from '../editor/apiRequest.mjs';
+import { formResponseError } from '../ui/formValidation.mjs';
 
 const FILTERS = [
     { value: 'all', label: 'Все' },
@@ -39,8 +41,7 @@ function mediaIdFromUrl(value) {
 }
 
 async function responseError(response, fallback) {
-    const result = await response.json().catch(() => ({}));
-    return result.error || `${fallback}: ${response.status}`;
+    return fallback;
 }
 
 function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel }) {
@@ -55,20 +56,21 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
             </div>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Имя автора</span>
-                <input value={review.authorName} onChange={setField('authorName')} required maxLength="200" autoFocus={!editing} />
+                <input name="authorName" value={review.authorName} onChange={setField('authorName')} required maxLength="200" autoFocus={!editing} />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Подпись</span>
-                <input value={review.authorSubtitle ?? ''} onChange={setField('authorSubtitle')} maxLength="300" />
+                <input name="authorSubtitle" value={review.authorSubtitle ?? ''} onChange={setField('authorSubtitle')} maxLength="300" />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact} ${styles.textField}`}>
                 <span>Текст отзыва</span>
-                <textarea rows="4" value={review.text} onChange={setField('text')} required maxLength="5000" />
+                <textarea name="text" rows="4" value={review.text} onChange={setField('text')} required maxLength="5000" />
             </label>
             <div className={`${compactStyles.field} ${compactStyles.compact} ${styles.imageField}`}>
                 <span>Фотография</span>
                 <div className={styles.imageControls}>
                     <ImageField
+                        name="mediaId"
                         label=""
                         value={imageUrl}
                         aspectRatio="1:1"
@@ -80,7 +82,7 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
             </div>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Дата отзыва</span>
-                <input type="date" value={review.reviewDate} onChange={setField('reviewDate')} required />
+                <input name="reviewDate" type="date" value={review.reviewDate} onChange={setField('reviewDate')} required />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Статус</span>
@@ -140,22 +142,23 @@ export default function SiteReviewsPage() {
 
     async function saveReview(event) {
         event.preventDefault();
+        const currentForm = event.currentTarget;
         if (!form || saving) return;
         setSaving(true);
         setFormError('');
         const { id, ...body } = form;
         try {
-            const response = await fetch(id ? `/api/site/reviews/${id}` : '/api/site/reviews', {
+            const response = await apiRequest(id ? `/api/site/reviews/${id}` : '/api/site/reviews', {
                 method: id ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-            if (!response.ok) throw new Error(await responseError(response, 'Не удалось сохранить отзыв'));
+            if (!response.ok) throw new Error(await formResponseError(response, currentForm, 'Не удалось сохранить отзыв. Проверьте поля и повторите попытку.'));
             await response.json();
             setForm(null);
             setReload((value) => value + 1);
         } catch (saveError) {
-            setFormError(saveError.message);
+            setFormError('Не удалось сохранить отзыв. Проверьте поля и повторите попытку.');
         } finally {
             setSaving(false);
         }
@@ -166,7 +169,7 @@ export default function SiteReviewsPage() {
         setDeletingId(review.id);
         setError('');
         try {
-            const response = await fetch(`/api/site/reviews/${review.id}`, { method: 'DELETE' });
+            const response = await apiRequest(`/api/site/reviews/${review.id}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить отзыв'));
             setReviews((current) => current.filter(({ id }) => id !== review.id));
         } catch (deleteError) {
@@ -195,7 +198,7 @@ export default function SiteReviewsPage() {
                         </select>
                     </label>
                 </AdminPanel>
-                {form && <ReviewForm review={form} editing={Boolean(form.id)} busy={saving} error={formError} onChange={setForm} onSubmit={saveReview} onCancel={() => setForm(null)} />}
+                {form && <ReviewForm review={form} editing={Boolean(form.id)} busy={saving} error={formError} onChange={(next) => { setForm(next); setFormError(''); }} onSubmit={saveReview} onCancel={() => setForm(null)} />}
                 {error && status === 'success' && <p className={styles.actionError} role="alert">{error}</p>}
                 <AdminPanel className={styles.tableCard} noPadding>
                     <div className={styles.tableScroll}>

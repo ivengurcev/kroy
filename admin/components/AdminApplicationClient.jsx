@@ -97,7 +97,7 @@ export default function AdminApplication({ children }) {
                     mobileMenuOpen={mobileMenuOpen}
                     onCloseMobileMenu={() => setMobileMenuOpen(false)}
                 >
-                    {children}
+                    <div key={pathname}>{children}</div>
                 </AdminLayout>
             </div>
         </AdminWorkspaceContext.Provider>

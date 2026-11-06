@@ -69,6 +69,8 @@ test('rejects unknown providers, invalid settings, malformed bodies and non-bool
         assert.equal((await patchSitePaymentActivation(context('prodamus', body))).status, 400);
     }
     assert.equal((await patchSitePaymentActivation(context('unknown', { isActive: true }))).status, 400);
+    const domainError = await patchSitePaymentSettings(context('prodamus', { settings: { payformDomain: 'bad/path' } }));
+    assert.match(domainError.value.fields.payformDomain, /домен/);
     const malformed = context();
     malformed.req.json = async () => { throw new SyntaxError('Invalid JSON'); };
     assert.equal((await patchSitePaymentSettings(malformed)).status, 400);

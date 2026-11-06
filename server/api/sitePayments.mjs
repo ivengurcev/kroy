@@ -11,7 +11,10 @@ async function sitePayments(siteId) {
 }
 
 function paymentError(c, error) {
-    if (error instanceof PaymentSettingsError) return c.json({ error: error.message }, 400);
+    if (error instanceof PaymentSettingsError) {
+        const field = /ключ/i.test(error.message) ? 'secretKey' : /режим/i.test(error.message) ? 'testMode' : 'payformDomain';
+        return c.json({ error: error.message, fields: { [field]: error.message } }, 400);
+    }
     console.error('Failed to update site payments');
     return c.json({ error: 'Internal server error' }, 500);
 }

@@ -115,7 +115,7 @@ export async function getOrderNotifications(c) {
 export async function patchOrderNotifications(c) {
     const body = await c.req.json().catch(() => null);
     if (!isPlainObject(body) || Object.keys(body).length !== 1 || typeof body.email !== 'string'
-        || body.email.length > 320 || body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return c.json({ error: 'Укажите корректный email.' }, 400);
+        || body.email.length > 320 || body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return c.json({ error: 'Укажите корректный email.', fields: { email: 'Укажите корректный email' } }, 400);
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Сайт не найден.' }, 404);

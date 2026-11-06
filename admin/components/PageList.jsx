@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './PageList.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -18,10 +18,12 @@ export default function PageList({
     onDelete,
     onCreateDetailTemplate,
     onRestore,
+    onDirtyChange,
 }) {
     const [editingPage, setEditingPage] = useState(null);
     const [editDirty, setEditDirty] = useState(false);
     const [editErrorMessage, setEditErrorMessage] = useState('');
+    useEffect(() => { onDirtyChange?.(editDirty); }, [editDirty, onDirtyChange]);
     const editButtons = useRef(new Map());
     const sortedPages = [...pages].sort((left, right) =>
         pathDepth(left.path) - pathDepth(right.path)

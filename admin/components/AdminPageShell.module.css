@@ -1,2 +1,4 @@
 .page { width: 100%; min-width: 0; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 20px; }
+.actions > a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid #cbd7d1; border-radius: 9px; color: #27332f; text-decoration: none; background: #fff; }
 .status { max-width: var(--admin-content-max); margin: 48px auto; padding: 32px; border: 1px solid #dde5e0; border-radius: 12px; text-align: center; background: #fff; box-shadow: 0 10px 28px rgb(32 51 48 / 7%); }

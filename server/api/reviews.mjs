@@ -134,6 +134,15 @@ function normalizeReviewDate(value) {
     return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value ? value : null;
 }
 
+function reviewFieldErrors(body) {
+    const fields = {};
+    if (Object.hasOwn(body, 'authorName') && !normalizeRequiredText(body.authorName, 200)) fields.authorName = 'Укажите имя автора не длиннее 200 символов';
+    if (Object.hasOwn(body, 'text') && !normalizeRequiredText(body.text, 5000)) fields.text = 'Укажите текст отзыва не длиннее 5000 символов';
+    if (Object.hasOwn(body, 'authorSubtitle') && normalizeOptionalText(body.authorSubtitle, 300) === undefined) fields.authorSubtitle = 'Подпись должна быть не длиннее 300 символов';
+    if (Object.hasOwn(body, 'reviewDate') && !normalizeReviewDate(body.reviewDate)) fields.reviewDate = 'Укажите корректную дату';
+    return fields;
+}
+
 function normalizeAdminReview(body, { partial = false } = {}) {
     if (!isPlainObject(body) || Object.keys(body).length === 0
         || Object.keys(body).some((key) => !ADMIN_FIELDS.has(key))) return null;
@@ -298,13 +307,13 @@ export async function postSiteReview(c) {
         return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
     }
     const review = normalizeAdminReview(body);
-    if (!review) return c.json({ error: 'Invalid review' }, 400);
+    if (!review) return c.json({ error: 'Проверьте поля отзыва', fields: reviewFieldErrors(body || {}) }, 400);
 
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         const created = await createReview(site.id, review);
-        return created ? c.json(created, 201) : c.json({ error: 'Invalid media' }, 400);
+        return created ? c.json(created, 201) : c.json({ error: 'Изображение недоступно', fields: { mediaId: 'Загрузите изображение повторно' } }, 400);
     } catch (error) {
         console.error('Failed to create site review', error);
         return c.json({ error: 'Internal server error' }, 500);
@@ -322,13 +331,13 @@ export async function patchSiteReview(c) {
         return c.json({ error: error.message === 'BODY_TOO_LARGE' ? 'Request body too large' : 'Invalid review' }, error.message === 'BODY_TOO_LARGE' ? 413 : 400);
     }
     const changes = normalizeAdminReview(body, { partial: true });
-    if (!changes) return c.json({ error: 'Invalid review' }, 400);
+    if (!changes) return c.json({ error: 'Проверьте поля отзыва', fields: reviewFieldErrors(body || {}) }, 400);
 
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         const review = await updateReview(site.id, id, changes);
-        if (review === undefined) return c.json({ error: 'Invalid media' }, 400);
+        if (review === undefined) return c.json({ error: 'Изображение недоступно', fields: { mediaId: 'Загрузите изображение повторно' } }, 400);
         return review ? c.json(review) : c.json({ error: 'Review not found' }, 404);
     } catch (error) {
         console.error('Failed to update review', error);

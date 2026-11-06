@@ -9,6 +9,9 @@ import CatalogEditor from '../components/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/SiteSettingsLayout.jsx';
 import styles from './SitePage.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
+import { apiRequest } from '../editor/apiRequest.mjs';
+import { formResponseError } from '../ui/formValidation.mjs';
+import ValidatedForm from '../ui/ValidatedForm.jsx';
 
 const MODE_OPTIONS = [
     { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -110,12 +113,12 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
     </div>;
 }
 
-function ContactSettings({ value, onChange }) {
+function ContactSettings({ value, onChange, onSave }) {
     const contacts = value ?? {};
     const update = (name, nextValue) => onChange({ ...contacts, [name]: nextValue });
 
     return (
-        <AdminPanel className={styles.contactPanel}>
+        <AdminPanel as="form" id="contact-form" onSubmit={(event) => { event.preventDefault(); onSave(); }} className={styles.contactPanel}>
             <div className={styles.formGrid}>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Адрес</span>
@@ -132,11 +135,11 @@ function ContactSettings({ value, onChange }) {
                 <div className={styles.coordinateGrid}>
                     <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Широта</span>
-                        <input type="number" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
+                        <input name="latitude" type="number" min="-90" max="90" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
                     <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Долгота</span>
-                        <input type="number" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
+                        <input name="longitude" type="number" min="-180" max="180" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
                 </div>
             </div>
@@ -162,6 +165,7 @@ function SeoPlaceholder() {
 export default function SitePage() {
     const { pathname } = useContext(ApplicationContext) || {};
     const [section, setSection] = useState('appearance');
+    const [catalogDialogDirty, setCatalogDialogDirty] = useState(false);
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [savedCatalog, setSavedCatalog] = useState(null); const [catalog, setCatalog] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -185,15 +189,17 @@ export default function SitePage() {
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const catalogDirty = Boolean(catalog && savedCatalog && JSON.stringify(catalog) !== JSON.stringify(savedCatalog));
-    const dirty = themeDirty || contactsDirty || catalogDirty;
+    const dirty = themeDirty || contactsDirty || catalogDirty || catalogDialogDirty;
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
-    function updateDraft(change) { setDraft((current) => ({ ...current, ...change })); }
-    function updateContacts(change) { setContacts((current) => ({ ...current, ...change })); }
+    function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
+    function updateDraft(change) { clearSaveError(); setDraft((current) => ({ ...current, ...change })); }
+    function updateContacts(change) { clearSaveError(); setContacts((current) => ({ ...current, ...change })); }
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() {
         if (saveStatus === 'saving' || !dirty) return;
+        const contactForm = document.getElementById('contact-form');
         const requestTheme = themeDirty ? cloneSettings(draft) : null;
         const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
         const requestCatalog = catalogDirty ? catalog : null;
@@ -202,34 +208,37 @@ export default function SitePage() {
         setSaveStatus('saving'); setError('');
         try {
             if (requestTheme) {
-                const response = await fetch('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestTheme) });
+                const response = await apiRequest('/api/site/theme', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestTheme) });
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить оформление.');
+                if (!response.ok) throw new Error('Не удалось сохранить оформление. Проверьте значения настроек.');
                 const next = cloneSettings(result); setSaved(next); setDraft((current) => JSON.stringify(current) === themeFingerprint ? next : current);
             }
             if (requestContacts) {
-                const response = await fetch('/api/site/contact', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestContacts) });
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить контакты.');
+                const response = await apiRequest('/api/site/contact', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestContacts) });
+                if (!response.ok) throw new Error(await formResponseError(response, contactForm, 'Не удалось сохранить контакты. Проверьте поля и повторите попытку.'));
+                const result = await response.json();
                 setSavedContacts(result); setContacts((current) => JSON.stringify(current) === contactsFingerprint ? result : current);
             }
             if (requestCatalog) {
-                const response = await fetch('/api/site/catalog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestCatalog) });
+                const response = await apiRequest('/api/site/catalog', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestCatalog) });
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.error || 'Не удалось сохранить каталог.');
+                if (!response.ok) throw new Error('Не удалось сохранить каталог. Проверьте названия, цены и изображения позиций.');
                 setSavedCatalog(result); setCatalog((current) => JSON.stringify(current) === JSON.stringify(requestCatalog) ? result : current);
             }
             setSaveStatus('success');
-        } catch (saveError) { setError(saveError.message); setSaveStatus('error'); }
+        } catch { setError('Не удалось сохранить настройки. Проверьте поля и повторите попытку.'); setSaveStatus('error'); }
     }
     const activeMode = draft?.themeMode;
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
-    return <SiteSettingsLayout title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={save}>
+    const saveAction = section === 'contacts' || section === 'appearance'
+        ? () => document.getElementById(section === 'contacts' ? 'contact-form' : 'appearance-form')?.requestSubmit()
+        : section === 'catalog' ? save : undefined;
+    return <SiteSettingsLayout title={sectionTitle} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : undefined}>
         {section === 'overview' && <Overview siteData={siteData} />}
-        {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} />}
-        {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={setCatalog} />}
+        {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
+        {section === 'catalog' && catalog && <CatalogEditor value={catalog} onChange={(next) => { clearSaveError(); setCatalog(next); }} onDraftDirtyChange={setCatalogDialogDirty} />}
         {section === 'seo' && <SeoPlaceholder />}
-        {section === 'appearance' && draft && selectedTheme && <div className={styles.content}>
+        {section === 'appearance' && draft && selectedTheme && <ValidatedForm id="appearance-form" className={styles.content} onSubmit={(event) => { event.preventDefault(); save(); }}>
             <AdminPanel className={styles.panel}>
                 <div className={styles.sectionHeading}>
                     <div>
@@ -248,7 +257,8 @@ export default function SitePage() {
             </AdminPanel>
             <AdminPanel className={styles.tokensPanel} noPadding>
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
-            </AdminPanel>{error && <p className={styles.error} role="alert">{error}</p>}
-        </div>}
+            </AdminPanel>
+        </ValidatedForm>}
+        {error && status === 'success' && <p className={styles.error} role="alert">{error}</p>}
     </SiteSettingsLayout>;
 }

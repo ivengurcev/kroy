@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test, { before, after } from 'node:test';
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { build } from 'esbuild';
 import { transform } from '@svgr/core';
@@ -22,7 +22,13 @@ before(async () => {
                 export { default as SiteMaterialsPage } from './admin/pages/SiteMaterialsPage.jsx';
                 export { default as SiteOrdersPage } from './admin/pages/SiteOrdersPage.jsx';
                 export { default as PaymentResult } from './site/payments/PaymentResult.jsx';
-                export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';`,
+                export { default as SitePaymentsPage } from './admin/pages/SitePaymentsPage.jsx';
+                export { default as ActionFooter } from './admin/components/ActionFooter.jsx';
+                export { default as AdminPageShell } from './admin/components/AdminPageShell.jsx';
+                export { default as AdminHeader } from './admin/components/AdminHeader.jsx';
+                export { default as AdminShell } from './admin/components/AdminShell.jsx';
+                export { MaterialActions } from './admin/pages/SiteMaterialEditorPage.jsx';
+                export { default as useAutoSlug } from './admin/editor/useAutoSlug.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath, bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',
@@ -59,6 +65,8 @@ test('payment fields render the provider schema and send edited settings without
     assert.match(html, /example.payform.ru/);
     assert.match(html, /disabled/);
     assert.match(html, /RUB/);
+    const notificationOnly = renderToString(createElement(components.PaymentIntegrationEditor, { provider, settings: { payformDomain: '' }, validateRequired: false, onChange() {} }));
+    assert.doesNotMatch(notificationOnly, /required/);
 });
 
 test('site settings expose a Payments route without a duplicate section menu and the payments page renders a loading state on SSR', () => {
@@ -141,4 +149,78 @@ test('saved-key deletion button is visible only for a configured key and require
     const html = renderToString(createElement(components.PaymentIntegrationEditor, { ...props, provider: saved, disabled: true }));
     assert.match(html, /disabled[^>]*>Удалить секретный ключ/);
     assert.doesNotMatch(html, /PRIVATE_SENTINEL/);
+});
+
+test('action footer is absent without local actions and represents all form states', () => {
+    assert.equal(renderToString(createElement(components.ActionFooter)), '');
+    assert.equal(renderToString(createElement(components.ActionFooter, null, [])), '');
+    for (const [isDirty, saveStatus, label] of [[false, 'idle', 'Сохранено'], [true, 'idle', 'Есть несохранённые изменения'], [true, 'saving', 'Сохранение...'], [true, 'error', 'Ошибка сохранения'], [false, 'success', 'Сохранено']]) {
+        const html = renderToString(createElement(components.ActionFooter, { isDirty, saveStatus }, createElement('button', null, 'Сохранить')));
+        assert.match(html, /<footer/);
+        assert.ok(html.includes(label));
+    }
+});
+
+test('lists have no footer, settings have one save action enabled only for changes', () => {
+    const render = (props) => renderToString(createElement(components.AdminPageShell, { status: 'success', ...props }, createElement('p', null, 'Контент')));
+    assert.doesNotMatch(render({ title: 'Список' }), /<footer|Сохранить/);
+    assert.match(render({ onSave() {} }), /disabled=""[^>]*>.*?Сохранить/s);
+    const dirty = render({ onSave() {}, isDirty: true });
+    assert.equal((dirty.match(/Сохранить/g) || []).length, 1);
+    assert.doesNotMatch(dirty, /disabled/);
+    assert.doesNotMatch(render({ title: 'Другой список' }), /<footer/);
+});
+
+test('page footer preserves main-page deletion restriction and has one Save button', () => {
+    const props = { page: { id: 'page', title: 'Страница', path: '/' }, content: [], metadata: {}, parts: {}, widgets: {}, widgetMetadata: {}, loadStatus: 'success', saveStatus: 'idle', isDirty: true };
+    const main = renderToString(createElement(components.AdminShell, props));
+    assert.doesNotMatch(main, /> Удалить</);
+    assert.equal((main.match(/> Сохранить</g) || []).length, 1);
+    const ordinary = renderToString(createElement(components.AdminShell, { ...props, page: { ...props.page, path: '/other' } }));
+    assert.match(ordinary, /> Удалить</);
+});
+
+test('material actions never publish and do not offer deletion before creation', () => {
+    const fresh = renderToString(createElement(components.MaterialActions, { dirty: true, saveStatus: 'idle' }));
+    assert.doesNotMatch(fresh, /Удалить|Опубликовать/);
+    assert.match(fresh, /form="material-form"/);
+    const existing = renderToString(createElement(components.MaterialActions, { materialId: 'material', dirty: false, saveStatus: 'success' }));
+    assert.match(existing, /Удалить/);
+    assert.match(existing, /disabled/);
+    assert.doesNotMatch(existing, /Опубликовать/);
+    assert.equal((existing.match(/Сохранить/g) || []).length, 1);
+});
+
+test('header has global actions only and blocks publication while the current form is dirty or saving', () => {
+    for (const props of [{ isDirty: true }, { saveStatus: 'saving' }]) {
+        const html = renderToString(createElement(components.AdminHeader, props));
+        assert.match(html, /Сначала сохраните изменения/);
+        assert.match(html, /aria-label="Опубликовать"[^>]*disabled/);
+        assert.doesNotMatch(html, /name="save"|>Сохранить</);
+    }
+    assert.doesNotMatch(renderToString(createElement(components.AdminHeader)), /Сначала сохраните изменения/);
+});
+
+test('auto-slug hook follows title changes, stops after manual editing, and resets for another object', () => {
+    const seen = [];
+    function Probe() {
+        const [stage, setStage] = useState(0);
+        const [title, setTitle] = useState('Первый материал');
+        const [value, setValue] = useState('');
+        const [identity, setIdentity] = useState('new-1');
+        const { slug, changeSlug } = components.useAutoSlug({ title, value, onChange: setValue, identity });
+        seen.push(slug);
+        if (stage === 0) { setTitle('Второй материал'); setStage(1); }
+        if (stage === 1) { changeSlug('manual-address'); setStage(2); }
+        if (stage === 2) { setTitle('Третий материал'); setStage(3); }
+        if (stage === 3) { setIdentity('new-2'); setValue(''); setTitle('Новый объект'); setStage(4); }
+        return createElement('span', null, slug);
+    }
+    renderToString(createElement(Probe));
+    assert.deepEqual(seen, ['pervyi-material', 'vtoroi-material', 'manual-address', 'manual-address', 'novyi-obekt']);
+    function Existing() {
+        const { slug } = components.useAutoSlug({ title: 'Новое название', value: 'existing-address', enabled: false });
+        return createElement('span', null, slug);
+    }
+    assert.match(renderToString(createElement(Existing)), /existing-address/);
 });

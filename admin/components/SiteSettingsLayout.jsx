@@ -19,6 +19,8 @@ export default function SiteSettingsLayout({
     isDirty,
     saveStatus,
     onSave,
+    footerActions,
+    formId,
     children,
 }) {
     return (
@@ -31,6 +33,8 @@ export default function SiteSettingsLayout({
             isDirty={isDirty}
             saveStatus={saveStatus}
             onSave={onSave}
+            footerActions={footerActions}
+            formId={formId}
         >
             {children}
         </AdminPageShell>

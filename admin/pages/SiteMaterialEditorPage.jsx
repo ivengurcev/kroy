@@ -9,6 +9,9 @@ import MaterialEditor from '../components/MaterialEditor.jsx';
 import { materialRequestBody } from '../editor/materialRequest.mjs';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './SiteMaterialEditorPage.module.css';
+import useAutoSlug from '../editor/useAutoSlug.jsx';
+import { apiRequest } from '../editor/apiRequest.mjs';
+import { formResponseError, showFieldErrors } from '../ui/formValidation.mjs';
 
 const EMPTY_CONTENT = {
     root: {
@@ -41,8 +44,14 @@ function materialHasText(content) {
 }
 
 async function responseError(response, fallback) {
-    const result = await response.json().catch(() => ({}));
-    return result.error || `${fallback}: ${response.status}`;
+    return fallback;
+}
+
+export function MaterialActions({ materialId, dirty, saveStatus, onDelete }) {
+    return <>
+        {materialId && <Button type="button" variant="danger" onClick={onDelete} disabled={saveStatus === 'saving'}><Icon name="delete" /> Удалить</Button>}
+        <Button type="submit" form="material-form" variant="primary" disabled={!dirty || saveStatus === 'saving'}><Icon name="save" /> Сохранить</Button>
+    </>;
 }
 
 export default function SiteMaterialEditorPage() {
@@ -57,6 +66,12 @@ export default function SiteMaterialEditorPage() {
     const [saveStatus, setSaveStatus] = useState('idle');
     const revision = useRef(0);
     const skipLoadId = useRef(null);
+    const active = useRef(true);
+    useEffect(() => {
+        active.current = true;
+        return () => { active.current = false; };
+    }, []);
+    const { slug, changeSlug } = useAutoSlug({ title: material?.title || '', value: material?.slug || '', onChange: (value) => updateField('slug', value), enabled: materialId === null, identity: materialId });
 
     useEffect(() => {
         fetch('/api/site/material-sections').then((response) => response.json()).then((result) => setSections(Array.isArray(result) ? result : [])).catch(() => {});
@@ -125,27 +140,30 @@ export default function SiteMaterialEditorPage() {
         setSaveStatus((current) => current === 'saving' ? current : 'idle');
     }
 
-    async function saveMaterial(event, requestedStatus = null) {
+    async function saveMaterial(event) {
         event?.preventDefault();
-        if (!material || saveStatus === 'saving') return;
-        const nextStatus = requestedStatus || material.status;
+        const currentForm = event?.currentTarget || document.getElementById('material-form');
+        if (!material || !dirty || saveStatus === 'saving') return;
+        const nextStatus = material.status;
         if (nextStatus === 'published' && !materialHasText(material.content)) {
-            setFormError('Для публикации добавьте непустой текст материала.');
+            showFieldErrors(currentForm, { content: 'Добавьте текст материала или выберите статус «Черновик»' });
+            setSaveStatus('error');
             return;
         }
 
         const savedRevision = revision.current;
         setSaveStatus('saving');
         setFormError('');
-        const body = materialRequestBody(material, nextStatus);
+        const body = materialRequestBody({ ...material, slug }, nextStatus);
         try {
-            const response = await fetch(materialId ? `/api/site/materials/${materialId}` : '/api/site/materials', {
+            const response = await apiRequest(materialId ? `/api/site/materials/${materialId}` : '/api/site/materials', {
                 method: materialId ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-            if (!response.ok) throw new Error(await responseError(response, 'Не удалось сохранить материал'));
+            if (!response.ok) throw new Error(await formResponseError(response, currentForm, 'Не удалось сохранить материал. Проверьте поля и повторите попытку.'));
             const result = await response.json();
+            if (!active.current) return;
             setSavedMaterial(result);
             if (revision.current === savedRevision) {
                 setMaterial(result);
@@ -159,16 +177,17 @@ export default function SiteMaterialEditorPage() {
                 setMaterialId(result.id);
             }
         } catch (saveError) {
-            setFormError(saveError.message);
-            setSaveStatus('idle');
+            setFormError('Не удалось сохранить материал. Проверьте поля и повторите попытку.');
+            setSaveStatus('error');
         }
     }
 
     async function deleteCurrentMaterial() {
         if (!materialId || !window.confirm(`Удалить материал «${material?.title || ''}»?`)) return;
         try {
-            const response = await fetch(`/api/site/materials/${materialId}`, { method: 'DELETE' });
+            const response = await apiRequest(`/api/site/materials/${materialId}`, { method: 'DELETE' });
             if (!response.ok) throw new Error(await responseError(response, 'Не удалось удалить материал'));
+            if (!active.current) return;
             navigate?.('/admin/materials', { skipGuard: true });
         } catch (deleteError) {
             setFormError(deleteError.message);
@@ -189,35 +208,39 @@ export default function SiteMaterialEditorPage() {
             errorMessage={error || 'Не удалось загрузить материал.'}
             isDirty={dirty}
             saveStatus={saveStatus}
-            onSave={() => saveMaterial()}
+            onSave={() => document.getElementById('material-form')?.requestSubmit()}
+            footerActions={<MaterialActions materialId={materialId} dirty={dirty} saveStatus={saveStatus} onDelete={deleteCurrentMaterial} />}
         >
-            {material && <AdminPanel as="form" className={styles.form} onSubmit={saveMaterial}>
+            {material && <AdminPanel as="form" id="material-form" className={styles.form} onSubmit={saveMaterial}>
+                <fieldset className={styles.fields} disabled={!materialId && saveStatus === 'saving'}>
                 <div className={styles.heading}>
                     <p>{materialId ? 'Изменения сохраняются только после явного действия.' : 'Сначала сохраните черновик, чтобы открыть постоянный адрес материала.'}</p>
                 </div>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Раздел</span>
-                    <select value={material.sectionId || ''} onChange={(event) => updateField('sectionId', event.target.value)} required>
+                    <select name="sectionId" value={material.sectionId || ''} onChange={(event) => updateField('sectionId', event.target.value)} required>
                         <option value="">Выберите раздел</option>
                         {sections.map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}
                     </select>
+                </label>
+                <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Заголовок</span>
-                    <input value={material.title} onChange={(event) => updateField('title', event.target.value)} required maxLength="300" autoFocus />
+                    <input name="title" value={material.title} onChange={(event) => updateField('title', event.target.value)} required maxLength="300" autoFocus />
                 </label>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Slug</span>
-                    <input value={material.slug} onChange={(event) => updateField('slug', event.target.value)} required maxLength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
+                    <input name="slug" value={slug} onChange={(event) => changeSlug(event.target.value)} required maxLength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
                 </label>
                 <label className={`${compactStyles.field} ${compactStyles.long}`}>
                     <span>Краткое описание</span>
-                    <textarea rows="3" value={material.summary ?? ''} onChange={(event) => updateField('summary', event.target.value)} maxLength="2000" />
+                    <textarea name="summary" rows="3" value={material.summary ?? ''} onChange={(event) => updateField('summary', event.target.value)} maxLength="2000" />
                 </label>
                 <div className={`${compactStyles.field} ${compactStyles.long} ${styles.coverField}`}>
                     <span>Обложка</span>
                     <ImageField
                         label=""
+                        name="coverMediaId"
                         value={imageUrl}
-                        aspectRatio="16:9"
                         maxWidth={1600}
                         onChange={(url) => updateField('coverMediaId', mediaIdFromUrl(url))}
                     />
@@ -229,18 +252,13 @@ export default function SiteMaterialEditorPage() {
                 </div>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Статус</span>
-                    <select value={material.status} onChange={(event) => updateField('status', event.target.value)}>
+                    <select name="status" value={material.status} onChange={(event) => updateField('status', event.target.value)}>
                         <option value="draft">Черновик</option>
-                        <option value="published">Опубликована</option>
+                        <option value="published">Готов к публикации сайта</option>
                     </select>
                 </label>
+                </fieldset>
                 {formError && <p className={styles.formError} role="alert">{formError}</p>}
-                <div className={styles.actions}>
-                    {materialId && <Button type="button" variant="danger" onClick={deleteCurrentMaterial} disabled={saveStatus === 'saving'}><Icon name="delete" /> Удалить</Button>}
-                    <span className={styles.actionSpacer} />
-                    <Button type="submit" variant="secondary" disabled={saveStatus === 'saving'}><Icon name="save" /> {saveStatus === 'saving' ? 'Сохранение…' : 'Сохранить'}</Button>
-                    <Button type="button" variant="primary" disabled={saveStatus === 'saving'} onClick={() => saveMaterial(undefined, 'published')}><Icon name="publish" /> Опубликовать</Button>
-                </div>
             </AdminPanel>}
         </SiteSettingsLayout>
     );

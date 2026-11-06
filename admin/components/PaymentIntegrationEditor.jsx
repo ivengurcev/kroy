@@ -2,17 +2,18 @@ import compactStyles from '../ui/CompactForm.module.css';
 import styles from './PaymentIntegrationEditor.module.css';
 import Button from '../ui/Button.jsx';
 
-export default function PaymentIntegrationEditor({ provider, settings, disabled, onChange, onDeleteSecretKey }) {
+export default function PaymentIntegrationEditor({ provider, settings, disabled, onChange, onDeleteSecretKey, validateRequired = true }) {
     return <div className={styles.fields}>
         {Object.entries(provider.fields).map(([name, field]) => <div key={name}>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>{field.label}</span>
                 <input
+                    name={name}
                     type={field.type}
                     {...(field.type === 'checkbox' ? { checked: settings[name] === true } : { value: settings[name] ?? '' })}
                     placeholder={field.configured ? 'Ключ сохранён; оставьте поле пустым, чтобы не менять' : field.placeholder}
                     autoComplete={field.type === 'password' ? 'new-password' : undefined}
-                    required={field.required}
+                    required={validateRequired && field.required}
                     disabled={disabled}
                     onChange={(event) => onChange({ ...settings, [name]: field.type === 'checkbox' ? event.target.checked : event.target.value })}
                 />

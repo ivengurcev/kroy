@@ -5,16 +5,14 @@ import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import AdminPageHeader from './AdminPageHeader.jsx';
+import { publicationStateLabel, publicationBlocked } from '../editor/actionState.mjs';
 
 export default function AdminHeader({
     mode = 'editor',
     title = '',
-    actions,
     page = {},
     isDirty = false,
-    loadStatus = 'loading',
     saveStatus = 'idle',
-    onSave,
     onToggleSidebar,
     onToggleMobileMenu,
     sidebarCollapsed = false,
@@ -24,26 +22,12 @@ export default function AdminHeader({
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
-    const [publicationNoticeVisible, setPublicationNoticeVisible] = useState(false);
     const publishRequestRef = useRef(false);
     const publicationVersionRef = useRef(0);
-    const siteMode = mode === 'site';
     const editorMode = mode === 'editor';
     const headerTitle = title || (editorMode ? page.title : '') || 'Администрирование';
-    const isSaving = saveStatus === 'saving';
-    const saveDisabled = loadStatus !== 'success' || !isDirty || isSaving;
-    const saveLabel = loadStatus !== 'success'
-        ? 'Сохранение недоступно'
-        : isSaving
-            ? 'Сохранение…'
-            : !isDirty && saveStatus === 'success'
-                ? 'Сохранено'
-                : 'Сохранить';
-    const saveTitle = isDirty && !isSaving
-        ? 'Сохранить изменения страницы'
-        : saveLabel;
+    const blocked = publicationBlocked(isDirty, saveStatus);
     const isPublishing = publication.status === 'building' || publication.status === 'publishing';
-    const hasPublicationResult = publication.status === 'success' || publication.status === 'error';
     const publishLabel = publication.status === 'building'
         ? 'Сборка…'
         : publication.status === 'publishing'
@@ -60,7 +44,7 @@ export default function AdminHeader({
             try {
                 const response = await fetch('/api/site/publish');
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.error || 'Не удалось получить состояние публикации.');
+                if (!response.ok) throw new Error('Не удалось получить состояние публикации.');
                 if (!cancelled && version === publicationVersionRef.current) setPublication(result);
             } catch (error) {
                 if (!cancelled && version === publicationVersionRef.current) setPublication({
@@ -71,7 +55,15 @@ export default function AdminHeader({
         }
 
         loadPublicationStatus();
-        return () => { cancelled = true; };
+        window.addEventListener('kroy:saved', loadPublicationStatus);
+        window.addEventListener('focus', loadPublicationStatus);
+        const timer = window.setInterval(loadPublicationStatus, 15000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(timer);
+            window.removeEventListener('kroy:saved', loadPublicationStatus);
+            window.removeEventListener('focus', loadPublicationStatus);
+        };
     }, []);
 
     useEffect(() => {
@@ -83,7 +75,7 @@ export default function AdminHeader({
             try {
                 const response = await fetch('/api/site/publish');
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(result.error || 'Не удалось получить состояние публикации.');
+                if (!response.ok) throw new Error('Не удалось получить состояние публикации.');
                 if (version === publicationVersionRef.current) setPublication(result);
             } catch (error) {
                 if (version === publicationVersionRef.current) setPublication({
@@ -96,22 +88,6 @@ export default function AdminHeader({
         return () => window.clearInterval(timer);
     }, [isPublishing]);
 
-    useEffect(() => {
-        if (isPublishing) {
-            setPublicationNoticeVisible(true);
-            return undefined;
-        }
-
-        if (!hasPublicationResult) {
-            setPublicationNoticeVisible(false);
-            return undefined;
-        }
-
-        setPublicationNoticeVisible(true);
-        const timer = window.setTimeout(() => setPublicationNoticeVisible(false), 5000);
-        return () => window.clearTimeout(timer);
-    }, [hasPublicationResult, isPublishing, publication.status, publication.message, publication.releaseId]);
-
     function openPreview(event) {
         if (isDirty && !window.confirm('В предпросмотре будут показаны только сохранённые изменения. Продолжить?')) {
             event.preventDefault();
@@ -120,12 +96,7 @@ export default function AdminHeader({
 
     async function publishSite() {
         if (publishRequestRef.current || isPublishing) return;
-        if (
-            isDirty
-            && !window.confirm('В публикацию попадут только сохранённые изменения. Продолжить?')
-        ) {
-            return;
-        }
+        if (blocked) return;
 
         publishRequestRef.current = true;
         publicationVersionRef.current += 1;
@@ -134,7 +105,7 @@ export default function AdminHeader({
         try {
             const response = await fetch('/api/site/publish', { method: 'POST' });
             const result = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(result.error || 'Не удалось запустить публикацию.');
+            if (!response.ok) throw new Error('Не удалось запустить публикацию. Повторите попытку.');
             setPublication(result);
         } catch (error) {
             setPublication({
@@ -203,22 +174,14 @@ export default function AdminHeader({
                 </div>
 
                 <div className={styles.rightGroup}>
-                    {actions && <div className={styles.contextActions}>{actions}</div>}
-                    <Button
-                        className={`${styles.action} ${styles.saveAction} ${isSaving ? styles.savingAction : ''}`}
-                        variant="primary"
-                        aria-label={saveLabel}
-                        title={siteMode ? (isDirty && !isSaving ? 'Сохранить настройки' : saveLabel) : saveTitle}
-                        disabled={saveDisabled || !onSave}
-                        onClick={onSave}
-                    ><Icon name="save" /><span>Сохранить</span></Button>
-
+                    <span className={styles.publicationState} role="status" aria-live="polite">{publicationStateLabel(publication)}</span>
                     <Button
                         className={`${styles.action} ${styles.publishAction}`}
                         variant="outline"
                         aria-label={publishLabel}
-                        title={isPublishing ? publishLabel : 'Опубликовать сайт'}
-                        disabled={isPublishing}
+                        title={blocked ? 'Сначала сохраните изменения' : isPublishing ? publishLabel : 'Опубликовать сайт'}
+                        disabled={isPublishing || blocked}
+                        aria-describedby={blocked ? 'publication-blocked' : undefined}
                         onClick={publishSite}
                     ><Icon name="publish" /><span>{publishLabel}</span></Button>
                     <a
@@ -247,19 +210,8 @@ export default function AdminHeader({
                     </Button>
                 </div>
 
-                {(editorMode || siteMode) && saveStatus === 'error' && (
-                    <span className={styles.saveError} role="alert">Не удалось сохранить {siteMode ? 'оформление' : 'страницу'}.</span>
-                )}
-                {(isPublishing || publicationNoticeVisible) && (
-                    <span
-                        className={`${styles.publishStatus} ${publication.status === 'error' ? styles.publishError : ''}`}
-                        role={publication.status === 'error' ? 'alert' : 'status'}
-                    >
-                        {publication.status === 'success'
-                            ? (publication.releaseId ? `Опубликован релиз ${publication.releaseId}.` : publication.message)
-                            : publication.message}
-                    </span>
-                )}
+                {blocked && <span id="publication-blocked" className={styles.publishStatus}>Сначала сохраните изменения</span>}
+                {publication.status === 'error' && <span className={`${styles.publishStatus} ${styles.publishError}`} role="alert">Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.</span>}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>
                 )}

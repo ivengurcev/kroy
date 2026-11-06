@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../../db/client.mjs';
 import getHostname from './getHostname.mjs';
+import { getSitePublicationState } from './sitePublicationState.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const ACTIVE_STATUSES = new Set(['building', 'publishing']);
@@ -89,8 +90,9 @@ async function runPublication(site, job) {
         job.message = 'Сайт опубликован.';
         job.releaseId = output.match(/Опубликован релиз (\d{17})/)?.[1];
     } catch (error) {
+        console.error('Site publication failed', error);
         job.status = 'error';
-        job.message = error.message || 'Не удалось опубликовать сайт.';
+        job.message = 'Не удалось опубликовать сайт. Повторите попытку.';
     }
 
     job.finishedAt = new Date().toISOString();
@@ -101,7 +103,7 @@ export async function getSitePublishStatus(c) {
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        return c.json(snapshot(publicationJobs.get(site.id)));
+        return c.json({ ...snapshot(publicationJobs.get(site.id)), ...await getSitePublicationState(site) }, 200, { 'Cache-Control': 'no-store' });
     } catch (error) {
         console.error('Failed to get site publication status', error);
         return c.json({ error: 'Internal server error' }, 500);

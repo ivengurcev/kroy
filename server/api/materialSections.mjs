@@ -38,7 +38,11 @@ async function readBody(c) {
 export async function getSiteMaterialSections(c) {
     try {
         const site = await getCurrentSite(c);
-        return site ? c.json(await getMaterialSections(site.id)) : c.json({ error: 'Site not found' }, 404);
+        if (!site) return c.json({ error: 'Site not found' }, 404);
+        const sections = await getMaterialSections(site.id);
+        return c.json(await Promise.all(sections.map(async (section) => ({
+            ...section, canDelete: !await hasMaterialSectionReferences(site.id, section.id),
+        }))));
     } catch (error) {
         console.error('Failed to get material sections', error);
         return c.json({ error: 'Internal server error' }, 500);
@@ -47,13 +51,13 @@ export async function getSiteMaterialSections(c) {
 
 export async function postSiteMaterialSection(c) {
     const section = normalizeMaterialSectionInput(await readBody(c));
-    if (!section) return c.json({ error: 'Invalid material section' }, 400);
+    if (!section) return c.json({ error: 'Проверьте название раздела', fields: { name: 'Укажите название не длиннее 200 символов' } }, 400);
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        return c.json(await createMaterialSection(site.id, section), 201);
+        return c.json({ ...await createMaterialSection(site.id, section), canDelete: true }, 201);
     } catch (error) {
-        if (error.code === '23505') return c.json({ error: 'Material section slug already exists' }, 409);
+        if (error.code === '23505') return c.json({ error: 'Такой адрес уже используется', fields: { name: 'Раздел с таким адресом уже существует. Укажите другое название' } }, 409);
         console.error('Failed to create material section', error);
         return c.json({ error: 'Internal server error' }, 500);
     }
@@ -63,14 +67,14 @@ export async function patchSiteMaterialSection(c) {
     const id = c.req.param('id');
     const changes = normalizeMaterialSectionInput(await readBody(c), { partial: true });
     if (!isUuid(id)) return c.json({ error: 'Invalid UUID' }, 400);
-    if (!changes) return c.json({ error: 'Invalid material section' }, 400);
+    if (!changes) return c.json({ error: 'Проверьте название раздела', fields: { name: 'Укажите название не длиннее 200 символов' } }, 400);
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         const updated = await updateMaterialSection(site.id, id, changes);
-        return updated ? c.json(updated) : c.json({ error: 'Material section not found' }, 404);
+        return updated ? c.json({ ...updated, canDelete: !await hasMaterialSectionReferences(site.id, id) }) : c.json({ error: 'Material section not found' }, 404);
     } catch (error) {
-        if (error.code === '23505') return c.json({ error: 'Material section slug already exists' }, 409);
+        if (error.code === '23505') return c.json({ error: 'Такой адрес уже используется', fields: { name: 'Раздел с таким адресом уже существует. Укажите другое название' } }, 409);
         console.error('Failed to update material section', error);
         return c.json({ error: 'Internal server error' }, 500);
     }
