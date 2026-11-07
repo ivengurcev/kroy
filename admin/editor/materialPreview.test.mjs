@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { loadMaterialPreview } from './materialPreview.mjs';
+import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
 
 const sections = [{ id: 'section-a', name: 'Cases' }];
 const material = { id: 'material-a', sectionId: 'section-a', status: 'published', slug: 'one', title: 'One', summary: '', content: null, coverMediaId: 'cover' };
@@ -39,4 +39,21 @@ test('ordinary-page preview exposes all sections to the dynamic picker', async (
     const preview = await loadMaterialPreview({ type: 'standard' });
     assert.equal(preview.materials['section-a'].items.length, 1);
     assert.equal(preview.status, 'idle');
+});
+
+test('ordinary page preview contains published materials for the selected section', async (t) => {
+    mockCommon(t, [], [material, { ...material, id: 'draft', status: 'draft' }]);
+    const page = { type: 'standard', materialSectionId: 'section-a' };
+    assert.equal(shouldLoadMaterialPreview(page, 'success'), true);
+    const preview = await loadMaterialPreview(page);
+    assert.deepEqual(preview.materials['section-a'].items.map(({ slug }) => slug), ['one']);
+});
+
+test('ordinary pages load material preview only after the page is ready', () => {
+    const page = { type: 'standard' };
+    assert.equal(shouldLoadMaterialPreview(page, 'loading'), false);
+    assert.equal(shouldLoadMaterialPreview(page, 'success'), true);
+    assert.equal(shouldLoadMaterialPreview({ type: 'list', dataSource: 'products' }, 'success'), false);
+    assert.equal(shouldLoadMaterialPreview({ type: 'list', dataSource: 'materials' }, 'success'), true);
+    assert.equal(shouldLoadMaterialPreview({ type: 'detail' }, 'success'), true);
 });

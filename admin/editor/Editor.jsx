@@ -10,7 +10,7 @@ import widgetMetadata from '../../dist/kroy/widgets.json';
 import AdminShell from '../components/AdminShell.jsx';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
-import { loadMaterialPreview } from './materialPreview.mjs';
+import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
 import { apiRequest } from './apiRequest.mjs';
 
 export default function Editor() {
@@ -99,7 +99,7 @@ export default function Editor() {
     }, []);
 
     useEffect(() => {
-        if (page.type !== 'detail' && !(page.type === 'list' && page.dataSource === 'materials')) {
+        if (!shouldLoadMaterialPreview(page, loadStatus)) {
             setPreview({ status: 'idle', record: null });
             return undefined;
         }
@@ -114,7 +114,7 @@ export default function Editor() {
                 if (error.name !== 'AbortError') setPreview({ status: 'error', record: null });
             });
         return () => controller.abort();
-    }, [page.id, page.path, page.type, page.dataSource, page.detailParentId]);
+    }, [loadStatus, page.id, page.path, page.type, page.dataSource, page.detailParentId]);
 
     const pageContent = content.map(({ part, props, view }) => ({
         part, props, view: { name: view.name, props: view.props },

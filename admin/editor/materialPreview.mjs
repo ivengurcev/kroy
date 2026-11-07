@@ -1,5 +1,11 @@
 import { createMaterialListData } from '../../site/runtime/materialListData.mjs';
 
+export function shouldLoadMaterialPreview(page, loadStatus) {
+    if (loadStatus !== 'success') return false;
+    return page.type === 'standard' || page.type === 'detail'
+        || (page.type === 'list' && page.dataSource === 'materials');
+}
+
 export async function loadMaterialPreview(page, signal) {
     const [sectionsResponse, materialsResponse, pagesResponse] = await Promise.all([
         fetch('/api/site/material-sections', { signal }),
