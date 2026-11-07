@@ -5,6 +5,7 @@ export default function AdminDocument({ children, scripts, styles, title, apiDat
         <html lang="ru">
             <head>
                 <meta charSet="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
                 <link rel="icon" href="/static/favicon.ico" sizes="any" />
                 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />

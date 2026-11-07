@@ -4,7 +4,7 @@
 .card { overflow: hidden; border: 1px solid var(--site-color-border); border-radius: var(--site-radius-lg); background: var(--site-color-surface); }
 .link { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
 .link:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: -2px; }
-.cover { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.cover { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--site-color-surface-soft); }
 .body { display: flex; flex: 1; flex-direction: column; align-items: start; gap: var(--site-space-4); padding: var(--site-space-6); }
 .title { margin: 0; font: 400 clamp(24px, 3vw, 32px)/1.2 var(--site-font-heading); overflow-wrap: anywhere; }
 .summary, .empty { margin: 0; color: var(--site-color-text-secondary); font: 400 var(--site-font-size-base)/var(--site-line-height) var(--site-font-body); }
