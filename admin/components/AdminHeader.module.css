@@ -31,8 +31,7 @@
 .iconAction:disabled, .iconAction[aria-disabled="true"] { color: #98a19d; background: #f4f6f4; cursor: not-allowed; }
 .saveError { position: absolute; z-index: 60; top: calc(100% + 8px); right: 20px; padding: 8px 12px; border: 1px solid var(--color-error-text); border-radius: 8px; color: var(--color-error-text); font-size: 13px; white-space: nowrap; background: var(--color-error-soft); box-shadow: var(--shadow-panel); }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.publishStatus { flex-basis: 100%; margin-bottom: 8px; padding: 6px 12px; border: 1px solid #176e6b; border-radius: 8px; color: #27332f; font-size: 13px; text-align: center; background: #e9f2f0; }
-.publishError { border-color: var(--color-error-text); color: var(--color-error-text); background: var(--color-error-soft); }
+.publishError { position: absolute; z-index: 60; top: calc(100% + 8px); right: 20px; box-sizing: border-box; max-width: min(360px, calc(100vw - 20px)); padding: 8px 12px; border: 1px solid var(--color-error-text); border-radius: 8px; color: var(--color-error-text); font-size: 13px; background: var(--color-error-soft); box-shadow: var(--shadow-panel); }
 
 @media (max-width: 1100px) {
     .headerBar { gap: 14px; padding-inline: 20px; }

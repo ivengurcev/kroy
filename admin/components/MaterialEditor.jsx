@@ -164,11 +164,13 @@ export default function MaterialEditor({ value, onChange, disabled = false }) {
             <LexicalComposer initialConfig={initialConfig}>
                 <EditablePlugin disabled={disabled} />
                 <ToolbarPlugin />
-                <RichTextPlugin
-                    contentEditable={<ContentEditable name="content" className={styles.contentEditable} aria-label="Текст материала" />}
-                    placeholder={<div className={styles.placeholderText}>Начните писать материал…</div>}
-                    ErrorBoundary={LexicalErrorBoundary}
-                />
+                <div className={styles.editableArea}>
+                    <RichTextPlugin
+                        contentEditable={<ContentEditable name="content" className={styles.contentEditable} aria-label="Текст материала" />}
+                        placeholder={<div className={styles.placeholderText}>Начните писать материал…</div>}
+                        ErrorBoundary={LexicalErrorBoundary}
+                    />
+                </div>
                 <HistoryPlugin />
                 <ListPlugin />
                 <LinkPlugin />

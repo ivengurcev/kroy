@@ -8,8 +8,13 @@ export function publicationStateLabel(publication) {
     if (['building', 'publishing'].includes(publication.status)) return 'Публикация...';
     if (publication.status === 'error') return 'Ошибка публикации';
     if (publication.hasChanges === true) return 'Есть неопубликованные изменения';
-    if (publication.hasChanges === false) return 'Сайт опубликован';
+    if (publication.hasChanges === false) return publication.releaseId ? `Опубликован релиз ${publication.releaseId}` : 'Сайт опубликован';
     return 'Проверка публикации...';
+}
+
+export function createPublicationRequestTracker() {
+    let version = 0;
+    return { next: () => ++version, isCurrent: (request) => request === version };
 }
 
 export function publicationBlocked(isDirty, saveStatus) {

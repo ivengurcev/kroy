@@ -5,7 +5,7 @@ import OysiteMark from './OysiteMark.svg';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import AdminPageHeader from './AdminPageHeader.jsx';
-import { publicationStateLabel, publicationBlocked } from '../editor/actionState.mjs';
+import { createPublicationRequestTracker, publicationStateLabel, publicationBlocked } from '../editor/actionState.mjs';
 
 export default function AdminHeader({
     mode = 'editor',
@@ -24,7 +24,8 @@ export default function AdminHeader({
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
     const publishRequestRef = useRef(false);
-    const publicationVersionRef = useRef(0);
+    const publicationRequests = useRef(null);
+    if (!publicationRequests.current) publicationRequests.current = createPublicationRequestTracker();
     const editorMode = mode === 'editor';
     const headerTitle = title || (editorMode ? page.title : '') || 'Администрирование';
     const blocked = publicationBlocked(isDirty, saveStatus);
@@ -40,15 +41,16 @@ export default function AdminHeader({
         let cancelled = false;
 
         async function loadPublicationStatus() {
-            const version = publicationVersionRef.current;
+            if (publishRequestRef.current) return;
+            const version = publicationRequests.current.next();
 
             try {
-                const response = await fetch('/api/site/publish');
+                const response = await fetch('/api/site/publish', { cache: 'no-store' });
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error('Не удалось получить состояние публикации.');
-                if (!cancelled && version === publicationVersionRef.current) setPublication(result);
+                if (!cancelled && publicationRequests.current.isCurrent(version)) setPublication(result);
             } catch (error) {
-                if (!cancelled && version === publicationVersionRef.current) setPublication({
+                if (!cancelled && publicationRequests.current.isCurrent(version)) setPublication({
                     status: 'error',
                     message: error.message || 'Не удалось получить состояние публикации.',
                 });
@@ -69,24 +71,32 @@ export default function AdminHeader({
 
     useEffect(() => {
         if (!isPublishing) return undefined;
-
-        const timer = window.setInterval(async () => {
-            const version = publicationVersionRef.current;
+        let cancelled = false;
+        let timer;
+        async function poll() {
+            if (publishRequestRef.current) {
+                if (!cancelled) timer = window.setTimeout(poll, 1000);
+                return;
+            }
+            const version = publicationRequests.current.next();
 
             try {
-                const response = await fetch('/api/site/publish');
+                const response = await fetch('/api/site/publish', { cache: 'no-store' });
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error('Не удалось получить состояние публикации.');
-                if (version === publicationVersionRef.current) setPublication(result);
+                if (!cancelled && publicationRequests.current.isCurrent(version)) setPublication(result);
             } catch (error) {
-                if (version === publicationVersionRef.current) setPublication({
+                if (!cancelled && publicationRequests.current.isCurrent(version)) setPublication({
                     status: 'error',
                     message: error.message || 'Не удалось получить состояние публикации.',
                 });
+            } finally {
+                if (!cancelled) timer = window.setTimeout(poll, 1000);
             }
-        }, 1000);
+        }
+        timer = window.setTimeout(poll, 1000);
 
-        return () => window.clearInterval(timer);
+        return () => { cancelled = true; window.clearTimeout(timer); };
     }, [isPublishing]);
 
     function openPreview(event) {
@@ -100,7 +110,7 @@ export default function AdminHeader({
         if (blocked) return;
 
         publishRequestRef.current = true;
-        publicationVersionRef.current += 1;
+        publicationRequests.current.next();
         setPublication({ status: 'building', message: 'Запуск публикации…' });
 
         try {
@@ -212,7 +222,7 @@ export default function AdminHeader({
                 </div>
 
                 {blocked && <span id="publication-blocked" className={styles.visuallyHidden}>Сначала сохраните изменения</span>}
-                {publication.status === 'error' && <span className={`${styles.publishStatus} ${styles.publishError}`} role="alert">Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.</span>}
+                {publication.status === 'error' && <span className={styles.publishError} role="alert">Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.</span>}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>
                 )}

@@ -103,7 +103,13 @@ export async function getSitePublishStatus(c) {
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        return c.json({ ...snapshot(publicationJobs.get(site.id)), ...await getSitePublicationState(site) }, 200, { 'Cache-Control': 'no-store' });
+        const before = snapshot(publicationJobs.get(site.id));
+        let state = await getSitePublicationState(site);
+        if (ACTIVE_STATUSES.has(before.status) && !ACTIVE_STATUSES.has(snapshot(publicationJobs.get(site.id)).status)) {
+            state = await getSitePublicationState(site);
+        }
+        const { releaseId: _jobReleaseId, ...job } = snapshot(publicationJobs.get(site.id));
+        return c.json({ ...job, ...state }, 200, { 'Cache-Control': 'no-store' });
     } catch (error) {
         console.error('Failed to get site publication status', error);
         return c.json({ error: 'Internal server error' }, 500);

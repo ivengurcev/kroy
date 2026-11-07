@@ -3,7 +3,7 @@ import test from 'node:test';
 import { generatedSlug } from './autoSlug.mjs';
 import { isValidMaterialSlug, materialFieldErrors } from '../../shared/materialFields.mjs';
 import { fieldValidationMessage, formResponseError } from '../ui/formValidation.mjs';
-import { formStateLabel, publicationStateLabel, publicationBlocked } from './actionState.mjs';
+import { createPublicationRequestTracker, formStateLabel, publicationStateLabel, publicationBlocked } from './actionState.mjs';
 import { apiRequest } from './apiRequest.mjs';
 
 test('generated slug transliterates, strips slash and punctuation, and fits API limits', () => {
@@ -73,9 +73,23 @@ test('saving a form and publishing a site have independent state transitions', (
     assert.equal(publicationStateLabel({ status: 'building' }), 'Публикация...');
     assert.equal(publicationStateLabel({ status: 'publishing' }), 'Публикация...');
     assert.equal(publicationStateLabel({ status: 'success', hasChanges: false }), 'Сайт опубликован');
+    assert.equal(publicationStateLabel({ status: 'success', hasChanges: false, releaseId: '20261106000000000' }), 'Опубликован релиз 20261106000000000');
+    assert.equal(publicationStateLabel({ status: 'idle', hasChanges: false, releaseId: '20261106000000000' }), 'Опубликован релиз 20261106000000000');
+    assert.equal(publicationStateLabel({ status: 'success', hasChanges: true, releaseId: '20261106000000000' }), 'Есть неопубликованные изменения');
     assert.equal(publicationStateLabel({ status: 'error', hasChanges: true }), 'Ошибка публикации');
     assert.equal(publicationStateLabel({ status: 'idle' }), 'Проверка публикации...');
     assert.equal(publicationBlocked(true, 'idle'), true);
     assert.equal(publicationBlocked(false, 'saving'), true);
     assert.equal(publicationBlocked(false, 'success'), false);
+});
+
+test('a later publication status request invalidates older responses and errors', () => {
+    const tracker = createPublicationRequestTracker();
+    const oldRequest = tracker.next();
+    const recentRequest = tracker.next();
+    assert.equal(tracker.isCurrent(recentRequest), true);
+    assert.equal(tracker.isCurrent(oldRequest), false);
+    const publishStart = tracker.next();
+    assert.equal(tracker.isCurrent(recentRequest), false);
+    assert.equal(tracker.isCurrent(publishStart), true);
 });

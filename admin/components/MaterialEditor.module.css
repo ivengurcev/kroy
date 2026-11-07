@@ -28,6 +28,8 @@
 .toolbarGroup:last-child { padding-right: 0; border-right: 0; }
 .toolbarButton { min-width: 36px; padding-inline: var(--space-2); }
 
+.editableArea { position: relative; }
+
 .contentEditable {
     min-height: 360px;
     padding: var(--space-5);
@@ -52,6 +54,8 @@
 
 .placeholderText {
     position: absolute;
+    top: 0;
+    left: 0;
     padding: var(--space-5);
     pointer-events: none;
 }
