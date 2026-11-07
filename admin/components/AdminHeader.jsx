@@ -23,6 +23,9 @@ export default function AdminHeader({
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
+    const [publicationNotice, setPublicationNotice] = useState('');
+    const [publicationErrorDismissed, setPublicationErrorDismissed] = useState(false);
+    const previousPublicationStatus = useRef('idle');
     const publishRequestRef = useRef(false);
     const publicationRequests = useRef(null);
     if (!publicationRequests.current) publicationRequests.current = createPublicationRequestTracker();
@@ -98,6 +101,23 @@ export default function AdminHeader({
 
         return () => { cancelled = true; window.clearTimeout(timer); };
     }, [isPublishing]);
+
+    useEffect(() => {
+        const previous = previousPublicationStatus.current;
+        previousPublicationStatus.current = publication.status;
+        if (previous !== publication.status && publication.status === 'error') setPublicationErrorDismissed(false);
+        if ((previous === 'building' || previous === 'publishing') && publication.status === 'success') {
+            setPublicationNotice(publication.releaseId ? `Опубликован релиз ${publication.releaseId}` : 'Сайт опубликован');
+        } else if (publication.status === 'building' || publication.status === 'publishing' || publication.status === 'error') {
+            setPublicationNotice('');
+        }
+    }, [publication.status, publication.releaseId]);
+
+    useEffect(() => {
+        if (!publicationNotice) return undefined;
+        const timer = window.setTimeout(() => setPublicationNotice(''), 6000);
+        return () => window.clearTimeout(timer);
+    }, [publicationNotice]);
 
     function openPreview(event) {
         if (isDirty && !window.confirm('В предпросмотре будут показаны только сохранённые изменения. Продолжить?')) {
@@ -181,7 +201,7 @@ export default function AdminHeader({
                             else onToggleSidebar?.();
                         }}
                     ><Icon name="menu" size={23} /></Button>
-                    {!list && <AdminPageHeader title={headerTitle} />}
+                    <div className={`${styles.pageTitle} ${list ? styles.listTitle : ''}`}><AdminPageHeader title={headerTitle} /></div>
                 </div>
 
                 <div className={styles.rightGroup}>
@@ -222,7 +242,13 @@ export default function AdminHeader({
                 </div>
 
                 {blocked && <span id="publication-blocked" className={styles.visuallyHidden}>Сначала сохраните изменения</span>}
-                {publication.status === 'error' && <span className={styles.publishError} role="alert">Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.</span>}
+                {publicationNotice && <span className={styles.publishNotice} role="status">{publicationNotice}</span>}
+                {publication.status === 'error' && !publicationErrorDismissed && (
+                    <div className={styles.publishError}>
+                        <span role="alert">{publication.message || 'Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.'}</span>
+                        <button className={styles.dismissError} type="button" aria-label="Закрыть сообщение об ошибке" onClick={() => setPublicationErrorDismissed(true)}>×</button>
+                    </div>
+                )}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>
                 )}
