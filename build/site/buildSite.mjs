@@ -283,7 +283,6 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
-    await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await generateSiteParts(renderPages, site.slug);
     const pageRegistry = createClientPageRegistry(renderPages);
     await writeFile(
@@ -350,6 +349,7 @@ try {
     );
 
     await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);
+    await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
     await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
     for (const review of publishedReviews) {
