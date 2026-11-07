@@ -3,7 +3,8 @@ import styles from './PageList.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import PageDetailsForm from './PageDetailsForm.jsx';
-import AdminPanel from '../ui/AdminPanel.jsx';
+import Table from '../ui/Table.jsx';
+import listStyles from './AdminList.module.css';
 
 function pathDepth(path) {
     return path.split('/').filter(Boolean).length;
@@ -69,27 +70,21 @@ export default function PageList({
             : '');
 
     return (
-        <AdminPanel className={styles.pageList} noPadding>
+        <div className={styles.pageList}>
             {errorMessage && (
                 <div className={styles.errorArea} role="alert">{errorMessage}</div>
             )}
 
-            {sortedPages.length === 0 ? (
-                <p className={styles.emptyState}>
-                    {mode === 'trash' ? 'Корзина пуста.' : 'У сайта пока нет страниц.'}
-                </p>
-            ) : (
-                <>
-                    <div className={styles.listHeader} aria-hidden="true">
-                        <span>Путь</span><span>Название</span><span>Действия</span>
-                    </div>
-                    <ul className={styles.list}>
+            <Table className={styles.table} aria-label={mode === 'trash' ? 'Корзина страниц' : 'Страницы'}>
+                    <thead><tr><th>Путь</th><th>Название</th><th>Действия</th></tr></thead>
+                    <tbody>
                         {sortedPages.map((page) => {
                             const isEditing = editingPage?.id === page.id;
 
                             return (
-                                <li className={`${styles.row} ${page.type === 'list' ? styles.listPageRow : ''}`} key={page.id}>
+                                <tr key={page.id}>
                                     {isEditing ? (
+                                        <td colSpan="3">
                                         <PageDetailsForm
                                             key={page.id}
                                             className={styles.rowContents}
@@ -103,22 +98,27 @@ export default function PageList({
                                             onSaved={finishEditing}
                                             onCancel={cancelEditing}
                                         />
+                                        </td>
                                     ) : (
                                         <>
-                                            <span className={styles.path} title={page.path}>{page.path}</span>
+                                            <td><span className={styles.path} title={page.path}>{page.path}</span></td>
+                                            <td>
                                             {mode === 'active' ? (
                                                 <a className={styles.title} href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`} title={page.title}>{page.title}</a>
                                             ) : (
                                                 <span className={styles.title} title={page.title}>{page.title}</span>
                                             )}
-                                            <div className={`${styles.actions} ${mode === 'trash' ? styles.singleAction : ''}`}>
+                                            </td>
+                                            <td><div className={listStyles.actions}>
                                                 {mode === 'active' ? (
                                                     <>
                                                         {page.type === 'list' && <Button
+                                                            variant="listIcon"
                                                             title={page.detailTemplateId ? 'Открыть шаблон детального просмотра' : 'Создать шаблон детального просмотра'}
+                                                            aria-label={`${page.detailTemplateId ? 'Открыть' : 'Создать'} шаблон страницы «${page.title}»`}
                                                             onClick={() => onCreateDetailTemplate(page)}
                                                         >
-                                                            <Icon name="add" /> {page.detailTemplateId ? 'Шаблон' : 'Создать шаблон'}
+                                                            <Icon name="pages" size={18} />
                                                         </Button>}
                                                         <Button
                                                             ref={(node) => {
@@ -126,31 +126,33 @@ export default function PageList({
                                                                 else editButtons.current.delete(page.id);
                                                             }}
                                                             disabled={Boolean(editingPage && editingPage.id !== page.id && editDirty)}
+                                                            variant="listIcon"
                                                             title="Изменить название и путь страницы"
+                                                            aria-label={`Изменить название и путь страницы «${page.title}»`}
                                                             onClick={() => startEditing(page)}
                                                         >
-                                                            <Icon name="edit" /> Изменить
+                                                            <Icon name="edit" size={18} />
                                                         </Button>
-                                                        {page.path === '/' ? <span /> : (
-                                                            <Button title="Удалить страницу в корзину" disabled={busyPageId !== null} onClick={() => onDelete(page)}>
-                                                                <Icon name="delete" /> {busyPageId === page.id ? 'Удаление…' : 'Удалить'}
+                                                        {page.path !== '/' && (
+                                                            <Button variant="listIcon" title="Удалить страницу в корзину" aria-label={`Удалить страницу «${page.title}»`} disabled={busyPageId !== null} onClick={() => onDelete(page)}>
+                                                                <Icon name="delete" size={18} />
                                                             </Button>
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <Button title="Восстановить страницу" disabled={busyPageId !== null} onClick={() => onRestore(page.id)}>
-                                                        <Icon name="restore" /> {busyPageId === page.id ? 'Восстановление…' : 'Восстановить'}
+                                                    <Button variant="listIcon" title="Восстановить страницу" aria-label={`Восстановить страницу «${page.title}»`} disabled={busyPageId !== null} onClick={() => onRestore(page.id)}>
+                                                        <Icon name="restore" size={18} />
                                                     </Button>
                                                 )}
-                                            </div>
+                                            </div></td>
                                         </>
                                     )}
-                                </li>
+                                </tr>
                             );
                         })}
-                    </ul>
-                </>
-            )}
-        </AdminPanel>
+                        {!sortedPages.length && <tr><td className={listStyles.state} colSpan="3">{mode === 'trash' ? 'Корзина пуста.' : 'У сайта пока нет страниц.'}</td></tr>}
+                    </tbody>
+            </Table>
+        </div>
     );
 }

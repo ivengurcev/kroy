@@ -211,7 +211,7 @@ export default function AdminHeader({
                     </Button>
                 </div>
 
-                {blocked && <span id="publication-blocked" className={styles.publishStatus}>Сначала сохраните изменения</span>}
+                {blocked && <span id="publication-blocked" className={styles.visuallyHidden}>Сначала сохраните изменения</span>}
                 {publication.status === 'error' && <span className={`${styles.publishStatus} ${styles.publishError}`} role="alert">Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.</span>}
                 {logoutError && (
                     <span className={styles.saveError} role="alert">{logoutError}</span>

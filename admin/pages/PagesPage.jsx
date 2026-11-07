@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './PagesPage.module.css';
 import PageList from '../components/PageList.jsx';
 import AdminPageShell from '../components/AdminPageShell.jsx';
+import { AdminListToolbar } from '../components/AdminList.jsx';
 import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -164,22 +165,23 @@ export default function PagesPage() {
 
     const actions = useMemo(() => (
         <>
-            <Button variant="primary" aria-label="Создать новую страницу" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
+            <a href="/admin/pages/trash" aria-label="Корзина страниц" title="Открыть корзину страниц"><Icon name="trash" /> <span>Корзина</span></a>
+            <Button variant="primary" size="compact" aria-label="Создать новую страницу" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
                 <Icon name="add" /> <span>Создать страницу</span>
             </Button>
-            <a href="/admin/pages/trash" aria-label="Корзина страниц" title="Открыть корзину страниц"><Icon name="trash" /> <span>Корзина</span></a>
         </>
     ), [showForm]);
 
     return (
         <AdminPageShell
             title="Карта страниц"
-            actions={actions}
+            list
             isDirty={showForm || editingDirty}
             status={status}
             errorMessage="Не удалось загрузить страницы."
         >
             <div className={styles.content}>
+                <AdminListToolbar actions={<div className={styles.listActions}>{actions}</div>} />
                 {showForm && (
                     <AdminPanel as="form" className={styles.createForm} onSubmit={createPage}>
                         <label className={`${compactStyles.field} ${compactStyles.compact}`}>

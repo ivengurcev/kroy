@@ -213,7 +213,7 @@ export default function SiteReviewsPage() {
                                     <td><strong>{review.authorName}</strong>{review.authorSubtitle && <small>{review.authorSubtitle}</small>}</td>
                                     <td className={styles.reviewText} title={review.text}>{review.text}</td>
                                     <td><StatusBadge tone={review.status === 'rejected' ? 'error' : review.status === 'pending' ? 'warning' : 'success'}>{STATUS_LABELS[review.status] || review.status}</StatusBadge></td>
-                                    <td className={styles.actions}><Button variant="compact" title="Редактировать отзыв" onClick={() => openEdit(review)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button><Button variant="compact" title="Удалить отзыв" onClick={() => deleteReview(review)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button></td>
+                                    <td><div className={listStyles.actions}><Button variant="listIcon" title="Редактировать отзыв" aria-label={`Редактировать отзыв автора «${review.authorName}»`} onClick={() => openEdit(review)} disabled={Boolean(deletingId)}><Icon name="edit" size={18} /></Button><Button variant="listIcon" title="Удалить отзыв" aria-label={`Удалить отзыв автора «${review.authorName}»`} onClick={() => deleteReview(review)} disabled={Boolean(deletingId)}><Icon name="delete" size={18} /></Button></div></td>
                                 </tr>)}
                             {!visibleReviews.length && <tr><td className={listStyles.state} colSpan="5">{search || filter !== 'all' ? 'По заданным условиям ничего не найдено.' : 'Отзывов пока нет.'}</td></tr>}
                             </tbody>

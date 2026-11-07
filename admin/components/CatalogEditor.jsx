@@ -15,6 +15,9 @@ const UNCATEGORIZED = '__uncategorized__';
 
 function emptyProduct(categoryId, sortOrder) { return { categoryId, name: '', description: '', mediaId: null, price: '0.00', type: 'service', sortOrder, status: 'published' }; }
 function emptyCategory(sortOrder) { return { name: '', sortOrder }; }
+export function catalogProductsCanLoad(categories, activeCategoryId) {
+    return categories.length > 0 || activeCategoryId !== null;
+}
 
 export default function CatalogEditor() {
     const [activeCategoryId, setActiveCategoryId] = useState(null);
@@ -64,7 +67,7 @@ export default function CatalogEditor() {
     const offset = page * 50;
 
     useEffect(() => {
-        if (!categories.length && activeCategoryId === null) return;
+        if (!catalogProductsCanLoad(categories, activeCategoryId)) return;
         const controller = new AbortController();
         const query = new URLSearchParams({ categoryId: uncategorized ? 'null' : selectedCategoryId, search, type: typeFilter, status: filter, limit: '50', offset: String(offset) });
         setListStatus('loading'); setListError('');
@@ -75,7 +78,7 @@ export default function CatalogEditor() {
         }).then((result) => { setProducts(result.products); setTotal(result.total); setListStatus('success'); })
             .catch((cause) => { if (cause.name !== 'AbortError') { setListError(cause.message); setListStatus('error'); } });
         return () => controller.abort();
-    }, [categories.length, selectedCategoryId, uncategorized, search, typeFilter, filter, offset, listRevision]);
+    }, [categories.length, activeCategoryId, selectedCategoryId, uncategorized, search, typeFilter, filter, offset, listRevision]);
 
     function changeQuery(change) { setPage(0); change(); }
     function selectCategory(categoryId) { setPage(0); setActiveCategoryId(categoryId); }
@@ -126,7 +129,9 @@ export default function CatalogEditor() {
                 });
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(result.error || 'Не удалось сохранить раздел.');
-                setCategories((current) => dialog.mode === 'create' ? [...current, result] : current.map((item) => item.id === result.id ? result : item));
+                setCategories((current) => dialog.mode === 'create'
+                    ? [...current, result]
+                    : current.map((item) => item.id === result.id ? { ...item, ...result, productCount: item.productCount } : item));
                 setActiveCategoryId(result.id);
                 setPage(0);
             } else {
@@ -198,9 +203,9 @@ export default function CatalogEditor() {
                             <span title={category.name}>{category.name || 'Без названия'}</span>
                             <small>{category.productCount || 0}</small>
                         </button>
-                        <div className={styles.categoryActions}>
-                            <Button variant="iconCompact" title="Редактировать раздел" aria-label={`Редактировать раздел «${category.name}»`} onClick={() => openCategory(category)}><Icon name="edit" size={18} /></Button>
-                            <Button variant="iconCompact" title="Удалить раздел" aria-label={`Удалить раздел «${category.name}»`} onClick={() => deleteCategory(category)}><Icon name="delete" size={18} /></Button>
+                        <div className={listStyles.actions}>
+                            <Button variant="listIcon" title="Редактировать раздел" aria-label={`Редактировать раздел «${category.name}»`} onClick={() => openCategory(category)}><Icon name="edit" size={18} /></Button>
+                            <Button variant="listIcon" title="Удалить раздел" aria-label={`Удалить раздел «${category.name}»`} onClick={() => deleteCategory(category)}><Icon name="delete" size={18} /></Button>
                         </div>
                     </div>)}
                     <div className={`${styles.categoryRow} ${uncategorized ? styles.categoryActive : ''}`}>
@@ -241,9 +246,10 @@ export default function CatalogEditor() {
                                 <td className={styles.desktopMeta}>{product.type === 'goods' ? 'Товар' : 'Услуга'}</td>
                                 <td className={styles.desktopMeta}>{product.price} ₽</td>
                                 <td className={styles.desktopMeta}><StatusBadge tone={product.status === 'hidden' ? 'warning' : 'success'}>{product.status === 'hidden' ? 'Скрыт' : 'Опубликован'}</StatusBadge></td>
-                                <td className={styles.productActions}>
-                                    <Button variant="iconCompact" title="Редактировать товар" aria-label={`Редактировать «${product.name}»`} onClick={() => openProduct(product)}><Icon name="edit" size={18} /></Button>
-                                    <Button variant="iconCompact" title="Удалить товар" aria-label={`Удалить «${product.name}»`} onClick={() => deleteProduct(product)}><Icon name="delete" size={18} /></Button>
+                                <td><div className={listStyles.actions}>
+                                    <Button variant="listIcon" title="Редактировать товар" aria-label={`Редактировать «${product.name}»`} onClick={() => openProduct(product)}><Icon name="edit" size={18} /></Button>
+                                    <Button variant="listIcon" title="Удалить товар" aria-label={`Удалить «${product.name}»`} onClick={() => deleteProduct(product)}><Icon name="delete" size={18} /></Button>
+                                </div>
                                 </td>
                             </tr>)}
                             {!products.length && <tr><td className={listStyles.state} colSpan="5">{search || filter || typeFilter ? 'По заданным условиям ничего не найдено.' : 'В этом разделе пока нет товаров.'}</td></tr>}

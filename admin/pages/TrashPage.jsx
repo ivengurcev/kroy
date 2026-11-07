@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import PageList from '../components/PageList.jsx';
 import styles from './PagesPage.module.css';
 import AdminPageShell from '../components/AdminPageShell.jsx';
+import { AdminListToolbar } from '../components/AdminList.jsx';
 import Icon from '../ui/Icon.jsx';
 
 export default function TrashPage() {
@@ -59,11 +60,12 @@ export default function TrashPage() {
         <AdminPageShell
             headerMode="trash"
             title="Корзина"
-            actions={actions}
+            list
             status={status}
             errorMessage="Не удалось загрузить корзину."
         >
             <div className={styles.content}>
+                <AdminListToolbar actions={<div className={styles.listActions}>{actions}</div>} />
                 <PageList
                     pages={pages}
                     mode="trash"

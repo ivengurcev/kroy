@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
+import Switch from '../ui/Switch.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import ImageField from '../editor/ImageField.jsx';
@@ -26,7 +27,7 @@ const EMPTY_CONTENT = {
 };
 
 function emptyMaterial() {
-    return { sectionId: '', slug: '', title: '', summary: '', content: null, coverMediaId: null, status: 'draft' };
+    return { sectionId: '', slug: '', title: '', summary: '', content: null, coverMediaId: null, status: 'published' };
 }
 
 function mediaIdFromUrl(value) {
@@ -169,13 +170,13 @@ export default function SiteMaterialEditorPage() {
             if (revision.current === savedRevision) {
                 setMaterial(result);
                 setSaveStatus('success');
+                navigate?.('/admin/materials', { skipGuard: true });
             } else {
+                if (!materialId && result.id) {
+                    skipLoadId.current = result.id;
+                    setMaterialId(result.id);
+                }
                 setSaveStatus('idle');
-            }
-            if (!materialId && result.id) {
-                skipLoadId.current = result.id;
-                navigate?.(`/admin/materials/${result.id}`, { replace: true, skipGuard: true });
-                setMaterialId(result.id);
             }
         } catch (saveError) {
             setFormError('Не удалось сохранить материал. Проверьте поля и повторите попытку.');
@@ -249,13 +250,7 @@ export default function SiteMaterialEditorPage() {
                     <span className={styles.editorLabel}>Текст материала</span>
                     <MaterialEditor value={editorValue} onChange={(content) => updateField('content', content)} disabled={saveStatus === 'saving'} />
                 </div>
-                <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                    <span>Статус</span>
-                    <select name="status" value={material.status} onChange={(event) => updateField('status', event.target.value)}>
-                        <option value="draft">Черновик</option>
-                        <option value="published">Готов к публикации сайта</option>
-                    </select>
-                </label>
+                <Switch label="Показывать на сайте" checked={material.status === 'published'} onChange={(event) => updateField('status', event.target.checked ? 'published' : 'draft')} />
                 </fieldset>
                 {formError && <p className={styles.formError} role="alert">{formError}</p>}
             </AdminPanel>}

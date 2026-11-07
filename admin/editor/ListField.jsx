@@ -4,7 +4,7 @@ import styles from './ListField.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 
-export default function ListField({ label, itemLabel = 'Элемент', fields, value, onChange, FieldComponent }) {
+export default function ListField({ label, itemLabel = 'Элемент', fields, value, onChange, FieldComponent, createItem, renderItem, itemSummary }) {
     const items = Array.isArray(value) ? value : [];
     const listId = useId();
     const keySequence = useRef(0);
@@ -53,7 +53,7 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
 
     function addItem() {
         itemKeysRef.current = [...itemKeysRef.current, createItemKey()];
-        emitChange([...items, defaultProps(fields)]);
+        emitChange([...items, createItem ? createItem() : defaultProps(fields)]);
     }
 
     function removeItem(index) {
@@ -86,7 +86,7 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
             </legend>
             <div className={styles.items}>
                 {items.map((item, index) => {
-                    const summary = item?.title ?? item?.name ?? '';
+                    const summary = itemSummary ? itemSummary(item) : item?.title ?? item?.name ?? '';
                     return (
                         <section className={styles.listItem} key={itemKeysRef.current[index]}>
                             <header className={styles.itemHeader}>
@@ -98,7 +98,7 @@ export default function ListField({ label, itemLabel = 'Элемент', fields,
                                 </div>
                             </header>
                             <div className={styles.editor}>
-                                {Object.entries(fields).map(([name, schema]) => (
+                                {renderItem ? renderItem(item, index, (changes) => emitChange(items.map((current, i) => i === index ? { ...current, ...changes } : current))) : Object.entries(fields).map(([name, schema]) => (
                                     <FieldComponent key={name} name={name} schema={schema} value={item?.[name]} onChange={(nextValue) => updateItem(index, name, nextValue)} />
                                 ))}
                             </div>

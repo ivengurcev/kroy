@@ -15,7 +15,7 @@ before(async () => {
     const result = await build({
         stdin: {
             contents: `export { default as PaymentIntegrationEditor } from './admin/components/PaymentIntegrationEditor.jsx';
-                export { default as CatalogEditor } from './admin/components/CatalogEditor.jsx';
+                 export { default as CatalogEditor, catalogProductsCanLoad } from './admin/components/CatalogEditor.jsx';
                 export { default as ProductCards, ProductCard } from './site/components/ProductCards.jsx';
                 export { default as SiteSettingsLayout, SITE_SETTINGS_SECTIONS } from './admin/components/SiteSettingsLayout.jsx';
                 export { default as AdminSidebar } from './admin/components/AdminSidebar.jsx';
@@ -126,6 +126,15 @@ test('catalog editor uses server-loaded list controls and pagination', () => {
     assert.match(html, /Загрузка товаров/);
     assert.doesNotMatch(html, /Позиция/);
     assert.doesNotMatch(html, /<footer/);
+});
+
+test('catalog without categories starts the uncategorized products request after category loading', async () => {
+    assert.equal(components.catalogProductsCanLoad([], null), false);
+    assert.equal(components.catalogProductsCanLoad([], '__uncategorized__'), true);
+    assert.equal(components.catalogProductsCanLoad([{ id: 'category-a' }], 'category-a'), true);
+    const source = await readFile(new URL('./CatalogEditor.jsx', import.meta.url), 'utf8');
+    assert.match(source, /\}, \[categories\.length, activeCategoryId, selectedCategoryId/);
+    assert.match(source, /productCount: item\.productCount/);
 });
 
 test('orders and payment result render without browser globals and orders have standard SPA navigation', () => {

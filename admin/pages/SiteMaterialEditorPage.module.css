@@ -4,7 +4,7 @@
 .heading h2, .heading p { margin: 0; }
 .heading h2 { font-size: var(--font-size-lg); }
 .heading p { margin-top: var(--space-1); color: var(--color-text-secondary); font-size: var(--font-size-sm); }
-.form input, .form textarea, .form select { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
+.form input:not([type="checkbox"]), .form textarea, .form select { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
 .form textarea { resize: vertical; }
 .coverField { align-items: start; }
 .coverField > button { justify-self: start; }

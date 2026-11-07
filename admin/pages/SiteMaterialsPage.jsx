@@ -211,7 +211,7 @@ export default function SiteMaterialsPage() {
                                         <Button variant="compact" disabled={sectionSaving} onClick={(event) => { event.currentTarget.closest('details').open = false; deleteSection(selectedSection); }}>Удалить</Button></div>
                                 </details>}
                             </div>)}
-                            <Button variant="compact" onClick={() => openSectionDialog()}><Icon name="add" size={18} /> Раздел</Button>
+                            <div className={styles.tab}><button className={styles.addSection} type="button" onClick={() => openSectionDialog()}><Icon name="add" size={18} /> Раздел</button></div>
                         </nav>
                     </div>
                 </div>
@@ -235,9 +235,10 @@ export default function SiteMaterialsPage() {
                                     <td><strong>{material.title}</strong><small>/{material.slug}</small></td>
                                     <td>{formatDate(material.updatedAt)}</td>
                                     <td><StatusBadge tone={STATUS_TONES[material.status]}>{STATUS_LABELS[material.status] || material.status}</StatusBadge></td>
-                                    <td className={styles.actions}>
-                                        <Button variant="compact" title="Редактировать материал" aria-label={`Редактировать материал «${material.title}»`} onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" /></Button>
-                                        <Button variant="compact" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" /></Button>
+                                    <td><div className={listStyles.actions}>
+                                        <Button variant="listIcon" title="Редактировать материал" aria-label={`Редактировать материал «${material.title}»`} onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" size={18} /></Button>
+                                        <Button variant="listIcon" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" size={18} /></Button>
+                                    </div>
                                     </td>
                                 </tr>)}
                                 {!visibleMaterials.length && <tr><td className={listStyles.state} colSpan="4">

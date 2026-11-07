@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../ui/Button.jsx';
+import Icon from '../ui/Icon.jsx';
 import styles from './AdminList.module.css';
 
 export function AdminListToolbar({ children, actions }) {
@@ -7,7 +8,12 @@ export function AdminListToolbar({ children, actions }) {
 }
 
 export function AdminListField({ label, children }) {
-    return <label className={styles.field}><span>{label}</span>{children}</label>;
+    const isSearch = children?.type === 'input' && children.props.type === 'search';
+    return <label className={`${styles.field} ${isSearch ? styles.search : ''}`}>
+        <span className={styles.visuallyHidden}>{label}</span>
+        {isSearch && <Icon className={styles.searchIcon} name="search" size={18} />}
+        {children}
+    </label>;
 }
 
 export function Pagination({ page, hasNext, onChange, total }) {

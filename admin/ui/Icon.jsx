@@ -18,6 +18,7 @@ import PreviewIcon from './icons/preview.svg';
 import PublishIcon from './icons/publish.svg';
 import RestoreIcon from './icons/restore.svg';
 import SaveIcon from './icons/save.svg';
+import SearchIcon from './icons/search.svg';
 import SeoIcon from './icons/seo.svg';
 import SettingsIcon from './icons/settings.svg';
 import SunIcon from './icons/sun.svg';
@@ -37,6 +38,7 @@ const icons = {
     delete: DeleteIcon,
     restore: RestoreIcon,
     save: SaveIcon,
+    search: SearchIcon,
     close: CloseIcon,
     settings: SettingsIcon,
     pages: PagesIcon,

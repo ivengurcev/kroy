@@ -75,3 +75,7 @@
         flex: 1;
     }
 }
+.listActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-3); }
+.listActions a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height-md); color: var(--color-text-secondary); text-decoration: none; }
+.listActions a:hover { color: var(--color-primary); }
+.listActions a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

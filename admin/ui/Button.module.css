@@ -51,6 +51,20 @@
     padding: 0;
 }
 
+.listIcon {
+    width: var(--control-height-sm);
+    min-width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    min-height: var(--control-height-sm);
+    padding: 0;
+    border-color: transparent;
+    color: var(--color-text-secondary);
+    background: transparent;
+}
+.listIcon:not(:disabled):hover { color: var(--color-primary); background: var(--color-primary-soft); }
+.listIcon:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.listIcon:disabled { border-color: transparent; background: transparent; }
+
 .button:disabled {
     border-color: var(--color-disabled-border);
     color: var(--color-disabled-text);
