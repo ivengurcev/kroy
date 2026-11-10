@@ -213,6 +213,7 @@ async function restoreArchive(archive) {
     let appStopped = false;
     let restoreStarted = false;
     let databaseRestored = false;
+    let preserveStagedMedia = false;
     const oldMediaEntries = [];
     const newMediaEntries = [];
     try {
@@ -231,7 +232,7 @@ async function restoreArchive(archive) {
         await createArchive(before);
 
         mkdirSync(stagedMedia, { recursive: true, mode: 0o700 });
-        await run('cp', ['-a', join(media, '.'), `${stagedMedia}/`]);
+        await run('cp', ['-a', `${media}/.`, `${stagedMedia}/`]);
 
         restoreStarted = true;
         await restoreDatabase(dump);
@@ -251,6 +252,8 @@ async function restoreArchive(archive) {
         console.log(`Восстановление завершено. Предыдущие данные сохранены в ${before}`);
     } catch (error) {
         const rollbackErrors = [];
+        const recoveryPaths = [];
+        const restoredOldMedia = new Set();
         let safeToRollback = !appWasRunning || !restoreStarted;
         if (appWasRunning) {
             try {
@@ -265,12 +268,20 @@ async function restoreArchive(archive) {
         if (safeToRollback) {
             for (const name of newMediaEntries) {
                 try { rmSync(join(mediaRoot, name), { recursive: true, force: true }); }
-                catch (rollbackError) { rollbackErrors.push(`не удалось удалить новые media ${name}: ${rollbackError.message}`); }
+                catch (rollbackError) {
+                    rollbackErrors.push(`не удалось удалить новые media ${name}: ${rollbackError.message}`);
+                    recoveryPaths.push(join(mediaRoot, name));
+                }
             }
             for (const name of oldMediaEntries) {
                 try {
-                    if (existsSync(join(previousMedia, name))) renameSync(join(previousMedia, name), join(mediaRoot, name));
-                } catch (rollbackError) { rollbackErrors.push(`не удалось вернуть media ${name}: ${rollbackError.message}`); }
+                    if (!existsSync(join(previousMedia, name))) fail(`исходный файл media ${name} отсутствует в previousMedia`);
+                    renameSync(join(previousMedia, name), join(mediaRoot, name));
+                    restoredOldMedia.add(name);
+                } catch (rollbackError) {
+                    rollbackErrors.push(`не удалось вернуть media ${name}: ${rollbackError.message}`);
+                    recoveryPaths.push(previousMedia);
+                }
             }
             if (databaseRestored && before) {
                 const rollbackWork = mkdtempSync(join(tmpdir(), 'kroy-db-rollback-'));
@@ -282,15 +293,52 @@ async function restoreArchive(archive) {
                     rollbackErrors.push(`БД не удалось вернуть автоматически: ${rollbackError.message}`);
                 } finally { rmSync(rollbackWork, { recursive: true, force: true }); }
             }
-            try { rmSync(previousMedia, { recursive: true, force: true }); }
-            catch (rollbackError) { rollbackErrors.push(`не удалось удалить временный каталог media ${previousMedia}: ${rollbackError.message}`); }
         }
+        let remainingPrevious = [];
+        let previousMediaReadable = true;
+        if (existsSync(previousMedia)) {
+            try { remainingPrevious = readdirSync(previousMedia); }
+            catch (readError) {
+                previousMediaReadable = false;
+                rollbackErrors.push(`не удалось проверить содержимое ${previousMedia}: ${readError.message}`);
+                recoveryPaths.push(previousMedia);
+            }
+        }
+        if (!previousMediaReadable || restoredOldMedia.size !== oldMediaEntries.length || remainingPrevious.length) {
+            if (!rollbackErrors.some((message) => message.includes('media'))) rollbackErrors.push('не все исходные media-файлы подтверждены после возврата');
+            recoveryPaths.push(previousMedia);
+        } else if (existsSync(previousMedia)) {
+            try { rmSync(previousMedia, { recursive: true, force: true }); }
+            catch (rollbackError) {
+                rollbackErrors.push(`не удалось удалить пустой каталог media ${previousMedia}: ${rollbackError.message}`);
+                recoveryPaths.push(previousMedia);
+            }
+        }
+        if (existsSync(stagedMedia)) {
+            try {
+                if (readdirSync(stagedMedia).length && rollbackErrors.length) {
+                    recoveryPaths.push(stagedMedia);
+                    preserveStagedMedia = true;
+                }
+            } catch (readError) {
+                rollbackErrors.push(`не удалось проверить содержимое ${stagedMedia}: ${readError.message}`);
+                recoveryPaths.push(stagedMedia);
+                preserveStagedMedia = true;
+            }
+        }
+        const retainedPaths = [...new Set(recoveryPaths.filter((path) => existsSync(path)))];
         const detail = rollbackErrors.length ? ` Ошибки отката: ${rollbackErrors.join('; ')}.` : '';
         const appState = appStopped ? 'Приложение оставлено остановленным.' : 'Состояние приложения не менялось.';
-        console.error(`Восстановление не завершено. ${appState} Резервная копия текущего состояния: ${before && existsSync(before) ? before : 'не создана'}.${detail}`);
+        const manualRecovery = retainedPaths.length
+            ? ` Требуется ручное восстановление. Данные сохранены по путям: ${retainedPaths.join(', ')}.`
+            : '';
+        console.error(`Восстановление не завершено. ${appState} Резервная копия текущего состояния: ${before && existsSync(before) ? before : 'не создана'}.${detail}${manualRecovery}`);
         throw error;
     } finally {
-        rmSync(stagedMedia, { recursive: true, force: true });
+        if (!preserveStagedMedia) {
+            try { rmSync(stagedMedia, { recursive: true, force: true }); }
+            catch (cleanupError) { console.error(`Временные media-файлы остались в ${stagedMedia}: ${cleanupError.message}`); }
+        }
         rmSync(work, { recursive: true, force: true });
     }
 }
