@@ -211,17 +211,15 @@ async function restoreArchive(archive) {
     let before;
     let appWasRunning = false;
     let appStopped = false;
+    let restoreStarted = false;
     let databaseRestored = false;
-    let oldMediaMoved = false;
-    let newMediaMoved = false;
+    const oldMediaEntries = [];
+    const newMediaEntries = [];
     try {
         const { dump, media } = await validateArchive(resolved, work);
-        before = join(BACKUPS, `before-restore-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
-        await createArchive(before);
-
-        mkdirSync(stagedMedia, { recursive: true, mode: 0o700 });
-        await run('cp', ['-a', join(media, '.'), `${stagedMedia}/`]);
-
+        if (!existsSync(mediaRoot) || !lstatSync(mediaRoot).isDirectory() || lstatSync(mediaRoot).isSymbolicLink()) {
+            fail('Каталог data/media должен быть обычным каталогом bind mount.');
+        }
         appWasRunning = (await output('docker', [...DEV_COMPOSE, 'ps', '--status', 'running', '--services', 'app']))
             .toString().trim().split('\n').includes('app');
         if (appWasRunning) {
@@ -229,38 +227,50 @@ async function restoreArchive(archive) {
             appStopped = true;
         }
 
+        before = join(BACKUPS, `before-restore-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
+        await createArchive(before);
+
+        mkdirSync(stagedMedia, { recursive: true, mode: 0o700 });
+        await run('cp', ['-a', join(media, '.'), `${stagedMedia}/`]);
+
+        restoreStarted = true;
         await restoreDatabase(dump);
         databaseRestored = true;
-        if (existsSync(mediaRoot)) {
-            if (!lstatSync(mediaRoot).isDirectory() || lstatSync(mediaRoot).isSymbolicLink()) fail('Каталог data/media должен быть обычным каталогом.');
-            renameSync(mediaRoot, previousMedia);
-            oldMediaMoved = true;
+        mkdirSync(previousMedia, { mode: 0o700 });
+        for (const name of readdirSync(mediaRoot)) {
+            renameSync(join(mediaRoot, name), join(previousMedia, name));
+            oldMediaEntries.push(name);
         }
-        renameSync(stagedMedia, mediaRoot);
-        newMediaMoved = true;
+        for (const name of readdirSync(stagedMedia)) {
+            renameSync(join(stagedMedia, name), join(mediaRoot, name));
+            newMediaEntries.push(name);
+        }
         if (appWasRunning) await run('docker', [...DEV_COMPOSE, 'start', 'app']);
-        if (oldMediaMoved) rmSync(previousMedia, { recursive: true, force: true });
+        try { rmSync(previousMedia, { recursive: true, force: true }); }
+        catch (cleanupError) { console.error(`Старое содержимое media осталось в ${previousMedia}: ${cleanupError.message}`); }
         console.log(`Восстановление завершено. Предыдущие данные сохранены в ${before}`);
     } catch (error) {
         const rollbackErrors = [];
-        let safeToRollback = !appWasRunning;
+        let safeToRollback = !appWasRunning || !restoreStarted;
         if (appWasRunning) {
             try {
-                await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
-                appStopped = true;
+                if (restoreStarted) await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
+                else await run('docker', [...DEV_COMPOSE, 'start', 'app']);
+                appStopped = restoreStarted;
                 safeToRollback = true;
             } catch (rollbackError) {
-                rollbackErrors.push(`не удалось остановить приложение: ${rollbackError.message}`);
+                rollbackErrors.push(`не удалось вернуть прежнее состояние приложения: ${rollbackError.message}`);
             }
         }
         if (safeToRollback) {
-            if (newMediaMoved && existsSync(mediaRoot)) {
-                try { rmSync(mediaRoot, { recursive: true, force: true }); }
-                catch (rollbackError) { rollbackErrors.push(`не удалось удалить новые media: ${rollbackError.message}`); }
+            for (const name of newMediaEntries) {
+                try { rmSync(join(mediaRoot, name), { recursive: true, force: true }); }
+                catch (rollbackError) { rollbackErrors.push(`не удалось удалить новые media ${name}: ${rollbackError.message}`); }
             }
-            if (oldMediaMoved && existsSync(previousMedia)) {
-                try { renameSync(previousMedia, mediaRoot); }
-                catch (rollbackError) { rollbackErrors.push(`не удалось вернуть старые media: ${rollbackError.message}`); }
+            for (const name of oldMediaEntries) {
+                try {
+                    if (existsSync(join(previousMedia, name))) renameSync(join(previousMedia, name), join(mediaRoot, name));
+                } catch (rollbackError) { rollbackErrors.push(`не удалось вернуть media ${name}: ${rollbackError.message}`); }
             }
             if (databaseRestored && before) {
                 const rollbackWork = mkdtempSync(join(tmpdir(), 'kroy-db-rollback-'));
@@ -272,6 +282,8 @@ async function restoreArchive(archive) {
                     rollbackErrors.push(`БД не удалось вернуть автоматически: ${rollbackError.message}`);
                 } finally { rmSync(rollbackWork, { recursive: true, force: true }); }
             }
+            try { rmSync(previousMedia, { recursive: true, force: true }); }
+            catch (rollbackError) { rollbackErrors.push(`не удалось удалить временный каталог media ${previousMedia}: ${rollbackError.message}`); }
         }
         const detail = rollbackErrors.length ? ` Ошибки отката: ${rollbackErrors.join('; ')}.` : '';
         const appState = appStopped ? 'Приложение оставлено остановленным.' : 'Состояние приложения не менялось.';
@@ -318,15 +330,24 @@ async function push(archive) {
     const name = safeName(basename(resolved));
     await validateOnly(resolved);
     const child = spawn('ssh', [host, `sudo -n -u kroy /usr/local/sbin/kroy-run backup receive ${name}`], { stdio: ['pipe', 'inherit', 'inherit'] });
-    await pipeline(createReadStream(resolved), child.stdin);
-    const code = await new Promise((resolvePromise, reject) => { child.once('error', reject); child.once('exit', resolvePromise); });
+    const exited = new Promise((resolvePromise, reject) => {
+        child.once('error', reject);
+        child.once('exit', resolvePromise);
+    });
+    const [code] = await Promise.all([exited, pipeline(createReadStream(resolved), child.stdin)]);
     if (code !== 0) fail(`Загрузка завершилась с кодом ${code ?? 1}`);
     console.log(`Архив передан на VPS: ${name}`);
 }
 
 async function internal(action, value) {
     if (action === 'list') {
-        if (existsSync(BACKUPS)) console.log(readdirSync(BACKUPS).filter((name) => name.endsWith('.tar.gz')).sort().join('\n'));
+        if (existsSync(BACKUPS)) {
+            const archives = readdirSync(BACKUPS)
+                .filter((name) => name.endsWith('.tar.gz'))
+                .map((name) => ({ name, modifiedAt: statSync(join(BACKUPS, name)).mtimeMs }));
+            archives.sort((left, right) => left.modifiedAt - right.modifiedAt || (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
+            console.log(archives.map(({ name }) => name).join('\n'));
+        }
         return;
     }
     if (action === 'stream') {
