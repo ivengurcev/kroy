@@ -1,0 +1,294 @@
+import { createHash, randomUUID } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import {
+    chmodSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, mkdtempSync,
+    readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, dirname, join, resolve } from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import { fileURLToPath } from 'node:url';
+import { getRemoteHost } from './remoteUtils.mjs';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const args = process.argv.slice(2);
+const [command, ...rest] = args;
+const isProduction = ROOT === '/srv/kroy' || process.env.KROY_BACKUP_ENV === 'production';
+const BACKUPS = join(ROOT, 'data/backups');
+const FORMAT_VERSION = 1;
+const DEV_COMPOSE = ['compose', '-f', 'infra/compose.yaml'];
+process.umask(0o077);
+
+function fail(message) {
+    throw new Error(message);
+}
+
+function run(commandName, commandArgs, options = {}) {
+    return new Promise((resolvePromise, reject) => {
+        const child = spawn(commandName, commandArgs, { cwd: ROOT, stdio: 'inherit', ...options });
+        child.once('error', reject);
+        child.once('exit', (code) => code === 0 ? resolvePromise() : reject(new Error(`${commandName} завершилась с кодом ${code ?? 1}`)));
+    });
+}
+
+function output(commandName, commandArgs, options = {}) {
+    return new Promise((resolvePromise, reject) => {
+        const child = spawn(commandName, commandArgs, { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'], ...options });
+        const chunks = [];
+        child.stdout.on('data', (chunk) => chunks.push(chunk));
+        child.once('error', reject);
+        child.once('exit', (code) => code === 0 ? resolvePromise(Buffer.concat(chunks)) : reject(new Error(`${commandName} завершилась с кодом ${code ?? 1}`)));
+    });
+}
+
+function databaseUrl() {
+    if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+    if (isProduction) {
+        const env = readFileSync(join(ROOT, '.env'), 'utf8');
+        const value = env.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim();
+        if (value) return value.replace(/^(['"])(.*)\1$/, '$2');
+        fail('В .env не найдена DATABASE_URL.');
+    }
+    return 'postgres://kroy:kroy-local@db:5432/kroy?sslmode=disable';
+}
+
+async function dumpDatabase(destination) {
+    if (isProduction) {
+        await run('pg_dump', ['--format=custom', '--no-owner', '--no-acl', `--dbname=${databaseUrl()}`, `--file=${destination}`]);
+    } else {
+        await run('docker', [...DEV_COMPOSE, 'up', '-d', 'db']);
+        const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_dump', '--format=custom', '--no-owner', '--no-acl', '-U', 'kroy', 'kroy'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'] });
+        const file = Bun.file(destination).writer();
+        child.stdout.on('data', (chunk) => file.write(chunk));
+        const code = await new Promise((resolvePromise, reject) => {
+            child.once('error', reject);
+            child.once('exit', resolvePromise);
+        });
+        await file.end();
+        if (code !== 0) fail(`pg_dump завершилась с кодом ${code ?? 1}`);
+    }
+}
+
+async function restoreDatabase(dump) {
+    if (isProduction) fail('Восстановление production запрещено: текущие права и инфраструктура не позволяют остановить приложение и исключить конкурирующие записи.');
+    await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
+    try {
+        const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_restore', '--clean', '--if-exists', '--no-owner', '--no-acl', '-U', 'kroy', '-d', 'kroy'], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] });
+        const input = Bun.file(dump).stream();
+        await input.pipeTo(new WritableStream({ write(chunk) { child.stdin.write(chunk); }, close() { child.stdin.end(); } }));
+        const code = await new Promise((resolvePromise, reject) => {
+            child.once('error', reject);
+            child.once('exit', resolvePromise);
+        });
+        if (code !== 0) fail(`pg_restore завершилась с кодом ${code ?? 1}`);
+    } finally {
+        await run('docker', [...DEV_COMPOSE, 'start', 'app']);
+    }
+}
+
+function digest(path) {
+    return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
+function mediaManifest(directory, prefix = 'media') {
+    const files = {};
+    for (const name of readdirSync(directory).sort()) {
+        const path = join(directory, name);
+        const info = lstatSync(path);
+        if (info.isSymbolicLink()) fail('media содержит символическую ссылку.');
+        if (info.isDirectory()) Object.assign(files, mediaManifest(path, `${prefix}/${name}`));
+        else if (info.isFile()) files[`${prefix}/${name}`] = { size: info.size, sha256: digest(path) };
+        else fail('media содержит неподдерживаемый тип файла.');
+    }
+    return files;
+}
+
+async function createArchive(destination) {
+    const parent = dirname(destination);
+    mkdirSync(parent, { recursive: true, mode: 0o700 });
+    if (parent === BACKUPS) chmodSync(parent, 0o700);
+    if (existsSync(destination)) fail(`Файл уже существует: ${destination}`);
+    const work = mkdtempSync(join(tmpdir(), 'kroy-backup-'));
+    chmodSync(work, 0o700);
+    const staging = `${destination}.partial-${randomUUID()}`;
+    const verification = mkdtempSync(join(tmpdir(), 'kroy-backup-check-'));
+    chmodSync(verification, 0o700);
+    try {
+        await dumpDatabase(join(work, 'database.dump'));
+        const mediaRoot = join(ROOT, 'data/media');
+        if (existsSync(mediaRoot)) symlinkSync(mediaRoot, join(work, 'media'));
+        else mkdirSync(join(work, 'media'));
+        const manifest = {
+            formatVersion: FORMAT_VERSION,
+            createdAt: new Date().toISOString(),
+            files: {
+                'database.dump': { size: statSync(join(work, 'database.dump')).size, sha256: digest(join(work, 'database.dump')) },
+                ...mediaManifest(join(work, 'media')),
+            },
+        };
+        writeFileSync(join(work, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
+        await run('tar', ['-hczf', staging, '-C', work, 'manifest.json', 'database.dump', 'media']);
+        chmodSync(staging, 0o600);
+        await validateArchive(staging, verification);
+        renameSync(staging, destination);
+        console.log(`Резервная копия создана: ${destination}`);
+    } finally {
+        rmSync(work, { recursive: true, force: true });
+        rmSync(verification, { recursive: true, force: true });
+        rmSync(staging, { force: true });
+    }
+}
+
+async function validateArchive(archive, destination) {
+    const listing = (await output('tar', ['-tzf', archive])).toString().split('\n').filter(Boolean);
+    if (!listing.includes('manifest.json') || !listing.includes('database.dump') || !listing.includes('media/')) fail('Архив не соответствует формату Kroy.');
+    if (listing.some((item) => item.startsWith('/') || item.split('/').includes('..') || !['manifest.json', 'database.dump', 'media/'].includes(item) && !item.startsWith('media/'))) {
+        fail('Архив содержит недопустимые пути.');
+    }
+    const verbose = (await output('tar', ['-tvzf', archive])).toString();
+    if (verbose.split('\n').some((line) => /^[lh]/.test(line.slice(0, 1)))) fail('Символические и жёсткие ссылки в архиве запрещены.');
+    mkdirSync(destination, { recursive: true, mode: 0o700 });
+    await run('tar', ['-xzf', archive, '-C', destination]);
+    const manifest = JSON.parse(readFileSync(join(destination, 'manifest.json'), 'utf8'));
+    if (manifest.formatVersion !== FORMAT_VERSION) fail('Неподдерживаемая версия формата архива.');
+    const dump = join(destination, 'database.dump');
+    if (manifest.files?.['database.dump']?.size !== statSync(dump).size || manifest.files?.['database.dump']?.sha256 !== digest(dump)) fail('Контрольная сумма или размер дампа не совпадает.');
+    const expected = manifest.files || {};
+    const actual = mediaManifest(join(destination, 'media'));
+    if (JSON.stringify(Object.keys(actual).sort()) !== JSON.stringify(Object.keys(expected).filter((name) => name.startsWith('media/')).sort())) fail('Состав media не совпадает с manifest.json.');
+    for (const [name, file] of Object.entries(actual)) {
+        if (expected[name]?.size !== file.size || expected[name]?.sha256 !== file.sha256) fail(`Контрольная сумма или размер не совпадает: ${name}`);
+    }
+    if (isProduction) await run('pg_restore', ['--list', dump]);
+    else {
+        await run('docker', [...DEV_COMPOSE, 'up', '-d', 'db']);
+        const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_restore', '--list', '-'], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] });
+        const code = await Bun.file(dump).stream().pipeTo(new WritableStream({ write(chunk) { child.stdin.write(chunk); }, close() { child.stdin.end(); } })).then(() => new Promise((resolvePromise, reject) => { child.once('error', reject); child.once('exit', resolvePromise); }));
+        if (code !== 0) fail(`pg_restore --list завершилась с кодом ${code ?? 1}`);
+    }
+    return { manifest, dump, media: join(destination, 'media') };
+}
+
+async function validateOnly(archive) {
+    const work = mkdtempSync(join(tmpdir(), 'kroy-verify-'));
+    chmodSync(work, 0o700);
+    try { await validateArchive(archive, work); }
+    finally { rmSync(work, { recursive: true, force: true }); }
+}
+
+async function restoreArchive(archive) {
+    if (isProduction) fail('Восстановление production запрещено: сначала настройте maintenance mode и полномочия на остановку kroy-app.');
+    const resolved = resolve(archive);
+    if (!existsSync(resolved)) fail(`Архив не найден: ${resolved}`);
+    const work = mkdtempSync(join(tmpdir(), 'kroy-restore-'));
+    chmodSync(work, 0o700);
+    try {
+        const { dump, media } = await validateArchive(resolved, work);
+        const before = join(BACKUPS, `before-restore-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
+        await createArchive(before);
+        await restoreDatabase(dump);
+        rmSync(join(ROOT, 'data/media'), { recursive: true, force: true });
+        mkdirSync(join(ROOT, 'data/media'), { recursive: true });
+        await run('cp', ['-a', join(media, '.'), join(ROOT, 'data/media/')]);
+        console.log(`Восстановление завершено. Предыдущие данные сохранены в ${before}`);
+    } catch (error) {
+        console.error('Ошибка восстановления; данные PostgreSQL или media могли восстановиться не полностью. Сохраните архив before-restore для отката.');
+        throw error;
+    } finally { rmSync(work, { recursive: true, force: true }); }
+}
+
+function safeName(name) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*\.tar\.gz$/.test(name) || name.includes('..')) fail('Недопустимое имя архива.');
+    return name;
+}
+
+async function pull(name) {
+    const host = getRemoteHost();
+    const list = (await output('ssh', [host, "sudo -n -u kroy /usr/local/sbin/kroy-run backup list"])).toString().trim().split('\n').filter(Boolean);
+    const selected = name === 'latest' ? list.at(-1) : safeName(name);
+    if (!selected || !list.includes(selected)) fail(`Удалённый архив не найден: ${name}`);
+    const destination = join(BACKUPS, safeName(selected));
+    if (existsSync(destination)) fail(`Файл уже существует: ${destination}`);
+    mkdirSync(BACKUPS, { recursive: true, mode: 0o700 });
+    chmodSync(BACKUPS, 0o700);
+    const temp = `${destination}.partial-${randomUUID()}`;
+    try {
+        const child = spawn('ssh', [host, `sudo -n -u kroy /usr/local/sbin/kroy-run backup stream ${selected}`], { stdio: ['ignore', 'pipe', 'inherit'] });
+        const transfer = pipeline(child.stdout, createWriteStream(temp, { mode: 0o600, flags: 'wx' }));
+        const code = await new Promise((resolvePromise, reject) => { child.once('error', reject); child.once('exit', resolvePromise); });
+        await transfer;
+        if (code !== 0) fail(`Передача архива завершилась с кодом ${code ?? 1}`);
+        chmodSync(temp, 0o600);
+        await validateOnly(temp);
+        renameSync(temp, destination);
+        console.log(`Архив загружен: ${destination}`);
+    } finally { rmSync(temp, { force: true }); }
+}
+
+async function push(archive) {
+    const host = getRemoteHost();
+    const resolved = resolve(archive);
+    if (!existsSync(resolved)) fail(`Архив не найден: ${resolved}`);
+    const name = safeName(basename(resolved));
+    await validateOnly(resolved);
+    const child = spawn('ssh', [host, `sudo -n -u kroy /usr/local/sbin/kroy-run backup receive ${name}`], { stdio: ['pipe', 'inherit', 'inherit'] });
+    await pipeline(createReadStream(resolved), child.stdin);
+    const code = await new Promise((resolvePromise, reject) => { child.once('error', reject); child.once('exit', resolvePromise); });
+    if (code !== 0) fail(`Загрузка завершилась с кодом ${code ?? 1}`);
+    console.log(`Архив передан на VPS: ${name}`);
+}
+
+async function internal(action, value) {
+    if (action === 'list') {
+        if (existsSync(BACKUPS)) console.log(readdirSync(BACKUPS).filter((name) => name.endsWith('.tar.gz')).sort().join('\n'));
+        return;
+    }
+    if (action === 'stream') {
+        const path = join(BACKUPS, safeName(value));
+        if (!existsSync(path)) fail('Архив не найден.');
+        await pipeline(createReadStream(path), process.stdout);
+        return;
+    }
+    if (action === 'receive') {
+        const name = safeName(value);
+        mkdirSync(BACKUPS, { recursive: true, mode: 0o700 });
+        chmodSync(BACKUPS, 0o700);
+        const destination = join(BACKUPS, name);
+        if (existsSync(destination)) fail(`Файл уже существует: ${name}`);
+        const temp = join(BACKUPS, `.${name}.partial-${randomUUID()}`);
+        const file = createWriteStream(temp, { mode: 0o600, flags: 'wx' });
+        try {
+            await pipeline(process.stdin, file);
+            await validateOnly(temp);
+            if (existsSync(destination)) fail(`Файл уже существует: ${name}`);
+            renameSync(temp, destination);
+        } finally { rmSync(temp, { force: true }); }
+        return;
+    }
+    fail('Неизвестная внутренняя команда backup.');
+}
+
+try {
+    if (command === 'create') {
+        let destination = join(BACKUPS, `kroy-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
+        if (rest.length) {
+            if (rest.length !== 2 || rest[0] !== '--output') fail('Использование: bun run backup create [--output <путь>].');
+            destination = resolve(rest[1]);
+        }
+        await createArchive(destination);
+    } else if (command === 'restore') {
+        if (rest.length !== 1) fail('Использование: bun run backup restore <архив>.');
+        await restoreArchive(rest[0]);
+    } else if (command === 'pull') {
+        if (rest.length !== 1) fail('Использование: bun run backup pull <имя|latest>.');
+        await pull(rest[0]);
+    } else if (command === 'push') {
+        if (rest.length !== 1) fail('Использование: bun run backup push <архив>.');
+        await push(rest[0]);
+    } else if (command === 'list' || command === 'stream' || command === 'receive') {
+        await internal(command, rest[0]);
+    } else fail('Использование: bun run backup create|restore|pull|push ...');
+} catch (error) {
+    console.error(`Ошибка backup: ${error.message}`);
+    process.exitCode = 1;
+}

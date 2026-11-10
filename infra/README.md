@@ -249,3 +249,53 @@ bun run deploy site demo
 `deploy app` разворачивает приложение через Ansible, `deploy site` вызывает
 site:publish на VPS. Первичная настройка сервера и права sudoers описаны в
 [infra/ansible/README.md](ansible/README.md).
+
+## Резервные копии
+
+`backup` создаёт переносимый архив `.tar.gz` с custom dump PostgreSQL 16,
+`data/media/` и `manifest.json` с версией формата, датой, размерами и SHA-256.
+Команда не включает `.env` и `dist/sites`. Архивы хранятся в `data/backups/`,
+не попадают в Git и не передаются при deploy (каталог `data/` целиком исключён).
+Файлы и каталог доступны только владельцу; старые копии автоматически не
+удаляются. Учитывайте свободное место: во время создания существует временный
+архив рядом с итоговым; проверка архива временно распаковывает его и требует
+место примерно под распакованный размер копии.
+
+Локальные команды работают с development Compose (`kroy-dev`, сервис `db`) и
+локальным bind mount `data/media/`:
+
+```bash
+bun run backup create
+bun run backup create --output /tmp/kroy-dev.tar.gz
+bun run backup restore data/backups/kroy-<дата>.tar.gz
+```
+
+`restore` сначала проверяет архив и сохраняет текущие данные отдельной копией в
+`data/backups/`, затем останавливает Compose-сервис `app`, восстанавливает БД и
+media и запускает приложение снова. Это заменяет данные выбранной development
+среды. Убедитесь, что Compose-проект `kroy-dev` содержит нужную локальную БД.
+
+Production backup create выполняется на VPS через защищённый runner; `pull` и
+`push` запускаются локально. Укажите SSH-цель через `KROY_REMOTE_HOST`:
+
+```bash
+export KROY_REMOTE_HOST=user@example.org
+bun run remote backup create
+bun run backup pull latest
+bun run backup pull kroy-<дата>.tar.gz
+bun run backup push /tmp/kroy-dev.tar.gz
+```
+
+`create` на production только читает PostgreSQL и media. `pull` скачивает
+готовую копию в локальный `data/backups/`, `push` передаёт её в каталог VPS;
+обе операции проверяют контрольные суммы, не восстанавливают данные и отказываются
+перезаписывать существующие имена. Для загрузки имя локального файла должно
+заканчиваться на `.tar.gz` и содержать только латинские буквы, цифры, точку,
+дефис или подчёркивание.
+
+Production restore сейчас намеренно запрещён. Текущий `kroy-run` и sudoers
+разрешают запуск скриптов от `kroy`, но не остановку `kroy-app`; maintenance mode
+или другой способ исключить записи на время восстановления не настроен. Не
+запускайте `pg_restore` вручную поверх работающего production. Для безопасного
+восстановления сначала потребуется отдельный эксплуатационный механизм,
+останавливающий приложение и гарантирующий отсутствие конкурирующих записей.

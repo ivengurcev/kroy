@@ -16,6 +16,7 @@
     "help": "bun scripts/help.mjs",
     "kroy:help": "bun scripts/help.mjs",
     "remote": "bun scripts/remote.mjs",
+    "backup": "bun scripts/backup.mjs",
     "deploy": "bun scripts/deploy.mjs",
     "db": "dbmate up",
     "db:migrate": "dbmate up",
