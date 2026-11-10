@@ -42,62 +42,80 @@ function output(commandName, commandArgs, options = {}) {
 }
 
 function databaseUrl() {
-    if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+    if (process.env.DATABASE_URL) return connectionSettings(process.env.DATABASE_URL);
     if (isProduction) {
         const env = readFileSync(join(ROOT, '.env'), 'utf8');
         const value = env.match(/^DATABASE_URL=(.*)$/m)?.[1]?.trim();
-        if (value) return value.replace(/^(['"])(.*)\1$/, '$2');
+        if (value) return connectionSettings(value.replace(/^(['"])(.*)\1$/, '$2'));
         fail('В .env не найдена DATABASE_URL.');
     }
-    return 'postgres://kroy:kroy-local@db:5432/kroy?sslmode=disable';
+    return connectionSettings('postgres://kroy:kroy-local@db:5432/kroy?sslmode=disable');
+}
+
+function connectionSettings(value) {
+    const url = new URL(value);
+    const env = {
+        PGHOST: url.hostname,
+        PGPORT: url.port || '5432',
+        PGUSER: decodeURIComponent(url.username),
+        PGPASSWORD: decodeURIComponent(url.password),
+        PGDATABASE: decodeURIComponent(url.pathname.slice(1)),
+    };
+    for (const [key, variable] of [
+        ['sslmode', 'PGSSLMODE'], ['connect_timeout', 'PGCONNECT_TIMEOUT'],
+        ['application_name', 'PGAPPNAME'], ['sslrootcert', 'PGSSLROOTCERT'],
+        ['sslcert', 'PGSSLCERT'], ['sslkey', 'PGSSLKEY'],
+        ['target_session_attrs', 'PGTARGETSESSIONATTRS'], ['gssencmode', 'PGGSSENCMODE'],
+    ]) {
+        if (url.searchParams.has(key)) env[variable] = url.searchParams.get(key);
+    }
+    return env;
 }
 
 async function dumpDatabase(destination) {
     if (isProduction) {
-        await run('pg_dump', ['--format=custom', '--no-owner', '--no-acl', `--dbname=${databaseUrl()}`, `--file=${destination}`]);
+        const connection = databaseUrl();
+        await run('pg_dump', ['--format=custom', '--no-owner', '--no-acl', `--dbname=${connection.PGDATABASE}`, `--file=${destination}`], {
+            env: { ...process.env, ...connection },
+        });
     } else {
         await run('docker', [...DEV_COMPOSE, 'up', '-d', 'db']);
         const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_dump', '--format=custom', '--no-owner', '--no-acl', '-U', 'kroy', 'kroy'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'] });
-        const file = Bun.file(destination).writer();
-        child.stdout.on('data', (chunk) => file.write(chunk));
-        const code = await new Promise((resolvePromise, reject) => {
+        const written = pipeline(child.stdout, createWriteStream(destination, { mode: 0o600, flags: 'wx' }));
+        const exited = new Promise((resolvePromise, reject) => {
             child.once('error', reject);
             child.once('exit', resolvePromise);
         });
-        await file.end();
+        const [code] = await Promise.all([exited, written]);
         if (code !== 0) fail(`pg_dump завершилась с кодом ${code ?? 1}`);
     }
 }
 
 async function restoreDatabase(dump) {
     if (isProduction) fail('Восстановление production запрещено: текущие права и инфраструктура не позволяют остановить приложение и исключить конкурирующие записи.');
-    await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
-    try {
-        const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_restore', '--clean', '--if-exists', '--no-owner', '--no-acl', '-U', 'kroy', '-d', 'kroy'], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] });
-        const input = Bun.file(dump).stream();
-        await input.pipeTo(new WritableStream({ write(chunk) { child.stdin.write(chunk); }, close() { child.stdin.end(); } }));
-        const code = await new Promise((resolvePromise, reject) => {
-            child.once('error', reject);
-            child.once('exit', resolvePromise);
-        });
-        if (code !== 0) fail(`pg_restore завершилась с кодом ${code ?? 1}`);
-    } finally {
-        await run('docker', [...DEV_COMPOSE, 'start', 'app']);
-    }
+    const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_restore', '--clean', '--if-exists', '--exit-on-error', '--single-transaction', '--no-owner', '--no-acl', '-U', 'kroy', '-d', 'kroy'], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] });
+    const exited = new Promise((resolvePromise, reject) => {
+        child.once('error', reject);
+        child.once('exit', resolvePromise);
+    });
+    const [code] = await Promise.all([exited, pipeline(createReadStream(dump), child.stdin)]);
+    if (code !== 0) fail(`pg_restore завершилась с кодом ${code ?? 1}; транзакция отменена.`);
 }
 
-function digest(path) {
-    return createHash('sha256').update(readFileSync(path)).digest('hex');
+async function digest(path) {
+    const hash = createHash('sha256');
+    for await (const chunk of createReadStream(path)) hash.update(chunk);
+    return hash.digest('hex');
 }
 
-function mediaManifest(directory, prefix = 'media') {
+async function mediaManifest(directory, prefix = 'media') {
     const files = {};
     for (const name of readdirSync(directory).sort()) {
         const path = join(directory, name);
         const info = lstatSync(path);
         if (info.isSymbolicLink()) fail('media содержит символическую ссылку.');
-        if (info.isDirectory()) Object.assign(files, mediaManifest(path, `${prefix}/${name}`));
-        else if (info.isFile()) files[`${prefix}/${name}`] = { size: info.size, sha256: digest(path) };
+        if (info.isDirectory()) Object.assign(files, await mediaManifest(path, `${prefix}/${name}`));
+        else if (info.isFile()) files[`${prefix}/${name}`] = { size: info.size, sha256: await digest(path) };
         else fail('media содержит неподдерживаемый тип файла.');
     }
     return files;
@@ -122,8 +140,8 @@ async function createArchive(destination) {
             formatVersion: FORMAT_VERSION,
             createdAt: new Date().toISOString(),
             files: {
-                'database.dump': { size: statSync(join(work, 'database.dump')).size, sha256: digest(join(work, 'database.dump')) },
-                ...mediaManifest(join(work, 'media')),
+                'database.dump': { size: statSync(join(work, 'database.dump')).size, sha256: await digest(join(work, 'database.dump')) },
+                ...await mediaManifest(join(work, 'media')),
             },
         };
         writeFileSync(join(work, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
@@ -152,21 +170,25 @@ async function validateArchive(archive, destination) {
     const manifest = JSON.parse(readFileSync(join(destination, 'manifest.json'), 'utf8'));
     if (manifest.formatVersion !== FORMAT_VERSION) fail('Неподдерживаемая версия формата архива.');
     const dump = join(destination, 'database.dump');
-    if (manifest.files?.['database.dump']?.size !== statSync(dump).size || manifest.files?.['database.dump']?.sha256 !== digest(dump)) fail('Контрольная сумма или размер дампа не совпадает.');
+    if (manifest.files?.['database.dump']?.size !== statSync(dump).size || manifest.files?.['database.dump']?.sha256 !== await digest(dump)) fail('Контрольная сумма или размер дампа не совпадает.');
     const expected = manifest.files || {};
-    const actual = mediaManifest(join(destination, 'media'));
+    const actual = await mediaManifest(join(destination, 'media'));
     if (JSON.stringify(Object.keys(actual).sort()) !== JSON.stringify(Object.keys(expected).filter((name) => name.startsWith('media/')).sort())) fail('Состав media не совпадает с manifest.json.');
     for (const [name, file] of Object.entries(actual)) {
         if (expected[name]?.size !== file.size || expected[name]?.sha256 !== file.sha256) fail(`Контрольная сумма или размер не совпадает: ${name}`);
     }
-    if (isProduction) await run('pg_restore', ['--list', dump]);
-    else {
-        await run('docker', [...DEV_COMPOSE, 'up', '-d', 'db']);
-        const child = spawn('docker', [...DEV_COMPOSE, 'exec', '-T', 'db', 'pg_restore', '--list', '-'], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] });
-        const code = await Bun.file(dump).stream().pipeTo(new WritableStream({ write(chunk) { child.stdin.write(chunk); }, close() { child.stdin.end(); } })).then(() => new Promise((resolvePromise, reject) => { child.once('error', reject); child.once('exit', resolvePromise); }));
-        if (code !== 0) fail(`pg_restore --list завершилась с кодом ${code ?? 1}`);
-    }
+    await checkDump(dump);
     return { manifest, dump, media: join(destination, 'media') };
+}
+
+async function checkDump(dump) {
+    const child = spawn('pg_restore', ['--list'], { cwd: ROOT, stdio: ['pipe', 'ignore', 'inherit'] });
+    const exited = new Promise((resolvePromise, reject) => {
+        child.once('error', (error) => reject(new Error(`Не удалось запустить pg_restore для проверки дампа: ${error.message}`)));
+        child.once('exit', resolvePromise);
+    });
+    const [code] = await Promise.all([exited, pipeline(createReadStream(dump), child.stdin)]);
+    if (code !== 0) fail(`pg_restore --list завершилась с кодом ${code ?? 1}`);
 }
 
 async function validateOnly(archive) {
@@ -182,19 +204,83 @@ async function restoreArchive(archive) {
     if (!existsSync(resolved)) fail(`Архив не найден: ${resolved}`);
     const work = mkdtempSync(join(tmpdir(), 'kroy-restore-'));
     chmodSync(work, 0o700);
+    const mediaRoot = join(ROOT, 'data/media');
+    const restoreId = randomUUID();
+    const stagedMedia = join(ROOT, 'data', `.media-restore-${restoreId}`);
+    const previousMedia = join(ROOT, 'data', `.media-before-restore-${restoreId}`);
+    let before;
+    let appWasRunning = false;
+    let appStopped = false;
+    let databaseRestored = false;
+    let oldMediaMoved = false;
+    let newMediaMoved = false;
     try {
         const { dump, media } = await validateArchive(resolved, work);
-        const before = join(BACKUPS, `before-restore-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
+        before = join(BACKUPS, `before-restore-${new Date().toISOString().replaceAll(':', '-')}.tar.gz`);
         await createArchive(before);
+
+        mkdirSync(stagedMedia, { recursive: true, mode: 0o700 });
+        await run('cp', ['-a', join(media, '.'), `${stagedMedia}/`]);
+
+        appWasRunning = (await output('docker', [...DEV_COMPOSE, 'ps', '--status', 'running', '--services', 'app']))
+            .toString().trim().split('\n').includes('app');
+        if (appWasRunning) {
+            await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
+            appStopped = true;
+        }
+
         await restoreDatabase(dump);
-        rmSync(join(ROOT, 'data/media'), { recursive: true, force: true });
-        mkdirSync(join(ROOT, 'data/media'), { recursive: true });
-        await run('cp', ['-a', join(media, '.'), join(ROOT, 'data/media/')]);
+        databaseRestored = true;
+        if (existsSync(mediaRoot)) {
+            if (!lstatSync(mediaRoot).isDirectory() || lstatSync(mediaRoot).isSymbolicLink()) fail('Каталог data/media должен быть обычным каталогом.');
+            renameSync(mediaRoot, previousMedia);
+            oldMediaMoved = true;
+        }
+        renameSync(stagedMedia, mediaRoot);
+        newMediaMoved = true;
+        if (appWasRunning) await run('docker', [...DEV_COMPOSE, 'start', 'app']);
+        if (oldMediaMoved) rmSync(previousMedia, { recursive: true, force: true });
         console.log(`Восстановление завершено. Предыдущие данные сохранены в ${before}`);
     } catch (error) {
-        console.error('Ошибка восстановления; данные PostgreSQL или media могли восстановиться не полностью. Сохраните архив before-restore для отката.');
+        const rollbackErrors = [];
+        let safeToRollback = !appWasRunning;
+        if (appWasRunning) {
+            try {
+                await run('docker', [...DEV_COMPOSE, 'stop', 'app']);
+                appStopped = true;
+                safeToRollback = true;
+            } catch (rollbackError) {
+                rollbackErrors.push(`не удалось остановить приложение: ${rollbackError.message}`);
+            }
+        }
+        if (safeToRollback) {
+            if (newMediaMoved && existsSync(mediaRoot)) {
+                try { rmSync(mediaRoot, { recursive: true, force: true }); }
+                catch (rollbackError) { rollbackErrors.push(`не удалось удалить новые media: ${rollbackError.message}`); }
+            }
+            if (oldMediaMoved && existsSync(previousMedia)) {
+                try { renameSync(previousMedia, mediaRoot); }
+                catch (rollbackError) { rollbackErrors.push(`не удалось вернуть старые media: ${rollbackError.message}`); }
+            }
+            if (databaseRestored && before) {
+                const rollbackWork = mkdtempSync(join(tmpdir(), 'kroy-db-rollback-'));
+                chmodSync(rollbackWork, 0o700);
+                try {
+                    const oldState = await validateArchive(before, rollbackWork);
+                    await restoreDatabase(oldState.dump);
+                } catch (rollbackError) {
+                    rollbackErrors.push(`БД не удалось вернуть автоматически: ${rollbackError.message}`);
+                } finally { rmSync(rollbackWork, { recursive: true, force: true }); }
+            }
+        }
+        const detail = rollbackErrors.length ? ` Ошибки отката: ${rollbackErrors.join('; ')}.` : '';
+        const appState = appStopped ? 'Приложение оставлено остановленным.' : 'Состояние приложения не менялось.';
+        console.error(`Восстановление не завершено. ${appState} Резервная копия текущего состояния: ${before && existsSync(before) ? before : 'не создана'}.${detail}`);
         throw error;
-    } finally { rmSync(work, { recursive: true, force: true }); }
+    } finally {
+        rmSync(stagedMedia, { recursive: true, force: true });
+        rmSync(work, { recursive: true, force: true });
+    }
 }
 
 function safeName(name) {
