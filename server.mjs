@@ -1,3 +1,4 @@
+import { withApiDiagnostics } from './server/apiDiagnostics.mjs';
 import createApp from '@vyaz/core/createApp.mjs';
 import auth, { hasAccess } from './server/auth.mjs';
 import deletePage from './server/api/deletePage.mjs';
@@ -365,5 +366,5 @@ await createApp({
             { method: 'GET', private: true },
             (c) => c.json({ error: 'Not found' }, 404),
         ],
-    ],
+    ].map(([path, options, handler]) => [path, options, withApiDiagnostics(handler, path)]),
 });

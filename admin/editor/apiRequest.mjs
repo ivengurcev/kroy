@@ -5,3 +5,13 @@ export async function apiRequest(url, options) {
     }
     return response;
 }
+
+export async function readApiError(response) {
+    const body = await response.json().catch(() => ({}));
+    const details = Array.isArray(body.details) ? body.details : [];
+    const description = details.map(({ path, message }) => `${path}: ${message}`).join(' ');
+    const error = new Error(description || body.error || `Ошибка сохранения (HTTP ${response.status}).`);
+    error.details = details;
+    error.status = response.status;
+    return error;
+}

@@ -3,13 +3,13 @@ import widgetCatalog from "../../dist/kroy/widgets.json" with { type: "json" };
 import { pool } from "../../db/client.mjs";
 import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
-import { isPlainObject, isValidContent } from "../../shared/pageContent.mjs";
+import { isPlainObject, validateContent } from "../../shared/pageContent.mjs";
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");
 
   if (!isUuid(pageId)) {
-    return c.json({ error: "Invalid UUID" }, 400);
+    return c.json({ error: "Invalid UUID", details: [{ path: "pageId", code: "invalid_format", message: "Некорректный идентификатор страницы." }] }, 400);
   }
 
   let body;
@@ -17,15 +17,18 @@ export default async function putPage(c) {
   try {
     body = await c.req.json();
   } catch {
-    return c.json({ error: "Invalid request" }, 400);
+    return c.json({ error: "Invalid request", details: [{ path: "body", code: "invalid_json", message: "Тело запроса должно содержать корректный JSON." }] }, 400);
   }
 
-  if (!isPlainObject(body) || !isValidContent(body.content, partCatalog, widgetCatalog)) {
-    return c.json({ error: "Invalid content" }, 400);
+  const details = isPlainObject(body)
+    ? validateContent(body.content, partCatalog, widgetCatalog)
+    : [{ path: "content", code: "invalid_format", message: "Тело запроса должно быть объектом." }];
+  if (details.length) {
+    return c.json({ error: "Invalid content", details }, 400);
   }
 
   const hostname = getHostname(c);
-  if (!hostname) return c.json({ error: "Page not found" }, 404);
+  if (!hostname) return c.json({ error: "Page not found", details: [] }, 404);
 
   const sectionIds = [];
   let client;
@@ -42,20 +45,20 @@ export default async function putPage(c) {
     );
     if (!page) {
       await client.query('ROLLBACK');
-      return c.json({ error: 'Page not found' }, 404);
+      return c.json({ error: 'Page not found', details: [] }, 404);
     }
 
-    for (const block of body.content) {
+    for (const [index, block] of body.content.entries()) {
       if (block.part !== '@kroy/material-list') continue;
       const sectionId = block.props.sectionId;
       if (sectionId === '' || sectionId === null || sectionId === undefined) {
         if (page.page_type === 'list' && page.data_source === 'materials') continue;
         await client.query('ROLLBACK');
-        return c.json({ error: 'Select a material section for this block' }, 400);
+        return c.json({ error: 'Select a material section for this block', details: [{ path: `content[${index}].props.sectionId`, code: 'required', message: 'Выберите раздел материалов.' }] }, 400);
       }
       if (!isUuid(sectionId)) {
         await client.query('ROLLBACK');
-        return c.json({ error: 'Invalid material section' }, 400);
+        return c.json({ error: 'Invalid material section', details: [{ path: 'content', code: 'invalid_section', message: 'Раздел материалов отсутствует или недоступен на этом сайте.' }] }, 400);
       }
       sectionIds.push(sectionId);
     }
@@ -70,7 +73,7 @@ export default async function putPage(c) {
       );
       if (rows.length !== uniqueSectionIds.length) {
         await client.query('ROLLBACK');
-        return c.json({ error: 'Invalid material section' }, 400);
+        return c.json({ error: 'Invalid material section', details: [{ path: 'content', code: 'invalid_section', message: 'Раздел материалов отсутствует или недоступен на этом сайте.' }] }, 400);
       }
     }
 
@@ -89,15 +92,15 @@ export default async function putPage(c) {
 
     if (rows.length === 0) {
       await client.query('ROLLBACK');
-      return c.json({ error: 'Page not found' }, 404);
+      return c.json({ error: 'Page not found', details: [] }, 404);
     }
 
     await client.query('COMMIT');
     return rows[0];
   } catch (error) {
     await client?.query('ROLLBACK').catch(() => {});
-    console.error('Failed to update page', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    console.error(JSON.stringify({ method: 'PUT', url: `/api/pages/${pageId}`, status: 500, reason: 'Page update failed', name: error?.name, frames: error?.stack?.split('\n').filter((line) => /^\s+at /.test(line)) }));
+    return c.json({ error: 'Internal server error', details: [] }, 500);
   } finally {
     client?.release();
   }

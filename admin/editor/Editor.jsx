@@ -11,7 +11,7 @@ import AdminShell from '../components/AdminShell.jsx';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
-import { apiRequest } from './apiRequest.mjs';
+import { apiRequest, readApiError } from './apiRequest.mjs';
 
 export default function Editor() {
     const { pathname, navigate } = useContext(ApplicationContext) || {};
@@ -19,6 +19,7 @@ export default function Editor() {
     const [page, setPage] = useState({ id: null, title: '', path: '' });
     const [loadStatus, setLoadStatus] = useState('loading');
     const [saveStatus, setSaveStatus] = useState('idle');
+    const [saveError, setSaveError] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
     const [theme, setTheme] = useState();
     const [contacts, setContacts] = useState();
@@ -132,6 +133,7 @@ export default function Editor() {
         const savedContent = pageContent;
         const savedRevision = revision.current;
         setSaveStatus('saving');
+        setSaveError(null);
 
         try {
             const response = await apiRequest(`/api/pages/${page.id}`, {
@@ -143,7 +145,7 @@ export default function Editor() {
             });
 
             if (!response.ok) {
-                throw new Error(`Не удалось сохранить страницу: ${response.status}`);
+                throw await readApiError(response);
             }
 
             if (revision.current === savedRevision) {
@@ -152,7 +154,8 @@ export default function Editor() {
             } else {
                 setSaveStatus('idle');
             }
-        } catch {
+        } catch (error) {
+            setSaveError(error);
             setSaveStatus('error');
         }
     }
@@ -244,6 +247,8 @@ export default function Editor() {
     }
 
     return (
+        <>
+        {saveError && <p role="alert">Не удалось сохранить страницу. {saveError.message}</p>}
         <AdminShell
             page={page}
             content={content}
@@ -269,5 +274,6 @@ export default function Editor() {
             onSave={savePage}
             onPageDetailsChange={updatePageDetails}
         />
+        </>
     );
 }

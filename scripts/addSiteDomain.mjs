@@ -1,5 +1,5 @@
 import { pool } from "../db/client.mjs";
-import isValidHostname from "./isValidHostname.mjs";
+import isValidHostname from "../build/nginx/isValidHostname.mjs";
 
 const [slug, hostname] = process.argv.slice(2);
 
