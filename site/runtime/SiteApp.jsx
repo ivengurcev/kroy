@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Page from './Page.jsx';
 import SiteRoot from './SiteRoot.jsx';
+import updatePageMeta from './updatePageMeta.mjs';
 
 const RESERVED_PATHS = [
     '/_kroy',
@@ -53,6 +54,10 @@ export default function SiteApp({
     useEffect(() => setCurrentPath(path), [path]);
 
     useEffect(() => {
+        if (page?.meta) updatePageMeta(page.meta, document);
+    }, [page]);
+
+    useEffect(() => {
         function navigate(url, push) {
             const nextPath = normalizePathname(pathFromUrl(url));
             const nextPage = pages[nextPath];
@@ -63,7 +68,7 @@ export default function SiteApp({
             }
 
             setCurrentPath(nextPath);
-            document.title = nextPage?.title ?? 'Страница не найдена';
+            if (!nextPage?.meta) document.title = nextPage?.title ?? 'Страница не найдена';
 
             if (push) {
                 history.pushState(null, '', urlForPath(nextPath, url));

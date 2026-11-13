@@ -11,7 +11,7 @@ export async function getSiteFingerprint(siteId, client = pool) {
     const { rows: [row] } = await client.query(`
         SELECT md5(jsonb_build_object(
             'site', (SELECT jsonb_build_object('name', name, 'theme_id', theme_id,
-                'theme_mode', theme_mode, 'theme_overrides', theme_overrides, 'contact_settings', contact_settings)
+                'theme_mode', theme_mode, 'theme_overrides', theme_overrides, 'contact_settings', contact_settings, 'seo', seo)
                 FROM sites WHERE id = $1),
             ${collections.join(',')}
         )::text) AS fingerprint`, [siteId]);

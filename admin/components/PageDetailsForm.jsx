@@ -4,8 +4,10 @@ import Icon from '../ui/Icon.jsx';
 import styles from './PageDetailsForm.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
-import { formResponseError } from '../ui/formValidation.mjs';
+import { formResponseError, fieldValidationMessage } from '../ui/formValidation.mjs';
 import { apiRequest } from '../editor/apiRequest.mjs';
+import Tabs from '../ui/Tabs.jsx';
+import SeoFields from './SeoFields.jsx';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -38,6 +40,9 @@ export default function PageDetailsForm({
     const [dataSource, setDataSource] = useState(page.dataSource || 'materials');
     const [materialSectionId, setMaterialSectionId] = useState(page.materialSectionId || '');
     const [sections, setSections] = useState([]);
+    const [seo, setSeo] = useState(page.seo ?? {});
+    const [siteData, setSiteData] = useState(null);
+    const [tab, setTab] = useState(0);
     const [status, setStatus] = useState('idle');
     const [error, setError] = useState('');
     const pathInputRef = useRef(null);
@@ -45,7 +50,8 @@ export default function PageDetailsForm({
     const isMainPage = page.path === '/';
     const isDetail = page.type === 'detail';
     const isDirty = title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
-        || (page.type === 'list' && (dataSource !== (page.dataSource || 'materials') || materialSectionId !== (page.materialSectionId || '')));
+        || (page.type === 'list' && (dataSource !== (page.dataSource || 'materials') || materialSectionId !== (page.materialSectionId || '')))
+        || JSON.stringify(seo) !== JSON.stringify(page.seo ?? {});
     const isSubmitting = status === 'submitting';
     const saveButton = (
         <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!isDirty || isSubmitting}>
@@ -59,6 +65,15 @@ export default function PageDetailsForm({
     );
 
     useEffect(() => {
+        const controller = new AbortController();
+        fetch('/api/site/settings', { signal: controller.signal }).then((response) => {
+            if (!response.ok) throw new Error();
+            return response.json();
+        }).then(setSiteData).catch((error) => { if (error.name !== 'AbortError') setFormError('Не удалось загрузить наследуемые SEO-настройки.'); });
+        return () => controller.abort();
+    }, [page.id]);
+
+    useEffect(() => {
         if (page.type === 'list') fetch('/api/site/material-sections').then((response) => response.json()).then((result) => setSections(Array.isArray(result) ? result : [])).catch(() => {});
     }, [page.id, page.type]);
 
@@ -68,9 +83,10 @@ export default function PageDetailsForm({
         setRouteParam(page.routeParam || 'slug');
         setDataSource(page.dataSource || 'materials');
         setMaterialSectionId(page.materialSectionId || '');
+        setSeo(page.seo ?? {});
         setStatus('idle');
         setError('');
-    }, [page.id, page.title, page.path, page.routeParam, page.dataSource, page.materialSectionId]);
+    }, [page.id, page.title, page.path, page.routeParam, page.dataSource, page.materialSectionId, page.seo]);
 
     useEffect(() => {
         onDirtyChange?.(isDirty);
@@ -119,11 +135,17 @@ export default function PageDetailsForm({
             const response = await apiRequest(`/api/pages/${page.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(isDetail ? { title, routeParam } : page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }),
+                body: JSON.stringify(isDetail ? { title, routeParam } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo }),
             });
 
             if (!response.ok) {
                 setStatus('idle');
+                const result = await response.clone().json().catch(() => ({}));
+                const names = Object.keys(result.fields ?? {});
+                if (names.length) {
+                    setTab(names[0].startsWith('seo.') ? 1 : 0);
+                    requestAnimationFrame(() => form.querySelector('[aria-invalid="true"]')?.focus());
+                }
                 setFormError(await formResponseError(response, form, errorMessage(response.status)));
                 return;
             }
@@ -136,7 +158,12 @@ export default function PageDetailsForm({
     }
 
     return (
-        <ValidatedForm className={joinClasses(styles.form, className)} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
+        <ValidatedForm className={joinClasses(styles.form, className)} onSubmitCapture={(event) => {
+            const invalid = [...event.currentTarget.elements].find((field) => field.closest(`.${styles.basic}`) && !field.disabled && fieldValidationMessage(field));
+            if (invalid) { setTab(0); requestAnimationFrame(() => invalid.focus()); }
+        }} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
+            <Tabs items={[{ label: 'Основное' }, { label: 'SEO', disabled: isDetail }, { label: 'Внешний вид', disabled: true }]} activeIndex={tab} onSelect={setTab} ariaLabel="Разделы настроек страницы" />
+            <div hidden={tab !== 0} className={styles.basic}>
             {page.type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Источник данных</span>
                 <select value={dataSource} onChange={(event) => { setDataSource(event.target.value); if (event.target.value !== 'materials') setMaterialSectionId(''); }}>
@@ -167,6 +194,8 @@ export default function PageDetailsForm({
                     onChange={(event) => setTitle(event.target.value)}
                 />
             </label>
+            </div>
+            {!isDetail && <div hidden={tab !== 1}><SeoFields value={seo} onChange={setSeo} siteData={siteData} page={{ ...page, title }} /></div>}
             <div className={joinClasses(styles.actions, actionsClassName)}>
                 {cancelFirst ? <>{cancelButton}{saveButton}</> : <>{saveButton}{cancelButton}</>}
             </div>

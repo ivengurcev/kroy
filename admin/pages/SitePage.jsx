@@ -12,6 +12,7 @@ import compactStyles from '../ui/CompactForm.module.css';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
+import SeoFields from '../components/SeoFields.jsx';
 
 const MODE_OPTIONS = [
     { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -158,13 +159,11 @@ function Overview({ siteData }) {
     </AdminPanel>;
 }
 
-function SeoPlaceholder() {
-    return <AdminPanel className={styles.placeholder}><h2>SEO</h2><p>Настройки SEO появятся позже.</p></AdminPanel>;
-}
-
 export default function SitePage() {
     const { pathname } = useContext(ApplicationContext) || {};
     const [section, setSection] = useState('appearance');
+    const [seo, setSeo] = useState(null);
+    const [savedSeo, setSavedSeo] = useState(null);
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -175,6 +174,7 @@ export default function SitePage() {
             if (!themeResponse.ok || !siteResponse.ok) throw new Error('Не удалось загрузить настройки сайта.');
             return Promise.all([themeResponse.json(), siteResponse.json()]);
         }).then(([themeResult, siteResult]) => {
+            setSeo(siteResult.seo ?? {}); setSavedSeo(siteResult.seo ?? {});
             const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
             setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
         }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
@@ -186,7 +186,8 @@ export default function SitePage() {
     }, [pathname]);
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
-    const dirty = themeDirty || contactsDirty;
+    const seoDirty = Boolean(seo && savedSeo && JSON.stringify(seo) !== JSON.stringify(savedSeo));
+    const dirty = themeDirty || contactsDirty || seoDirty;
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
@@ -196,6 +197,20 @@ export default function SitePage() {
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() {
         if (saveStatus === 'saving' || !dirty) return;
+        if (section === 'seo') {
+            if (!seoDirty) return;
+            const requestSeo = JSON.stringify(seo);
+            setSaveStatus('saving'); setError('');
+            try {
+                const response = await apiRequest('/api/site/seo', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: requestSeo });
+                if (!response.ok) throw new Error(await formResponseError(response, document.getElementById('seo-form'), 'Не удалось сохранить SEO-настройки.'));
+                const result = await response.json();
+                setSavedSeo(result); setSeo((current) => JSON.stringify(current) === requestSeo ? result : current);
+                setSiteData((current) => ({ ...current, seo: result }));
+                setSaveStatus('success');
+            } catch (error) { setError(error.message); setSaveStatus('error'); }
+            return;
+        }
         const contactForm = document.getElementById('contact-form');
         const requestTheme = themeDirty ? cloneSettings(draft) : null;
         const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
@@ -220,14 +235,14 @@ export default function SitePage() {
     }
     const activeMode = draft?.themeMode;
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
-    const saveAction = section === 'contacts' || section === 'appearance'
-        ? () => document.getElementById(section === 'contacts' ? 'contact-form' : 'appearance-form')?.requestSubmit()
+    const saveAction = section === 'contacts' || section === 'appearance' || section === 'seo'
+        ? () => document.getElementById(section === 'contacts' ? 'contact-form' : section === 'seo' ? 'seo-form' : 'appearance-form')?.requestSubmit()
         : undefined;
-    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : undefined}>
+    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : section === 'seo' ? 'seo-form' : undefined}>
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
         {section === 'catalog' && <CatalogEditor />}
-        {section === 'seo' && <SeoPlaceholder />}
+        {section === 'seo' && seo && <AdminPanel as="form" id="seo-form" className={styles.contactPanel} onSubmit={(event) => { event.preventDefault(); save(); }}><SeoFields value={seo} onChange={(next) => { clearSaveError(); setSeo(next); }} siteData={siteData} /></AdminPanel>}
         {section === 'appearance' && draft && selectedTheme && <ValidatedForm id="appearance-form" className={styles.content} onSubmit={(event) => { event.preventDefault(); save(); }}>
             <AdminPanel className={styles.panel}>
                 <div className={styles.sectionHeading}>

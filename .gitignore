@@ -11,7 +11,12 @@ nbproject
 
 # Build
 dist/
-build/
+/build/*
+!/build/site/
+/build/site/*
+!/build/site/createMaterialPages.mjs
+!/build/site/seoFiles.mjs
+!/build/site/seoHead.test.mjs
 .cache/
 
 # Persistent media

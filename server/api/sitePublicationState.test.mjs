@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, cp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pool } from '../../db/client.mjs';
 import { getSitePublicationState } from './sitePublicationState.mjs';
+import { createHash } from 'node:crypto';
 
 test('publication state compares saved data with the active release across edits, restart and rollback', async (t) => {
     const root = await mkdtemp('/tmp/opencode/kroy-publication-');
@@ -66,4 +67,36 @@ test('fingerprint survives staging publication and only reports changes after sa
     assert.deepEqual(await getSitePublicationState(site, options), { releaseId, hasChanges: false });
     currentFingerprint = 'saved-b';
     assert.deepEqual(await getSitePublicationState(site, options), { releaseId, hasChanges: true });
+});
+
+test('site and page SEO edits use the same publication state and a matching release clears changes', async (t) => {
+    const root = await mkdtemp('/tmp/opencode/kroy-seo-publication-');
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const options = { nginxDir: join(root, 'nginx'), sitesDir: join(root, 'sites') };
+    const site = { id: 'site-a', slug: 'seo' };
+    const releaseId = '20261113000000000';
+    const saved = { site: { seo: {} }, pages: [{ seo: {} }] };
+    const digest = () => createHash('md5').update(JSON.stringify(saved)).digest('hex');
+    // SQL contract plus the state consumer: no separate SEO dirty flag exists.
+    t.mock.method(pool, 'query', async (sql) => {
+        assert.match(sql, /'seo', seo/);
+        assert.match(sql, /FROM pages t WHERE site_id = \$1/);
+        assert.doesNotMatch(sql, /- 'seo'/);
+        return { rows: [{ fingerprint: digest() }] };
+    });
+    await mkdir(join(options.nginxDir, 'sites'), { recursive: true });
+    const releaseDir = join(options.sitesDir, site.slug, releaseId);
+    await mkdir(releaseDir, { recursive: true });
+    await writeFile(join(options.nginxDir, 'sites', 'seo.conf'), `# Kroy release: ${releaseId}\n`);
+    const publish = () => writeFile(join(releaseDir, 'source-fingerprint.json'), JSON.stringify({ fingerprint: digest() }));
+    await publish();
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
+    saved.site.seo.description = 'Changed site description';
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, true);
+    await publish();
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
+    saved.pages[0].seo.title = 'Changed page title';
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, true);
+    await publish();
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
 });

@@ -16,6 +16,8 @@ import createSiteSvgPlugin from './siteSvgPlugin.mjs';
 import { assertMaterialPathsAvailable, createMaterialPages } from './createMaterialPages.mjs';
 import { createClientPageRegistry } from './sitePageData.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
+import { isSeoDomain, resolvePageMeta } from '../../shared/seo.mjs';
+import { createRobots, createSitemap } from './seoFiles.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'build', 'site', 'hydrateSite.jsx');
@@ -131,6 +133,7 @@ try {
     let publishedMaterials;
     let redirects;
     let deletedPages;
+    let seoMedia;
     let transactionStarted = false;
 
     client = await pool.connect();
@@ -142,7 +145,7 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo
              FROM sites
              WHERE slug = $1`,
             [siteSlug]
@@ -165,9 +168,14 @@ try {
         if (domainsResult.rows.length === 0) {
             throw new Error(`У сайта ${site.slug} нет доменов`);
         }
+        const primaryDomain = site.seo.primaryDomain || domainsResult.rows.find(({ hostname }) => isSeoDomain(hostname))?.hostname;
+        if (!isSeoDomain(primaryDomain) || !domainsResult.rows.some(({ hostname }) => hostname === primaryDomain)) {
+            throw new Error('Выберите привязанный публичный основной домен в SEO-настройках сайта.');
+        }
+        site.seo = { ...site.seo, primaryDomain };
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
+            `SELECT id, site_id, path, title, content, seo, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NULL
@@ -224,6 +232,12 @@ try {
         publishedMaterials = materialsResult.rows;
         redirects = redirectsResult.rows;
         deletedPages = deletedPagesResult.rows.filter(({ page_type }) => page_type !== 'detail');
+        const imageIds = [...new Set([site.seo.imageId, ...pages.map((page) => page.seo?.imageId)].filter(Boolean))];
+        const mediaResult = await client.query('SELECT id, filename FROM media WHERE site_id = $1 AND id = ANY($2::uuid[])', [site.id, imageIds]);
+        seoMedia = mediaResult.rows;
+        const imageUrls = new Map(seoMedia.map(({ id, filename }) => [id, `${ASSET_BASE}/seo/${filename}`]));
+        site.seo.imageUrl = imageUrls.get(site.seo.imageId) ?? null;
+        pages = pages.map((page) => ({ ...page, seo: { ...page.seo, imageUrl: imageUrls.get(page.seo?.imageId) ?? null } }));
         if (allDetailTemplates.some(({ path, route_param }) =>
             !isValidPageRoutePattern(path) || !path.endsWith(`/:${route_param}`)
         )) {
@@ -274,7 +288,8 @@ try {
         ...deletedPages.map(({ path }) => path),
         ...allDetailTemplates.filter(({ id }) => !materialTemplateIds.has(id)).map(({ path }) => path),
     ]);
-    const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages];
+    const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages]
+        .map((page) => ({ ...page, meta: resolvePageMeta(site, page) }));
 
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
@@ -349,8 +364,16 @@ try {
     );
 
     await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);
+    await writeFile(join(temporaryDirectory, 'robots.txt'), createRobots(`https://${site.seo.primaryDomain}`));
+    await writeFile(join(temporaryDirectory, 'sitemap.xml'), createSitemap(renderPages));
     await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
+    await mkdir(join(temporaryDirectory, 'assets', 'seo'), { recursive: true });
+    for (const { filename } of seoMedia) {
+        const source = getMediaPath(site.id, filename);
+        if (!source) throw new Error(`Некорректное SEO-изображение: ${filename}`);
+        await copyFile(source, join(temporaryDirectory, 'assets', 'seo', filename));
+    }
     await mkdir(join(temporaryDirectory, 'assets', 'reviews'), { recursive: true });
     for (const review of publishedReviews) {
         if (!review.mediaFilename) continue;

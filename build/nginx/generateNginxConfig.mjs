@@ -14,6 +14,8 @@ const MIME_TYPES = `types {
     text/css css;
     application/javascript js mjs;
     application/json json map;
+    application/xml xml;
+    text/plain txt;
     image/svg+xml svg;
     image/png png;
     image/jpeg jpg jpeg;

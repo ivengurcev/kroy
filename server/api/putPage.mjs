@@ -86,7 +86,7 @@ export default async function putPage(c) {
          AND p.site_id = d.site_id
          AND p.deleted_at IS NULL
          AND d.hostname = $3
-       RETURNING p.id, p.site_id, p.path, p.title, p.content`,
+        RETURNING p.id, p.site_id, p.path, p.title, p.content, p.seo`,
       [JSON.stringify(body.content), pageId, hostname, page.site_id],
     );
 

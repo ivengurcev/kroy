@@ -11,6 +11,8 @@ import {
 import findPageRouteConflict from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
+import { normalizeSeo } from '../../shared/seo.mjs';
+import { seoReferenceErrors } from './seoValidation.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -26,6 +28,9 @@ export default async function patchPage(c) {
 
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const hasTitle = Object.hasOwn(body ?? {}, "title");
+  const hasSeo = Object.hasOwn(body ?? {}, 'seo');
+  const seoInput = hasSeo ? normalizeSeo(body.seo) : null;
+  if (seoInput && Object.keys(seoInput.fields).length) return c.json({ error: 'Проверьте SEO-настройки', fields: Object.fromEntries(Object.entries(seoInput.fields).map(([key, message]) => [`seo.${key}`, message])) }, 400);
   const hasPath = Object.hasOwn(body ?? {}, "path");
   const hasRouteParam = Object.hasOwn(body ?? {}, "routeParam");
   const hasDataSource = Object.hasOwn(body ?? {}, "dataSource");
@@ -34,8 +39,8 @@ export default async function patchPage(c) {
 
   if (
     keys.length === 0
-    || keys.length > 5
-    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId"].includes(key))
+    || keys.length > 6
+    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo"].includes(key))
     || (hasTitle && !title)
     || (hasRouteParam && !isValidRouteParameter(body.routeParam))
     || (hasDataSource && !isPageDataSource(body.dataSource))
@@ -67,7 +72,7 @@ export default async function patchPage(c) {
 
     const siteId = sites[0].id;
     const { rows: pages } = await client.query(
-      `SELECT id, site_id, path, title, content, page_type, data_source, material_section_id,
+      `SELECT id, site_id, path, title, content, seo, page_type, data_source, material_section_id,
               detail_parent_id, route_param
        FROM pages
        WHERE id = $1 AND site_id = $2 AND deleted_at IS NULL
@@ -81,7 +86,7 @@ export default async function patchPage(c) {
     }
 
     if (
-      page.page_type === "detail" && (hasPath || hasDataSource || hasMaterialSectionId)
+      page.page_type === "detail" && (hasPath || hasDataSource || hasMaterialSectionId || hasSeo)
       || page.page_type !== "detail" && hasRouteParam
       || page.page_type !== "list" && (hasDataSource || hasMaterialSectionId)
     ) {
@@ -90,6 +95,13 @@ export default async function patchPage(c) {
     }
 
     const nextTitle = hasTitle ? title : page.title;
+    if (hasSeo) {
+      const fields = await seoReferenceErrors(client, siteId, seoInput.seo);
+      if (Object.keys(fields).length) {
+        await client.query('ROLLBACK');
+        return c.json({ error: 'Проверьте SEO-настройки', fields: Object.fromEntries(Object.entries(fields).map(([key, message]) => [`seo.${key}`, message])) }, 400);
+      }
+    }
     const nextRouteParam = hasRouteParam ? body.routeParam : page.route_param;
     const nextDataSource = hasDataSource ? body.dataSource : page.data_source;
     const nextMaterialSectionId = nextDataSource === "materials"
@@ -192,14 +204,15 @@ export default async function patchPage(c) {
     const { rows } = await client.query(
       `UPDATE pages
        SET title = $2, path = $3, route_param = $4,
-           data_source = $5, material_section_id = $6
+            data_source = $5, material_section_id = $6, seo = $7::jsonb
        WHERE id = $1
-       RETURNING id, site_id, path, title, content, page_type AS type,
+        RETURNING id, site_id, path, title, content, seo, page_type AS type,
                  data_source AS "dataSource", material_section_id AS "materialSectionId",
                  detail_parent_id AS "detailParentId", route_param AS "routeParam"`,
       [pageId, nextTitle, nextPath, page.page_type === "detail" ? nextRouteParam : null,
         page.page_type === "list" ? nextDataSource : null,
-        page.page_type === "list" ? nextMaterialSectionId : null],
+        page.page_type === "list" ? nextMaterialSectionId : null,
+        JSON.stringify(hasSeo ? seoInput.seo : page.seo)],
     );
 
     if (detailTemplate && nextDetailPath !== detailTemplate.path) {

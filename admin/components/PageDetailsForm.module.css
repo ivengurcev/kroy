@@ -3,6 +3,9 @@
     gap: var(--space-4);
 }
 
+.basic:not([hidden]) { display: grid; gap: var(--space-4); min-width: 0; }
+.form > nav, .form > div { grid-column: 1 / -1; min-width: 0; }
+
 .field {
     display: grid;
     gap: var(--space-2);

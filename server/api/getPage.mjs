@@ -27,8 +27,8 @@ export default async function getPage(c) {
               AND p.deleted_at IS NOT NULL
              WHERE d.hostname = $1
              ORDER BY p.deleted_at DESC, p.id`
-          : `SELECT p.id, p.path, p.title, p.page_type AS type,
-                    p.data_source AS "dataSource",
+          : `SELECT p.id, p.path, p.title, p.seo, p.page_type AS type,
+                     p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
                     p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam",
                     detail.id AS "detailTemplateId", detail.path AS "detailTemplatePath",
                     detail.deleted_at AS "detailTemplateDeletedAt"
@@ -79,7 +79,7 @@ export default async function getPage(c) {
 
   try {
     const { rows } = await pool.query(
-      `SELECT p.id, p.site_id, p.path, p.title, p.content,
+       `SELECT p.id, p.site_id, p.path, p.title, p.content, p.seo,
               p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
               p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
        FROM pages p

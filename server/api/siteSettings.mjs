@@ -13,6 +13,7 @@ export default async function getSiteSettings(c) {
 
     return c.json({
         site,
+        seo: (await pool.query('SELECT seo FROM sites WHERE id = $1', [site.id])).rows[0].seo,
         domains: domains.map(({ hostname }) => hostname),
         contacts: await getSiteContacts(site.id),
     });

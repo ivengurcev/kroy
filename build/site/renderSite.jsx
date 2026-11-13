@@ -10,6 +10,7 @@ import { contacts } from '../../dist/kroy/site-contacts.mjs';
 import { catalog } from '../../dist/kroy/site-catalog.mjs';
 import { reviews } from '../../dist/kroy/site-reviews.mjs';
 import { serializePagePayload } from './sitePageData.mjs';
+import SeoHead from '../../site/runtime/SeoHead.jsx';
 
 const DIST_DIR = resolve('dist');
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -47,7 +48,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                 <head>
                     <meta charSet="UTF-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=1" />
-                    <title>{page.title}</title>
+                    <SeoHead meta={page.meta} />
                     <link rel="stylesheet" href={`${assetBase}/app.css`} />
                     <link rel="icon" href={`${assetBase}/favicon.svg`} type="image/svg+xml" />
                 </head>

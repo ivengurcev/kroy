@@ -43,7 +43,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin/reviews` | Модерация отзывов |
 | `/admin/materials` | Разделы и материалы |
 | `/admin/materials/new`, `/admin/materials/:id` | Создание и редактирование материала |
-| `/admin/seo` | SEO-настройки (пока заглушка) |
+| `/admin/seo` | Общие SEO-настройки сайта |
 | `/admin/preview?path=...` | Сохранённый сайт до публикации |
 | `/auth/signin`, `/auth/signout` | Вход и выход Auth.js |
 
@@ -58,11 +58,12 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `GET /pages` | Список без content; `?deleted=1` — корзина |
 | `GET /pages?path=/`, `GET /pages/:pageId` | Страница с content |
 | `POST /pages` | Создать пустую страницу; title/path, type/dataSource для списка |
-| `PATCH /pages/:pageId` | title/path; у detail — routeParam вместо произвольного path |
+| `PATCH /pages/:pageId` | title/path/seo; у detail — routeParam вместо произвольного path, без seo |
 | `PUT /pages/:pageId` | Полностью заменить content; формат в [PARTS.md](PARTS.md) |
 | `DELETE /pages/:pageId`, `POST /pages/:pageId/restore` | Мягкое удаление / восстановление |
 | `POST /pages/:pageId/detail-template` | Создать один detail-шаблон для list |
 | `GET /site/settings` | Общие данные настроек |
+| `PATCH /site/seo` | Полностью заменить общие SEO-настройки; чтение через `/site/settings` |
 | `GET/PATCH /site/theme`, `GET/PATCH /site/contact` | Тема и контакты |
 | `GET/PATCH /site/catalog` | Категории и позиции каталога |
 | `GET/POST /site/catalog/categories`, `PATCH/DELETE /site/catalog/categories/:id` | Разделы каталога |
