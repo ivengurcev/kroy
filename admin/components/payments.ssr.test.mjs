@@ -30,7 +30,10 @@ before(async () => {
                 export { default as AdminHeader } from './admin/components/AdminHeader.jsx';
                 export { default as AdminShell } from './admin/components/AdminShell.jsx';
                 export { MaterialActions } from './admin/pages/SiteMaterialEditorPage.jsx';
-                export { default as useAutoSlug } from './admin/editor/useAutoSlug.jsx';`,
+                 export { default as useAutoSlug } from './admin/editor/useAutoSlug.jsx';
+                 export { default as PageList } from './admin/components/PageList.jsx';
+                 export { default as PageSettingsPage } from './admin/pages/PageSettingsPage.jsx';
+                 export { default as PageDetailsForm } from './admin/components/PageDetailsForm.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath, bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',
@@ -45,6 +48,30 @@ before(async () => {
     components = await import(pathToFileURL(compiledPath).href);
 });
 after(() => rm(compiledPath, { force: true }));
+
+test('page tree opens content by title and settings via a dedicated URL, not inline form', () => {
+    const pages = [{ id: 'page', title: 'About', path: '/about', redirects: ['/old'] }, { id: 'deleted', title: 'Deleted', path: '/deleted', deleted_at: 'now' }];
+    const html = renderToString(createElement(components.PageList, { pages }));
+    assert.match(html, /href="\/admin\/pages\/page"/);
+    assert.match(html, /href="\/admin\/pages\/page\/settings"/);
+    assert.match(html, /aria-expanded="false"[^>]*>↪ (?:<!-- -->)?1/);
+    assert.doesNotMatch(html, /<form|301 →|Deleted/);
+    const deleted = renderToString(createElement(components.PageList, { pages, showDeleted: true }));
+    assert.match(deleted, /Удалена|Восстановить/);
+    assert.doesNotThrow(() => renderToString(createElement(components.PageSettingsPage)));
+});
+
+test('settings form retains SEO tabs, inherited fields and external footer submission', () => {
+    const html = renderToString(createElement(components.PageDetailsForm, {
+        page: { id: 'page', title: 'About', path: '/about', type: 'standard', seo: { title: 'SEO About' } },
+        formId: 'page-settings-form', hideActions: true, handleEscape: false,
+    }));
+    assert.match(html, /id="page-settings-form"/);
+    assert.match(html, /SEO About/);
+    assert.match(html, /Основное/);
+    assert.match(html, /Внешний вид/);
+    assert.doesNotMatch(html, /type="submit"/);
+});
 
 function descendants(element) {
     if (Array.isArray(element)) return element.flatMap(descendants);

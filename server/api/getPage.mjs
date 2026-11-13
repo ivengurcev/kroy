@@ -10,7 +10,7 @@ export default async function getPage(c) {
 
   if (!hostname) return c.json({ error: "Page not found" }, 404);
 
-  if (pageId === undefined && deleted !== undefined && (deleted !== "1" || path !== undefined)) {
+  if (pageId === undefined && deleted !== undefined && (!["1", "all"].includes(deleted) || path !== undefined)) {
     return c.json({ error: "Invalid request" }, 400);
   }
 
@@ -27,19 +27,27 @@ export default async function getPage(c) {
               AND p.deleted_at IS NOT NULL
              WHERE d.hostname = $1
              ORDER BY p.deleted_at DESC, p.id`
-          : `SELECT p.id, p.path, p.title, p.seo, p.page_type AS type,
+          : `SELECT p.id, p.path, p.title, p.seo, p.deleted_at, p.page_type AS type,
                      p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
                     p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam",
                     detail.id AS "detailTemplateId", detail.path AS "detailTemplatePath",
-                    detail.deleted_at AS "detailTemplateDeletedAt"
+                     detail.deleted_at AS "detailTemplateDeletedAt",
+                     ARRAY(SELECT r.from_path FROM redirects r
+                           WHERE r.site_id = p.site_id AND r.page_id = p.id
+                             AND p.deleted_at IS NULL AND p.page_type <> 'detail'
+                             AND r.from_path <> p.path
+                             AND NOT EXISTS (SELECT 1 FROM pages owner
+                                 WHERE owner.site_id = p.site_id AND owner.path = r.from_path
+                                   AND owner.deleted_at IS NULL)
+                           ORDER BY r.from_path) AS redirects
              FROM domains d
              LEFT JOIN pages p ON p.site_id = d.site_id
-              AND p.deleted_at IS NULL
+               AND (p.deleted_at IS NULL OR $2::boolean)
              LEFT JOIN pages detail ON detail.site_id = p.site_id
               AND detail.detail_parent_id = p.id AND detail.page_type = 'detail'
              WHERE d.hostname = $1
              ORDER BY p.path, p.id`,
-        [hostname],
+        deletedPages ? [hostname] : [hostname, deleted === "all"],
       );
 
       if (rows.length === 0) {

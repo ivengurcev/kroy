@@ -5,7 +5,7 @@ import {
   isValidPagePath,
   normalizePageTitle,
 } from "../../shared/pageFields.mjs";
-import findPageRouteConflict from "./pageRouteConflicts.mjs";
+import findPageRouteConflict, { releasePageRedirects } from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import isUuid from "./isUuid.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
@@ -66,13 +66,14 @@ export default async function postPage(c) {
       const { rowCount } = await client.query("SELECT 1 FROM material_sections WHERE id = $1 AND site_id = $2", [materialSectionId, siteId]);
       if (!rowCount) { await client.query("ROLLBACK"); return c.json({ error: "Выберите раздел", fields: { materialSectionId: 'Выберите доступный раздел' } }, 400); }
     }
-    const conflict = await findPageRouteConflict(client, siteId, body.path);
+    const conflict = await findPageRouteConflict(client, siteId, body.path, { reclaimRedirects: true });
 
     if (conflict) {
       await client.query("ROLLBACK");
       return c.json({ error: "Такой адрес уже используется", fields: pageConflictFields() }, 409);
     }
 
+    await releasePageRedirects(client, siteId, body.path);
     const { rows } = await client.query(
       `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
        VALUES ($1, $2, $3, '[]'::jsonb, $4, $5, $6)

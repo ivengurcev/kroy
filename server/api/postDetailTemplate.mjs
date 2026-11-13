@@ -2,7 +2,7 @@ import { pool } from '../../db/client.mjs';
 import getHostname from './getHostname.mjs';
 import isUuid from './isUuid.mjs';
 import { createDetailPath, isValidRouteParameter, normalizePageTitle } from '../../shared/pageFields.mjs';
-import findPageRouteConflict from './pageRouteConflicts.mjs';
+import findPageRouteConflict, { releasePageRedirects } from './pageRouteConflicts.mjs';
 import partCatalog from '../../dist/kroy/parts.json' with { type: 'json' };
 import widgetCatalog from '../../dist/kroy/widgets.json' with { type: 'json' };
 import { defaultProps, createView } from '../../shared/partModel.js';
@@ -90,12 +90,14 @@ export default async function postDetailTemplate(c) {
         const path = createDetailPath(list.path, routeParam);
         const conflict = await findPageRouteConflict(client, siteId, path, {
             excludePageIds: [listPageId],
+            reclaimRedirects: true,
         });
         if (conflict) {
             await client.query('ROLLBACK');
             return c.json({ error: 'Page already exists' }, 409);
         }
 
+        await releasePageRedirects(client, siteId, path);
         const { rows } = await client.query(
             `INSERT INTO pages (site_id, title, path, content, page_type, detail_parent_id, route_param)
              VALUES ($1, $2, $3, $4::jsonb, 'detail', $5, $6)

@@ -488,8 +488,7 @@ ALTER TABLE ONLY public.pages
 -- Name: pages pages_site_id_path_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.pages
-    ADD CONSTRAINT pages_site_id_path_key UNIQUE (site_id, path);
+CREATE UNIQUE INDEX pages_site_id_path_key ON public.pages USING btree (site_id, path) WHERE (deleted_at IS NULL);
 
 
 --
@@ -911,4 +910,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611020000'),
     ('202611020001'),
     ('202611050001'),
-    ('202611130001');
+    ('202611130001'),
+    ('202611130002');

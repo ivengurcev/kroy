@@ -65,7 +65,7 @@ try {
   await client.query(
     `INSERT INTO pages (site_id, path, title, content)
      VALUES ($1, $2, $3, $4)
-     ON CONFLICT (site_id, path) DO NOTHING`,
+     ON CONFLICT (site_id, path) WHERE deleted_at IS NULL DO NOTHING`,
     [siteId, "/", "Главная", JSON.stringify(pageContent)],
   );
 
@@ -101,7 +101,7 @@ try {
   await client.query(
     `INSERT INTO pages (site_id, path, title, content)
      VALUES ($1, $2, $3, $4)
-     ON CONFLICT (site_id, path) DO NOTHING`,
+     ON CONFLICT (site_id, path) WHERE deleted_at IS NULL DO NOTHING`,
     [testSiteId, "/", "Тестовая главная", JSON.stringify(testPageContent)],
   );
 

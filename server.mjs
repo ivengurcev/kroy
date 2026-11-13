@@ -48,6 +48,20 @@ await createApp({
             component: './admin/pages/PagesPage.jsx',
         },
         {
+            path: '/admin/pages/new',
+            isPrivate: true,
+            disableSSR: true,
+            title: 'Новая страница Oysite',
+            component: './admin/pages/PageSettingsPage.jsx',
+        },
+        {
+            path: '/admin/pages/:pageId/settings',
+            isPrivate: true,
+            disableSSR: true,
+            title: 'Настройки страницы Oysite',
+            component: './admin/pages/PageSettingsPage.jsx',
+        },
+        {
             path: '/admin/pages/trash',
             isPrivate: true,
             disableSSR: true,

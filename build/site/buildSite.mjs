@@ -281,8 +281,7 @@ try {
     const materialTemplateIds = new Set(detailTemplates.map(({ id }) => id));
     assertMaterialPathsAvailable(materialPages, [
         ...pages.map(({ path }) => path),
-        ...redirects.map(({ from_path: path }) => path),
-        ...deletedPages.map(({ path }) => path),
+        ...redirects.filter(({ deleted_at }) => deleted_at === null).map(({ from_path: path }) => path),
         ...allDetailTemplates.filter(({ id }) => !materialTemplateIds.has(id)).map(({ path }) => path),
     ]);
     const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages]
@@ -430,7 +429,8 @@ try {
         site.slug,
         redirects,
         deletedPages,
-        join(temporaryDirectory, 'routing.json')
+        join(temporaryDirectory, 'routing.json'),
+        renderPages.map(({ path }) => path)
     );
 
     await rm(previousDirectory, { recursive: true, force: true });

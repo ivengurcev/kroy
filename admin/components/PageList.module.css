@@ -1,15 +1,17 @@
-.pageList { min-width: 0; }
-.errorArea { margin-bottom: var(--space-2); color: var(--color-error-text); font-size: var(--font-size-sm); }
-.table { table-layout: fixed; }
-.table th:first-child { width: 30%; }
-.table th:last-child { width: 150px; text-align: right; }
-.path, .title { display: block; min-width: 0; overflow-wrap: anywhere; }
-a.title { color: var(--color-primary); font-weight: var(--font-weight-bold); text-decoration: none; }
-.rowContents { grid-template-columns: minmax(0, 30fr) minmax(0, 45fr) minmax(160px, 25fr); align-items: end; gap: var(--space-3); }
-.rowContents .path, .rowContents .title { min-width: 0; }
-.rowContents input, .rowContents select { box-sizing: border-box; max-width: 100%; }
-.actions { flex-wrap: wrap; }
-@media (max-width: 700px) {
-    .table { min-width: 580px; }
-    .rowContents { grid-template-columns: minmax(0, 1fr); }
+.tree { min-width: 0; border-top: 1px solid var(--color-border); }
+.row { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; padding-left: calc(var(--depth) * 8px); border-bottom: 1px solid var(--color-border); min-width: 0; }
+.spacer { width: 32px; flex: 0 0 32px; }
+.info { flex: 1; min-width: 0; }
+.heading { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+.heading a { color: var(--color-text); text-decoration: none; font-weight: 500; }
+.heading a:hover { color: var(--color-primary); }
+.path { display: block; min-width: 0; overflow-wrap: anywhere; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.deleted .info { opacity: .6; }
+.badge { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.edit { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); color: var(--color-text-secondary); }
+.edit:hover { color: var(--color-primary); background: var(--color-surface); }
+.redirect { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) 0 var(--space-2) calc(var(--depth) * 8px + 40px); border-bottom: 1px solid var(--color-border); }
+@media (min-width: 768px) {
+    .row { padding-left: calc(var(--depth) * 20px); }
+    .redirect { padding-left: calc(var(--depth) * 20px + 40px); }
 }

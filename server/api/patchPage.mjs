@@ -8,7 +8,7 @@ import {
   isValidRouteParameter,
   normalizePageTitle,
 } from "../../shared/pageFields.mjs";
-import findPageRouteConflict from "./pageRouteConflicts.mjs";
+import findPageRouteConflict, { releasePageRedirects } from "./pageRouteConflicts.mjs";
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import { normalizeSeo } from '../../shared/seo.mjs';
@@ -154,7 +154,7 @@ export default async function patchPage(c) {
 
     if (page.page_type === "list" && pathChanged) {
       const { rows: templates } = await client.query(
-        `SELECT id, path, route_param
+        `SELECT id, path, route_param, deleted_at
          FROM pages
          WHERE site_id = $1 AND detail_parent_id = $2 AND page_type = 'detail'
          FOR UPDATE`,
@@ -167,6 +167,7 @@ export default async function patchPage(c) {
     if (pathChanged) {
       const conflict = await findPageRouteConflict(client, siteId, nextPath, {
         excludePageIds: excluded,
+        reclaimRedirects: true,
         excludeRedirectPageIds: page.page_type === "detail" ? [] : [pageId],
       });
       if (conflict) {
@@ -178,9 +179,10 @@ export default async function patchPage(c) {
     const nextDetailPath = detailTemplate
       ? createDetailPath(nextPath, detailTemplate.route_param)
       : null;
-    if (nextDetailPath && nextDetailPath !== detailTemplate.path) {
+    if (nextDetailPath && !detailTemplate.deleted_at && nextDetailPath !== detailTemplate.path) {
       const conflict = await findPageRouteConflict(client, siteId, nextDetailPath, {
         excludePageIds: excluded,
+        reclaimRedirects: true,
       });
       if (conflict) {
         await client.query("ROLLBACK");
@@ -188,6 +190,12 @@ export default async function patchPage(c) {
       }
     }
 
+    if (pathChanged) {
+      await releasePageRedirects(client, siteId, nextPath);
+    }
+    if (nextDetailPath && !detailTemplate.deleted_at && nextDetailPath !== detailTemplate.path) {
+      await releasePageRedirects(client, siteId, nextDetailPath);
+    }
     if (page.page_type !== "detail" && pathChanged) {
       const { rows: redirects } = await client.query(
         `SELECT page_id FROM redirects WHERE site_id = $1 AND from_path = $2`,

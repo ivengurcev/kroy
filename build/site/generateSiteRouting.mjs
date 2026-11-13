@@ -10,7 +10,8 @@ export default async function generateSiteRouting(
     siteSlug,
     redirects,
     deletedPages,
-    outputPath = join(OUTPUT_DIR, `${siteSlug}.json`)
+    outputPath = join(OUTPUT_DIR, `${siteSlug}.json`),
+    activePaths = []
 ) {
     const paths = [
         ...redirects.flatMap(({ from_path: from, path }) => [from, path]),
@@ -21,16 +22,18 @@ export default async function generateSiteRouting(
         throw new Error(`Некорректный публичный путь сайта ${siteSlug}`);
     }
 
+    const occupied = new Set(activePaths);
     const activeRedirects = redirects
-        .filter(({ deleted_at: deletedAt }) => deletedAt === null)
+        .filter(({ deleted_at: deletedAt, from_path: from, path }) => deletedAt === null && from !== path && !occupied.has(from))
         .map(({ from_path: from, path: to }) => ({ from, to, status: 301 }))
         .sort((a, b) => a.from < b.from ? -1 : a.from > b.from ? 1 : 0);
+    for (const { from } of activeRedirects) occupied.add(from);
     const gone = [...new Set([
         ...redirects
             .filter(({ deleted_at: deletedAt }) => deletedAt !== null)
             .map(({ from_path: from }) => from),
         ...deletedPages.map(({ path }) => path),
-    ])].sort();
+    ])].filter((path) => !occupied.has(path)).sort();
     await mkdir(dirname(outputPath), { recursive: true });
     await writeFile(
         outputPath,

@@ -62,7 +62,7 @@ test('registered navigation guard exempts preserved settings only, for navigate 
     assert.equal(prompts, 0);
     assert.equal(header.isDirty, true); // Exemption does not reset dirty/publication state.
     for (const type of ['navigate', 'popstate']) {
-        for (const from of [...settings, '/admin/pages/page-id']) {
+        for (const from of [...settings, '/admin/pages/page-id', '/admin/pages/page-id/settings', '/admin/pages/new']) {
             const transition = { from: url(from), to: url('/admin/materials'), type };
             confirmed = false;
             const before = prompts;

@@ -8,6 +8,7 @@ import { formResponseError, fieldValidationMessage } from '../ui/formValidation.
 import { apiRequest } from '../editor/apiRequest.mjs';
 import Tabs from '../ui/Tabs.jsx';
 import SeoFields from './SeoFields.jsx';
+import useAutoSlug from '../editor/useAutoSlug.jsx';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -33,7 +34,12 @@ export default function PageDetailsForm({
     pathClassName = '',
     titleClassName = '',
     actionsClassName = '',
+    formId,
+    hideActions = false,
+    onSaveStatusChange,
 }) {
+    const isNew = !page.id;
+    const [type, setType] = useState(page.type || 'standard');
     const [title, setTitle] = useState(page.title);
     const [path, setPath] = useState(page.path);
     const [routeParam, setRouteParam] = useState(page.routeParam || 'slug');
@@ -45,11 +51,12 @@ export default function PageDetailsForm({
     const [tab, setTab] = useState(0);
     const [status, setStatus] = useState('idle');
     const [error, setError] = useState('');
+    const { slug: generatedPath, changeSlug } = useAutoSlug({ title, value: path, onChange: setPath, prefix: '/', maxLength: Infinity, enabled: isNew });
     const pathInputRef = useRef(null);
     const titleInputRef = useRef(null);
-    const isMainPage = page.path === '/';
+    const isMainPage = !isNew && page.path === '/';
     const isDetail = page.type === 'detail';
-    const isDirty = title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
+    const isDirty = (isNew && Boolean(title || path || type !== 'standard')) || title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
         || (page.type === 'list' && (dataSource !== (page.dataSource || 'materials') || materialSectionId !== (page.materialSectionId || '')))
         || JSON.stringify(seo) !== JSON.stringify(page.seo ?? {});
     const isSubmitting = status === 'submitting';
@@ -74,8 +81,8 @@ export default function PageDetailsForm({
     }, [page.id]);
 
     useEffect(() => {
-        if (page.type === 'list') fetch('/api/site/material-sections').then((response) => response.json()).then((result) => setSections(Array.isArray(result) ? result : [])).catch(() => {});
-    }, [page.id, page.type]);
+        if (type === 'list') fetch('/api/site/material-sections').then((response) => response.json()).then((result) => setSections(Array.isArray(result) ? result : [])).catch(() => {});
+    }, [page.id, type]);
 
     useEffect(() => {
         setTitle(page.title);
@@ -84,7 +91,6 @@ export default function PageDetailsForm({
         setDataSource(page.dataSource || 'materials');
         setMaterialSectionId(page.materialSectionId || '');
         setSeo(page.seo ?? {});
-        setStatus('idle');
         setError('');
     }, [page.id, page.title, page.path, page.routeParam, page.dataSource, page.materialSectionId, page.seo]);
 
@@ -95,6 +101,10 @@ export default function PageDetailsForm({
     useEffect(() => {
         onSubmittingChange?.(isSubmitting);
     }, [isSubmitting, onSubmittingChange]);
+
+    useEffect(() => {
+        onSaveStatusChange?.(status === 'submitting' ? 'saving' : status);
+    }, [status, onSaveStatusChange]);
 
     useEffect(() => {
         const frame = requestAnimationFrame(() => {
@@ -132,14 +142,16 @@ export default function PageDetailsForm({
         setFormError('');
 
         try {
-            const response = await apiRequest(`/api/pages/${page.id}`, {
-                method: 'PATCH',
+            const response = await apiRequest(isNew ? '/api/pages' : `/api/pages/${page.id}`, {
+                method: isNew ? 'POST' : 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(isDetail ? { title, routeParam } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo }),
+                body: JSON.stringify(isNew
+                    ? { title, path: generatedPath, type, dataSource: type === 'list' ? dataSource : null, materialSectionId: type === 'list' && dataSource === 'materials' ? materialSectionId : null }
+                    : isDetail ? { title, routeParam } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo }),
             });
 
             if (!response.ok) {
-                setStatus('idle');
+                setStatus('error');
                 const result = await response.clone().json().catch(() => ({}));
                 const names = Object.keys(result.fields ?? {});
                 if (names.length) {
@@ -151,20 +163,27 @@ export default function PageDetailsForm({
             }
 
             onSaved(await response.json());
+            setStatus('success');
         } catch {
-            setStatus('idle');
+            setStatus('error');
             setFormError(errorMessage());
         }
     }
 
     return (
-        <ValidatedForm className={joinClasses(styles.form, className)} onSubmitCapture={(event) => {
+        <ValidatedForm id={formId} inert={isSubmitting || undefined} className={joinClasses(styles.form, className)} onInput={() => { if (!isSubmitting) setStatus('idle'); }} onSubmitCapture={(event) => {
             const invalid = [...event.currentTarget.elements].find((field) => field.closest(`.${styles.basic}`) && !field.disabled && fieldValidationMessage(field));
             if (invalid) { setTab(0); requestAnimationFrame(() => invalid.focus()); }
         }} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
-            <Tabs items={[{ label: 'Основное' }, { label: 'SEO', disabled: isDetail }, { label: 'Внешний вид', disabled: true }]} activeIndex={tab} onSelect={setTab} ariaLabel="Разделы настроек страницы" />
+            <Tabs items={[{ label: 'Основное' }, { label: 'SEO', disabled: isDetail || isNew }, { label: 'Внешний вид', disabled: true }]} activeIndex={tab} onSelect={setTab} ariaLabel="Разделы настроек страницы" />
             <div hidden={tab !== 0} className={styles.basic}>
-            {page.type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
+            <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
+                <span>Тип страницы</span>
+                <select name="type" value={type} disabled={!isNew || isSubmitting} onChange={(event) => setType(event.target.value)}>
+                    <option value="standard">Обычная</option><option value="list">Список</option><option value="detail" disabled>Детальный шаблон</option>
+                </select>
+            </label>
+            {type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Источник данных</span>
                 <select value={dataSource} onChange={(event) => { setDataSource(event.target.value); if (event.target.value !== 'materials') setMaterialSectionId(''); }}>
                     <option value="materials">Материалы</option><option value="products">Товары</option><option value="reviews">Отзывы</option>
@@ -178,9 +197,9 @@ export default function PageDetailsForm({
                     name={isDetail ? 'routeParam' : 'path'}
                     required
                     ref={pathInputRef}
-                    value={isDetail ? routeParam : path}
+                    value={isDetail ? routeParam : isNew ? generatedPath : path}
                     disabled={isMainPage || isSubmitting}
-                    onChange={(event) => isDetail ? setRouteParam(event.target.value) : setPath(event.target.value)}
+                    onChange={(event) => isDetail ? setRouteParam(event.target.value) : isNew ? changeSlug(event.target.value) : setPath(event.target.value)}
                 />
             </label>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, titleClassName)}>
@@ -196,9 +215,9 @@ export default function PageDetailsForm({
             </label>
             </div>
             {!isDetail && <div hidden={tab !== 1}><SeoFields value={seo} onChange={setSeo} siteData={siteData} page={{ ...page, title }} /></div>}
-            <div className={joinClasses(styles.actions, actionsClassName)}>
+            {!hideActions && <div className={joinClasses(styles.actions, actionsClassName)}>
                 {cancelFirst ? <>{cancelButton}{saveButton}</> : <>{saveButton}{cancelButton}</>}
-            </div>
+            </div>}
             {showError && error && (
                 <div className={styles.error} role="alert">{error}</div>
             )}

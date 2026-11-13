@@ -1,238 +1,78 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import styles from './PagesPage.module.css';
+import { useEffect, useState } from 'react';
 import PageList from '../components/PageList.jsx';
 import AdminPageShell from '../components/AdminPageShell.jsx';
 import { AdminListToolbar } from '../components/AdminList.jsx';
 import Button from '../ui/Button.jsx';
-import AdminPanel from '../ui/AdminPanel.jsx';
+import Switch from '../ui/Switch.jsx';
 import Icon from '../ui/Icon.jsx';
-import compactStyles from '../ui/CompactForm.module.css';
-import useAutoSlug from '../editor/useAutoSlug.jsx';
 import { apiRequest } from '../editor/apiRequest.mjs';
-import { formResponseError } from '../ui/formValidation.mjs';
-import { PAGE_DATA_SOURCES } from '../../shared/pageDataSources.mjs';
 import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 
-export default function PagesPage() {
+export default function PagesPage({ initiallyShowDeleted = false }) {
     const navigate = useAppNavigate();
     const [pages, setPages] = useState([]);
     const [status, setStatus] = useState('loading');
-    const [showForm, setShowForm] = useState(false);
-    const [title, setTitle] = useState('');
-    const [path, setPath] = useState('');
-    const [type, setType] = useState('standard');
-    const [dataSource, setDataSource] = useState('materials');
-    const [sections, setSections] = useState([]);
-    const [materialSectionId, setMaterialSectionId] = useState('');
-    const [createStatus, setCreateStatus] = useState('idle');
-    const [deletingPageId, setDeletingPageId] = useState(null);
-    const [deleteErrorId, setDeleteErrorId] = useState(null);
-    const [editingDirty, setEditingDirty] = useState(false);
-    const titleInputRef = useRef(null);
-    const active = useRef(true);
-    useEffect(() => {
-        active.current = true;
-        return () => { active.current = false; };
-    }, []);
-    const { slug: generatedPath, changeSlug } = useAutoSlug({ title, value: path, onChange: setPath, prefix: '/', maxLength: Infinity });
+    const [showDeleted, setShowDeleted] = useState(initiallyShowDeleted);
+    const [busyPageId, setBusyPageId] = useState(null);
+    const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetch('/api/site/material-sections').then((response) => response.json()).then((result) => {
-            const nextSections = Array.isArray(result) ? result : [];
-            setSections(nextSections); setMaterialSectionId(nextSections[0]?.id || '');
-        }).catch(() => {});
-    }, []);
-
+    async function loadPages(signal) {
+        const response = await fetch('/api/pages?deleted=all', { signal });
+        if (!response.ok) throw new Error('Не удалось загрузить страницы.');
+        setPages(await response.json());
+    }
     useEffect(() => {
         const controller = new AbortController();
-
-        async function loadPages() {
-            try {
-                const response = await fetch('/api/pages', { signal: controller.signal });
-
-                if (!response.ok) {
-                    throw new Error(`Не удалось загрузить страницы: ${response.status}`);
-                }
-
-                setPages(await response.json());
-                setStatus('success');
-            } catch (error) {
-                if (error.name !== 'AbortError') setStatus('error');
-            }
-        }
-
-        loadPages();
-
+        loadPages(controller.signal).then(() => setStatus('success')).catch((error) => {
+            if (error.name !== 'AbortError') setStatus('error');
+        });
         return () => controller.abort();
     }, []);
 
-    useEffect(() => {
-        if (showForm) titleInputRef.current?.focus();
-    }, [showForm]);
-
-    async function createPage(event) {
-        event.preventDefault();
-        const form = event.currentTarget;
-
-        if (createStatus === 'submitting') return;
-
-        setCreateStatus('submitting');
-
+    async function action(pageId, url, options) {
+        if (busyPageId) return;
+        setBusyPageId(pageId);
+        setError('');
         try {
-            const response = await apiRequest('/api/pages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, path: generatedPath, type, dataSource: type === 'list' ? dataSource : null, materialSectionId: type === 'list' && dataSource === 'materials' ? materialSectionId : null }),
-            });
-
+            const response = await apiRequest(url, options);
             if (!response.ok) {
-                throw new Error(await formResponseError(response, form));
+                const result = await response.json().catch(() => ({}));
+                throw new Error(result.error || 'Не удалось выполнить действие.');
             }
-
-            const page = await response.json();
-            if (!active.current) return;
-
-            navigate?.(page.path === '/' ? '/admin' : `/admin/pages/${page.id}`, { skipGuard: true });
-        } catch {
-            setCreateStatus('error');
+            const result = response.status === 204 ? null : await response.json();
+            await loadPages();
+            return result;
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setBusyPageId(null);
         }
     }
-
-    function updatePage(updatedPage) {
-        setPages((previous) => previous.map((item) =>
-            item.id === updatedPage.id
-                ? { ...item, ...updatedPage }
-                : item.id === updatedPage.detailTemplateId
-                    ? { ...item, path: updatedPage.detailTemplatePath }
-                : item
-        ));
-    }
-
     async function createDetailTemplate(page) {
         if (page.detailTemplateId) {
             if (page.detailTemplateDeletedAt) {
-                const response = await apiRequest(`/api/pages/${page.detailTemplateId}/restore`, { method: 'POST' });
-                if (!response.ok) { setDeleteErrorId(page.id); return; }
+                const restored = await action(page.id, `/api/pages/${page.detailTemplateId}/restore`, { method: 'POST' });
+                if (!restored) return;
             }
-            if (active.current) navigate?.(`/admin/pages/${page.detailTemplateId}`);
+            navigate?.(`/admin/pages/${page.detailTemplateId}`);
             return;
         }
-        try {
-            const response = await apiRequest(`/api/pages/${page.id}/detail-template`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: `${page.title} — Детальная страница`, routeParam: 'slug' }),
-            });
-            if (!response.ok) throw new Error();
-            const template = await response.json();
-            if (!active.current) return;
-            navigate?.(`/admin/pages/${template.id}`);
-        } catch {
-            setDeleteErrorId(page.id);
-        }
+        const template = await action(page.id, `/api/pages/${page.id}/detail-template`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: `${page.title} — Детальная страница`, routeParam: 'slug' }),
+        });
+        if (template) navigate?.(`/admin/pages/${template.id}`);
     }
-
-    async function deletePage(page) {
-        if (
-            page.path === '/'
-            || deletingPageId
-            || !window.confirm(`Удалить страницу «${page.title}»?`)
-        ) {
-            return;
-        }
-
-        setDeletingPageId(page.id);
-        setDeleteErrorId(null);
-
-        try {
-            const response = await apiRequest(`/api/pages/${page.id}`, { method: 'DELETE' });
-
-            if (!response.ok) {
-                throw new Error(`Не удалось удалить страницу: ${response.status}`);
-            }
-
-            setPages((previous) => previous.filter(({ id }) => id !== page.id));
-        } catch {
-            setDeleteErrorId(page.id);
-        } finally {
-            setDeletingPageId(null);
-        }
-    }
-
-    function closeCreateForm() {
-        setShowForm(false);
-        setCreateStatus('idle');
-    }
-
-    const actions = useMemo(() => (
-        <>
-            <a href="/admin/pages/trash" aria-label="Корзина страниц" title="Открыть корзину страниц"><Icon name="trash" /> <span>Корзина</span></a>
-            <Button variant="primary" size="compact" aria-label="Создать новую страницу" title="Создать новую страницу" disabled={showForm} onClick={() => setShowForm(true)}>
-                <Icon name="add" /> <span>Создать страницу</span>
-            </Button>
-        </>
-    ), [showForm]);
-
-    return (
-        <AdminPageShell
-            title="Карта страниц"
-            list
-            isDirty={showForm || editingDirty}
-            status={status}
-            errorMessage="Не удалось загрузить страницы."
-        >
-            <div className={styles.content}>
-                <AdminListToolbar actions={<div className={styles.listActions}>{actions}</div>} />
-                {showForm && (
-                    <AdminPanel as="form" className={styles.createForm} onSubmit={createPage}>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                            <span>Название</span>
-                            <input name="title" required ref={titleInputRef} value={title} onChange={(event) => setTitle(event.target.value)} />
-                        </label>
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                            <span>Тип страницы</span>
-                            <select value={type} onChange={(event) => setType(event.target.value)}>
-                                <option value="standard">Обычная</option>
-                                <option value="list">Динамический список</option>
-                            </select>
-                        </label>
-                        {type === 'list' && <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                            <span>Источник данных</span>
-                            <select value={dataSource} onChange={(event) => setDataSource(event.target.value)}>
-                                {PAGE_DATA_SOURCES.map((source) => <option key={source.id} value={source.id}>{source.title}</option>)}
-                            </select>
-                        </label>}
-                        {type === 'list' && dataSource === 'materials' && <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                            <span>Раздел материалов</span>
-                            <select name="materialSectionId" value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required>
-                                <option value="">Выберите раздел</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}
-                            </select>
-                        </label>}
-                        <label className={`${compactStyles.field} ${compactStyles.compact}`}>
-                            <span>Путь</span>
-                            <input name="path" required value={generatedPath} onChange={(event) => changeSlug(event.target.value)} />
-                        </label>
-                        <div className={styles.formActions}>
-                            <Button type="submit" variant="primary" title="Создать страницу" disabled={createStatus === 'submitting'}>
-                                <Icon name="add" /> {createStatus === 'submitting' ? 'Создание…' : 'Создать'}
-                            </Button>
-                            <Button title="Отменить создание страницы" disabled={createStatus === 'submitting'} onClick={closeCreateForm}><Icon name="close" /> Отмена</Button>
-                        </div>
-                        <div className={styles.formError} role={createStatus === 'error' ? 'alert' : undefined}>
-                            {createStatus === 'error' && 'Не удалось создать страницу. Проверьте источник данных, раздел и путь.'}
-                        </div>
-                    </AdminPanel>
-                )}
-
-                <PageList
-                    pages={pages}
-                    busyPageId={deletingPageId}
-                    actionErrorId={deleteErrorId}
-                    onUpdate={updatePage}
-                    onDirtyChange={setEditingDirty}
-                    onDelete={deletePage}
-                    onCreateDetailTemplate={createDetailTemplate}
-                />
-            </div>
-        </AdminPageShell>
-    );
+    return <AdminPageShell title="Карта страниц" list status={status} errorMessage="Не удалось загрузить страницы.">
+        <AdminListToolbar actions={<Button variant="primary" size="compact" onClick={() => navigate?.('/admin/pages/new')}><Icon name="add" /> Создать страницу</Button>}>
+            <Switch label="Показать удалённые" checked={showDeleted} onChange={(event) => setShowDeleted(event.target.checked)} />
+        </AdminListToolbar>
+        {error && <p role="alert">{error}</p>}
+        <PageList pages={pages} showDeleted={showDeleted} busyPageId={busyPageId}
+            onCreateDetailTemplate={createDetailTemplate}
+            onRestore={(id) => action(id, `/api/pages/${id}/restore`, { method: 'POST' })}
+            onDelete={(page) => {
+                if (window.confirm(`Удалить страницу «${page.title}»?`)) action(page.id, `/api/pages/${page.id}`, { method: 'DELETE' });
+            }} />
+    </AdminPageShell>;
 }

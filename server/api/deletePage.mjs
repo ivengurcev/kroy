@@ -17,6 +17,9 @@ export default async function deletePage(c) {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    await client.query(
+      `SELECT s.id FROM sites s JOIN domains d ON d.site_id = s.id
+       WHERE d.hostname = $1 FOR UPDATE OF s`, [hostname]);
     const { rows } = await client.query(
       `SELECT p.id, p.path, p.page_type,
               EXISTS (SELECT 1 FROM pages child WHERE child.detail_parent_id = p.id

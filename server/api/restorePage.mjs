@@ -18,6 +18,9 @@ export default async function restorePage(c) {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    await client.query(
+      `SELECT s.id FROM sites s JOIN domains d ON d.site_id = s.id
+       WHERE d.hostname = $1 FOR UPDATE OF s`, [hostname]);
     const { rows: pages } = await client.query(
       `SELECT p.* FROM pages p JOIN domains d ON d.site_id = p.site_id
        WHERE p.id = $1 AND p.deleted_at IS NOT NULL AND d.hostname = $2 FOR UPDATE OF p`,
@@ -30,8 +33,8 @@ export default async function restorePage(c) {
         [page.detail_parent_id, page.site_id]);
       if (!parents.length) { await client.query("ROLLBACK"); return c.json({ error: "Parent list page not found" }, 409); }
     }
-    const conflict = await findPageRouteConflict(client, page.site_id, page.path, { excludePageIds: [pageId] });
-    if (conflict) { await client.query("ROLLBACK"); return c.json({ error: "Page already exists" }, 409); }
+    const conflict = await findPageRouteConflict(client, page.site_id, page.path, { excludePageIds: [pageId], excludeRedirectPageIds: [pageId] });
+    if (conflict) { await client.query("ROLLBACK"); return c.json({ error: "Адрес уже используется действующей страницей или перенаправлением" }, 409); }
     const { rows } = await client.query(
       `UPDATE pages SET deleted_at = NULL WHERE id = $1
        RETURNING id, site_id, path, title, content, page_type AS type,
