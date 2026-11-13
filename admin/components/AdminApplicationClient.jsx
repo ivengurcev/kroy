@@ -4,6 +4,7 @@ import AdminHeader from './AdminHeader.jsx';
 import AdminLayout from './AdminLayout.jsx';
 import AdminSidebar from './AdminSidebar.jsx';
 import AdminWorkspaceContext from './AdminWorkspaceContext.jsx';
+import { siteSettingsWorkspaceKey } from '../pages/siteSettingsState.mjs';
 
 const EMPTY_HEADER = { mode: 'pages', title: '', isDirty: false, loadStatus: 'success', saveStatus: 'idle' };
 
@@ -97,7 +98,7 @@ export default function AdminApplication({ children }) {
                     mobileMenuOpen={mobileMenuOpen}
                     onCloseMobileMenu={() => setMobileMenuOpen(false)}
                 >
-                    <div key={pathname}>{children}</div>
+                    <div key={siteSettingsWorkspaceKey(pathname)}>{children}</div>
                 </AdminLayout>
             </div>
         </AdminWorkspaceContext.Provider>

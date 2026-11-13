@@ -36,6 +36,7 @@ services:
       NGINX_SITES_ROOT: /app/dist/sites
       NGINX_UPSTREAM: app:3000
       NGINX_LISTEN: 0.0.0.0:8080
+      KROY_DEV_ORIGIN: "http://localhost:${KROY_DEV_PORT:-8080}"
       KROY_NGINX_CONTROL_URL: http://nginx:3001
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:3000/').then(() => process.exit(0), () => process.exit(1))"]
@@ -63,7 +64,7 @@ services:
       NGINX_CONFIG: /app/dist/kroy/nginx-dev/nginx.conf
       NGINX_CONTROL_PORT: 3001
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${KROY_DEV_PORT:-8080}:8080"
     restart: "no"
     volumes:
       - ../dist/sites:/app/dist/sites:ro

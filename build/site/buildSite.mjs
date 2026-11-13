@@ -16,7 +16,7 @@ import createSiteSvgPlugin from './siteSvgPlugin.mjs';
 import { assertMaterialPathsAvailable, createMaterialPages } from './createMaterialPages.mjs';
 import { createClientPageRegistry } from './sitePageData.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
-import { isSeoDomain, resolvePageMeta } from '../../shared/seo.mjs';
+import { getSiteSeoContext, resolvePageMeta } from '../../shared/seo.mjs';
 import { createRobots, createSitemap } from './seoFiles.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -134,6 +134,7 @@ try {
     let redirects;
     let deletedPages;
     let seoMedia;
+    let seoContext;
     let transactionStarted = false;
 
     client = await pool.connect();
@@ -168,11 +169,7 @@ try {
         if (domainsResult.rows.length === 0) {
             throw new Error(`У сайта ${site.slug} нет доменов`);
         }
-        const primaryDomain = site.seo.primaryDomain || domainsResult.rows.find(({ hostname }) => isSeoDomain(hostname))?.hostname;
-        if (!isSeoDomain(primaryDomain) || !domainsResult.rows.some(({ hostname }) => hostname === primaryDomain)) {
-            throw new Error('Выберите привязанный публичный основной домен в SEO-настройках сайта.');
-        }
-        site.seo = { ...site.seo, primaryDomain };
+        seoContext = getSiteSeoContext(site, domainsResult.rows.map(({ hostname }) => hostname), process.env);
 
         const pagesResult = await client.query(
             `SELECT id, site_id, path, title, content, seo, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
@@ -289,7 +286,7 @@ try {
         ...allDetailTemplates.filter(({ id }) => !materialTemplateIds.has(id)).map(({ path }) => path),
     ]);
     const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages]
-        .map((page) => ({ ...page, meta: resolvePageMeta(site, page) }));
+        .map((page) => ({ ...page, meta: resolvePageMeta(site, page, page.record, seoContext) }));
 
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
@@ -364,8 +361,8 @@ try {
     );
 
     await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);
-    await writeFile(join(temporaryDirectory, 'robots.txt'), createRobots(`https://${site.seo.primaryDomain}`));
-    await writeFile(join(temporaryDirectory, 'sitemap.xml'), createSitemap(renderPages));
+    await writeFile(join(temporaryDirectory, 'robots.txt'), createRobots(seoContext.origin));
+    await writeFile(join(temporaryDirectory, 'sitemap.xml'), createSitemap(renderPages, seoContext));
     await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
     await mkdir(join(temporaryDirectory, 'assets', 'seo'), { recursive: true });

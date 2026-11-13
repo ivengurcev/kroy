@@ -9,6 +9,27 @@ export function isSeoDomain(value) {
         && !/(?:^|\.)(localhost|local|internal|lan|test|invalid|example|home|home\.arpa)$/.test(value);
 }
 
+export function getSiteSeoContext(site, domains, env = {}) {
+    const development = env.NODE_ENV === 'development';
+    const primaryDomain = site.seo?.primaryDomain || (!development && domains.find(isSeoDomain));
+    if (primaryDomain) {
+        if (!isSeoDomain(primaryDomain) || !domains.includes(primaryDomain)) throw new Error('Выберите привязанный публичный основной домен в SEO-настройках сайта.');
+        return { origin: `https://${primaryDomain}`, development };
+    }
+    if (!development) throw new Error('Выберите привязанный публичный основной домен в SEO-настройках сайта.');
+    const hostname = `${site.slug}.localhost`;
+    if (!domains.includes(hostname)) throw new Error(`Привяжите локальный домен ${hostname} к сайту для development-сборки.`);
+    // Compose supplies its published endpoint, not the container's internal port.
+    // A direct Nginx listener is HTTP (the common generator does not configure TLS).
+    const listener = /^\d+$/.test(env.NGINX_LISTEN ?? '') ? `localhost:${env.NGINX_LISTEN}` : env.NGINX_LISTEN;
+    const endpoint = env.KROY_DEV_ORIGIN || (listener && `http://${listener}`);
+    let url;
+    try { url = new URL(endpoint); } catch { throw new Error('Задайте KROY_DEV_ORIGIN или NGINX_LISTEN для локального SEO-адреса.'); }
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Некорректный KROY_DEV_ORIGIN: ожидается HTTP(S) origin локального сервера.');
+    url.hostname = hostname;
+    return { origin: url.origin, development };
+}
+
 // Empty optional values are omitted, never materialized from inherited values.
 export function normalizeSeo(value, { site = false } = {}) {
     const fields = {};
@@ -38,7 +59,7 @@ export function normalizeSeo(value, { site = false } = {}) {
     return { seo, fields };
 }
 
-export function resolvePageMeta(site, page, record = page.record) {
+export function resolvePageMeta(site, page, record = page.record, { origin: buildOrigin, development = false } = {}) {
     const settings = site.seo ?? {};
     const own = record ? {} : page.seo ?? {};
     const siteName = text(settings.name) || text(site.name);
@@ -47,7 +68,15 @@ export function resolvePageMeta(site, page, record = page.record) {
         : text(own.title) || template.replace(/\{(page|site)\}/g, (_, key) => key === 'page' ? text(page.title) : siteName);
     const description = text(record ? record.summary || record.description || record.text : own.description) || text(settings.description);
     const domain = settings.primaryDomain;
-    const origin = isSeoDomain(domain) ? `https://${domain}` : null;
+    let origin = isSeoDomain(domain) ? `https://${domain}` : null;
+    if (buildOrigin) {
+        try {
+            const url = new URL(buildOrigin);
+            const publicOrigin = isSeoDomain(url.hostname) && url.protocol === 'https:';
+            const localOrigin = development && url.hostname === `${site.slug}.localhost` && ['http:', 'https:'].includes(url.protocol);
+            origin = (publicOrigin || localOrigin) && !url.username && !url.password && url.pathname === '/' && !url.search && !url.hash ? url.origin : null;
+        } catch { origin = null; }
+    }
     const canonical = origin && isValidPagePath(page.path) && !/^\/(auth|assets|_kroy)(\/|$)/.test(page.path) ? `${origin}${page.path}` : null;
     const imagePath = (record ? record.coverUrl || record.mediaUrl : own.imageUrl) || settings.imageUrl;
     // Images are release-owned public assets, not API/admin or external URLs.
@@ -56,7 +85,7 @@ export function resolvePageMeta(site, page, record = page.record) {
         title,
         description: record?.text ? description.replace(/\s+/g, ' ').slice(0, 300) : description,
         canonical,
-        robots: settings.indexable === false || own.indexing === 'deny' ? 'noindex, follow' : 'index, follow',
+        robots: development || settings.indexable === false || own.indexing === 'deny' ? 'noindex, follow' : 'index, follow',
         image,
         type: record && page.dataSource === 'materials' ? 'article' : 'website',
         siteName,

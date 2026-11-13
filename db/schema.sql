@@ -1,7 +1,7 @@
 \restrict dbmate
 
--- Dumped from database version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
--- Dumped by pg_dump version 17.11 (Ubuntu 17.11-1.pgdg24.04+2)
+-- Dumped from database version 17.12 (Ubuntu 17.12-1.pgdg24.04+1)
+-- Dumped by pg_dump version 17.12 (Ubuntu 17.12-1.pgdg24.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -180,9 +180,9 @@ CREATE TABLE public.pages (
     route_param text,
     material_section_id uuid,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT pages_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
+    CONSTRAINT pages_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['materials'::text, 'products'::text, 'reviews'::text])) AND (((data_source = 'materials'::text) AND (material_section_id IS NOT NULL)) OR ((data_source = ANY (ARRAY['products'::text, 'reviews'::text])) AND (material_section_id IS NULL))) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
 );
 
@@ -326,8 +326,8 @@ CREATE TABLE public.sites (
     contact_settings jsonb DEFAULT '{"hours": "", "phone": "", "address": "", "socials": [], "latitude": null, "longitude": null}'::jsonb NOT NULL,
     order_notification_email text,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT sites_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
+    CONSTRAINT sites_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
     CONSTRAINT sites_theme_overrides_check CHECK ((jsonb_typeof(theme_overrides) = 'object'::text))
 );

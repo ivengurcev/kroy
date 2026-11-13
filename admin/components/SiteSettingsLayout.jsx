@@ -18,6 +18,7 @@ export default function SiteSettingsLayout({
     status,
     errorMessage,
     isDirty,
+    hasUnsavedChanges,
     saveStatus,
     onSave,
     footerActions,
@@ -33,6 +34,7 @@ export default function SiteSettingsLayout({
             status={status}
             errorMessage={errorMessage}
             isDirty={isDirty}
+            hasUnsavedChanges={hasUnsavedChanges}
             saveStatus={saveStatus}
             onSave={onSave}
             footerActions={footerActions}

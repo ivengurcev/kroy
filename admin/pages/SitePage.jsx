@@ -13,6 +13,7 @@ import { apiRequest } from '../editor/apiRequest.mjs';
 import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
 import SeoFields from '../components/SeoFields.jsx';
+import { siteSettingsDirty } from './siteSettingsState.mjs';
 
 const MODE_OPTIONS = [
     { value: 'light', label: 'Светлая', icon: 'sun' },
@@ -187,7 +188,7 @@ export default function SitePage() {
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const seoDirty = Boolean(seo && savedSeo && JSON.stringify(seo) !== JSON.stringify(savedSeo));
-    const dirty = themeDirty || contactsDirty || seoDirty;
+    const { active: sectionDirty, any: dirty } = siteSettingsDirty(section, { appearance: themeDirty, contacts: contactsDirty, seo: seoDirty });
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
@@ -196,7 +197,7 @@ export default function SitePage() {
     function updateToken(palette, token, value) { setDraft((current) => { const nextOverrides = { ...current.overrides, [palette]: { ...current.overrides[palette] } }; const base = palette === 'shared' ? selectedTheme.shared[token] : selectedTheme.palettes[palette][token]; if (!value.trim() || value === base) delete nextOverrides[palette][token]; else nextOverrides[palette][token] = value; return { ...current, overrides: nextOverrides }; }); }
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() {
-        if (saveStatus === 'saving' || !dirty) return;
+        if (saveStatus === 'saving' || !sectionDirty) return;
         if (section === 'seo') {
             if (!seoDirty) return;
             const requestSeo = JSON.stringify(seo);
@@ -212,8 +213,8 @@ export default function SitePage() {
             return;
         }
         const contactForm = document.getElementById('contact-form');
-        const requestTheme = themeDirty ? cloneSettings(draft) : null;
-        const requestContacts = contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
+        const requestTheme = section === 'appearance' && themeDirty ? cloneSettings(draft) : null;
+        const requestContacts = section === 'contacts' && contactsDirty ? { ...contacts, socials: [...(contacts.socials ?? [])] } : null;
         const themeFingerprint = requestTheme && JSON.stringify(requestTheme);
         const contactsFingerprint = requestContacts && JSON.stringify(requestContacts);
         setSaveStatus('saving'); setError('');
@@ -238,7 +239,7 @@ export default function SitePage() {
     const saveAction = section === 'contacts' || section === 'appearance' || section === 'seo'
         ? () => document.getElementById(section === 'contacts' ? 'contact-form' : section === 'seo' ? 'seo-form' : 'appearance-form')?.requestSubmit()
         : undefined;
-    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : section === 'seo' ? 'seo-form' : undefined}>
+    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={sectionDirty} hasUnsavedChanges={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : section === 'seo' ? 'seo-form' : undefined}>
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
         {section === 'catalog' && <CatalogEditor />}

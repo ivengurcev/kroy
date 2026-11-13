@@ -14,13 +14,14 @@ export default function AdminPageShell({
     errorMessage,
     headerMode = 'pages',
     isDirty = false,
+    hasUnsavedChanges = isDirty,
     saveStatus = 'idle',
     onSave,
     footerActions,
     formId,
     children,
 }) {
-    useAdminHeader({ mode: headerMode, title, list, isDirty, loadStatus: status, saveStatus, onSave });
+    useAdminHeader({ mode: headerMode, title, list, isDirty: hasUnsavedChanges, loadStatus: status, saveStatus, onSave });
 
     return (
         <div className={list ? listStyles.page : styles.page} data-admin-list={list || undefined}>
