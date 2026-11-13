@@ -4,7 +4,7 @@ import AdminHeader from './AdminHeader.jsx';
 import AdminLayout from './AdminLayout.jsx';
 import AdminSidebar from './AdminSidebar.jsx';
 import AdminWorkspaceContext from './AdminWorkspaceContext.jsx';
-import { siteSettingsWorkspaceKey } from '../pages/siteSettingsState.mjs';
+import { isPreservedSiteSettingsNavigation, siteSettingsWorkspaceKey } from '../pages/siteSettingsState.mjs';
 
 const EMPTY_HEADER = { mode: 'pages', title: '', isDirty: false, loadStatus: 'success', saveStatus: 'idle' };
 
@@ -30,7 +30,8 @@ export default function AdminApplication({ children }) {
     }, []);
     const workspace = useMemo(() => ({ registerHeader }), [registerHeader]);
 
-    const confirmNavigation = useCallback(() => {
+    const confirmNavigation = useCallback(({ from, to } = {}) => {
+        if (isPreservedSiteSettingsNavigation(from, to)) return true;
         const current = headerRef.current;
         return !current.isDirty || window.confirm('Есть несохранённые изменения. Перейти без сохранения?');
     }, []);
