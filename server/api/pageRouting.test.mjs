@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import generateSiteRouting from '../../build/site/generateSiteRouting.mjs';
 import { renderNginxConfig } from '../../build/nginx/generateNginxConfig.mjs';
 
 test('publication routing has one interpretation per URL: current HTML, 301, 410, or 404', async () => {
-    const directory = await mkdtemp('/tmp/opencode/page-routing-');
+    const directory = await mkdtemp(join(tmpdir(), 'page-routing-'));
     try {
         const file = join(directory, 'routing.json');
         await generateSiteRouting('test', [

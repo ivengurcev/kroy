@@ -26,7 +26,7 @@ test('route checks exclude deleted pages but retain active dynamic intersections
     assert.deepEqual(await findPageRouteConflict(client, id, '/news/example', { reclaimRedirects: true }), { type: 'page', path: '/news/:slug' });
 });
 
-test('creation frees redirect atomically, inserts a fresh UUID/default content instead of resurrecting old data', async (t) => {
+test('creation at a free or redirected URL inserts a fresh page in the locked transaction', async (t) => {
     const calls = [];
     t.mock.method(pool, 'connect', async () => ({
         release() {},
@@ -52,6 +52,45 @@ test('creation frees redirect atomically, inserts a fresh UUID/default content i
     assert.ok(insertion > deletion);
     assert.deepEqual(calls[deletion].values, [id, ['/old']]);
     assert.equal(calls.at(-1).sql, 'COMMIT');
+});
+
+test('creation reuses the deleted UUID, resets every page field and removes old dependencies and redirects', async (t) => {
+    const childId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    const calls = [];
+    t.mock.method(pool, 'connect', async () => ({ release() {}, async query(sql, values) {
+        calls.push({ sql, values });
+        if (sql.includes('FOR UPDATE OF s')) return { rows: [{ id }] };
+        if (sql.startsWith('SELECT id, deleted_at')) return { rows: [{ id, deleted_at: 'now' }] };
+        if (sql.includes('WITH RECURSIVE')) return { rows: [{ id: childId, deleted_at: 'now' }] };
+        if (sql.startsWith('UPDATE pages')) {
+            for (const field of ["content = '[]'::jsonb", "seo = '{}'::jsonb", 'deleted_at = NULL', 'page_type = $4',
+                'data_source = $5', 'material_section_id = $6', 'detail_parent_id = NULL', 'route_param = NULL']) assert.ok(sql.includes(field), field);
+            assert.deepEqual(values, [id, 'New', '/old', 'standard', null, null, id]);
+            return { rows: [{ id, title: 'New', path: '/old', content: [] }] };
+        }
+        assert.ok(!sql.includes('INSERT INTO pages'));
+        return { rows: [] };
+    } }));
+    const result = await postPage(ctx({ title: 'New', path: '/old' }));
+    assert.equal(result.status, 201);
+    assert.equal(result.value.id, id);
+    assert.deepEqual(calls.find(({ sql }) => sql.includes('page_id = ANY')).values, [id, [id, childId]]);
+    assert.deepEqual(calls.find(({ sql }) => sql.startsWith('DELETE FROM pages')).values, [id, [childId]]);
+    assert.equal(calls.at(-1).sql, 'COMMIT');
+});
+
+test('active dependents abort reuse without deleting any content', async (t) => {
+    const calls = [];
+    t.mock.method(pool, 'connect', async () => ({ release() {}, async query(sql) {
+        calls.push(sql);
+        if (sql.includes('FOR UPDATE OF s')) return { rows: [{ id }] };
+        if (sql.startsWith('SELECT id, deleted_at')) return { rows: [{ id, deleted_at: 'now' }] };
+        if (sql.includes('WITH RECURSIVE')) return { rows: [{ id: 'live-child', deleted_at: null }] };
+        return { rows: [] };
+    } }));
+    assert.equal((await postPage(ctx({ title: 'New', path: '/old' }))).status, 409);
+    assert.equal(calls.at(-1), 'ROLLBACK');
+    assert.ok(!calls.some((sql) => sql.startsWith('DELETE FROM pages') || sql.startsWith('UPDATE pages')));
 });
 
 test('active page conflict rolls back without removing redirects or writing pages', async (t) => {

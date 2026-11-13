@@ -485,13 +485,6 @@ ALTER TABLE ONLY public.pages
 
 
 --
--- Name: pages pages_site_id_path_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX pages_site_id_path_key ON public.pages USING btree (site_id, path) WHERE (deleted_at IS NULL);
-
-
---
 -- Name: payments payments_order_id_provider_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -643,6 +636,14 @@ CREATE UNIQUE INDEX pages_one_active_material_list_per_section ON public.pages U
 --
 
 CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
+
+
+--
+-- Name: pages_site_id_path_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pages
+    ADD CONSTRAINT pages_site_id_path_key UNIQUE (site_id, path);
 
 
 --
@@ -911,4 +912,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611020001'),
     ('202611050001'),
     ('202611130001'),
-    ('202611130002');
+    ('202611130002'),
+    ('202611130003');

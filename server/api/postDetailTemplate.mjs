@@ -3,6 +3,7 @@ import getHostname from './getHostname.mjs';
 import isUuid from './isUuid.mjs';
 import { createDetailPath, isValidRouteParameter, normalizePageTitle } from '../../shared/pageFields.mjs';
 import findPageRouteConflict, { releasePageRedirects } from './pageRouteConflicts.mjs';
+import reusePagePath from './reusePagePath.mjs';
 import partCatalog from '../../dist/kroy/parts.json' with { type: 'json' };
 import widgetCatalog from '../../dist/kroy/widgets.json' with { type: 'json' };
 import { defaultProps, createView } from '../../shared/partModel.js';
@@ -98,20 +99,29 @@ export default async function postDetailTemplate(c) {
         }
 
         await releasePageRedirects(client, siteId, path);
+        const reusedId = await reusePagePath(client, siteId, path, { keepRecord: true });
         const { rows } = await client.query(
-            `INSERT INTO pages (site_id, title, path, content, page_type, detail_parent_id, route_param)
+            reusedId
+                ? `UPDATE pages SET title = $2, path = $3, content = $4::jsonb, page_type = 'detail',
+                        detail_parent_id = $5, route_param = $6, deleted_at = NULL,
+                        seo = '{}'::jsonb, data_source = NULL, material_section_id = NULL
+                   WHERE site_id = $1 AND id = $7
+                   RETURNING id, site_id, path, title, content, page_type AS type,
+                        data_source AS "dataSource", detail_parent_id AS "detailParentId",
+                        route_param AS "routeParam"`
+                : `INSERT INTO pages (site_id, title, path, content, page_type, detail_parent_id, route_param)
              VALUES ($1, $2, $3, $4::jsonb, 'detail', $5, $6)
              RETURNING id, site_id, path, title, content, page_type AS type,
                        data_source AS "dataSource", detail_parent_id AS "detailParentId",
                        route_param AS "routeParam"`,
-            [siteId, title, path, JSON.stringify(initialDetailContent(list.data_source)), listPageId, routeParam],
+            [siteId, title, path, JSON.stringify(initialDetailContent(list.data_source)), listPageId, routeParam, ...(reusedId ? [reusedId] : [])],
         );
 
         await client.query('COMMIT');
         return c.json(rows[0], 201);
     } catch (error) {
         await client?.query('ROLLBACK').catch(() => {});
-        if (error.code === '23505') return c.json({ error: 'Detail template already exists' }, 409);
+        if (error.code === '23505' || error.code === 'PAGE_PATH_CONFLICT') return c.json({ error: 'Detail template already exists' }, 409);
         console.error('Failed to create detail template', error);
         return c.json({ error: 'Internal server error' }, 500);
     } finally {

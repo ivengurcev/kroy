@@ -1,4 +1,5 @@
 .tree { min-width: 0; border-top: 1px solid var(--color-border); }
+.expandedChevron { transform: rotate(90deg); }
 .row { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; padding-left: calc(var(--depth) * 8px); border-bottom: 1px solid var(--color-border); min-width: 0; }
 .spacer { width: 32px; flex: 0 0 32px; }
 .info { flex: 1; min-width: 0; }

@@ -9,6 +9,7 @@ import {
   normalizePageTitle,
 } from "../../shared/pageFields.mjs";
 import findPageRouteConflict, { releasePageRedirects } from "./pageRouteConflicts.mjs";
+import reusePagePath from './reusePagePath.mjs';
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import { normalizeSeo } from '../../shared/seo.mjs';
@@ -192,9 +193,13 @@ export default async function patchPage(c) {
 
     if (pathChanged) {
       await releasePageRedirects(client, siteId, nextPath);
+      await reusePagePath(client, siteId, nextPath, { excludePageIds: excluded });
     }
     if (nextDetailPath && !detailTemplate.deleted_at && nextDetailPath !== detailTemplate.path) {
       await releasePageRedirects(client, siteId, nextDetailPath);
+    }
+    if (nextDetailPath && nextDetailPath !== detailTemplate.path) {
+      await reusePagePath(client, siteId, nextDetailPath, { excludePageIds: excluded });
     }
     if (page.page_type !== "detail" && pathChanged) {
       const { rows: redirects } = await client.query(
@@ -254,7 +259,7 @@ export default async function patchPage(c) {
     return rows[0];
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
-    if (error.code === "23505") return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
+    if (error.code === "23505" || error.code === 'PAGE_PATH_CONFLICT') return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
     console.error("Failed to update page details", error);
     return c.json({ error: "Internal server error" }, 500);
   } finally {

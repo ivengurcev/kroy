@@ -22,7 +22,7 @@ export default function PageList({ pages, showDeleted = false, busyPageId = null
         {rows.map((node) => <div key={node.path} style={{ '--depth': Math.min(node.depth, 4) }}>
             {!node.pages.length && <div className={styles.row}>
                 <Button variant="listIcon" aria-label={`Ветка ${node.path}`} aria-expanded={!collapsed.has(node.path)} onClick={() => toggle(setCollapsed, node.path)}>
-                    <Icon name={collapsed.has(node.path) ? 'chevronRight' : 'down'} size={18} />
+                    <Icon name="chevronRight" className={collapsed.has(node.path) ? '' : styles.expandedChevron} size={18} />
                 </Button>
                 <span className={styles.path}>{node.path}</span>
             </div>}
@@ -32,7 +32,7 @@ export default function PageList({ pages, showDeleted = false, busyPageId = null
                 return <div key={page.id}>
                     <div className={`${styles.row} ${deleted ? styles.deleted : ''}`}>
                         {node.children.length > 0 && index === 0
-                            ? <Button variant="listIcon" aria-label={`Дочерние страницы ${page.title}`} aria-expanded={!collapsed.has(node.path)} onClick={() => toggle(setCollapsed, node.path)}><Icon name={collapsed.has(node.path) ? 'chevronRight' : 'down'} size={18} /></Button>
+                            ? <Button variant="listIcon" aria-label={`Дочерние страницы ${page.title}`} aria-expanded={!collapsed.has(node.path)} onClick={() => toggle(setCollapsed, node.path)}><Icon name="chevronRight" className={collapsed.has(node.path) ? '' : styles.expandedChevron} size={18} /></Button>
                             : <span className={styles.spacer} />}
                         <div className={styles.info}>
                             <div className={styles.heading}>

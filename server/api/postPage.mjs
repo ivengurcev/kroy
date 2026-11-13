@@ -9,6 +9,7 @@ import findPageRouteConflict, { releasePageRedirects } from "./pageRouteConflict
 import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import isUuid from "./isUuid.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
+import reusePagePath from './reusePagePath.mjs';
 
 export default async function postPage(c) {
   let body;
@@ -74,11 +75,18 @@ export default async function postPage(c) {
     }
 
     await releasePageRedirects(client, siteId, body.path);
+    const reusedId = await reusePagePath(client, siteId, body.path, { keepRecord: true });
     const { rows } = await client.query(
-      `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
+      reusedId
+        ? `UPDATE pages SET title = $2, path = $3, content = '[]'::jsonb, seo = '{}'::jsonb,
+             deleted_at = NULL, page_type = $4, data_source = $5, material_section_id = $6,
+             detail_parent_id = NULL, route_param = NULL
+           WHERE id = $7 AND site_id = $1
+           RETURNING id, site_id, path, title, content, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`
+        : `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
        VALUES ($1, $2, $3, '[]'::jsonb, $4, $5, $6)
        RETURNING id, site_id, path, title, content, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`,
-      [siteId, title, body.path, type, dataSource, materialSectionId],
+      [siteId, title, body.path, type, dataSource, materialSectionId, ...(reusedId ? [reusedId] : [])],
     );
 
     await client.query("COMMIT");
@@ -87,7 +95,7 @@ export default async function postPage(c) {
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
 
-    if (error.code === "23505") {
+    if (error.code === "23505" || error.code === 'PAGE_PATH_CONFLICT') {
       return c.json({ error: 'Проверьте адрес и раздел', fields: pageConflictFields(error) }, 409);
     }
 
