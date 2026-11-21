@@ -2,7 +2,7 @@
 
 ## Первый запуск development
 
-Нужны Docker Compose plugin и Bun 1.4.4. Команда из корня проекта собирает
+Нужны Docker Compose plugin и Bun 1.4.5. Команда из корня проекта собирает
 контейнеры, создаёт отдельный volume PostgreSQL, применяет миграции и показывает
 общий поток логов:
 
@@ -128,7 +128,7 @@ bun run dev
 
 ## Production
 
-Production работает без Docker: системный PostgreSQL, Bun 1.4.4, отдельный
+Production работает без Docker: системный PostgreSQL, Bun 1.4.5, отдельный
 Kroy Nginx под systemd и внешний системный Nginx.
 Provisioning/deploy находятся в `infra/ansible`; inventory —
 `infra/ansible/inventory`. Начальная команда:
@@ -142,7 +142,7 @@ Compose не предназначен для VPS и не управляет prod
 проверка systemd, rsync и playbook требует целевого VPS; локальная разработка
 их не запускает.
 
-Bootstrap устанавливает закреплённый Bun 1.4.4 и настраивает systemd для
+Bootstrap устанавливает закреплённый Bun 1.4.5 и настраивает systemd для
 запуска сервера и Nginx через Bun. Ansible deploy устанавливает зависимости из
 `bun.lock` и исключает локальный `node_modules` из rsync. Данные, `.env`,
 опубликованные релизы и Nginx-конфигурации сохраняются. Подробности — в
@@ -156,7 +156,7 @@ standalone/production-окружение. Для development выполняйт�
 `bun run dev:run <script> [...args]`; `bun run demo` — алиас только подготовки demo.
 Полный список — `bun run help` или `bun run kroy:help`.
 
-Для ручного standalone-окружения нужны PostgreSQL и Bun 1.4.4:
+Для ручного standalone-окружения нужны PostgreSQL и Bun 1.4.5:
 
 ```bash
 cp .env.example .env

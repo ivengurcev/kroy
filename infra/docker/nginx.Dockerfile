@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.4
+FROM oven/bun:1.4.5
 
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends nginx \

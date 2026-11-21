@@ -17,7 +17,7 @@ Nginx от пользователя приложения. Системный Ngi
 Существующий пользователь и каталоги не пересоздаются и не удаляются.
 
 Bootstrap устанавливает системные зависимости: Nginx, PostgreSQL, `rsync`,
-`acl`, `python3-psycopg2`, `unzip` и Bun `1.4.4`. Bun загружается из закреплённого
+`acl`, `python3-psycopg2`, `unzip` и Bun `1.4.5`. Bun загружается из закреплённого
 Linux x64 baseline archive с проверкой SHA-256 и устанавливается в
 `/usr/local/bin/bun`. Проверяется Ubuntu 24.04 x86_64. Playbook не устанавливает
 Node.js, NodeSource, Corepack или Yarn.
@@ -121,12 +121,12 @@ Provision создаёт роль PostgreSQL `kroy` с `LOGIN`, базу `kroy` 
 базы отсутствует, она восстанавливается с паролем из этого файла.
 
 `kroy-deploy.yml` не импортирует bootstrap или provision и не устанавливает
-системные пакеты, пользователей или PostgreSQL. При отсутствии Bun `1.4.4` deploy
+системные пакеты, пользователей или PostgreSQL. При отсутствии Bun `1.4.5` deploy
 завершается с рекомендацией запустить bootstrap. `kroy-provision.yml` сохранён
 как совместимая точка входа и вызывает bootstrap.
 
 Перед deploy на локальной машине выполняются `bun install --frozen-lockfile` и
-`bun run vyaz:build`; проверяются Bun `1.4.4`, `package.json` и `bun.lock`.
+`bun run vyaz:build`; проверяются Bun `1.4.5`, `package.json` и `bun.lock`.
 Через rsync передаются исходники и сборка `dist`. Данные передаются напрямую от
 пользователя SSH-подключения. Исключаются `.git`
 (в том числе внутри субмодулей), `.env` и `.env.*`, `dist/sites`, конфигурации
