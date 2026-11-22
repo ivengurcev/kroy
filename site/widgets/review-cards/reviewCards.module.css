@@ -14,9 +14,9 @@
     margin: 0 0 clamp(24px, 4cqw, 48px);
     color: var(--site-color-text);
     font-family: var(--site-font-heading);
-    font-size: clamp(46px, 5cqw, 78px);
+    font-size: var(--site-font-size-h2);
     font-weight: 400;
-    line-height: 1.04;
+    line-height: 1.2;
     letter-spacing: -.035em;
     text-wrap: balance;
 }
@@ -47,14 +47,14 @@
 .quote {
     margin: 0;
     color: var(--site-color-text);
-    font: 400 calc(var(--site-font-size-base) * 1.05)/1.5 var(--site-font-heading);
+    font: 400 var(--site-font-size-body)/var(--site-line-height) var(--site-font-heading);
 }
 
 .author {
     display: grid;
     gap: 4px;
     color: var(--site-color-text-secondary);
-    font: 400 calc(var(--site-font-size-base) * .9)/1.4 var(--site-font-body);
+    font: 400 var(--site-font-size-small)/var(--site-line-height) var(--site-font-body);
 }
 
 .author strong {
@@ -73,7 +73,7 @@
     border: 0;
     border-radius: var(--site-radius-base);
     color: var(--site-color-bg);
-    font: 600 calc(var(--site-font-size-base) * .9)/1.2 var(--site-font-body);
+    font: 600 var(--site-font-size-body)/var(--site-line-height) var(--site-font-body);
     background: var(--site-color-accent);
     cursor: pointer;
 }
@@ -102,9 +102,6 @@
 }
 
 @container review-cards (max-width: 560px) {
-    .title {
-        font-size: clamp(42px, 10cqw, 64px);
-    }
 
     .card {
         padding: var(--site-space-4);

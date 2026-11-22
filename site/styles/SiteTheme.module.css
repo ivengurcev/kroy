@@ -1,4 +1,7 @@
+@import './fonts.css';
+
 .theme {
+    container-type: inline-size;
     --site-color-bg: #f6f5f2;
     --site-color-text: #10221e;
     --site-color-text-secondary: #3b4743;
@@ -30,7 +33,7 @@
 
     color: var(--site-color-text);
     font-family: var(--site-font-body);
-    font-size: var(--site-font-size-base);
+    font-size: var(--site-font-size-body);
     line-height: var(--site-line-height);
     background: var(--site-color-bg);
 }
@@ -41,3 +44,58 @@
 .theme *::after {
     box-sizing: border-box;
 }
+
+/* Recalculate on descendants so nested cards use their own container width. */
+.theme,
+.theme * {
+    --site-font-size-small: calc(var(--site-font-size-base) * .875);
+    --site-font-size-body: calc(var(--site-font-size-base) * 1);
+    --site-font-size-lead: calc(var(--site-font-size-base) * 1.125);
+    --site-font-size-h6: calc(var(--site-font-size-base) * 1);
+    --site-font-size-h5: calc(var(--site-font-size-base) * 1.125);
+    --site-font-size-h4: calc(var(--site-font-size-base) * 1.25);
+    --site-font-size-h3: calc(var(--site-font-size-base) * 1.5);
+    --site-font-size-h2: calc(var(--site-font-size-base) * 1.75);
+    --site-font-size-h1: calc(var(--site-font-size-base) * 2.25);
+    --site-font-size-display: calc(var(--site-font-size-base) * 2.75);
+}
+
+@container (min-width: 768px) {
+    .theme * {
+        --site-font-size-lead: calc(var(--site-font-size-base) * 1.1875);
+        --site-font-size-h6: calc(var(--site-font-size-base) * 1.0625);
+        --site-font-size-h5: calc(var(--site-font-size-base) * 1.1875);
+        --site-font-size-h4: calc(var(--site-font-size-base) * 1.375);
+        --site-font-size-h3: calc(var(--site-font-size-base) * 1.625);
+        --site-font-size-h2: calc(var(--site-font-size-base) * 2);
+        --site-font-size-h1: calc(var(--site-font-size-base) * 2.625);
+        --site-font-size-display: calc(var(--site-font-size-base) * 3.375);
+    }
+}
+
+@container (min-width: 1200px) {
+    .theme * {
+        --site-font-size-lead: calc(var(--site-font-size-base) * 1.25);
+        --site-font-size-h6: calc(var(--site-font-size-base) * 1.125);
+        --site-font-size-h5: calc(var(--site-font-size-base) * 1.25);
+        --site-font-size-h4: calc(var(--site-font-size-base) * 1.5);
+        --site-font-size-h3: calc(var(--site-font-size-base) * 1.75);
+        --site-font-size-h2: calc(var(--site-font-size-base) * 2.25);
+        --site-font-size-h1: calc(var(--site-font-size-base) * 3);
+        --site-font-size-display: calc(var(--site-font-size-base) * 4);
+    }
+}
+
+:where(.theme) :where(h1, h2, h3, h4, h5, h6) {
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+:where(.theme) :where(h1) { font-size: var(--site-font-size-h1); }
+:where(.theme) :where(h2) { font-size: var(--site-font-size-h2); }
+:where(.theme) :where(h3) { font-size: var(--site-font-size-h3); }
+:where(.theme) :where(h4) { font-size: var(--site-font-size-h4); }
+:where(.theme) :where(h5) { font-size: var(--site-font-size-h5); }
+:where(.theme) :where(h6) { font-size: var(--site-font-size-h6); }
+:where(.theme) :where(small) { font-size: var(--site-font-size-small); }
+:where(.theme) :where(input, textarea, select, button) { font: inherit; }

@@ -35,3 +35,15 @@
     background: var(--site-color-accent);
     transform: rotate(-45deg);
 }
+
+.map:global(.leaflet-container),
+.map :global(.leaflet-popup-content),
+.map :global(.leaflet-tooltip) {
+    font-size: var(--site-font-size-body);
+    line-height: var(--site-line-height);
+}
+
+.map :global(.leaflet-control-attribution) {
+    font-size: var(--site-font-size-small);
+    line-height: var(--site-line-height);
+}

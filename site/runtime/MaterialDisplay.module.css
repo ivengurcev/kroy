@@ -1,4 +1,5 @@
 .article {
+    container-type: inline-size;
     width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
     margin: 0 auto;
     padding-block: var(--site-space-8);
@@ -8,9 +9,9 @@
 .title {
     margin: 0 0 var(--site-space-6);
     font-family: var(--site-font-heading);
-    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-size: var(--site-font-size-h1);
     font-weight: 400;
-    line-height: 1.05;
+    line-height: 1.2;
 }
 
 .cover {
@@ -23,9 +24,10 @@
 }
 
 .content {
+    container-type: inline-size;
     max-width: 760px;
     margin-inline: auto;
-    font: 400 var(--site-font-size-base)/1.7 var(--site-font-body);
+    font: 400 var(--site-font-size-body)/var(--site-line-height) var(--site-font-body);
 }
 
 .content h2,

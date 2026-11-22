@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './TokenControls.module.css';
+import '../../site/styles/fonts.css';
 
 export const FONT_OPTIONS = [
     'Arial, Helvetica, sans-serif',
@@ -14,6 +15,10 @@ export const FONT_OPTIONS = [
     '"Trebuchet MS", Arial, sans-serif',
     '"Courier New", monospace',
     '"Palatino Linotype", "Book Antiqua", Palatino, serif',
+    '"Yeseva One", Georgia, serif',
+    'Oswald, Arial, sans-serif',
+    '"Roboto Condensed", Arial, sans-serif',
+    'Caveat, cursive',
 ];
 
 function hexColor(value) {

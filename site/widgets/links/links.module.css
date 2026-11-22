@@ -14,9 +14,9 @@
 .title {
     margin: 0 0 var(--site-space-6);
     font-family: var(--site-font-heading);
-    font-size: clamp(32px, 4cqw, 56px);
+    font-size: var(--site-font-size-h2);
     font-weight: 400;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
 .list {
