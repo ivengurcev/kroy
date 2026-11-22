@@ -1,24 +1,7 @@
 import Section from '../../runtime/Section.jsx';
+import Icon from '../../components/Icon.jsx';
+import HR from '../../components/HR.jsx';
 import styles from './heroEditorial.module.css';
-
-function FeatureIcon({ name }) {
-    const paths = {
-        check: <path d="m5 12 4 4L19 6" />,
-        star: <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z" />,
-        heart: <path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />,
-        leaf: <><path d="M20 3C9 2 3 6 4 13c1 7 12 8 15-2 1-3 1-5 1-8Z" /><path d="M3 22 15 9" /></>,
-        book: <><path d="M12 5v16M3 3c4 0 6 0 9 2 3-2 5-2 9-2v16c-4 0-6 0-9 2-3-2-5-2-9-2Z" /></>,
-        shield: <><path d="m12 2 8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5Z" /><path d="m8 11 3 3 5-6" /></>,
-    };
-    if (!paths[name]) return null;
-    return (
-        <span className={styles.featureIcon} aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                {paths[name]}
-            </svg>
-        </span>
-    );
-}
 
 /**
  * @kroy-title Первый экран — журнальный
@@ -50,7 +33,7 @@ export default function HeroEditorial({ data, options = {} }) {
                                     {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
                                 </h1>
                             )}
-                            {(title || subtitle) && <div className={styles.rule} aria-hidden="true"><span>◆</span></div>}
+                            {(title || subtitle) && <HR className={styles.rule} />}
                         </header>
                     )}
                     {(lead || features.length > 0) && (
@@ -60,7 +43,7 @@ export default function HeroEditorial({ data, options = {} }) {
                                 <ul className={styles.features}>
                                     {features.map(({ icon, text }, index) => (
                                         <li className={styles.feature} key={index}>
-                                            <FeatureIcon name={icon} />
+                                            {icon !== 'none' && <span className={styles.featureIcon}><Icon name={icon} /></span>}
                                             <span>{text}</span>
                                         </li>
                                     ))}

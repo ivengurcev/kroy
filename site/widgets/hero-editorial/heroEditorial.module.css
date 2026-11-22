@@ -70,22 +70,9 @@
 }
 
 .rule {
-    display: flex;
-    align-items: center;
-    gap: var(--site-space-3);
     margin-top: var(--site-space-4);
-    color: var(--site-color-accent-secondary, var(--site-color-accent));
-    font-size: 14px;
 }
 
-.rule::before,
-.rule::after {
-    flex: 1;
-    height: 1px;
-    background: currentColor;
-    opacity: .5;
-    content: '';
-}
 
 .withPhoto .story {
     width: 68%;

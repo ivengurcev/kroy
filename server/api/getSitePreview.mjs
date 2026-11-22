@@ -64,6 +64,7 @@ export default async function getSitePreview(c) {
             materialSections,
             theme: {
                 mode: settings.themeMode,
+                separatorUrl: settings.separatorMediaId ? `/api/media/${settings.separatorMediaId}` : '',
                 light: getThemeTokens(settings.themeId, 'light', settings.overrides),
                 dark: getThemeTokens(settings.themeId, 'dark', settings.overrides),
             },

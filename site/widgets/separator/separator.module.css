@@ -1,0 +1,5 @@
+.separator {
+    width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
+    margin-inline: auto;
+    padding-block: var(--site-space-4);
+}

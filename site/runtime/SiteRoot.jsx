@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from '../styles/SiteTheme.module.css';
 import PaymentResult from '../payments/PaymentResult.jsx';
+import SeparatorContext from './separatorContext.js';
 
 function getPaletteStyle(theme, palette) {
     if (!theme || !['light', 'dark'].includes(palette)) return undefined;
@@ -22,5 +23,5 @@ export default function SiteRoot({ children, tokens, theme }) {
         return () => media.removeEventListener('change', update);
     }, [mode]);
 
-    return <div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}><PaymentResult />{children}</div>;
+    return <SeparatorContext.Provider value={theme?.separatorUrl ?? ''}><div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}><PaymentResult />{children}</div></SeparatorContext.Provider>;
 }

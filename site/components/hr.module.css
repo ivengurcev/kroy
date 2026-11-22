@@ -1,0 +1,8 @@
+.hr {
+    display: block;
+    width: 100%;
+    height: var(--site-space-12);
+    margin: 0;
+    border: 0;
+    background: transparent none center / contain no-repeat;
+}

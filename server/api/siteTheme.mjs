@@ -2,6 +2,7 @@ import { getSiteTheme, setSiteTheme } from "../../db/siteThemes.mjs";
 import getCurrentSite from "./siteContext.mjs";
 import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../../site/themes/themeRegistry.mjs";
 import { getAllTokenMetadata } from "../../site/themes/tokenMetadata.mjs";
+import isUuid from './isUuid.mjs';
 
 function themeDetails() {
   return listThemes().map(({ id }) => getThemeEditorModel(id));
@@ -36,6 +37,10 @@ export async function patchSiteTheme(c) {
     return c.json({ error: "Invalid theme settings" }, 400);
   }
 
+  if (body.separatorMediaId !== undefined && body.separatorMediaId !== null && !isUuid(body.separatorMediaId)) {
+    return c.json({ error: 'Некорректное изображение разделителя' }, 400);
+  }
+
   try {
     const site = await getCurrentSite(c);
     if (!site) return c.json({ error: "Site not found" }, 404);
@@ -44,6 +49,7 @@ export async function patchSiteTheme(c) {
       themeId: body.themeId,
       themeMode: body.themeMode,
       overrides: body.overrides,
+      separatorMediaId: body.separatorMediaId,
     });
     return c.json(settings);
   } catch (error) {

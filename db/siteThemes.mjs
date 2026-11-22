@@ -11,6 +11,7 @@ function toSiteTheme(row) {
     themeId: row.theme_id,
     themeMode: row.theme_mode,
     overrides: row.theme_overrides,
+    separatorMediaId: row.separator_media_id ?? null,
   };
 }
 
@@ -18,7 +19,7 @@ export async function getSiteTheme(siteId) {
   const {
     rows: [row],
   } = await pool.query(
-    `SELECT theme_id, theme_mode, theme_overrides
+    `SELECT theme_id, theme_mode, theme_overrides, separator_media_id
      FROM sites
      WHERE id = $1`,
     [siteId],
@@ -26,24 +27,26 @@ export async function getSiteTheme(siteId) {
   return toSiteTheme(row);
 }
 
-async function saveSiteTheme(siteId, themeId, themeMode, overrides) {
+async function saveSiteTheme(siteId, themeId, themeMode, overrides, separatorMediaId) {
   const {
     rows: [row],
   } = await pool.query(
     `UPDATE sites
      SET theme_id = $2,
          theme_mode = $3,
-         theme_overrides = $4::jsonb
+         theme_overrides = $4::jsonb,
+         separator_media_id = $5::uuid
      WHERE id = $1
-     RETURNING theme_id, theme_mode, theme_overrides`,
-    [siteId, themeId, themeMode, JSON.stringify(overrides)],
+       AND ($5::uuid IS NULL OR EXISTS (SELECT 1 FROM media WHERE id = $5::uuid AND site_id = $1))
+     RETURNING theme_id, theme_mode, theme_overrides, separator_media_id`,
+    [siteId, themeId, themeMode, JSON.stringify(overrides), separatorMediaId],
   );
 
-  if (!row) throw new Error(`Сайт ${siteId} не найден`);
+  if (!row) throw new Error('Некорректное изображение разделителя');
   return toSiteTheme(row);
 }
 
-export async function setSiteTheme(siteId, { themeId, themeMode, overrides } = {}) {
+export async function setSiteTheme(siteId, { themeId, themeMode, overrides, separatorMediaId } = {}) {
   const current = await getSiteTheme(siteId);
   if (!current) throw new Error(`Сайт ${siteId} не найден`);
 
@@ -55,7 +58,8 @@ export async function setSiteTheme(siteId, { themeId, themeMode, overrides } = {
     overrides ?? current.overrides,
   );
 
-  return saveSiteTheme(siteId, nextThemeId, nextThemeMode, nextOverrides);
+  return saveSiteTheme(siteId, nextThemeId, nextThemeMode, nextOverrides,
+    separatorMediaId === undefined ? current.separatorMediaId : separatorMediaId);
 }
 
 export async function setSiteThemeOverride(siteId, palette, token, value) {
@@ -75,6 +79,7 @@ export async function setSiteThemeOverride(siteId, palette, token, value) {
     current.themeId,
     current.themeMode,
     overrides,
+    current.separatorMediaId,
   );
 }
 
@@ -94,5 +99,6 @@ export async function resetSiteThemeOverride(siteId, palette, token) {
     current.themeId,
     current.themeMode,
     overrides,
+    current.separatorMediaId,
   );
 }

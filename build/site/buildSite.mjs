@@ -134,6 +134,7 @@ try {
     let redirects;
     let deletedPages;
     let seoMedia;
+    let separatorMedia;
     let seoContext;
     let transactionStarted = false;
 
@@ -146,7 +147,7 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo, separator_media_id
              FROM sites
              WHERE slug = $1`,
             [siteSlug]
@@ -155,6 +156,14 @@ try {
 
         if (!site) {
             throw new Error(`Сайт не найден: ${siteSlug}`);
+        }
+        if (site.separator_media_id) {
+            const { rows } = await client.query(
+                'SELECT filename FROM media WHERE id = $1 AND site_id = $2',
+                [site.separator_media_id, site.id],
+            );
+            separatorMedia = rows[0];
+            if (!separatorMedia) throw new Error('Изображение разделителя не найдено');
         }
         sourceFingerprint = await getSiteFingerprint(site.id, client);
 
@@ -302,6 +311,7 @@ try {
     );
     const theme = {
         mode: site.theme_mode,
+        separatorUrl: separatorMedia ? `${ASSET_BASE}/separator/${separatorMedia.filename}` : '',
         light: getThemeTokens(site.theme_id, 'light', site.theme_overrides),
         dark: getThemeTokens(site.theme_id, 'dark', site.theme_overrides),
     };
@@ -364,6 +374,12 @@ try {
     await writeFile(join(temporaryDirectory, 'sitemap.xml'), createSitemap(renderPages, seoContext));
     await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));
     await mkdir(join(temporaryDirectory, 'assets'), { recursive: true });
+    if (separatorMedia) {
+        const source = getMediaPath(site.id, separatorMedia.filename);
+        if (!source) throw new Error('Некорректное изображение разделителя');
+        await mkdir(join(temporaryDirectory, 'assets', 'separator'), { recursive: true });
+        await copyFile(source, join(temporaryDirectory, 'assets', 'separator', separatorMedia.filename));
+    }
     await mkdir(join(temporaryDirectory, 'assets', 'seo'), { recursive: true });
     for (const { filename } of seoMedia) {
         const source = getMediaPath(site.id, filename);

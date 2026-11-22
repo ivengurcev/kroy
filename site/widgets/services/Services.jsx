@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styles from './services.module.css';
 import Section from '../../runtime/Section.jsx';
+import Icon from '../../components/Icon.jsx';
 
 function Category({ category, defaultExpanded }) {
     const [isOpen, setIsOpen] = useState(defaultExpanded);
@@ -15,6 +16,7 @@ function Category({ category, defaultExpanded }) {
                 onClick={() => setIsOpen((value) => !value)}
             >
                 {category?.title}
+                <Icon name={isOpen ? 'minus' : 'plus'} />
             </button>
 
             <div className={`${styles.categoryContent} ${isOpen ? styles.categoryContentOpen : ''}`}>

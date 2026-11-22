@@ -4,6 +4,7 @@ import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
 import Icon from '../ui/Icon.jsx';
 import TokenControl from '../ui/TokenControls.jsx';
+import ImageField from '../editor/ImageField.jsx';
 import SocialLinksEditor from '../components/SocialLinksEditor.jsx';
 import CatalogEditor from '../components/CatalogEditor.jsx';
 import SiteSettingsLayout, { SITE_SETTINGS_SECTIONS } from '../components/SiteSettingsLayout.jsx';
@@ -33,7 +34,7 @@ const SHARED_GROUPS = [
 ];
 
 function cloneSettings(settings) {
-    return { themeId: settings.themeId, themeMode: settings.themeMode, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
+    return { themeId: settings.themeId, themeMode: settings.themeMode, separatorMediaId: settings.separatorMediaId ?? null, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
 }
 
 function tokenInfo(token, metadata) {
@@ -263,6 +264,12 @@ export default function SitePage() {
             </AdminPanel>
             <AdminPanel className={styles.tokensPanel} noPadding>
                 <TokenTable theme={selectedTheme} draft={draft} metadata={metadata} disabledPalette={activeMode === 'light' ? 'dark' : activeMode === 'dark' ? 'light' : null} onChange={updateToken} onReset={resetToken} />
+            </AdminPanel>
+            <AdminPanel>
+                <ImageField label="Сепаратор" maxWidth={1600}
+                    value={draft.separatorMediaId ? `/api/media/${draft.separatorMediaId}` : ''}
+                    onChange={(url) => updateDraft({ separatorMediaId: url ? url.split('/').at(-1) : null })} />
+                <p>Используется в разделителях сайта. Без картинки остаётся пустой отступ.</p>
             </AdminPanel>
         </ValidatedForm>}
         {error && status === 'success' && <p className={styles.error} role="alert">{error}</p>}

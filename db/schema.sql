@@ -326,6 +326,7 @@ CREATE TABLE public.sites (
     contact_settings jsonb DEFAULT '{"hours": "", "phone": "", "address": "", "socials": [], "latitude": null, "longitude": null}'::jsonb NOT NULL,
     order_notification_email text,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
+    separator_media_id uuid,
     CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
     CONSTRAINT sites_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
@@ -881,6 +882,14 @@ ALTER TABLE ONLY public.site_payment_integrations
 
 
 --
+-- Name: sites sites_separator_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sites
+    ADD CONSTRAINT sites_separator_media_id_fkey FOREIGN KEY (separator_media_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -913,4 +922,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611050001'),
     ('202611130001'),
     ('202611130002'),
-    ('202611130003');
+    ('202611130003'),
+    ('202611220001');

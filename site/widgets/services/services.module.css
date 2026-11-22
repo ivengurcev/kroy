@@ -69,18 +69,7 @@
     line-height: 1.2;
 }
 
-.categoryToggle::after {
-    flex: 0 0 auto;
-    color: var(--site-color-accent-secondary, var(--site-color-accent));
-    font-family: var(--site-font-body);
-    font-size: .8em;
-    font-weight: 300;
-    content: '+';
-}
 
-.categoryToggle[aria-expanded='true']::after {
-    content: '−';
-}
 
 .categoryToggle:focus-visible {
     outline: 2px solid var(--site-color-accent);
