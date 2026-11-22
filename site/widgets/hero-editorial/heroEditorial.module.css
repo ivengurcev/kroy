@@ -119,9 +119,10 @@
     background: color-mix(in srgb, var(--site-color-section-bg, var(--site-color-surface-soft)) 88%, transparent);
 }
 
-.featureIcon svg {
+.featureImage {
     width: 52%;
     height: 52%;
+    object-fit: contain;
 }
 
 .note {

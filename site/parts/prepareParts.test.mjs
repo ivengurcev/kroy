@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import prepareText from './text/prepareText.mjs';
+import prepareCards from './cards/prepareCards.mjs';
 import prepareMaterial from './material/prepareMaterial.mjs';
 import prepareHero from './hero/prepareHero.mjs';
 import prepareLinks from './links/prepareLinks.mjs';
@@ -57,4 +58,29 @@ test('prepares shared contacts and normalizes source data without mutating it', 
     assert.equal(JSON.stringify(contacts), snapshot);
     assert.deepEqual(prepareText({ props: { title: 'About', text: ' First\n\n Second ' } }).paragraphs, ['First', 'Second']);
     assert.deepEqual(prepareServices({ props: { categories: null } }).categories, []);
+    const cardProps = { title: ' Секция ', headingIcon: 'unknown', cards: [
+        { icon: { src: '/api/media/example', mimeType: 'image/svg+xml' }, title: ' Первая ', description: ' Описание ' },
+        { icon: 'unknown', title: 'Вторая' },
+        null,
+        { icon: 'none', title: '  ', description: '' },
+    ] };
+    const savedCards = JSON.stringify(cardProps);
+    assert.deepEqual(prepareCards({ props: cardProps }), {
+        title: 'Секция', headingIcon: '', cards: [
+            { icon: { src: '/api/media/example', mimeType: 'image/svg+xml' }, title: 'Первая', description: 'Описание' },
+            { icon: '', title: 'Вторая', description: '' },
+        ],
+    });
+    assert.equal(JSON.stringify(cardProps), savedCards);
+    assert.deepEqual(prepareCards({ props: { cards: null } }).cards, []);
+    const heroIcons = prepareHero({ props: { features: [
+        { icon: { src: '/api/media/vector', mimeType: 'image/svg+xml' }, text: 'SVG' },
+        { icon: '/raster.webp', text: 'Растр' },
+        { icon: 'leaf', text: 'Прежнее имя' },
+    ] } }).features;
+    assert.deepEqual(heroIcons.map(({ icon }) => icon), [
+        { src: '/api/media/vector', mimeType: 'image/svg+xml' },
+        { src: '/raster.webp', mimeType: undefined },
+        '',
+    ]);
 });

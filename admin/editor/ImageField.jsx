@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import styles from './ImageField.module.css';
+import { normalizeImageSource } from '../../shared/imageSource.mjs';
 
 const DEFAULT_MAX_WIDTH = 1600;
 const CROP_QUALITY = 0.82;
@@ -23,7 +24,7 @@ function clamp(value, minimum, maximum) {
     return Math.min(maximum, Math.max(minimum, value));
 }
 
-export default function ImageField({ label, value, aspectRatio, maxWidth, onChange, name }) {
+export default function ImageField({ label, value, aspectRatio, maxWidth, format, onChange, name }) {
     const [status, setStatus] = useState('idle');
     const [crop, setCrop] = useState(null);
     const [zoom, setZoom] = useState(1);
@@ -34,7 +35,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
     const stageRef = useRef(null);
     const imageRef = useRef(null);
     const dragRef = useRef(null);
-    const imageUrl = typeof value === 'string' ? value : '';
+    const imageUrl = normalizeImageSource(value)?.src ?? '';
     const outputMaxWidth = parseMaxWidth(maxWidth);
 
     useEffect(() => {
@@ -206,7 +207,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
         const response = await fetch('/api/media', { method: 'POST', body: form });
         if (!response.ok) throw new Error(`Не удалось загрузить изображение: ${response.status}`);
         const media = await response.json();
-        onChange(media.url);
+        onChange(format === 'media' ? { src: media.url, mimeType: media.mimeType } : media.url);
     }
 
     async function uploadImage() {
@@ -249,6 +250,15 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
                         ? 'Заменить'
                         : 'Загрузить изображение'}
             </Button>
+            {format === 'media' && imageUrl && (
+                <Button
+                    variant="compact"
+                    disabled={status === 'uploading'}
+                    onClick={() => { onChange(''); setStatus('idle'); }}
+                >
+                    <Icon name="delete" /> Убрать иконку
+                </Button>
+            )}
             <small className={styles.error} role={status === 'error' ? 'alert' : undefined}>
                 {status === 'error' && 'Не удалось загрузить изображение. Выберите файл повторно.'}
             </small>

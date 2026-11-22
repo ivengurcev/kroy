@@ -88,7 +88,7 @@ export default async function postMedia(c) {
         await client.query('COMMIT');
         keepFile = true;
 
-        return c.json({ id: media.id, url: media.url }, 201);
+        return c.json({ id: media.id, url: media.url, mimeType: output.format === 'svg' ? 'image/svg+xml' : 'image/webp' }, 201);
     } catch (error) {
         await client?.query('ROLLBACK').catch(() => {});
         console.error('Failed to upload media', error);

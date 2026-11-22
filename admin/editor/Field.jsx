@@ -43,6 +43,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
                 value={value}
                 aspectRatio={schema.aspectRatio}
                 maxWidth={schema.maxWidth}
+                format={schema.format}
                 onChange={onChange}
             />
         );

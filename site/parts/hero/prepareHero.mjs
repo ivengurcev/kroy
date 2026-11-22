@@ -1,3 +1,4 @@
+import { normalizeImageSource } from '../../../shared/imageSource.mjs';
 import { socialType } from '../../../shared/socialLinks.mjs';
 
 /**
@@ -11,7 +12,7 @@ import { socialType } from '../../../shared/socialLinks.mjs';
  * @param {string} props.title - Главный заголовок
  * @param {string} [props.subtitle] - Вторая строка заголовка
  * @param {string} [props.lead] - Вводный текст
- * @param {{icon: 'none'|'check'|'star'|'heart'|'leaf'|'book'|'shield', text: string}[]} [props.features] - Тезисы
+ * @param {{icon: string, text: string}[]} [props.features] - Тезисы
  * @param {string} props.captionTitle - Заголовок плашки
  * @param {string} props.description - Текст плашки
  * @param {string} props.photo - Фотография
@@ -20,8 +21,7 @@ import { socialType } from '../../../shared/socialLinks.mjs';
  * @kroy title widget=textarea
  * @kroy subtitle widget=textarea
  * @kroy lead widget=textarea
- * @kroy features.icon label=Иконка
- * @kroy features.icon optionLabels=none:Нет,check:Галочка,star:Звезда,heart:Сердце,leaf:Лист,book:Книга,shield:Щит
+ * @kroy features.icon widget=image format=media maxWidth=512 label=Иконка
  * @kroy features.text widget=textarea label=Текст
  * @kroy captionTitle widget=input
  * @kroy description widget=textarea
@@ -30,10 +30,9 @@ import { socialType } from '../../../shared/socialLinks.mjs';
 export default function prepareHero({ props, contacts }) {
     const { eyebrow = '', title = '', captionTitle = '', description = '', photo = '' } = props;
     const { subtitle = '', lead = '' } = props;
-    const icons = ['none', 'check', 'star', 'heart', 'leaf', 'book', 'shield'];
     const features = Array.isArray(props.features)
         ? props.features.map((feature) => ({
-            icon: icons.includes(feature?.icon) ? feature.icon : 'none',
+            icon: normalizeImageSource(feature?.icon),
             text: typeof feature?.text === 'string' ? feature.text.trim() : '',
         })).filter(({ text }) => text)
         : [];

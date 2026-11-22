@@ -1,5 +1,5 @@
 import Section from '../../runtime/Section.jsx';
-import Icon from '../../components/Icon.jsx';
+import Image from '../../components/Image.jsx';
 import HR from '../../components/HR.jsx';
 import styles from './heroEditorial.module.css';
 
@@ -44,7 +44,7 @@ export default function HeroEditorial({ data, options = {} }) {
                                 <ul className={styles.features}>
                                     {features.map(({ icon, text }, index) => (
                                         <li className={styles.feature} key={index}>
-                                            {icon !== 'none' && <span className={styles.featureIcon}><Icon name={icon} /></span>}
+                                            {icon && <span className={styles.featureIcon}><Image src={icon} monochrome className={styles.featureImage} /></span>}
                                             <span>{text}</span>
                                         </li>
                                     ))}

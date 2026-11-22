@@ -1,0 +1,108 @@
+.section {
+    container: feature-cards / inline-size;
+    color: var(--site-color-text);
+    background: var(--site-color-bg);
+}
+
+.inner {
+    width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
+    margin-inline: auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--site-space-4);
+    margin-bottom: var(--site-space-6);
+}
+
+.headingIcon {
+    flex-shrink: 0;
+    object-fit: contain;
+    width: calc(var(--site-font-size-base) * 2.5);
+    height: calc(var(--site-font-size-base) * 2.5);
+    color: var(--site-color-accent);
+}
+
+.title {
+    min-width: 0;
+    margin: 0;
+    font-family: var(--site-font-heading);
+    font-size: var(--site-font-size-h2);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--site-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--site-space-4);
+    min-width: 0;
+    padding: var(--site-space-6) var(--site-space-4);
+    border-radius: var(--site-radius-lg);
+    background: var(--site-color-surface-soft);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.iconCircle {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: min(100%, calc(var(--site-font-size-base) * 4.5));
+    aspect-ratio: 1;
+    border-radius: 50%;
+    color: var(--site-color-bg);
+    background: var(--site-color-accent);
+}
+
+.cardIcon {
+    width: 58%;
+    height: 58%;
+    object-fit: contain;
+}
+
+.cardTitle {
+    max-width: 100%;
+    margin: 0;
+    font-family: var(--site-font-heading);
+    font-size: var(--site-font-size-h4);
+    line-height: 1.2;
+    white-space: pre-line;
+}
+
+.description {
+    max-width: 100%;
+    margin: 0;
+    font-family: var(--site-font-body);
+    font-size: var(--site-font-size-body);
+    line-height: var(--site-line-height);
+    white-space: pre-line;
+}
+
+@container feature-cards (min-width: 375px) {
+    .grid:not([data-columns='1']) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container feature-cards (min-width: 1024px) {
+    .grid[data-columns] {
+        grid-template-columns: repeat(var(--feature-card-columns), minmax(0, 1fr));
+    }
+
+    .card {
+        padding-inline: var(--site-space-6);
+    }
+}

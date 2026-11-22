@@ -36,7 +36,7 @@ before(async () => {
         const result = await build({
             stdin: { contents, resolveDir: fileURLToPath(new URL('../../', import.meta.url)) },
             outfile, bundle: true, write: false, packages: 'external', platform, format: 'esm', jsx: 'automatic',
-            loader: { '.module.css': 'local-css', '.png': 'dataurl' },
+            loader: { '.module.css': 'local-css', '.png': 'dataurl', '.ttf': 'dataurl' },
             plugins: [createSiteSvgPlugin({ root: fileURLToPath(new URL('../../', import.meta.url)) })],
         });
         await writeFile(outfile, result.outputFiles.find(({ path }) => path.endsWith('.mjs')).contents);
@@ -49,6 +49,8 @@ before(async () => {
 after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
+    '@kroy/cards': { title: 'Cards heading', cards: [{ icon: { src: '/leaf.svg', mimeType: 'image/svg+xml' }, title: 'Card title', description: 'Card description' }] },
+    '@kroy/separator': {},
     '@kroy/text': { title: 'About heading', text: 'First paragraph\n\nSecond paragraph' },
     '@kroy/material': {},
     '@kroy/material-list': { sectionId: 'section' },
@@ -61,6 +63,8 @@ const settings = {
     '@kroy/reviews': { title: 'Reviews heading', mode: 'auto', showSubmitButton: true },
 };
 const expected = {
+    '@kroy/cards': /Card description/,
+    '@kroy/separator': /role="separator"/,
     '@kroy/text': /<p>First paragraph<\/p><p>Second paragraph<\/p>/,
     '@kroy/material': /Material body/,
     '@kroy/material-list': /List material/,
@@ -101,6 +105,54 @@ test('all default widgets preserve visible content and CSS Modules with identica
             assert.match(html, /<dialog/);
             assert.match(html, /name="authorName"/);
             assert.match(html, /name="text"/);
+        }
+        if (definition.name === '@kroy/hero') {
+            const editorialPage = { ...page, content: [{
+                part: definition.name,
+                props: { title: 'Hero', features: [
+                    { icon: { src: '/api/media/hero-vector', mimeType: 'image/svg+xml' }, text: 'SVG feature' },
+                    { icon: { src: '/hero-icon.webp', mimeType: 'image/webp' }, text: 'Raster feature' },
+                    { icon: 'leaf', text: 'Legacy feature' },
+                ] },
+                view: { name: '@kroy/hero-editorial', props: {} },
+            }] };
+            const editorial = render(server, editorialPage);
+            assert.match(editorial, /mask-image:url\(&quot;\/api\/media\/hero-vector&quot;\)/);
+            assert.match(editorial, /<img[^>]*src="\/hero-icon.webp"/);
+            assert.doesNotMatch(editorial, /src="leaf"/);
+            assert.equal(render(client, editorialPage), editorial);
+        }
+        if (definition.name === '@kroy/cards') {
+            for (const count of [1, 4, 8]) {
+                for (const columns of [1, 2, 3, 4]) {
+                    for (const base of [16, 18, 20]) {
+                        const content = [{
+                            part: definition.name,
+                            props: { headingIcon: '/info.svg', cards: Array.from({ length: count }, (_, index) => ({
+                                icon: [{ src: '/api/media/vector', mimeType: 'image/svg+xml' }, '/cart.webp', '/ruble.svg', ''][index % 4],
+                                title: `Card ${index} ${'Длинное название '.repeat(8)}`,
+                                description: index % 2 ? '' : 'Описание\nс переносом',
+                            })) },
+                            view: { name: definition.defaultWidget, props: { columns } },
+                        }];
+                        const initialPage = { ...page, content };
+                        const input = { path: '/', initialPage, tokens: { '--site-font-size-base': `${base}px` } };
+                        const renderCards = (module) => renderToString(createElement(module.SiteApp, {
+                            ...input, parts: module.parts, widgets: module.widgets,
+                        }));
+                        const initial = renderCards(server);
+                        assert.equal((initial.match(/<li\b/g) ?? []).length, count);
+                        assert.match(initial, new RegExp(`data-columns="${columns}"`));
+                        assert.match(initial, new RegExp(`--site-font-size-base:${base}px`));
+                        assert.doesNotMatch(initial, /<header\b|<h2\b|<p[^>]*><\/p>/);
+                        assert.equal(renderCards(client), initial);
+                        assert.match(initial, /mask-image:url\(&quot;\/api\/media\/vector&quot;\)/);
+                        if (count > 1) assert.match(initial, /<img[^>]*src="\/cart.webp"/);
+                    }
+                }
+            }
+            const emptyPage = { ...page, content: [{ part: definition.name, props: {}, view: { name: definition.defaultWidget, props: {} } }] };
+            assert.doesNotMatch(render(server, emptyPage), /<ul\b|<header\b|<section\b/);
         }
     }
 });
