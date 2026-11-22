@@ -12,9 +12,6 @@ export default async function generateSiteParts(pages, siteSlug) {
     const names = [...new Set(
         pages.flatMap(({ content }) => content.map(({ part }) => part))
     )];
-    const widgetNames = [...new Set(
-        pages.flatMap(({ content }) => content.map(({ view }) => view?.name))
-    )];
     const [discoveredParts, discoveredWidgets] = await Promise.all([
         discoverParts(),
         discoverWidgets(),
@@ -25,10 +22,15 @@ export default async function generateSiteParts(pages, siteSlug) {
     const partCatalog = Object.fromEntries(availableParts);
     const widgetCatalog = Object.fromEntries(availableWidgets);
     for (const page of pages) {
-        if (!isValidContent(page.content, partCatalog, widgetCatalog)) {
+        if (!isValidContent(page.content, partCatalog, widgetCatalog, { allowMissingParts: true })) {
             throw new Error(`Некорректный content сайта ${siteSlug}: каждая запчасть требует совместимый виджет`);
         }
     }
+    const widgetNames = [...new Set(
+        pages.flatMap(({ content }) => content
+            .filter(({ part }) => availableParts.has(part))
+            .map(({ view }) => view.name))
+    )];
     const imports = [];
     const partEntries = [];
     const widgetEntries = [];
@@ -37,7 +39,8 @@ export default async function generateSiteParts(pages, siteSlug) {
         const part = availableParts.get(name);
 
         if (!part) {
-            throw new Error(`Запчасть сайта ${siteSlug} не найдена: ${name}`);
+            console.warn(`Запчасть сайта ${siteSlug} не найдена: ${name}; будет показана заглушка`);
+            continue;
         }
 
         const variable = `Part${index}`;

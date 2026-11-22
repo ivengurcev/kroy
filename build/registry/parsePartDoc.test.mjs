@@ -36,11 +36,14 @@ test('reads string and boolean widget defaults from JSDoc', () => {
      * @param {boolean} [props.autoplay=true] - Автопрокрутка
      * @param {'left'|'right'} [props.align='right'] - Выравнивание
      * @param {string} [props.label="Read more"] - Подпись
+     * @kroy align optionLabels=left:Слева,right:Справа
      */
     export default function Widget() {}`;
     const { fields } = parsePartDoc(doc);
     assert.equal(fields.autoplay.default, true);
     assert.equal(fields.align.default, 'right');
+    assert.deepEqual(fields.align.optionLabels, { left: 'Слева', right: 'Справа' });
+    assert.throws(() => parsePartDoc(doc.replace('left:Слева', 'top:Сверху')), /подпись варианта/);
     assert.equal(fields.label.default, 'Read more');
 });
 

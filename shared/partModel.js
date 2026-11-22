@@ -67,10 +67,15 @@ export function createPart(part, metadata, widgetMetadata, props = {}, view) {
         id,
         part,
         props: {
-            ...defaultProps(metadata.fields),
+            ...defaultProps(metadata?.fields),
             ...props,
         },
     };
+
+    if (!metadata && view) {
+        item.view = { name: view.name, props: { ...view.props } };
+        return item;
+    }
 
     item.view = partView(view ? view.name : metadata.defaultWidget, metadata, widgetMetadata, view?.props);
 

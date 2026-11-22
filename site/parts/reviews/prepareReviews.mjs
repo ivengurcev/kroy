@@ -7,6 +7,7 @@
  * @param {object} props
  * @param {string} props.title - Заголовок секции
  * @param {'auto'|'manual'} props.mode - Режим подбора
+ * @kroy mode optionLabels=auto:Автоматически,manual:Вручную
  * @param {number} props.limit - Максимальное количество отзывов
  * @param {string[]} props.reviewIds - Выбранные отзывы
  * @param {boolean} props.showSubmitButton - Показывать кнопку "Оставить отзыв"

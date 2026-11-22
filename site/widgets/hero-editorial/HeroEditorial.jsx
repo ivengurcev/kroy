@@ -8,6 +8,7 @@ import styles from './heroEditorial.module.css';
  * @kroy-category Основное
  * @kroy-contract hero
  * @param {'left'|'center'|'right'} [props.photoPosition=center] - Положение фотографии
+ * @kroy photoPosition optionLabels=left:Слева,center:Центр,right:Справа
  */
 export default function HeroEditorial({ data, options = {} }) {
     const { eyebrow, title, subtitle, lead, features = [], photo, captionTitle, description, topNote, bottomNote, socials = [] } = data;

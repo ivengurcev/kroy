@@ -35,4 +35,11 @@ test('loads stored settings with the selected view and fills widget defaults wit
     assert.equal(item.props.columns, undefined);
     assert.equal(item.view.props.title, undefined);
     assert.throws(() => createPart('@kroy/reviews', { ...partMetadata, defaultWidget: undefined }, widgets), /виджет/i);
+    const savedProps = { title: 'Старый блок', text: 'Сохранённое содержимое' };
+    const savedView = { name: '@kroy/about-editorial', props: { imageSide: 'left' } };
+    const missing = createPart('@kroy/about', undefined, widgets, savedProps, savedView);
+    assert.equal(typeof missing.id, 'string');
+    assert.equal(missing.part, '@kroy/about');
+    assert.deepEqual(missing.props, savedProps);
+    assert.deepEqual(missing.view, savedView);
 });

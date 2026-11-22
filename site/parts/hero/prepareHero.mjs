@@ -21,6 +21,7 @@ import { socialType } from '../../../shared/socialLinks.mjs';
  * @kroy subtitle widget=textarea
  * @kroy lead widget=textarea
  * @kroy features.icon label=Иконка
+ * @kroy features.icon optionLabels=none:Нет,check:Галочка,star:Звезда,heart:Сердце,leaf:Лист,book:Книга,shield:Щит
  * @kroy features.text widget=textarea label=Текст
  * @kroy captionTitle widget=input
  * @kroy description widget=textarea

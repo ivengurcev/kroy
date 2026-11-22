@@ -182,7 +182,7 @@ export default function EditorWorkspace({
                                 onRemove={removePart}
                             />
                         </StickyPartHeader>
-                        {item.id === editingPartId ? (
+                        {item.id === editingPartId && metadata[item.part] ? (
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
                                     <PartEditor

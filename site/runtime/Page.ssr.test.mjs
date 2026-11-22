@@ -46,11 +46,17 @@ test('calls the data part with independent settings, record, context and site da
     })), '<output>setting|record|wide|sample</output>');
 });
 
-test('requires a known data part and a selected known widget', () => {
+test('shows a placeholder for a missing data part and requires a selected known widget for existing parts', () => {
     const item = { part: '@kroy/example', props: {}, view: { name: '@kroy/view', props: {} } };
     const props = { content: [item], parts: { '@kroy/example': () => ({}) }, widgets: { '@kroy/view': () => null } };
+    const html = renderToStaticMarkup(createElement(Page, {
+        content: [{ part: '@kroy/missing', props: {}, view: { name: '@kroy/missing-view', props: {} } }, item],
+        parts: props.parts,
+        widgets: { '@kroy/view': () => createElement('p', null, 'Следующий блок') },
+    }));
+    assert.match(html, /Запчасть недоступна: @kroy\/missing/);
+    assert.match(html, /Следующий блок/);
     for (const [overrides, message] of [
-        [{ parts: {} }, /Запчасть не найдена/],
         [{ widgets: {} }, /Виджет не найден/],
         [{ content: [{ part: item.part, props: {} }] }, /виджет/i],
     ]) {

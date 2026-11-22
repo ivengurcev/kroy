@@ -49,7 +49,7 @@ before(async () => {
 after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
-    '@kroy/about': { title: 'About heading', text: 'First paragraph\n\nSecond paragraph' },
+    '@kroy/text': { title: 'About heading', text: 'First paragraph\n\nSecond paragraph' },
     '@kroy/material': {},
     '@kroy/material-list': { sectionId: 'section' },
     '@kroy/hero': { title: 'Hero heading', photo: '/hero.webp', description: 'Hero caption' },
@@ -61,7 +61,7 @@ const settings = {
     '@kroy/reviews': { title: 'Reviews heading', mode: 'auto', showSubmitButton: true },
 };
 const expected = {
-    '@kroy/about': /<p>First paragraph<\/p><p>Second paragraph<\/p>/,
+    '@kroy/text': /<p>First paragraph<\/p><p>Second paragraph<\/p>/,
     '@kroy/material': /Material body/,
     '@kroy/material-list': /List material/,
     '@kroy/hero': /Hero caption/,

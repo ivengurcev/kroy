@@ -4,7 +4,7 @@ export function isPlainObject(value) {
     return prototype === Object.prototype || prototype === null;
 }
 
-export function validateContent(content, parts, widgets) {
+export function validateContent(content, parts, widgets, { allowMissingParts = false } = {}) {
     const errors = [];
     const add = (path, code, message) => errors.push({ path, code, message });
     if (!Array.isArray(content)) {
@@ -17,13 +17,14 @@ export function validateContent(content, parts, widgets) {
             add(path, 'invalid_format', 'Блок должен быть объектом.');
             return;
         }
+        const missingPart = typeof item.part === 'string' && !Object.hasOwn(parts, item.part);
         for (const key of ['part', 'props', 'view']) {
             if (!Object.hasOwn(item, key)) add(`${path}.${key}`, 'required', 'Обязательное поле отсутствует.');
         }
         if (Object.keys(item).some((key) => !['part', 'props', 'view'].includes(key))) add(path, 'invalid_format', 'Блок содержит лишние поля.');
         if (Object.hasOwn(item, 'part')) {
             if (typeof item.part !== 'string') add(`${path}.part`, 'invalid_format', 'Идентификатор запчасти должен быть строкой.');
-            else if (!Object.hasOwn(parts, item.part)) add(`${path}.part`, 'unknown_part', 'Запчасть не найдена в реестре сервера.');
+            else if (missingPart && !allowMissingParts) add(`${path}.part`, 'unknown_part', 'Запчасть не найдена в реестре сервера.');
         }
         if (Object.hasOwn(item, 'props') && !isPlainObject(item.props)) add(`${path}.props`, 'invalid_format', 'Настройки запчасти должны быть объектом.');
         if (!Object.hasOwn(item, 'view')) return;
@@ -39,6 +40,7 @@ export function validateContent(content, parts, widgets) {
         if (Object.hasOwn(view, 'props') && !isPlainObject(view.props)) add(`${path}.view.props`, 'invalid_format', 'Настройки виджета должны быть объектом.');
         if (Object.hasOwn(view, 'name')) {
             if (typeof view.name !== 'string') add(`${path}.view.name`, 'invalid_format', 'Идентификатор виджета должен быть строкой.');
+            else if (allowMissingParts && missingPart) return;
             else if (!Object.hasOwn(widgets, view.name)) add(`${path}.view.name`, 'unknown_widget', 'Виджет не найден в реестре сервера.');
             else if (typeof item.part === 'string' && Object.hasOwn(parts, item.part)
                 && (!parts[item.part].contract || parts[item.part].contract !== widgets[view.name].contract)) {
@@ -49,6 +51,6 @@ export function validateContent(content, parts, widgets) {
     return errors;
 }
 
-export function isValidContent(content, parts, widgets) {
-    return validateContent(content, parts, widgets).length === 0;
+export function isValidContent(content, parts, widgets, options) {
+    return validateContent(content, parts, widgets, options).length === 0;
 }

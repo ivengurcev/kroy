@@ -11,12 +11,14 @@ test('imports only selected data parts and widgets, including a non-default comp
     await generateSiteParts([{ content: [
         { part: '@kroy/reviews', props: {}, view: { name: '@kroy/review-cards', props: { columns: 3 } } },
         { part: '@kroy/reviews', props: {}, view: { name: '@kroy/review-cards', props: { columns: 4 } } },
+        { part: '@kroy/missing', props: {}, view: { name: '@kroy/missing-view', props: {} } },
     ] }], 'test');
     const source = await readFile(output, 'utf8');
     assert.match(source, /site\/parts\/reviews\/prepareReviews\.mjs/);
     assert.match(source, /site\/widgets\/review-cards\/ReviewCards\.jsx/);
     assert.equal((source.match(/import /g) ?? []).length, 2);
     assert.doesNotMatch(source, /ReviewsSlider|ReviewForm|ArticleContent|Hero/);
+    assert.doesNotMatch(source, /@kroy\/missing/);
 });
 
 test('rejects missing and incompatible views instead of importing legacy display parts', async () => {

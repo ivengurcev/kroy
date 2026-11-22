@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import prepareAbout from './about/prepareAbout.mjs';
+import prepareText from './text/prepareText.mjs';
 import prepareMaterial from './material/prepareMaterial.mjs';
 import prepareHero from './hero/prepareHero.mjs';
 import prepareLinks from './links/prepareLinks.mjs';
@@ -55,6 +55,6 @@ test('prepares shared contacts and normalizes source data without mutating it', 
     assert.equal(links.socials[0].name, 'Link');
     assert.equal(prepareContacts({ props: { title: 'Contacts', zoom: 10 }, contacts }).phone, '+79999999999');
     assert.equal(JSON.stringify(contacts), snapshot);
-    assert.deepEqual(prepareAbout({ props: { title: 'About', text: ' First\n\n Second ' } }).paragraphs, ['First', 'Second']);
+    assert.deepEqual(prepareText({ props: { title: 'About', text: ' First\n\n Second ' } }).paragraphs, ['First', 'Second']);
     assert.deepEqual(prepareServices({ props: { categories: null } }).categories, []);
 });

@@ -1,12 +1,12 @@
-import styles from './about.module.css';
+import styles from './text.module.css';
 import Section from '../../runtime/Section.jsx';
 
 /**
- * @kroy-title О себе
+ * @kroy-title Текст — обычный
  * @kroy-category Основное
- * @kroy-contract about
+ * @kroy-contract text
  */
-export default function About({ data }) {
+export default function Text({ data }) {
     const { title, paragraphs } = data;
 
     return (

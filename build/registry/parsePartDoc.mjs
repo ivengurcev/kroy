@@ -133,6 +133,17 @@ function applyKroy(field, settings) {
         }
 
         switch (key) {
+            case 'optionLabels':
+                field.optionLabels = {};
+                for (const pair of value.split(',')) {
+                    const [name, label, extra] = pair.split(':');
+                    if (!field.options?.includes(name) || !label || extra !== undefined) {
+                        throw new Error(`Некорректная подпись варианта: ${pair}`);
+                    }
+                    field.optionLabels[name] = label;
+                }
+                break;
+
             case 'label':
                 field.label = value;
                 break;

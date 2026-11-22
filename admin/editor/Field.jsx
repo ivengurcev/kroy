@@ -104,7 +104,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
                         <option value="">Выбрать...</option>
                         {schema.options.map((option) => (
                             <option key={option} value={option}>
-                                {option}
+                                {schema.optionLabels?.[option] ?? option}
                             </option>
                         ))}
                     </select>
