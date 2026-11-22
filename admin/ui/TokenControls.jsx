@@ -38,7 +38,7 @@ function parseDimension(value) {
     return match ? { number: match[1], unit: match[2] || '' } : null;
 }
 
-export function ColorControl({ value, disabled = false, label, onChange }) {
+export function ColorControl({ value, disabled = false, label, onChange, compact = false }) {
     const committed = hexColor(value);
     const [draft, setDraft] = useState(committed);
     const [focused, setFocused] = useState(false);
@@ -53,7 +53,7 @@ export function ColorControl({ value, disabled = false, label, onChange }) {
         setDraft(next);
         if (/^#[0-9a-f]{6}$/i.test(next) || /^#[0-9a-f]{8}$/i.test(next)) commit(next);
     }
-    return <div className={styles.control}>
+    return <div className={`${styles.control} ${compact ? styles.compactColor : ''}`}>
         <input className={styles.colorPicker} type="color" value={committed.slice(0, 7)} disabled={disabled} title={label} onChange={(event) => commit(event.target.value)} />
         <input className={`${styles.input} ${styles.colorHex}`} value={focused ? draft : committed} disabled={disabled} aria-label={`${label}, HEX8`} onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); setDraft(committed); }} onChange={handleText} />
     </div>;
@@ -98,8 +98,8 @@ export function FontControl({ value, disabled = false, label, onChange, options 
     </div></div>;
 }
 
-export default function TokenControl({ type, value, disabled, label, units, numeric = false, min, max, onChange }) {
-    if (type === 'color') return <ColorControl value={value} disabled={disabled} label={label} onChange={onChange} />;
+export default function TokenControl({ type, value, disabled, label, units, numeric = false, min, max, onChange, compact = false }) {
+    if (type === 'color') return <ColorControl value={value} disabled={disabled} label={label} onChange={onChange} compact={compact} />;
     if (type === 'font') return <FontControl value={value} disabled={disabled} label={label} onChange={onChange} />;
     if (type === 'dimension' || type === 'number') return <DimensionControl value={value} type={type} units={units} numeric={numeric} min={min} max={max} disabled={disabled} label={label} onChange={onChange} />;
     return <input className={styles.input} value={value ?? ''} disabled={disabled} title={label} onChange={(event) => onChange(event.target.value)} />;

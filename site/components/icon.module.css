@@ -2,4 +2,6 @@
     display: inline-block;
     flex-shrink: 0;
     vertical-align: middle;
+    stroke-width: var(--site-line-width-icon);
+    overflow: visible;
 }

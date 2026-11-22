@@ -66,7 +66,7 @@
 }
 
 .details a:focus-visible {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 4px;
 }
 

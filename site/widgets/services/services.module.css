@@ -42,12 +42,12 @@
 
 .categories {
     min-width: 0;
-    border-top: 1px solid var(--site-color-border);
+    border-top: var(--site-line-width) solid var(--site-color-border);
 }
 
 .category {
     min-width: 0;
-    border-bottom: 1px solid var(--site-color-border);
+    border-bottom: var(--site-line-width) solid var(--site-color-border);
 }
 
 .categoryToggle {
@@ -72,7 +72,7 @@
 
 
 .categoryToggle:focus-visible {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 5px;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .service + .service {
-    border-top: 1px solid color-mix(in srgb, var(--site-color-border) 55%, transparent);
+    border-top: var(--site-line-width) solid color-mix(in srgb, var(--site-color-border) 55%, transparent);
 }
 
 .serviceName,

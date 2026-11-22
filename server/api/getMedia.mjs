@@ -3,6 +3,7 @@ import { pool } from '../../db/client.mjs';
 import { getMediaPath } from '../media/storage.mjs';
 import getHostname from './getHostname.mjs';
 import isUuid from './isUuid.mjs';
+import { SVG_CONTENT_SECURITY_POLICY } from '../../shared/mediaPolicy.mjs';
 
 export default async function getMedia(c) {
     const mediaId = c.req.param('mediaId');
@@ -36,6 +37,8 @@ export default async function getMedia(c) {
             'Cache-Control': 'public, max-age=31536000, immutable',
             'Content-Length': String(bytes.length),
             'Content-Type': media.mime_type,
+            'X-Content-Type-Options': 'nosniff',
+            ...(media.mime_type === 'image/svg+xml' ? { 'Content-Security-Policy': SVG_CONTENT_SECURITY_POLICY } : {}),
         });
     } catch (error) {
         console.error('Failed to get media', error);

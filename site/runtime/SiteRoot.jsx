@@ -23,5 +23,6 @@ export default function SiteRoot({ children, tokens, theme }) {
         return () => media.removeEventListener('change', update);
     }, [mode]);
 
-    return <SeparatorContext.Provider value={theme?.separatorUrl ?? ''}><div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}><PaymentResult />{children}</div></SeparatorContext.Provider>;
+    const separator = theme?.separatorUrl ? { src: theme.separatorUrl, mimeType: theme.separatorMimeType } : null;
+    return <SeparatorContext.Provider value={separator}><div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}><PaymentResult />{children}</div></SeparatorContext.Provider>;
 }

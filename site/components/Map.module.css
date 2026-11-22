@@ -4,7 +4,7 @@
     isolation: isolate;
     min-height: clamp(300px, 35cqw, 520px);
     overflow: hidden;
-    border: 1px solid var(--site-color-border);
+    border: var(--site-line-width) solid var(--site-color-border);
     background: var(--site-color-surface-soft);
 }
 
@@ -22,14 +22,14 @@
 
 .map :global(.leaflet-control-attribution a:focus-visible),
 .map :global(.leaflet-popup-content a:focus-visible) {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 2px;
 }
 
 .marker {
     width: 24px;
     height: 24px;
-    border: 4px solid var(--site-color-surface);
+    border: var(--site-line-width-4) solid var(--site-color-surface);
     border-radius: 50% 50% 50% 0;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--site-color-text) 28%, transparent);
     background: var(--site-color-accent);
@@ -46,4 +46,26 @@
 .map :global(.leaflet-control-attribution) {
     font-size: var(--site-font-size-small);
     line-height: var(--site-line-height);
+}
+
+.map :global(.leaflet-bar a) {
+    border-bottom-width: var(--site-line-width);
+}
+
+.map :global(.leaflet-control-layers-separator) {
+    border-top-width: var(--site-line-width);
+}
+
+.map :global(.leaflet-tooltip),
+.map :global(.leaflet-div-icon) {
+    border-width: var(--site-line-width);
+}
+
+.map :global(.leaflet-zoom-box),
+.map:global(.leaflet-touch) :global(.leaflet-bar),
+.map:global(.leaflet-touch) :global(.leaflet-control-layers),
+.map :global(.leaflet-control-scale-line),
+.map :global(.leaflet-control-scale-line:not(:first-child)),
+.map :global(.leaflet-control-scale-line:not(:first-child):not(:last-child)) {
+    border-width: var(--site-line-width-2);
 }

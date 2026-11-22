@@ -29,6 +29,10 @@ export default async function getSitePreview(c) {
         const settings = await getSiteTheme(site.id);
         if (!settings) return c.json({ error: 'Site not found' }, 404);
 
+        const separator = settings.separatorMediaId
+            ? (await pool.query('SELECT mime_type FROM media WHERE id = $1 AND site_id = $2', [settings.separatorMediaId, site.id])).rows[0]
+            : null;
+
         const { rows: detailTemplates } = await pool.query(
             `SELECT detail.path, detail.route_param AS "routeParam", detail.detail_parent_id AS "detailParentId",
                     list.material_section_id AS "materialSectionId"
@@ -65,6 +69,7 @@ export default async function getSitePreview(c) {
             theme: {
                 mode: settings.themeMode,
                 separatorUrl: settings.separatorMediaId ? `/api/media/${settings.separatorMediaId}` : '',
+                separatorMimeType: separator?.mime_type ?? null,
                 light: getThemeTokens(settings.themeId, 'light', settings.overrides),
                 dark: getThemeTokens(settings.themeId, 'dark', settings.overrides),
             },

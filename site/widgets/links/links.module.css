@@ -31,7 +31,7 @@
     align-items: center;
     min-height: 44px;
     padding: var(--site-space-2) var(--site-space-4);
-    border: 1px solid var(--site-color-border);
+    border: var(--site-line-width) solid var(--site-color-border);
     border-radius: var(--site-radius-base);
     color: inherit;
     text-decoration: none;
@@ -44,7 +44,7 @@
 }
 
 .list a:focus-visible {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 4px;
 }
 
@@ -60,5 +60,5 @@
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 1.8;
+    stroke-width: var(--site-line-width-icon);
 }

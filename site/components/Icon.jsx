@@ -27,7 +27,7 @@ export default function Icon({ name, size = 24, className = '' }) {
     const shape = icons[key];
     return (
         <svg className={`${styles.icon} ${className}`} width={size} height={size} viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+            fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
             aria-hidden="true" focusable="false">
             {shape}
         </svg>

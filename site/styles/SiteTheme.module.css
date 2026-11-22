@@ -17,6 +17,11 @@
     --site-font-heading: Georgia, "Times New Roman", serif;
     --site-font-size-base: 16px;
     --site-line-height: 1.5;
+    --site-line-width: 1px;
+    --site-line-width-2: calc(var(--site-line-width) * 2);
+    --site-line-width-3: calc(var(--site-line-width) * 3);
+    --site-line-width-4: calc(var(--site-line-width) * 4);
+    --site-line-width-icon: calc(var(--site-line-width) * 1.8);
 
     --site-container-max: 1760px;
     --site-page-gutter: clamp(20px, 5vw, 90px);
@@ -48,6 +53,7 @@
 /* Recalculate on descendants so nested cards use their own container width. */
 .theme,
 .theme * {
+    text-decoration-thickness: var(--site-line-width);
     --site-font-size-small: calc(var(--site-font-size-base) * .875);
     --site-font-size-body: calc(var(--site-font-size-base) * 1);
     --site-font-size-lead: calc(var(--site-font-size-base) * 1.125);

@@ -20,6 +20,7 @@ const explicitMetadata = {
     '--site-container-max': { label: 'Максимальная ширина', type: 'dimension', units: ['px', 'rem'] },
     '--site-space-base': { label: 'Базовый шаг', type: 'dimension', units: ['px', 'rem'] },
     '--site-radius-base': { label: 'Базовое скругление', type: 'dimension', units: ['px', 'rem'] },
+    '--site-line-width': { label: 'Толщина линии', type: 'dimension', units: ['px'], min: 0, max: 8 },
 };
 
 export function getTokenMetadata(token) {

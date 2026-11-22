@@ -150,7 +150,7 @@
     width: fit-content;
     max-width: 95%;
     padding: var(--site-space-6);
-    border-left: 2px solid var(--site-color-accent-secondary, var(--site-color-accent));
+    border-left: var(--site-line-width-2) solid var(--site-color-accent-secondary, var(--site-color-accent));
     border-radius: 0 var(--site-space-8) var(--site-space-8) 0;
     background: color-mix(in srgb, var(--site-color-bg) 92%, transparent);
 }
@@ -200,7 +200,7 @@
 }
 
 .socials a:focus-visible {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 4px;
 }
 

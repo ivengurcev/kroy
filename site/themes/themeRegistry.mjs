@@ -74,6 +74,7 @@ function sharedDefaults(theme) {
         '--site-line-height': theme.tokens.light['--site-line-height'],
         '--site-space-base': theme.tokens.light['--site-space-base'],
         '--site-radius-base': theme.tokens.light['--site-radius-base'],
+        '--site-line-width': theme.tokens.light['--site-line-width'] ?? '1px',
         '--site-container-max': theme.tokens.light['--site-container-max'],
     };
 }
@@ -136,6 +137,10 @@ function normalizeOverrideShape(theme, mode, overrides = {}) {
 
 function computedTokens() {
     return {
+        '--site-line-width-2': 'calc(var(--site-line-width) * 2)',
+        '--site-line-width-3': 'calc(var(--site-line-width) * 3)',
+        '--site-line-width-4': 'calc(var(--site-line-width) * 4)',
+        '--site-line-width-icon': 'calc(var(--site-line-width) * 1.8)',
         '--site-color-text-secondary': 'color-mix(in srgb, var(--site-color-text) 72%, var(--site-color-bg))',
         '--site-color-border': 'color-mix(in srgb, var(--site-color-text) 24%, transparent)',
         '--site-color-surface': 'color-mix(in srgb, var(--site-color-bg) 94%, var(--site-color-text))',

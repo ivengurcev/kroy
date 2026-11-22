@@ -99,11 +99,11 @@
 .social + .social {
     margin-left: 0;
     padding-left: var(--site-space-6);
-    border-left: 1px solid var(--site-color-border);
+    border-left: var(--site-line-width) solid var(--site-color-border);
 }
 
 .social:hover { color: var(--site-color-accent-hover); }
-.social:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 5px; }
+.social:focus-visible { outline: var(--site-line-width-2) solid var(--site-color-accent); outline-offset: 5px; }
 
 .socialIcon {
     display: inline-flex;
@@ -129,7 +129,7 @@
     width: clamp(210px, 17.5cqw, 270px);
     aspect-ratio: 1;
     padding: var(--site-space-4);
-    border-top: 3px solid var(--site-color-accent-secondary, var(--site-color-accent));
+    border-top: var(--site-line-width-3) solid var(--site-color-accent-secondary, var(--site-color-accent));
     background: color-mix(in srgb, var(--site-color-section-bg, var(--site-color-surface-soft)) 77%, transparent);
     backdrop-filter: blur(9px);
 }

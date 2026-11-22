@@ -56,6 +56,21 @@
     font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
+.compactColor .colorPicker {
+    flex: 0 0 28px;
+    width: 28px;
+}
+
+.compactColor .colorHex {
+    padding-inline: 2px;
+    font-size: 11px;
+}
+
+@container appearance (min-width: 700px) {
+    .compactColor .colorPicker { flex-basis: var(--control-height-sm); width: var(--control-height-sm); }
+    .compactColor .colorHex { padding-inline: var(--space-2); font-size: inherit; }
+}
+
 .reset {
     flex: 0 0 auto;
     width: 30px;

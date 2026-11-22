@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isValidPagePath } from '../../shared/pageFields.mjs';
 import isValidHostname from './isValidHostname.mjs';
+import { SVG_CONTENT_SECURITY_POLICY } from '../../shared/mediaPolicy.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const DEFAULT_OUTPUT_DIR = join(ROOT, 'dist', 'kroy', 'nginx');
@@ -69,6 +70,14 @@ function buildServer(siteSlug, domains, routing, options) {
         '',
         '    location ^~ /_kroy/releases/ {',
         `        alias ${quote(`${options.sitesRoot}/${siteSlug}/`)};`,
+        `        add_header Content-Security-Policy ${quote(SVG_CONTENT_SECURITY_POLICY)} always;`,
+        '        add_header X-Content-Type-Options nosniff always;',
+        '        try_files $uri =404;',
+        '    }',
+        '',
+        '    location ~ ^/assets/.+\\.svg$ {',
+        `        add_header Content-Security-Policy ${quote(SVG_CONTENT_SECURITY_POLICY)} always;`,
+        '        add_header X-Content-Type-Options nosniff always;',
         '        try_files $uri =404;',
         '    }',
         '',

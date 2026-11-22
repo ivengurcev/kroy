@@ -4,8 +4,8 @@
 .grid[data-masonry-ready='true'] { grid-auto-rows: 4px; }
 .item { min-width: 0; align-self: start; }
 .spacing { padding-bottom: var(--site-space-4); }
-.card { container-type: inline-size; display: block; overflow: hidden; color: inherit; text-decoration: none; border: 1px solid var(--site-color-border); border-radius: var(--site-radius-lg); background: var(--site-color-surface); }
-a.card:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: -2px; }
+.card { container-type: inline-size; display: block; overflow: hidden; color: inherit; text-decoration: none; border: var(--site-line-width) solid var(--site-color-border); border-radius: var(--site-radius-lg); background: var(--site-color-surface); }
+a.card:focus-visible { outline: var(--site-line-width-2) solid var(--site-color-accent); outline-offset: -2px; }
 .cover { display: block; width: 100%; height: auto; }
 .body { padding: var(--site-space-4); }
 .title { margin: 0; font: 400 var(--site-font-size-h5)/1.2 var(--site-font-heading); overflow-wrap: anywhere; }

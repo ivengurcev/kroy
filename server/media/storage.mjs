@@ -17,7 +17,7 @@ export const MEDIA_ROOT = resolve(
     'media'
 );
 
-const MEDIA_FILENAME_PATTERN = /^([0-9a-f-]{36})\.(jpg|png|webp)$/i;
+const MEDIA_FILENAME_PATTERN = /^([0-9a-f-]{36})\.(jpg|png|webp|svg)$/i;
 const formats = [
     {
         extension: 'jpg',
@@ -55,19 +55,24 @@ export function getMediaPath(siteId, filename) {
 }
 
 export async function storeMedia(client, siteId, output) {
+    const { bytes, format } = output;
+    const mimeType = { webp: 'image/webp', svg: 'image/svg+xml' }[format];
+    if (!mimeType || !Buffer.isBuffer(bytes) || bytes.length <= 0 || bytes.length > MAX_MEDIA_SIZE) {
+        throw new Error('Invalid processed image');
+    }
     const id = randomUUID();
-    const filename = `${id}.webp`;
+    const filename = `${id}.${format}`;
     const filePath = getMediaPath(siteId, filename);
 
     if (!filePath) throw new Error('Invalid generated media path');
 
     try {
         await mkdir(dirname(filePath), { recursive: true });
-        await writeFile(filePath, output, { flag: 'wx' });
+        await writeFile(filePath, bytes, { flag: 'wx' });
         await client.query(
             `INSERT INTO media (id, site_id, filename, mime_type, size)
              VALUES ($1, $2, $3, $4, $5)`,
-            [id, siteId, filename, 'image/webp', output.length]
+            [id, siteId, filename, mimeType, bytes.length]
         );
     } catch (error) {
         await rm(filePath, { force: true }).catch(() => {});

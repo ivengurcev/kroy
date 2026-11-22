@@ -72,11 +72,12 @@ export default function ReviewForm({ open, onClose }) {
         const selection = ++selectionRef.current;
         setStatus('photo-loading');
         const url = URL.createObjectURL(file);
+        const vectorFile = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name) ? file : null;
         const image = new Image();
         image.onload = async () => {
             let bitmap;
             try {
-                bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+                if (!vectorFile) bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
             } catch {
                 bitmap = undefined;
             }
@@ -88,6 +89,7 @@ export default function ReviewForm({ open, onClose }) {
             setPhoto({
                 url,
                 bitmap,
+                originalFile: vectorFile,
                 width: bitmap?.width ?? image.naturalWidth,
                 height: bitmap?.height ?? image.naturalHeight,
             });
@@ -98,7 +100,8 @@ export default function ReviewForm({ open, onClose }) {
         image.onerror = () => {
             URL.revokeObjectURL(url);
             if (selection !== selectionRef.current) return;
-            setStatus('photo-error');
+            setPhoto({ originalFile: file, previewUnavailable: true });
+            setStatus('idle');
         };
         image.src = url;
     }
@@ -196,7 +199,7 @@ export default function ReviewForm({ open, onClose }) {
 
         try {
             const form = new FormData(event.currentTarget);
-            if (photo) form.set('photo', await cropPhoto(), 'review.webp');
+            if (photo) form.set('photo', photo.originalFile ?? await cropPhoto(), photo.originalFile?.name ?? 'review.webp');
             const response = await fetch('/api/reviews', { method: 'POST', body: form });
             if (!response.ok) throw new Error('Submit failed');
             setStatus('success');
@@ -212,8 +215,8 @@ export default function ReviewForm({ open, onClose }) {
             <label className={styles.formField}>Дополнительная подпись<input name="authorSubtitle" maxLength="300" /></label>
             <label className={styles.formField}>Текст отзыва<textarea name="text" required maxLength="5000" rows="5" /></label>
             <label className={styles.honeypot} aria-hidden="true">Сайт<input name="website" tabIndex="-1" autoComplete="off" /></label>
-            <div className={styles.photoField}><span>Фотография</span><input className={styles.fileInput} ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" disabled={status === 'submitting' || status === 'photo-loading'} onChange={selectPhoto} /><div className={styles.photoActions}><button className={styles.formSecondaryButton} type="button" disabled={status === 'submitting' || status === 'photo-loading'} onClick={() => fileRef.current?.click()}>{status === 'photo-loading' ? 'Подготовка…' : photo ? 'Заменить фотографию' : 'Выбрать фотографию'}</button>{photo && <button className={styles.formTextButton} type="button" disabled={status === 'submitting' || status === 'photo-loading'} onClick={removePhoto}>Удалить</button>}</div></div>
-            {photo && <div className={styles.cropArea}><div className={styles.cropStage} ref={stageRef} tabIndex="0" aria-label="Положение фотографии. Используйте стрелки для перемещения" onKeyDown={moveWithKeyboard} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={stopDrag} onPointerCancel={stopDrag}><img className={styles.cropImage} ref={imageRef} src={photo.url} alt="" draggable="false" style={{ width: photo.width, height: photo.height, transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${displayScale()})` }} /></div><label className={styles.zoomField}>Масштаб<input type="range" min="1" max="3" step="0.01" value={zoom} disabled={status === 'submitting'} onChange={changeZoom} /></label></div>}
+            <div className={styles.photoField}><span>Фотография</span><input className={styles.fileInput} ref={fileRef} type="file" accept="image/*" disabled={status === 'submitting' || status === 'photo-loading'} onChange={selectPhoto} /><div className={styles.photoActions}><button className={styles.formSecondaryButton} type="button" disabled={status === 'submitting' || status === 'photo-loading'} onClick={() => fileRef.current?.click()}>{status === 'photo-loading' ? 'Подготовка…' : photo ? 'Заменить фотографию' : 'Выбрать фотографию'}</button>{photo && <button className={styles.formTextButton} type="button" disabled={status === 'submitting' || status === 'photo-loading'} onClick={removePhoto}>Удалить</button>}</div></div>
+            {photo && (photo.previewUnavailable ? <p>Предпросмотр недоступен. Изображение будет обработано при отправке.</p> : photo.originalFile ? <img className={styles.vectorPreview} src={photo.url} alt="" /> : <div className={styles.cropArea}><div className={styles.cropStage} ref={stageRef} tabIndex="0" aria-label="Положение фотографии. Используйте стрелки для перемещения" onKeyDown={moveWithKeyboard} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={stopDrag} onPointerCancel={stopDrag}><img className={styles.cropImage} ref={imageRef} src={photo.url} alt="" draggable="false" style={{ width: photo.width, height: photo.height, transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${displayScale()})` }} /></div><label className={styles.zoomField}>Масштаб<input type="range" min="1" max="3" step="0.01" value={zoom} disabled={status === 'submitting'} onChange={changeZoom} /></label></div>)}
             {(status === 'error' || status === 'photo-error') && <p className={styles.formError} role="alert">{status === 'photo-error' ? 'Не удалось открыть фотографию.' : 'Не удалось отправить отзыв. Попробуйте ещё раз.'}</p>}
             <div className={styles.formActions}><button className={styles.formSecondaryButton} type="button" disabled={status === 'submitting'} onClick={close}>Отмена</button><button className={styles.formPrimaryButton} type="submit" disabled={status === 'submitting' || status === 'photo-loading'}>{status === 'submitting' ? 'Отправка…' : 'Отправить отзыв'}</button></div>
         </form>}

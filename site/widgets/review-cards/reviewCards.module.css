@@ -32,7 +32,7 @@
     gap: var(--site-space-4);
     align-content: start;
     padding: var(--site-space-6);
-    border: 1px solid var(--site-color-border);
+    border: var(--site-line-width) solid var(--site-color-border);
     border-radius: var(--site-radius-lg);
     background: var(--site-color-surface);
 }
@@ -83,7 +83,7 @@
 }
 
 .reviewButton:focus-visible {
-    outline: 2px solid var(--site-color-accent);
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
     outline-offset: 3px;
 }
 

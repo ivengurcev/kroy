@@ -73,11 +73,22 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
         if (status !== 'uploading') closeCrop();
     }
 
-    function selectImage(event) {
+    async function selectImage(event) {
         const file = event.target.files?.[0];
         event.target.value = '';
 
         if (!file || status === 'uploading') return;
+
+        if (file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)) {
+            setStatus('uploading');
+            try {
+                await uploadFile(file, file.name);
+                setStatus('idle');
+            } catch {
+                setStatus('error');
+            }
+            return;
+        }
 
         const url = URL.createObjectURL(file);
         const image = new Image();
@@ -98,9 +109,16 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
             setStatus('idle');
             setCrop({ url, bitmap, width, height, ratio });
         };
-        image.onerror = () => {
+        image.onerror = async () => {
             URL.revokeObjectURL(url);
-            setStatus('error');
+            // The server can decode raster formats the browser cannot preview.
+            setStatus('uploading');
+            try {
+                await uploadFile(file, file.name);
+                setStatus('idle');
+            } catch {
+                setStatus('error');
+            }
         };
         image.src = url;
     }
@@ -181,27 +199,23 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
         });
     }
 
+    async function uploadFile(blob, filename) {
+        const form = new FormData();
+        form.append('file', blob, filename);
+        form.append('maxWidth', String(outputMaxWidth));
+        const response = await fetch('/api/media', { method: 'POST', body: form });
+        if (!response.ok) throw new Error(`Не удалось загрузить изображение: ${response.status}`);
+        const media = await response.json();
+        onChange(media.url);
+    }
+
     async function uploadImage() {
         if (!crop || status === 'uploading') return;
         setStatus('uploading');
 
         try {
             const blob = await cropImage();
-            const form = new FormData();
-            form.append('file', blob, 'image.webp');
-            form.append('maxWidth', String(outputMaxWidth));
-
-            const response = await fetch('/api/media', {
-                method: 'POST',
-                body: form,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Не удалось загрузить изображение: ${response.status}`);
-            }
-
-            const media = await response.json();
-            onChange(media.url);
+            await uploadFile(blob, 'image.webp');
             closeCrop();
         } catch {
             setStatus('error');
@@ -218,7 +232,7 @@ export default function ImageField({ label, value, aspectRatio, maxWidth, onChan
                 className={styles.input}
                 ref={inputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 disabled={status === 'uploading'}
                 onChange={selectImage}
             />

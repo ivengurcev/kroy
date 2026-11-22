@@ -23,8 +23,13 @@ export default async function processImage(bytes, { maxWidth, square = false } =
     });
     const metadata = await image.metadata();
 
+    if (metadata.format === 'svg') {
+        if (bytes.length <= 0 || bytes.length > MAX_MEDIA_SIZE) throw new Error('Invalid image');
+        return { bytes, format: 'svg' };
+    }
+
     if (
-        !['jpeg', 'png', 'webp'].includes(metadata.format)
+        !['jpeg', 'png', 'webp', 'gif', 'heif', 'avif', 'tiff', 'jp2', 'jxl', 'magick'].includes(metadata.format)
         || !Number.isInteger(metadata.width)
         || !Number.isInteger(metadata.height)
         || metadata.width <= 0
@@ -48,5 +53,5 @@ export default async function processImage(bytes, { maxWidth, square = false } =
         throw new Error('Invalid image');
     }
 
-    return output;
+    return { bytes: output, format: 'webp' };
 }

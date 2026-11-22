@@ -30,7 +30,7 @@ const TOKEN_GROUPS = [
 const SHARED_GROUPS = [
     { id: 'statuses', label: 'Статусы', match: (token) => token.startsWith('--site-color-') },
     { id: 'typography', label: 'Типографика', match: (token) => token.startsWith('--site-font-') || token === '--site-line-height' },
-    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('space-base') || token.includes('radius-base') || token.includes('container') },
+    { id: 'geometry', label: 'Геометрия', match: (token) => token.includes('space-base') || token.includes('radius-base') || token.includes('container') || token === '--site-line-width' },
 ];
 
 function cloneSettings(settings) {
@@ -75,7 +75,7 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
         const info = tokenInfo(token, metadata);
         const overridden = draft.overrides[palette][token] !== undefined;
         return <div className={styles.tokenControl}>
-            <TokenControl type={info.type} value={draft.overrides[palette][token] ?? baseValue} label={info.label} units={info.units} disabled={disabled} onChange={(value) => onChange(palette, token, value)} />
+            <TokenControl type={info.type} value={draft.overrides[palette][token] ?? baseValue} label={info.label} units={info.units} min={info.min} max={info.max} disabled={disabled} compact onChange={(value) => onChange(palette, token, value)} />
             {overridden && <button className={styles.resetToken} type="button" title="Вернуть значение темы" aria-label={`Сбросить ${info.label}`} disabled={disabled} onClick={() => onReset(palette, token)}>↶</button>}
         </div>;
     };
@@ -85,7 +85,7 @@ function TokenTable({ theme, draft, metadata, disabledPalette, onChange, onReset
         return <tr key={`${palette}-${token}`}><th scope="row" title={token}>{info.label}</th><td colSpan={palette === 'shared' ? 2 : undefined}>{control(palette, token, base, palette !== 'shared' && disabledPalette === palette)}</td>{palette !== 'shared' && <td>{control('dark', token, theme.palettes.dark[token], disabledPalette === 'dark')}</td>}</tr>;
     };
     return <div className={styles.tokenScroll}>
-        <table className={styles.tokenTable}>
+        <table className={styles.tokenTable} role="table">
             <thead>
                 <tr>
                     <th>Токен</th>

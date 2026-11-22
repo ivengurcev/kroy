@@ -159,7 +159,7 @@ try {
         }
         if (site.separator_media_id) {
             const { rows } = await client.query(
-                'SELECT filename FROM media WHERE id = $1 AND site_id = $2',
+                'SELECT filename, mime_type FROM media WHERE id = $1 AND site_id = $2',
                 [site.separator_media_id, site.id],
             );
             separatorMedia = rows[0];
@@ -312,6 +312,7 @@ try {
     const theme = {
         mode: site.theme_mode,
         separatorUrl: separatorMedia ? `${ASSET_BASE}/separator/${separatorMedia.filename}` : '',
+        separatorMimeType: separatorMedia?.mime_type ?? null,
         light: getThemeTokens(site.theme_id, 'light', site.theme_overrides),
         dark: getThemeTokens(site.theme_id, 'dark', site.theme_overrides),
     };

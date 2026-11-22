@@ -94,7 +94,7 @@ CREATE TABLE public.media (
     mime_type text NOT NULL,
     size bigint NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT media_mime_type_check CHECK ((mime_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text]))),
+    CONSTRAINT media_mime_type_check CHECK ((mime_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text, 'image/svg+xml'::text]))),
     CONSTRAINT media_size_check CHECK (((size > 0) AND (size <= 10485760)))
 );
 
@@ -923,4 +923,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611130001'),
     ('202611130002'),
     ('202611130003'),
-    ('202611220001');
+    ('202611220001'),
+    ('202611220002');

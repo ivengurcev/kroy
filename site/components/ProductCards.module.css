@@ -1,5 +1,5 @@
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--site-space-6); }
-.card { container-type: inline-size; overflow: hidden; border: 1px solid var(--site-color-border); border-radius: var(--site-radius-base); color: var(--site-color-text); background: var(--site-color-surface); }
+.card { container-type: inline-size; overflow: hidden; border: var(--site-line-width) solid var(--site-color-border); border-radius: var(--site-radius-base); color: var(--site-color-text); background: var(--site-color-surface); }
 .image { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--site-color-surface-soft); }
 .body { display: grid; gap: var(--site-space-3); padding: var(--site-space-4); }
 .body h3, .body p { margin: 0; }
@@ -12,5 +12,5 @@
 .buy { padding: var(--site-space-2) var(--site-space-4); border: 0; border-radius: var(--site-radius-base); color: var(--site-color-bg); font: inherit; background: var(--site-color-accent); cursor: pointer; }
 .buy:hover { background: var(--site-color-accent-hover); }
 .buy:disabled { opacity: .65; cursor: wait; }
-.buy:focus-visible { outline: 2px solid var(--site-color-accent); outline-offset: 3px; }
+.buy:focus-visible { outline: var(--site-line-width-2) solid var(--site-color-accent); outline-offset: 3px; }
 .body .error { color: var(--site-color-danger); }
