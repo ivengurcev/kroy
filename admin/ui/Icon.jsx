@@ -31,8 +31,12 @@ import ReviewsIcon from './icons/reviews.svg';
 import PaymentsIcon from './icons/payments.svg';
 import MenuIcon from './icons/menu.svg';
 import styles from './Icon.module.css';
+import FolderIcon from './icons/folder.svg';
+import FileIcon from './icons/file.svg';
 
 const icons = {
+    folder: FolderIcon,
+    file: FileIcon,
     add: AddIcon,
     edit: EditIcon,
     delete: DeleteIcon,

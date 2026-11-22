@@ -11,10 +11,10 @@ import { normalizeImageSource } from '../../../shared/imageSource.mjs';
  * @param {string} [props.headingIcon] - Иконка заголовка
  * @param {{icon: string, title: string, description: string}[]} [props.cards] - Карточки
  *
- * @kroy title widget=textarea
+ * @kroy title widget=input
  * @kroy headingIcon widget=image format=media maxWidth=512
  * @kroy cards.icon widget=image format=media maxWidth=512 label=Иконка
- * @kroy cards.title widget=textarea label=Название
+ * @kroy cards.title widget=input label=Название
  * @kroy cards.description widget=textarea label=Описание
  */
 export default function prepareCards({ props = {} }) {

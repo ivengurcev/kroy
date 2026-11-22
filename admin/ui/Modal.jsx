@@ -6,7 +6,7 @@ export default function Modal({ title, children, actions, onClose, busy = false 
     const titleId = useId();
     useEffect(() => { ref.current?.showModal(); }, []);
     return <dialog ref={ref} className={styles.dialog} aria-labelledby={titleId}
-        onCancel={(event) => { event.preventDefault(); if (!busy) onClose(); }}>
+        onCancel={(event) => { if (event.target !== event.currentTarget) return; event.preventDefault(); if (!busy) onClose(); }}>
         <div className={styles.layout}>
             <header className={styles.header}><h2 id={titleId}>{title}</h2></header>
             <div className={styles.body}>{children}</div>
