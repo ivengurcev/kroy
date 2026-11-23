@@ -118,7 +118,7 @@ function findField(fields, path) {
 }
 
 function applyKroy(field, settings) {
-    for (const option of settings.split(/\s+/).filter(Boolean)) {
+    for (const option of settings.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) ?? []) {
         const separator = option.indexOf('=');
 
         if (separator === -1) {
@@ -126,7 +126,7 @@ function applyKroy(field, settings) {
         }
 
         const key = option.slice(0, separator);
-        const value = option.slice(separator + 1);
+        const value = option.slice(separator + 1).replace(/^(["'])(.*)\1$/, '$2');
 
         if (!key || !value) {
             throw new Error(`Некорректная настройка @kroy: ${option}`);

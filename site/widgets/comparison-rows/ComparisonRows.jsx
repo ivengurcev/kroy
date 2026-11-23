@@ -1,0 +1,60 @@
+import Section from '../../runtime/Section.jsx';
+import styles from './comparisonRows.module.css';
+
+/**
+ * @kroy-title Сравнение — строки
+ * @kroy-category Контент
+ * @kroy-contract comparison
+ */
+export default function ComparisonRows({ data }) {
+    const { title, subtitle, rows = [] } = data;
+    if (!title && !rows.length) return null;
+
+    return (
+        <Section className={styles.section}>
+            <div className={styles.inner}>
+                {(title || subtitle) && (
+                    <header className={styles.header}>
+                        {title && <h2 className={styles.title}>{title}</h2>}
+                        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+                    </header>
+                )}
+                {rows.length > 0 && (
+                    <ul className={styles.rows}>
+                        {rows.map((row, index) => (
+                            <li key={index} className={styles.row} data-tone={row.tone}>
+                                {row.title && (
+                                    <div className={styles.category}>
+                                        <h3 className={styles.rowTitle}>{row.title}</h3>
+                                    </div>
+                                )}
+                                {(row.description.length > 0 || row.highlight || row.note.length > 0) && (
+                                    <div className={styles.details}>
+                                        {row.description.length > 0 && (
+                                            <div className={styles.paragraphs}>
+                                                {row.description.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+                                            </div>
+                                        )}
+                                        {row.highlight && <p className={styles.highlight}>{row.highlight}</p>}
+                                        {row.note.length > 0 && (
+                                            <div className={styles.note}>
+                                                {row.note.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {row.examples.length > 0 && (
+                                    <div className={styles.examples}>
+                                        <ul>
+                                            {row.examples.map((example, i) => <li key={i}>{example}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </Section>
+    );
+}

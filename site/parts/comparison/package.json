@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/comparison",
+    "main": "prepareComparison.mjs"
+}

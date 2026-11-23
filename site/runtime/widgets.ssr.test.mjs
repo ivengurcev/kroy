@@ -50,6 +50,7 @@ before(async () => {
 after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
+    '@kroy/comparison': { title: 'Comparison heading', rows: [{ title: 'Category', description: 'Category description', highlight: '70–90%', note: 'Category note', tone: 'success', examples: 'First example\nSecond example' }] },
     '@kroy/callout': { title: 'Callout heading', text: 'First callout paragraph\n\nSecond callout paragraph' },
     '@kroy/cards': { title: 'Cards heading', cards: [{ icon: { src: '/leaf.svg', mimeType: 'image/svg+xml' }, title: 'Card title', description: 'Card description' }] },
     '@kroy/separator': {},
@@ -65,6 +66,7 @@ const settings = {
     '@kroy/reviews': { title: 'Reviews heading', mode: 'auto', showSubmitButton: true },
 };
 const expected = {
+    '@kroy/comparison': /Second example/,
     '@kroy/callout': /Second callout paragraph/,
     '@kroy/cards': /Card description/,
     '@kroy/separator': /role="separator"/,
