@@ -1,0 +1,135 @@
+.listField,
+.items {
+    --tree-step: 20px;
+    --tree-row-height: var(--control-height-md);
+    --tree-group-height: var(--control-height-sm);
+    --tree-line: var(--color-border-subtle);
+}
+
+.listField {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.listHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    height: var(--tree-group-height);
+    padding: 0;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.listHeader span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.listField[data-nested] > .listHeader { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.listHeader button { flex-shrink: 0; border-color: transparent; background: transparent; }
+.items { display: grid; gap: var(--space-1); min-width: 0; margin: 0; padding: 0 0 0 var(--tree-step); list-style: none; }
+.listItem { position: relative; min-width: 0; }
+.listItem[data-parent]:not(:last-child) { margin-bottom: var(--space-2); }
+
+/* Each sibling owns its trunk segment; the last one ends at the row centre. */
+.listItem::before,
+.listItem::after,
+.childGroup::before,
+.childGroup::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    border-color: var(--tree-line);
+    border-style: solid;
+    border-width: 0;
+}
+.listItem::before {
+    left: calc(var(--tree-step) / -2);
+    top: calc(-1 * var(--space-1));
+    bottom: calc(-1 * var(--space-1));
+    border-left-width: 1px;
+}
+.listItem[data-parent]:not(:last-child)::before { bottom: calc(-1 * (var(--space-1) + var(--space-2))); }
+.listItem:last-child::before { bottom: auto; height: calc(var(--tree-row-height) / 2 + var(--space-1)); }
+.listItem::after {
+    left: calc(var(--tree-step) / -2);
+    top: calc(var(--tree-row-height) / 2);
+    width: calc(var(--tree-step) / 2);
+    border-top-width: 1px;
+}
+
+.itemHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--tree-row-height);
+    min-width: 0;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    background: var(--color-surface);
+    font-size: var(--font-size-sm);
+}
+.listItem:nth-child(odd) > .itemHeader { background: color-mix(in srgb, var(--color-canvas) 60%, var(--color-surface)); }
+.listItem > .itemHeader:hover,
+.listItem > .itemHeader:focus-within { background: var(--color-primary-soft); }
+.listItem > .itemHeader[data-selected] { background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)); }
+.itemHeader button { flex-shrink: 0; }
+.itemHeader .summary { flex: 1 1 0; min-width: 0; }
+.summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    align-self: stretch;
+    padding: 0 var(--space-1);
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.nodeName { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nodeIcon { flex-shrink: 0; color: var(--color-text-muted); }
+.listItem[data-parent] > .itemHeader .nodeIcon { color: var(--color-primary); }
+.listItem[data-parent] > .itemHeader .nodeName { font-weight: 600; }
+.summary small { flex-shrink: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.summary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.actions { display: flex; flex: 0 0 auto; gap: 0; margin-left: auto; }
+.itemHeader button:not(.summary) { width: 24px; min-width: 24px; height: var(--tree-row-height); min-height: var(--tree-row-height); padding: 0; border-color: transparent; background: transparent; }
+.itemHeader button:not(.summary):not(:disabled):hover,
+.itemHeader button:not(.summary):focus-visible { background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.expanded { transform: rotate(90deg); }
+
+.children { display: grid; gap: var(--space-2); min-width: 0; padding: var(--space-1) 0 0 var(--tree-step); }
+.children[hidden] { display: none; }
+.childGroup { position: relative; min-width: 0; }
+.childGroup::before { left: calc(var(--tree-step) / -2); top: calc(-1 * var(--space-1)); bottom: calc(-1 * var(--space-2)); border-left-width: 1px; }
+.childGroup:last-child::before { bottom: auto; height: calc(var(--tree-group-height) / 2 + var(--space-1)); }
+.childGroup::after { left: calc(var(--tree-step) / -2); top: calc(var(--tree-group-height) / 2); width: calc(var(--tree-step) / 2); border-top-width: 1px; }
+.empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); }
+
+@media (min-width: 768px) {
+    .listField, .items { --tree-step: 24px; }
+    .itemHeader button:not(.summary) { width: 28px; min-width: 28px; }
+    .summary { gap: var(--space-2); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .actions { opacity: .4; }
+    .itemHeader:hover .actions,
+    .itemHeader:focus-within .actions,
+    .itemHeader[data-selected] .actions { opacity: 1; }
+}
+
+.children > .items { padding-left: 0; }
+.summary { text-decoration: none; }
+.muted { opacity: .6; }
+.actions > a { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: var(--tree-row-height); border-radius: var(--radius-sm); color: var(--color-text-secondary); text-decoration: none; }
+.actions > a:hover, .actions > a:focus-visible { color: var(--color-primary); background: var(--color-primary-soft); }
+@media (min-width: 768px) {
+    .actions > a { width: 28px; }
+}

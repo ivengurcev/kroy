@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
-import Table from '../ui/Table.jsx';
+import Tree, { TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
 import { AdminListToolbar, AdminListField, Pagination, useListPage } from '../components/AdminList.jsx';
 import listStyles from '../components/AdminList.module.css';
 import Icon from '../ui/Icon.jsx';
@@ -61,6 +61,7 @@ export default function SiteMaterialsPage() {
     const [status, setStatus] = useState('loading');
     const [error, setError] = useState('');
     const [deletingId, setDeletingId] = useState(null);
+    const [collapsedSections, setCollapsedSections] = useState(new Set());
 
     useEffect(() => {
         const dialog = sectionDialogRef.current;
@@ -95,11 +96,6 @@ export default function SiteMaterialsPage() {
         return () => controller.abort();
     }, []);
 
-    const selectedSection = sections.find(({ id }) => id === sectionId);
-    const tabs = useMemo(() => [
-        { id: '', label: 'Все' },
-        ...sections.map(({ id, name }) => ({ id, label: name })),
-    ], [sections]);
     const visibleMaterials = useMemo(
         () => materials.filter((material) =>
             (!sectionId || material.sectionId === sectionId)
@@ -146,6 +142,7 @@ export default function SiteMaterialsPage() {
                 ? current.map((item) => item.id === id ? saved : item)
                 : [...current, saved]);
             setSectionId(saved.id);
+            setCollapsedSections((current) => { const next = new Set(current); next.delete(saved.id); return next; });
             setSectionDialog(null);
         } catch (saveError) {
             setSectionError(saveError.message);
@@ -200,23 +197,11 @@ export default function SiteMaterialsPage() {
             errorMessage={error || 'Не удалось загрузить материалы.'}
         >
             <div className={styles.content}>
-                <div className={styles.sectionBar}>
-                    <div className={styles.tabsViewport}>
-                        <nav className={styles.sectionTabs} aria-label="Разделы материалов">
-                            {tabs.map((tab) => <div className={styles.tab} key={tab.id} data-active={tab.id === sectionId || undefined}>
-                                <button type="button" aria-current={tab.id === sectionId ? 'page' : undefined} onClick={() => setSectionId(tab.id)}>{tab.label}</button>
-                                {tab.id && tab.id === sectionId && <details className={styles.sectionMenu}>
-                                    <summary aria-label={`Действия раздела «${tab.label}»`}><Icon name="settings" size={18} /></summary>
-                                    <div><Button variant="compact" onClick={(event) => { event.currentTarget.closest('details').open = false; openSectionDialog(selectedSection); }}>Переименовать</Button>
-                                        <Button variant="compact" disabled={sectionSaving} onClick={(event) => { event.currentTarget.closest('details').open = false; deleteSection(selectedSection); }}>Удалить</Button></div>
-                                </details>}
-                            </div>)}
-                            <div className={styles.tab}><button className={styles.addSection} type="button" onClick={() => openSectionDialog()}><Icon name="add" size={18} /> Раздел</button></div>
-                        </nav>
-                    </div>
-                </div>
-
-                <AdminListToolbar actions={<Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new${sectionId ? `?sectionId=${encodeURIComponent(sectionId)}` : ''}`)}><Icon name="add" /> Добавить материал</Button>}>
+                <AdminListToolbar actions={<div className={styles.toolbarActions}>
+                    <Button size="compact" onClick={() => openSectionDialog()}><Icon name="add" /> Добавить раздел</Button>
+                    <Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new${sectionId ? `?sectionId=${encodeURIComponent(sectionId)}` : ''}`)}><Icon name="add" /> Добавить материал</Button>
+                </div>}>
+                    <AdminListField label="Раздел"><select value={sectionId} onChange={(event) => setSectionId(event.target.value)}><option value="">Все разделы</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</select></AdminListField>
                     <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название или адрес" /></AdminListField>
                     <AdminListField label="Статус">
                         <select value={filter} onChange={(event) => setFilter(event.target.value)}>
@@ -226,26 +211,37 @@ export default function SiteMaterialsPage() {
                 </AdminListToolbar>
 
                 {error && status === 'success' && <p className={listStyles.error} role="alert">{error}</p>}
-                        <Table className={listStyles.table} aria-label="Материалы">
-                            <thead>
-                                <tr><th>Название</th><th>Изменено</th><th>Статус</th><th><span className={styles.visuallyHidden}>Действия</span></th></tr>
-                            </thead>
-                            <tbody>
-                                {page.items.map((material) => <tr key={material.id}>
-                                    <td><strong>{material.title}</strong><small>/{material.slug}</small></td>
-                                    <td>{formatDate(material.updatedAt)}</td>
-                                    <td><StatusBadge tone={STATUS_TONES[material.status]}>{STATUS_LABELS[material.status] || material.status}</StatusBadge></td>
-                                    <td><div className={listStyles.actions}>
-                                        <Button variant="listIcon" title="Редактировать материал" aria-label={`Редактировать материал «${material.title}»`} onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" size={18} /></Button>
-                                        <Button variant="listIcon" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" size={18} /></Button>
-                                    </div>
-                                    </td>
-                                </tr>)}
-                                {!visibleMaterials.length && <tr><td className={listStyles.state} colSpan="4">
-                                    {search || filter !== 'all' ? 'По заданным условиям ничего не найдено.' : sectionId ? 'В этом разделе пока нет материалов.' : 'Материалов пока нет.'}
-                                </td></tr>}
-                            </tbody>
-                        </Table>
+                <Tree aria-label="Материалы">
+                    {sections.filter((section) => !sectionId || section.id === sectionId).map((section) => {
+                        const expanded = !collapsedSections.has(section.id);
+                        const items = page.items.filter((material) => material.sectionId === section.id);
+                        const count = visibleMaterials.filter((material) => material.sectionId === section.id).length;
+                        const toggleSection = () => setCollapsedSections((current) => {
+                            const next = new Set(current);
+                            if (next.has(section.id)) next.delete(section.id); else next.add(section.id);
+                            return next;
+                        });
+                        return <TreeItem key={section.id} label={section.name} title={section.name} folder expanded={expanded}
+                            count={count} toggleLabel={`Раздел материалов «${section.name}»`} onToggle={toggleSection} onClick={toggleSection}
+                            actions={<>
+                                <Button variant="listIcon" title="Добавить материал" aria-label={`Добавить материал в «${section.name}»`} onClick={() => navigate?.(`/admin/materials/new?sectionId=${encodeURIComponent(section.id)}`)}><Icon name="add" size={16} /></Button>
+                                <Button variant="listIcon" title="Переименовать раздел" aria-label={`Переименовать раздел «${section.name}»`} onClick={() => openSectionDialog(section)} disabled={sectionSaving}><Icon name="edit" size={16} /></Button>
+                                <Button variant="listIcon" title="Удалить раздел" aria-label={`Удалить раздел «${section.name}»`} onClick={() => deleteSection(section)} disabled={sectionSaving}><Icon name="delete" size={16} /></Button>
+                            </>}>
+                            {expanded && <TreeChildren>
+                                {items.length ? <Tree>{items.map((material) => <TreeItem key={material.id}
+                                    label={<span className={styles.itemLabel}><span>{material.title}</span><small>/{material.slug}</small><StatusBadge tone={STATUS_TONES[material.status]}>{STATUS_LABELS[material.status] || material.status}</StatusBadge></span>}
+                                    title={`${material.title} · /${material.slug} · ${formatDate(material.updatedAt)}`}
+                                    href={`/admin/materials/${material.id}`}
+                                    actions={<>
+                                        <Button variant="listIcon" title="Редактировать материал" aria-label={`Редактировать материал «${material.title}»`} onClick={() => navigate?.(`/admin/materials/${material.id}`)} disabled={Boolean(deletingId)}><Icon name="edit" size={16} /></Button>
+                                        <Button variant="listIcon" title="Удалить материал" aria-label={`Удалить материал «${material.title}»`} onClick={() => deleteMaterial(material)} disabled={Boolean(deletingId)}><Icon name="delete" size={16} /></Button>
+                                    </>} />)}</Tree> : <TreeEmpty>{count ? 'Материалы этого раздела находятся на других страницах списка.' : search || filter !== 'all' ? 'По заданным условиям ничего не найдено.' : 'В этом разделе пока нет материалов.'}</TreeEmpty>}
+                            </TreeChildren>}
+                        </TreeItem>;
+                    })}
+                </Tree>
+                {!sections.length && <TreeEmpty>Разделов и материалов пока нет.</TreeEmpty>}
                 <Pagination {...page.pagination} />
             </div>
 

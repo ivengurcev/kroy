@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 function descendants(element) {
     if (Array.isArray(element)) return element.flatMap(descendants);
     if (!element || typeof element !== 'object') return [];
+    if (typeof element.type === 'function') return descendants(element.type(element.props));
     return [element, ...descendants(element.props?.children)];
 }
 
@@ -50,7 +51,7 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
                 if (path === 'react/jsx-runtime') return { contents: 'export const jsx = (type,props) => ({type,props}); export const jsxs = jsx; export const Fragment = "fragment";' };
                 if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest = (...args) => globalThis.__kroyPageSettingsTest.request(...args);' };
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const fieldValidationMessage = () => ""; export const formResponseError = async () => "Ошибка";' };
-                if (path.endsWith('.css')) return { contents: 'export default { expandedChevron: "expandedChevron" };' };
+                if (path.endsWith('.css')) return { contents: 'export default { expanded: "expanded" };' };
                 return { contents: `export default ${JSON.stringify(path.split('/').at(-1).replace('.jsx', ''))};` };
             });
         } }],
@@ -70,18 +71,18 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
         assert.equal(button.props['aria-expanded'], expanded);
         assert.equal(button.props.children.type, 'Icon');
         assert.equal(button.props.children.props.name, 'chevronRight');
-        assert.equal(button.props.children.props.className, expanded ? 'expandedChevron' : '');
+        assert.equal(button.props.children.props.className, expanded ? 'expanded' : '');
     };
-    assert.match(await readFile(new URL('./PageList.module.css', import.meta.url), 'utf8'), /\.expandedChevron\s*\{\s*transform:\s*rotate\(90deg\)/);
+    assert.match(await readFile(new URL('../ui/Tree.module.css', import.meta.url), 'utf8'), /\.expanded\s*\{\s*transform:\s*rotate\(90deg\)/);
     assertChevron(branch(tree, 'Дочерние'), true);
     tree.find(({ props }) => props['aria-label']?.startsWith('Перенаправления')).props.onClick();
     tree = render(PageList, { pages });
     assertChevron(branch(tree, 'Дочерние'), true);
-    assert.ok(tree.some(({ props }) => Array.isArray(props.children) && props.children.join('') === '↪ /old'));
+    assert.ok(tree.some(({ props }) => props.children === '↪ /old'));
     tree.find(({ props }) => props['aria-label']?.startsWith('Дочерние')).props.onClick();
     tree = render(PageList, { pages });
     assertChevron(branch(tree, 'Дочерние'), false);
-    assert.ok(tree.some(({ props }) => Array.isArray(props.children) && props.children.join('') === '↪ /old'));
+    assert.ok(tree.some(({ props }) => props.children === '↪ /old'));
     assert.ok(!tree.some(({ props }) => props.href === '/admin/pages/b'));
     tree.find(({ props }) => props['aria-label']?.startsWith('Дочерние')).props.onClick();
     tree = render(PageList, { pages });
@@ -93,6 +94,28 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
     branch(tree, 'Ветка').props.onClick();
     tree = render(PageList, { pages: [pages[1]] });
     assertChevron(branch(tree, 'Ветка'), false);
+
+    cells = [];
+    const removed = { id: 'old', title: 'Old A', path: '/a', deleted_at: '2026-11-23' };
+    const home = { id: 'home', title: 'Home', path: '/' };
+    const list = { id: 'list', title: 'List', path: '/news', type: 'list' };
+    let restored;
+    let deleted;
+    let detailed;
+    tree = render(PageList, { pages: [...pages, home, list, removed], showDeleted: true,
+        onRestore: (id) => { restored = id; },
+        onDelete: (page) => { deleted = page; },
+        onCreateDetailTemplate: (page) => { detailed = page; },
+    });
+    assert.ok(tree.some(({ props }) => props.href === '/admin'));
+    assert.ok(!tree.some(({ props }) => props.href === '/admin/pages/old'));
+    assert.ok(!branch(tree, 'Удалить страницу «Home»'));
+    branch(tree, 'Восстановить страницу').props.onClick();
+    assert.equal(restored, 'old');
+    branch(tree, 'Удалить страницу «A»').props.onClick();
+    assert.equal(deleted.id, 'a');
+    branch(tree, 'Детальный шаблон').props.onClick();
+    assert.equal(detailed.id, 'list');
 
     cells = [];
     let dirty;

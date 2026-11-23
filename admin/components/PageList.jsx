@@ -2,8 +2,8 @@ import { useState } from 'react';
 import styles from './PageList.module.css';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
-import listStyles from './AdminList.module.css';
-import { buildPageTree, visiblePageRows, pageRedirects } from '../editor/pageTree.mjs';
+import Tree, { TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
+import { buildPageTree, pageRedirects } from '../editor/pageTree.mjs';
 
 function toggle(setState, key) {
     setState((previous) => {
@@ -17,45 +17,47 @@ function toggle(setState, key) {
 export default function PageList({ pages, showDeleted = false, busyPageId = null, onDelete, onCreateDetailTemplate, onRestore }) {
     const [collapsed, setCollapsed] = useState(new Set());
     const [expandedRedirects, setExpandedRedirects] = useState(new Set());
-    const rows = visiblePageRows(buildPageTree(pages, showDeleted), collapsed);
-    return <div className={styles.tree} aria-label="Страницы">
-        {rows.map((node) => <div key={node.path} style={{ '--depth': Math.min(node.depth, 4) }}>
-            {!node.pages.length && <div className={styles.row}>
-                <Button variant="listIcon" aria-label={`Ветка ${node.path}`} aria-expanded={!collapsed.has(node.path)} onClick={() => toggle(setCollapsed, node.path)}>
-                    <Icon name="chevronRight" className={collapsed.has(node.path) ? '' : styles.expandedChevron} size={18} />
-                </Button>
-                <span className={styles.path}>{node.path}</span>
-            </div>}
-            {node.pages.map((page, index) => {
+    const nodes = buildPageTree(pages, showDeleted);
+
+    function renderNodes(branches) {
+        return branches.flatMap((node) => {
+            const expanded = !collapsed.has(node.path);
+            if (!node.pages.length) return <TreeItem key={node.path} label={node.path} title={node.path}
+                folder expanded={expanded} count={node.children.length} toggleLabel={`Ветка ${node.path}`}
+                onToggle={() => toggle(setCollapsed, node.path)}>
+                {expanded && <TreeChildren><Tree>{renderNodes(node.children)}</Tree></TreeChildren>}
+            </TreeItem>;
+            return node.pages.map((page, index) => {
                 const deleted = Boolean(page.deleted_at);
                 const redirects = pageRedirects(page);
-                return <div key={page.id}>
-                    <div className={`${styles.row} ${deleted ? styles.deleted : ''}`}>
-                        {node.children.length > 0 && index === 0
-                            ? <Button variant="listIcon" aria-label={`Дочерние страницы ${page.title}`} aria-expanded={!collapsed.has(node.path)} onClick={() => toggle(setCollapsed, node.path)}><Icon name="chevronRight" className={collapsed.has(node.path) ? '' : styles.expandedChevron} size={18} /></Button>
-                            : <span className={styles.spacer} />}
-                        <div className={styles.info}>
-                            <div className={styles.heading}>
-                                {deleted ? <span>{page.title}</span> : <a href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}>{page.title}</a>}
-                                {deleted && <span className={styles.badge}>Удалена</span>}
-                                {redirects.length > 0 && <Button size="compact" aria-label={`Перенаправления страницы ${page.title}: ${redirects.length}`} aria-expanded={expandedRedirects.has(page.id)} onClick={() => toggle(setExpandedRedirects, page.id)}>↪ {redirects.length}</Button>}
-                            </div>
-                            <span className={styles.path}>{page.path}</span>
-                        </div>
-                        <div className={listStyles.actions}>
-                            {deleted ? <Button variant="listIcon" aria-label={`Восстановить страницу «${page.title}»`} title="Восстановить" disabled={busyPageId !== null} onClick={() => onRestore(page.id)}><Icon name="restore" size={18} /></Button> : <>
-                                {page.type === 'list' && <Button variant="listIcon" title={page.detailTemplateId ? 'Открыть детальный шаблон' : 'Создать детальный шаблон'} aria-label={`Детальный шаблон «${page.title}»`} disabled={busyPageId !== null} onClick={() => onCreateDetailTemplate(page)}><Icon name="pages" size={18} /></Button>}
-                                <a className={styles.edit} href={`/admin/pages/${page.id}/settings`} aria-label={`Настройки страницы «${page.title}»`} title="Настройки страницы"><Icon name="edit" size={18} /></a>
-                                {page.path !== '/' && <Button variant="listIcon" title="Удалить" aria-label={`Удалить страницу «${page.title}»`} disabled={busyPageId !== null} onClick={() => onDelete(page)}><Icon name="delete" size={18} /></Button>}
-                            </>}
-                        </div>
-                    </div>
-                    {expandedRedirects.has(page.id) && redirects.map((path) => <div key={path} className={styles.redirect}>
-                        <span className={styles.path}>↪ {path}</span><span className={styles.path}>301 → {page.path}</span>
-                    </div>)}
-                </div>;
-            })}
-        </div>)}
-        {!rows.length && <p className={listStyles.state}>У сайта пока нет страниц.</p>}
+                const hasChildren = node.children.length > 0 && index === 0;
+                const redirectsOpen = expandedRedirects.has(page.id);
+                return <TreeItem key={page.id} folder={hasChildren} expanded={expanded} muted={deleted}
+                    title={`${page.title} · ${page.path}`} count={hasChildren ? node.children.length : undefined}
+                    label={<span className={styles.label}><span className={styles.name}>{page.title}</span><small className={styles.path}>{page.path}</small>{deleted && <small className={styles.badge}>Удалена</small>}</span>}
+                    href={deleted ? undefined : page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}
+                    toggleLabel={`Дочерние страницы ${page.title}`}
+                    onToggle={hasChildren ? () => toggle(setCollapsed, node.path) : undefined}
+                    actions={<>
+                        {redirects.length > 0 && <Button variant="listIcon" title="Перенаправления"
+                            aria-label={`Перенаправления страницы ${page.title}: ${redirects.length}`}
+                            aria-expanded={redirectsOpen} onClick={() => toggle(setExpandedRedirects, page.id)}>{redirects.length}</Button>}
+                        {deleted ? <Button variant="listIcon" aria-label={`Восстановить страницу «${page.title}»`} title="Восстановить" disabled={busyPageId !== null} onClick={() => onRestore(page.id)}><Icon name="restore" size={16} /></Button> : <>
+                            {page.type === 'list' && <Button variant="listIcon" title={page.detailTemplateId ? 'Открыть детальный шаблон' : 'Создать детальный шаблон'} aria-label={`Детальный шаблон «${page.title}»`} disabled={busyPageId !== null} onClick={() => onCreateDetailTemplate(page)}><Icon name="pages" size={16} /></Button>}
+                            <a href={`/admin/pages/${page.id}/settings`} aria-label={`Настройки страницы «${page.title}»`} title="Настройки страницы"><Icon name="edit" size={16} /></a>
+                            {page.path !== '/' && <Button variant="listIcon" title="Удалить" aria-label={`Удалить страницу «${page.title}»`} disabled={busyPageId !== null} onClick={() => onDelete(page)}><Icon name="delete" size={16} /></Button>}
+                        </>}
+                    </>}>
+                    {(redirectsOpen && redirects.length > 0 || hasChildren && expanded) && <TreeChildren><Tree>
+                        {redirectsOpen && redirects.map((path) => <TreeItem key={path} label={`↪ ${path}`} title={`301 → ${page.path}`} />)}
+                        {hasChildren && expanded && renderNodes(node.children)}
+                    </Tree></TreeChildren>}
+                </TreeItem>;
+            });
+        });
+    }
+
+    return <div aria-label="Страницы">
+        {nodes.length ? <Tree>{renderNodes(nodes)}</Tree> : <TreeEmpty>У сайта пока нет страниц.</TreeEmpty>}
     </div>;
 }

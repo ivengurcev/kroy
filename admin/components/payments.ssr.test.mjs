@@ -37,7 +37,7 @@ before(async () => {
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath, bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',
-        loader: { '.module.css': 'local-css' },
+            loader: { '.module.css': 'local-css', '.ttf': 'dataurl' },
         plugins: [{ name: 'svg', setup(builder) {
             builder.onLoad({ filter: /\.svg$/ }, async ({ path }) => ({
                 contents: await transform(await readFile(path, 'utf8'), { plugins: ['@svgr/plugin-jsx'] }), loader: 'jsx',
@@ -54,7 +54,7 @@ test('page tree opens content by title and settings via a dedicated URL, not inl
     const html = renderToString(createElement(components.PageList, { pages }));
     assert.match(html, /href="\/admin\/pages\/page"/);
     assert.match(html, /href="\/admin\/pages\/page\/settings"/);
-    assert.match(html, /aria-expanded="false"[^>]*>↪ (?:<!-- -->)?1/);
+    assert.match(html, /aria-label="Перенаправления страницы About: 1" aria-expanded="false"[^>]*>1/);
     assert.doesNotMatch(html, /<form|301 →|Deleted/);
     const deleted = renderToString(createElement(components.PageList, { pages, showDeleted: true }));
     assert.match(deleted, /Удалена|Восстановить/);
@@ -122,7 +122,7 @@ test('list layouts keep compact titles and common states in the workspace withou
             assert.ok(html.includes(status === 'loading' ? 'Загрузка' : status === 'error' ? 'Ошибка загрузки' : 'Список'));
         }
         const header = renderToString(createElement(components.AdminHeader, { title, list: true }));
-        assert.doesNotMatch(header, /<h1/);
+        assert.match(header, new RegExp(`<h1[^>]*>${title}</h1>`));
         assert.match(header, /Опубликовать|Предпросмотр/);
     }
     assert.match(renderToString(createElement(components.SiteReviewsPage)), /Загрузка/);

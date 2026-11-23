@@ -8,6 +8,7 @@ import Modal from '../ui/Modal.jsx';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
 import { listItemSummary, mergeListItem, moveListItem, updateListDraft } from './listFieldModel.mjs';
 import theme from '../styles/AdminTheme.module.css';
+import Tree, { TreeGroup, TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
 
 export default function ListField({ label, itemLabel = 'Элемент', fields = {}, value, onChange, FieldComponent, createItem, renderItem, itemSummary, depth = 0 }) {
     const items = Array.isArray(value) ? value : [];
@@ -120,58 +121,43 @@ export default function ListField({ label, itemLabel = 'Элемент', fields 
     }
 
     return (
-        <fieldset className={styles.listField} data-nested={depth > 0 || undefined}>
-            <legend className={styles.listHeader}>
-                <span>{label}</span>
-                <Button variant="iconCompact" title={`Добавить ${itemLabel.toLowerCase()}`} aria-label={`Добавить ${itemLabel.toLowerCase()}`} onClick={addItem}>
-                    <Icon name="add" size={18} />
-                </Button>
-            </legend>
-            {items.length === 0 && <p className={styles.empty}>Список пуст. <Button variant="compact" onClick={addItem}>Добавить</Button></p>}
-            <ul className={styles.items}>
+        <TreeGroup label={label} nested={depth > 0} actions={
+            <Button variant="iconCompact" title={`Добавить ${itemLabel.toLowerCase()}`} aria-label={`Добавить ${itemLabel.toLowerCase()}`} onClick={addItem}>
+                <Icon name="add" size={18} />
+            </Button>
+        }>
+            {items.length === 0 && <TreeEmpty>Список пуст. <Button variant="compact" onClick={addItem}>Добавить</Button></TreeEmpty>}
+            <Tree>
                 {items.map((item, index) => {
                     const key = itemKeysRef.current[index];
                     const title = summary(item, index);
                     const expanded = !collapsed.has(key);
                     const childCount = nestedFields.reduce((count, [name]) => count + (Array.isArray(item?.[name]) ? item[name].length : 0), 0);
                     return (
-                        <li className={styles.listItem} key={key} data-parent={nestedFields.length > 0 || undefined}>
-                            <div className={styles.itemHeader} data-selected={dialog?.key === key || undefined}>
-                                {nestedFields.length > 0 && (
-                                    <Button variant="listIcon" aria-expanded={expanded} aria-controls={`${key}-children`}
-                                        title={expanded ? 'Свернуть вложенные списки' : 'Раскрыть вложенные списки'}
-                                        aria-label={expanded ? 'Свернуть вложенные списки' : 'Раскрыть вложенные списки'}
-                                        onClick={() => toggle(key)}>
-                                        <Icon name="chevronRight" size={16} className={expanded ? styles.expanded : ''} />
-                                    </Button>
-                                )}
-                                <button type="button" className={styles.summary} onClick={() => editItem(index)} title={typeof title === 'string' ? title : undefined}>
-                                    <Icon name={nestedFields.length > 0 ? 'folder' : 'file'} size={16} className={styles.nodeIcon} />
-                                    <span className={styles.nodeName}>{title}</span>
-                                    {nestedFields.length > 0 && <small aria-label={`Вложенных элементов: ${childCount}`}>{childCount}</small>}
-                                </button>
-                                <div className={styles.actions}>
-                                    <Button variant="listIcon" title="Переместить вверх" aria-label={`Переместить ${itemLabel.toLowerCase()} вверх`} disabled={index === 0} onClick={() => moveItem(index, -1)}><Icon name="up" size={16} /></Button>
-                                    <Button variant="listIcon" title="Переместить вниз" aria-label={`Переместить ${itemLabel.toLowerCase()} вниз`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Icon name="down" size={16} /></Button>
-                                    <Button variant="listIcon" title="Редактировать" aria-label={`Редактировать ${itemLabel.toLowerCase()}`} onClick={() => editItem(index)}><Icon name="edit" size={16} /></Button>
-                                    <Button variant="listIcon" title="Удалить" aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => requestRemove(index)}><Icon name="delete" size={16} /></Button>
-                                </div>
-                            </div>
+                        <TreeItem key={key} label={title} title={typeof title === 'string' ? title : undefined}
+                            folder={nestedFields.length > 0} expanded={expanded} selected={dialog?.key === key}
+                            controlsId={`${key}-children`} count={nestedFields.length > 0 ? childCount : undefined}
+                            onClick={() => editItem(index)} onToggle={nestedFields.length > 0 ? () => toggle(key) : undefined}
+                            toggleLabel={expanded ? 'Свернуть вложенные списки' : 'Раскрыть вложенные списки'}
+                            actions={<>
+                                <Button variant="listIcon" title="Переместить вверх" aria-label={`Переместить ${itemLabel.toLowerCase()} вверх`} disabled={index === 0} onClick={() => moveItem(index, -1)}><Icon name="up" size={16} /></Button>
+                                <Button variant="listIcon" title="Переместить вниз" aria-label={`Переместить ${itemLabel.toLowerCase()} вниз`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Icon name="down" size={16} /></Button>
+                                <Button variant="listIcon" title="Редактировать" aria-label={`Редактировать ${itemLabel.toLowerCase()}`} onClick={() => editItem(index)}><Icon name="edit" size={16} /></Button>
+                                <Button variant="listIcon" title="Удалить" aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => requestRemove(index)}><Icon name="delete" size={16} /></Button>
+                            </>}>
                             {nestedFields.length > 0 && (
-                                <div className={styles.children} id={`${key}-children`} hidden={!expanded}>
+                                <TreeChildren id={`${key}-children`} expanded={expanded}>
                                     {nestedFields.map(([name, schema]) => (
-                                        <div className={styles.childGroup} key={name}>
-                                            <ListField label={schema.label ?? name} fields={schema.fields} itemLabel={schema.itemLabel}
-                                                value={item?.[name]} FieldComponent={FieldComponent} depth={depth + 1}
-                                                onChange={(nextValue) => emitChange(items.map((current, i) => i === index ? { ...current, [name]: nextValue } : current))} />
-                                        </div>
+                                        <ListField key={name} label={schema.label ?? name} fields={schema.fields} itemLabel={schema.itemLabel}
+                                            value={item?.[name]} FieldComponent={FieldComponent} depth={depth + 1}
+                                            onChange={(nextValue) => emitChange(items.map((current, i) => i === index ? { ...current, [name]: nextValue } : current))} />
                                     ))}
-                                </div>
+                                </TreeChildren>
                             )}
-                        </li>
+                        </TreeItem>
                     );
                 })}
-            </ul>
+            </Tree>
             {dialog && createPortal(
                 <div className={theme.theme} onSubmit={(event) => event.stopPropagation()}>
                     <Modal title={<span className={styles.dialogTitle}>{dialog.mode === 'add' ? `Добавление — ${itemLabel}` : `${dialog.mode === 'delete' ? 'Удаление' : 'Редактирование'} — ${dialog.title}`}</span>}
@@ -193,6 +179,6 @@ export default function ListField({ label, itemLabel = 'Элемент', fields 
                     </Modal>
                 </div>, document.body
             )}
-        </fieldset>
+        </TreeGroup>
     );
 }
