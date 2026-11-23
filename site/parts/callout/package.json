@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/callout",
+    "main": "prepareCallout.mjs"
+}

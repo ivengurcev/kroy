@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import prepareText from './text/prepareText.mjs';
 import prepareCards from './cards/prepareCards.mjs';
+import prepareCallout from './callout/prepareCallout.mjs';
 import prepareMaterial from './material/prepareMaterial.mjs';
 import prepareHero from './hero/prepareHero.mjs';
 import prepareLinks from './links/prepareLinks.mjs';
@@ -83,4 +84,11 @@ test('prepares shared contacts and normalizes source data without mutating it', 
         { src: '/raster.webp', mimeType: undefined },
         '',
     ]);
+    const calloutProps = { title: ' Примечание ', text: ' Первый абзац \r\n\r\n Второй абзац ', icon: { src: '/api/media/icon', mimeType: 'image/svg+xml' } };
+    const calloutSnapshot = JSON.stringify(calloutProps);
+    assert.deepEqual(prepareCallout({ props: calloutProps }), {
+        title: 'Примечание', paragraphs: ['Первый абзац', 'Второй абзац'], icon: calloutProps.icon,
+    });
+    assert.equal(JSON.stringify(calloutProps), calloutSnapshot);
+    assert.deepEqual(prepareCallout({ props: { title: 42, text: null, icon: 'none' } }), { title: '', paragraphs: [], icon: '' });
 });

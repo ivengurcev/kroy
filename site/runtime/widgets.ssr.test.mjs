@@ -10,6 +10,7 @@ import { discoverParts, discoverWidgets } from '../../build/registry/discoverPar
 import createSiteSvgPlugin from '../../build/site/siteSvgPlugin.mjs';
 import { createMaterialListData } from './materialListData.mjs';
 import { createClientPageRegistry, serializePagePayload } from '../../build/site/sitePageData.mjs';
+import { getThemeTokens } from '../themes/themeRegistry.mjs';
 
 const outputs = [];
 let server;
@@ -49,6 +50,7 @@ before(async () => {
 after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
+    '@kroy/callout': { title: 'Callout heading', text: 'First callout paragraph\n\nSecond callout paragraph' },
     '@kroy/cards': { title: 'Cards heading', cards: [{ icon: { src: '/leaf.svg', mimeType: 'image/svg+xml' }, title: 'Card title', description: 'Card description' }] },
     '@kroy/separator': {},
     '@kroy/text': { title: 'About heading', text: 'First paragraph\n\nSecond paragraph' },
@@ -63,6 +65,7 @@ const settings = {
     '@kroy/reviews': { title: 'Reviews heading', mode: 'auto', showSubmitButton: true },
 };
 const expected = {
+    '@kroy/callout': /Second callout paragraph/,
     '@kroy/cards': /Card description/,
     '@kroy/separator': /role="separator"/,
     '@kroy/text': /<p>First paragraph<\/p><p>Second paragraph<\/p>/,
@@ -100,6 +103,33 @@ test('all default widgets preserve visible content and CSS Modules with identica
         assert.match(html, expected[definition.name]);
         assert.doesNotMatch(html, /undefined/);
         assert.equal(render(client, JSON.parse(serializePagePayload(page))), html);
+        if (definition.name === '@kroy/callout') {
+            const cases = [
+                { title: 'Длинный заголовок '.repeat(20), text: 'Первый абзац\n\nВторой абзац' },
+                { title: 'Примечание', text: 'Текст', icon: { src: '/api/media/callout-vector', mimeType: 'image/svg+xml' } },
+                { text: 'Текст без заголовка', icon: { src: '/api/media/callout-raster', mimeType: 'image/webp' } },
+                { title: 'Только заголовок' },
+                { text: 'Длинный текст '.repeat(100) },
+                { icon: '/only-icon.svg' },
+                {},
+            ];
+            for (const mode of ['light', 'dark']) for (const base of [16, 18, 20]) for (const props of cases) {
+                const initialPage = { ...page, content: [{ part: definition.name, props, view: { name: definition.defaultWidget, props: {} } }] };
+                const tokens = { ...getThemeTokens('calm', mode), '--site-font-size-base': `${base}px` };
+                const input = { path: '/', initialPage, tokens };
+                const renderCallout = (module) => renderToString(createElement(module.SiteApp, { ...input, parts: module.parts, widgets: module.widgets }));
+                const initial = renderCallout(server);
+                assert.equal(renderCallout(client), initial);
+                assert.doesNotMatch(initial, /role="alert"|aria-live|<h1\b|<p[^>]*><\/p>/);
+                if (!props.title && !props.text) assert.doesNotMatch(initial, /<section\b|only-icon/);
+                if (props.title) assert.ok(initial.includes(props.title.trim()));
+                else assert.doesNotMatch(initial, /<h2\b/);
+                if (!props.icon) assert.doesNotMatch(initial, /<img\b|mask-image/);
+                if (props.icon?.mimeType === 'image/svg+xml') assert.match(initial, /mask-image:url\(&quot;\/api\/media\/callout-vector&quot;\)/);
+                if (props.icon?.mimeType === 'image/webp') assert.match(initial, /<img[^>]*src="\/api\/media\/callout-raster"[^>]*alt=""/);
+            }
+            assert.match(html, /<p>First callout paragraph<\/p><p>Second callout paragraph<\/p>/);
+        }
         if (definition.name === '@kroy/reviews') {
             assert.match(html, /Оставить отзыв/);
             assert.match(html, /<dialog/);
