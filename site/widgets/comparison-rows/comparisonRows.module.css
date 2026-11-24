@@ -44,7 +44,7 @@
     display: grid;
     min-width: 0;
     border: var(--site-line-width) solid var(--comparison-tone);
-    border-radius: var(--site-radius-sm);
+    border-radius: var(--site-radius-lg);
     overflow: hidden;
     overflow-wrap: anywhere;
 }
@@ -78,8 +78,8 @@
 .rowTitle {
     margin: 0;
     padding: var(--site-space-6) var(--site-space-4);
-    border-end-start-radius: var(--site-radius-sm);
-    border-end-end-radius: var(--site-radius-sm);
+    border-end-start-radius: var(--site-radius-lg);
+    border-end-end-radius: var(--site-radius-lg);
     color: var(--site-color-text);
     background: color-mix(in srgb, var(--comparison-tone) 14%, var(--site-color-bg));
     font-family: var(--site-font-heading);
