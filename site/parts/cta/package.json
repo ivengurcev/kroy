@@ -1,0 +1,5 @@
+{
+    "private": true,
+    "name": "@kroy/cta",
+    "main": "prepareCta.mjs"
+}

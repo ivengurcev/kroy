@@ -50,6 +50,7 @@ before(async () => {
 after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
+    '@kroy/cta': { title: 'Action heading', subtitle: 'Action subtitle', price: '499 ₽', href: '/action' },
     '@kroy/comparison': { title: 'Comparison heading', rows: [{ title: 'Category', description: 'Category description', highlight: '70–90%', note: 'Category note', tone: 'success', examples: 'First example\nSecond example' }] },
     '@kroy/callout': { title: 'Callout heading', text: 'First callout paragraph\n\nSecond callout paragraph' },
     '@kroy/cards': { title: 'Cards heading', cards: [{ icon: { src: '/leaf.svg', mimeType: 'image/svg+xml' }, title: 'Card title', description: 'Card description' }] },
@@ -66,6 +67,7 @@ const settings = {
     '@kroy/reviews': { title: 'Reviews heading', mode: 'auto', showSubmitButton: true },
 };
 const expected = {
+    '@kroy/cta': /href="\/action"/,
     '@kroy/comparison': /Second example/,
     '@kroy/callout': /Second callout paragraph/,
     '@kroy/cards': /Card description/,
@@ -105,6 +107,41 @@ test('all default widgets preserve visible content and CSS Modules with identica
         assert.match(html, expected[definition.name]);
         assert.doesNotMatch(html, /undefined/);
         assert.equal(render(client, JSON.parse(serializePagePayload(page))), html);
+        if (definition.name === '@kroy/cta') {
+            const cases = [
+                { title: 'Записаться', href: '/booking' },
+                { title: 'Купить', subtitle: 'Материал', price: '499 ₽', href: 'https://example.com', icon: { src: '/cta.svg', mimeType: 'image/svg+xml' } },
+                { title: 'Скачать', href: '#guide', icon: { src: '/cta.webp', mimeType: 'image/webp' } },
+                { title: 'ДлиннаяНадпись'.repeat(40), subtitle: 'Дополнительная строка '.repeat(30), price: 'Любая текстовая метка '.repeat(20), href: '../action' },
+                { title: 'Нет адреса' },
+                { title: 'Некорректный адрес', href: 'javascript:alert(1)' },
+                { title: 'Некорректный HTTP', href: 'https://' },
+                { icon: '/only-icon.svg' },
+                {},
+            ];
+            for (const mode of ['light', 'dark']) for (const base of [16, 18, 20]) for (const props of cases) {
+                const initialPage = { ...page, content: [{ part: definition.name, props, view: { name: definition.defaultWidget, props: {} } }] };
+                const tokens = { ...getThemeTokens('calm', mode), '--site-font-size-base': `${base}px`, colorScheme: mode };
+                const input = { path: '/', initialPage, tokens };
+                const renderCta = (module) => renderToString(createElement(module.SiteApp, { ...input, parts: module.parts, widgets: module.widgets }));
+                const initial = renderCta(server);
+                assert.equal(renderCta(client), initial);
+                if (!props.title) assert.doesNotMatch(initial, /<section\b|only-icon/);
+                else {
+                    assert.ok(initial.includes(props.title));
+                    const href = server.parts[definition.name]({ props }).href;
+                    if (href) {
+                        assert.match(initial, /<a\b/);
+                        assert.match(initial, /data-native-navigation=""/);
+                        assert.ok(initial.includes(`href="${href}"`));
+                        assert.equal((initial.match(/<a\b/g) ?? []).length, 1);
+                    } else assert.doesNotMatch(initial, /<a\b|href=/);
+                    if (!props.icon) assert.doesNotMatch(initial, /<img\b|mask-image/);
+                    if (props.icon?.mimeType === 'image/svg+xml') assert.match(initial, /mask-image:url\(&quot;\/cta.svg&quot;\)/);
+                    if (props.icon?.mimeType === 'image/webp') assert.match(initial, /<img[^>]*src="\/cta.webp"[^>]*alt=""/);
+                }
+            }
+        }
         if (definition.name === '@kroy/callout') {
             const cases = [
                 { title: 'Длинный заголовок '.repeat(20), text: 'Первый абзац\n\nВторой абзац' },

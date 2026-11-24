@@ -94,6 +94,7 @@ export default function SiteApp({
                 !link
                 || (link.target && link.target !== '_self')
                 || link.hasAttribute('download')
+                || link.hasAttribute('data-native-navigation')
             ) {
                 return;
             }

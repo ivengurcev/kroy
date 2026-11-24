@@ -1,0 +1,81 @@
+.section {
+    container: cta / inline-size;
+    padding-block: var(--site-space-4);
+}
+
+.inner {
+    width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
+    margin-inline: auto;
+}
+
+.panel {
+    --cta-bg: light-dark(var(--site-color-text), var(--site-color-bg));
+    --cta-text: light-dark(var(--site-color-bg), var(--site-color-text));
+    --cta-accent: color-mix(in srgb, var(--site-color-accent) 70%, var(--cta-text));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--site-space-4);
+    min-width: 0;
+    padding: var(--site-space-6) var(--site-space-4);
+    border: var(--site-line-width-2) solid var(--site-color-accent);
+    border-radius: var(--site-radius-lg);
+    background: var(--cta-bg);
+    color: var(--cta-text);
+    font-family: var(--site-font-heading);
+    font-size: var(--site-font-size-h3);
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.panel[href]:hover {
+    border-color: var(--cta-accent);
+    background: color-mix(in srgb, var(--cta-bg) 94%, var(--site-color-accent));
+}
+
+.panel[href]:focus-visible {
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
+    outline-offset: var(--site-space-1);
+}
+
+.icon {
+    flex: 0 0 auto;
+    width: calc(var(--site-font-size-base) * 2.5);
+    height: calc(var(--site-font-size-base) * 2.5);
+    object-fit: contain;
+    color: var(--cta-accent);
+}
+
+.copy {
+    display: grid;
+    flex: 1 1 0;
+    min-width: 0;
+    gap: var(--site-space-1);
+    white-space: pre-line;
+}
+
+.subtitle { color: var(--cta-accent); }
+
+.price {
+    flex: 1 1 100%;
+    min-width: 0;
+    border-top: var(--site-line-width) solid var(--cta-accent);
+    padding-top: var(--site-space-3);
+    font-size: var(--site-font-size-h2);
+    white-space: pre-line;
+}
+
+@container cta (min-width: 768px) {
+    .panel { flex-wrap: nowrap; gap: var(--site-space-6); padding: var(--site-space-8); }
+    .icon { width: calc(var(--site-font-size-base) * 4); height: calc(var(--site-font-size-base) * 4); }
+    .price {
+        flex: 0 1 30%;
+        border-top: 0;
+        border-inline-start: var(--site-line-width) solid var(--cta-accent);
+        padding-top: 0;
+        padding-inline-start: var(--site-space-6);
+        margin-inline-start: auto;
+    }
+}

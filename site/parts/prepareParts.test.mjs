@@ -3,6 +3,7 @@ import test from 'node:test';
 import prepareText from './text/prepareText.mjs';
 import prepareCards from './cards/prepareCards.mjs';
 import prepareCallout from './callout/prepareCallout.mjs';
+import prepareCta from './cta/prepareCta.mjs';
 import prepareMaterial from './material/prepareMaterial.mjs';
 import prepareHero from './hero/prepareHero.mjs';
 import prepareLinks from './links/prepareLinks.mjs';
@@ -58,6 +59,20 @@ test('prepares shared contacts and normalizes source data without mutating it', 
     assert.equal(prepareContacts({ props: { title: 'Contacts', zoom: 10 }, contacts }).phone, '+79999999999');
     assert.equal(JSON.stringify(contacts), snapshot);
     assert.deepEqual(prepareText({ props: { title: 'About', text: ' First\n\n Second ' } }).paragraphs, ['First', 'Second']);
+    const ctaProps = { title: ' Записаться ', subtitle: ' На консультацию ', price: ' от 499 ₽ ', icon: { src: '/cta.svg', mimeType: 'image/svg+xml' }, href: ' /booking#form ' };
+    const savedCta = JSON.stringify(ctaProps);
+    assert.deepEqual(prepareCta({ props: ctaProps }), {
+        title: 'Записаться', subtitle: 'На консультацию', price: 'от 499 ₽',
+        icon: { src: '/cta.svg', mimeType: 'image/svg+xml' }, href: '/booking#form',
+    });
+    assert.equal(JSON.stringify(ctaProps), savedCta);
+    for (const href of ['/booking', './guide.pdf', '../booking', 'booking?plan=1', '#form', 'https://example.com/book', 'http://example.com']) {
+        assert.equal(prepareCta({ props: { href } }).href, href);
+    }
+    for (const href of ['', undefined, null, 123, 'javascript:alert(1)', 'data:text/html,hello', 'mailto:a@example.com', '//example.com', '/\\example.com', 'java\nscript:alert(1)', 'https://', 'https://bad host']) {
+        assert.equal(prepareCta({ props: { href } }).href, '');
+    }
+    assert.deepEqual(prepareCta({}), { title: '', subtitle: '', price: '', icon: '', href: '' });
     assert.deepEqual(prepareServices({ props: { categories: null } }).categories, []);
     const cardProps = { title: ' Секция ', headingIcon: 'unknown', cards: [
         { icon: { src: '/api/media/example', mimeType: 'image/svg+xml' }, title: ' Первая ', description: ' Описание ' },
