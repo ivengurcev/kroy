@@ -64,6 +64,8 @@
     "@lexical/rich-text": "^0.53.0",
     "@lexical/selection": "^0.53.0",
     "@vyaz/core": "workspace:*",
+    "dompurify": "^3.5.0",
+    "jsdom": "^31.0.1",
     "leaflet": "1.9.4",
     "lexical": "^0.53.0",
     "pg": "^8.23.1",

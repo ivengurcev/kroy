@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import sanitizeSvg from './sanitizeSvg.mjs';
 import {
     DEFAULT_MEDIA_WIDTH,
     MAX_MEDIA_PIXELS,
@@ -24,8 +25,7 @@ export default async function processImage(bytes, { maxWidth, square = false } =
     const metadata = await image.metadata();
 
     if (metadata.format === 'svg') {
-        if (bytes.length <= 0 || bytes.length > MAX_MEDIA_SIZE) throw new Error('Invalid image');
-        return { bytes, format: 'svg' };
+        return { bytes: sanitizeSvg(bytes), format: 'svg' };
     }
 
     if (
