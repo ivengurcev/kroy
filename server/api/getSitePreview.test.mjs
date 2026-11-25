@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pool } from '../../db/client.mjs';
 import getSitePreview from './getSitePreview.mjs';
+import { getPageTheme } from '../../site/themes/themeRegistry.mjs';
 
 const context = { req: { header: () => 'preview.localhost' }, json: (value) => value };
 
@@ -9,7 +10,7 @@ test('saved-page preview has published summary sources scoped to material-list p
     t.mock.method(pool, 'query', async (sql) => {
         if (sql.includes('LEFT JOIN pages')) return { rows: [
             { id: 'list', path: '/news', title: 'News', type: 'list', dataSource: 'materials', materialSectionId: 'section-id', content: [] },
-            { id: 'home', path: '/', title: 'Home', type: 'standard', content: [] },
+            { id: 'home', path: '/', title: 'Home', type: 'standard', content: [], appearance: { themeMode: 'dark', overrides: { shared: { '--site-font-size-base': '18px' } } } },
         ] };
         if (sql.includes('SELECT s.id, s.slug')) return { rows: [{ id: 'site' }] };
         if (sql.includes('SELECT theme_id')) return { rows: [{ theme_id: 'calm', theme_mode: 'light', theme_overrides: {} }] };
@@ -35,4 +36,8 @@ test('saved-page preview has published summary sources scoped to material-list p
         detailTemplate: { path: '/news/:slug', routeParam: 'slug' },
     });
     assert.equal(snapshot.pages['/'].materials['section-id'].items.length, 1);
+    assert.deepEqual(snapshot.pages['/'].theme, getPageTheme({ themeId: 'calm', themeMode: 'light', overrides: {} },
+        { themeMode: 'dark', overrides: { shared: { '--site-font-size-base': '18px' } } }));
+    assert.equal(snapshot.pages['/news'].theme, undefined);
+    assert.equal(snapshot.pages['/'].appearance, undefined);
 });

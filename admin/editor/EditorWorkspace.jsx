@@ -89,6 +89,17 @@ export default function EditorWorkspace({
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
+    const editingPartRef = useRef(null);
+    useEffect(() => {
+        if (!editingPartId) return undefined;
+        const frame = requestAnimationFrame(() => {
+            editingPartRef.current?.scrollIntoView({
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [editingPartId]);
     const record = page?.type === 'detail' ? preview?.record : null;
     const context = { params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
     const previewMessage = page?.type === 'detail' && {
@@ -164,12 +175,16 @@ export default function EditorWorkspace({
                 {content.flatMap((item, index) => [
                     insertionPoint(index, `insertion-${item.id}`),
                     <AdminPanel
+                        ref={item.id === editingPartId ? editingPartRef : undefined}
                         className={styles.previewPart}
                         noPadding
                         key={item.id}
                     >
                         <StickyPartHeader>
-                            <b className={styles.partTitle}>{partTitle(item.part, metadata)}</b>
+                            <span className={styles.partHeading}>
+                                <b className={styles.partTitle}>{partTitle(item.part, metadata)}</b>
+                                <code className={styles.partCode}>{item.part}</code>
+                            </span>
                             <PartControls
                                 className={styles.partControls}
                                 partId={item.id}

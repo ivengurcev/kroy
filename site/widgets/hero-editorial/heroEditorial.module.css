@@ -36,7 +36,7 @@
 }
 
 .withPhoto .inner {
-    min-height: clamp(680px, 160cqw, 1050px);
+    min-height: clamp(min(var(--hero-min-height, 680px), 680px), 160cqw, 1050px);
 }
 
 .heading,
@@ -104,7 +104,7 @@
     line-height: var(--site-line-height);
 }
 
-.feature > span:last-child {
+.feature > :last-child {
     min-width: 0;
 }
 
@@ -225,7 +225,7 @@
         grid-auto-rows: min-content;
         align-content: space-between;
         gap: var(--site-space-8) var(--site-space-6);
-        min-height: clamp(760px, 72cqw, 1100px);
+        min-height: clamp(var(--hero-min-height, 760px), 72cqw, 1100px);
     }
 
     .heading { grid-column: 1; }

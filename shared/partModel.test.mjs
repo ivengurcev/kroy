@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createPart, changePartView } from './partModel.js';
+import { createPart, changePartView, defaultProps } from './partModel.js';
 
 const partMetadata = { contract: 'reviews', defaultWidget: '@kroy/slider', fields: { title: { type: 'input', default: 'Отзывы' }, reviewIds: { type: 'review-list' } } };
 const widgets = {
@@ -14,6 +14,17 @@ test('creates a part with the JSDoc default widget and its initial settings', ()
     assert.equal(typeof item.id, 'string');
     assert.deepEqual(item.props, { title: 'Отзывы', reviewIds: [] });
     assert.deepEqual(item.view, { name: '@kroy/slider', props: { autoplay: true } });
+});
+
+test('richtext defaults stay empty strings and loaded strings/documents are not converted', () => {
+    const metadata = { ...partMetadata, fields: { text: { type: 'richtext' } } };
+    assert.deepEqual(defaultProps(metadata.fields), { text: '' });
+    assert.deepEqual(defaultProps({ showContacts: { type: 'switch' } }), { showContacts: false });
+    assert.deepEqual(defaultProps({ showContacts: { type: 'switch', default: true } }), { showContacts: true });
+    for (const text of ['Старый текст', { root: { type: 'root', children: [] } }]) {
+        const item = createPart('@kroy/reviews', metadata, widgets, { text });
+        assert.equal(item.props.text, text);
+    }
 });
 
 test('changes to a compatible widget without altering the data settings', () => {

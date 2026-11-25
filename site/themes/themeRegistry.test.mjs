@@ -5,6 +5,8 @@ import {
     normalizeThemeOverrides,
     resetThemeOverride,
     setThemeOverride,
+    listThemes,
+    getThemeEditorModel,
 } from './themeRegistry.mjs';
 
 const token = '--site-color-bg';
@@ -27,6 +29,14 @@ test('changing mode preserves both palette overrides', () => {
     };
 
     assert.deepEqual(normalizeThemeOverrides('calm', 'dark', overrides), overrides);
+    const baseline = getThemeTokens('calm', 'light');
+    for (const { id } of listThemes()) {
+        assert.deepEqual(getThemeEditorModel(id).shared, getThemeEditorModel('calm').shared);
+        const tokens = getThemeTokens(id, 'dark');
+        for (const [token, value] of Object.entries(baseline).filter(([token]) => !token.startsWith('--site-color-'))) {
+            assert.equal(tokens[token], value, `${id}: ${token} must not depend on a color theme`);
+        }
+    }
 });
 
 test('reset affects only the selected palette', () => {

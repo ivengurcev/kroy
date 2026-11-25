@@ -9,6 +9,7 @@ export function defaultValue(schema) {
             return 0;
 
         case 'checkbox':
+        case 'switch':
             return false;
 
         case 'select':
@@ -20,6 +21,7 @@ export function defaultValue(schema) {
             return [];
 
         case 'material-section':
+        case 'richtext':
             return '';
 
         default:

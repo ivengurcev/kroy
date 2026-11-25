@@ -16,7 +16,10 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--site-space-4);
+    width: fit-content;
+    max-width: 100%;
     min-width: 0;
+    margin-inline: auto;
     padding: var(--site-space-6) var(--site-space-4);
     border: var(--site-line-width-2) solid var(--site-color-accent);
     border-radius: var(--site-radius-lg);

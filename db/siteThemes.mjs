@@ -55,7 +55,9 @@ export async function setSiteTheme(siteId, { themeId, themeMode, overrides, sepa
   const nextOverrides = normalizeThemeOverrides(
     nextThemeId,
     nextThemeMode,
-    overrides ?? current.overrides,
+    overrides ?? (nextThemeId === current.themeId ? current.overrides : {
+      light: {}, dark: {}, shared: normalizeThemeOverrides(current.themeId, current.themeMode, current.overrides).shared ?? {},
+    }),
   );
 
   return saveSiteTheme(siteId, nextThemeId, nextThemeMode, nextOverrides,

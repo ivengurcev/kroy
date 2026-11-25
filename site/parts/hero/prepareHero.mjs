@@ -1,5 +1,6 @@
 import { normalizeImageSource } from '../../../shared/imageSource.mjs';
 import { socialType } from '../../../shared/socialLinks.mjs';
+import { normalizeRichText } from '../../../shared/richText.mjs';
 
 /**
  * @kroy-title Первый экран
@@ -20,20 +21,21 @@ import { socialType } from '../../../shared/socialLinks.mjs';
  * @kroy eyebrow widget=input
  * @kroy title widget=textarea
  * @kroy subtitle widget=textarea
- * @kroy lead widget=textarea
+ * @kroy lead widget=richtext
  * @kroy features.icon widget=image format=media maxWidth=512 label=Иконка
- * @kroy features.text widget=textarea label=Текст
+ * @kroy features.text widget=richtext label=Текст
  * @kroy captionTitle widget=input
- * @kroy description widget=textarea
+ * @kroy description widget=richtext
  * @kroy photo widget=image aspectRatio=3:4 maxWidth=1600
  */
 export default function prepareHero({ props, contacts }) {
-    const { eyebrow = '', title = '', captionTitle = '', description = '', photo = '' } = props;
-    const { subtitle = '', lead = '' } = props;
+    const { eyebrow = '', title = '', captionTitle = '', photo = '', subtitle = '' } = props;
+    const description = normalizeRichText(props.description);
+    const lead = normalizeRichText(props.lead);
     const features = Array.isArray(props.features)
         ? props.features.map((feature) => ({
             icon: normalizeImageSource(feature?.icon),
-            text: typeof feature?.text === 'string' ? feature.text.trim() : '',
+            text: normalizeRichText(feature?.text),
         })).filter(({ text }) => text)
         : [];
     const socials = Array.isArray(contacts?.socials)

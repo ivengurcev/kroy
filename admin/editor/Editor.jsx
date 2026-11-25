@@ -22,6 +22,8 @@ export default function Editor() {
     const [saveError, setSaveError] = useState(null);
     const [isDirty, setIsDirty] = useState(false);
     const [theme, setTheme] = useState();
+    const [pageThemes, setPageThemes] = useState({});
+    const [appearancePreview, setAppearancePreview] = useState(null);
     const [contacts, setContacts] = useState();
     const [catalog, setCatalog] = useState();
     const [reviews, setReviews] = useState();
@@ -32,6 +34,7 @@ export default function Editor() {
     useEffect(() => {
         const controller = new AbortController();
         setLoadStatus('loading');
+        setAppearancePreview(null);
         const match = pathname.match(
             /^\/admin\/pages\/([^/]+)$/
         );
@@ -85,8 +88,9 @@ export default function Editor() {
                 if (!response.ok) throw new Error('Не удалось загрузить тему сайта.');
                 return response.json();
             })
-            .then(({ theme: nextTheme, contacts: nextContacts, catalog: nextCatalog, reviews: nextReviews, materialSections: nextMaterialSections }) => {
+            .then(({ theme: nextTheme, pages = {}, detailTemplates = [], contacts: nextContacts, catalog: nextCatalog, reviews: nextReviews, materialSections: nextMaterialSections }) => {
                 setTheme(nextTheme);
+                setPageThemes(Object.fromEntries([...Object.values(pages), ...detailTemplates].filter(({ theme }) => theme).map(({ path, theme }) => [path, theme])));
                 setContacts(nextContacts);
                 setCatalog(nextCatalog);
                 setReviews(nextReviews);
@@ -243,6 +247,12 @@ export default function Editor() {
     }
 
     function updatePageDetails(updatedPage) {
+        if (updatedPage.theme) setPageThemes((current) => {
+            const next = { ...current };
+            delete next[page.path];
+            if (Object.keys(updatedPage.appearance ?? {}).length) next[updatedPage.path] = updatedPage.theme;
+            return next;
+        });
         setPage(toEditorPage(updatedPage));
     }
 
@@ -259,7 +269,7 @@ export default function Editor() {
             loadStatus={loadStatus}
             saveStatus={saveStatus}
             isDirty={isDirty}
-            theme={theme}
+            theme={appearancePreview || pageThemes[page.path] ? { ...theme, ...(appearancePreview ?? pageThemes[page.path]) } : theme}
             contacts={contacts}
             catalog={catalog}
             reviews={reviews}
@@ -273,6 +283,7 @@ export default function Editor() {
             onViewPropChange={updateViewProp}
             onSave={savePage}
             onPageDetailsChange={updatePageDetails}
+            onPageAppearancePreview={setAppearancePreview}
         />
         </>
     );

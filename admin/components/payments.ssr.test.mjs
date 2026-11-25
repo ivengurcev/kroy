@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { getPaymentProvider, describePaymentProvider } from '../../server/payments/providers.mjs';
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
 
 let components;
 const compiledPath = fileURLToPath(new URL(`.payments-test-${randomUUID()}.mjs`, import.meta.url));
@@ -33,7 +34,10 @@ before(async () => {
                  export { default as useAutoSlug } from './admin/editor/useAutoSlug.jsx';
                  export { default as PageList } from './admin/components/PageList.jsx';
                  export { default as PageSettingsPage } from './admin/pages/PageSettingsPage.jsx';
-                 export { default as PageDetailsForm } from './admin/components/PageDetailsForm.jsx';`,
+                  export { default as PageDetailsForm } from './admin/components/PageDetailsForm.jsx';
+                  export { default as Field } from './admin/editor/Field.jsx';
+                  export { default as MaterialEditor } from './admin/components/MaterialEditor.jsx';
+                   export { default as RichTextEditor, RichTextToolbar } from './admin/ui/RichTextEditor.jsx';`,
             resolveDir: fileURLToPath(new URL('../../', import.meta.url)),
         },
         outfile: compiledPath, bundle: true, write: false, packages: 'external', platform: 'node', format: 'esm', jsx: 'automatic',
@@ -71,6 +75,44 @@ test('settings form retains SEO tabs, inherited fields and external footer submi
     assert.match(html, /Основное/);
     assert.match(html, /Внешний вид/);
     assert.doesNotMatch(html, /type="submit"/);
+});
+
+test('richtext fields and materials use the shared editor with labelled wide layout, without changing values on open', () => {
+    const value = 'Старые строки\r\n\r\n<b>Не HTML</b>';
+    let changes = 0;
+    const html = renderToString(createElement(components.Field, {
+        name: 'text', schema: { type: 'richtext', label: 'Описание' }, value, onChange: () => { changes++; },
+    }));
+    assert.match(html, /Описание/);
+    assert.match(html, /Редактор загружается/);
+    assert.doesNotMatch(html, /<label\b/);
+    assert.equal(changes, 0);
+    const material = renderToString(createElement(components.MaterialEditor, { value, onChange: () => { changes++; } }));
+    assert.match(material, /Текст материала/);
+    assert.match(material, /--richtext-min-height:360px/);
+    assert.equal(changes, 0);
+    assert.equal(components.Field({ name: 'text', schema: { type: 'richtext' }, value }).props.children.props.variant, 'compact');
+    const compact = renderToString(createElement(LexicalComposer, {
+        initialConfig: { namespace: 'CompactToolbarTest', onError: (error) => { throw error; } },
+    }, createElement(components.RichTextToolbar)));
+    const full = renderToString(createElement(LexicalComposer, {
+        initialConfig: { namespace: 'FullToolbarTest', onError: (error) => { throw error; } },
+    }, createElement(components.RichTextToolbar, { variant: 'full' })));
+    assert.doesNotMatch(compact, /aria-label="(?:Абзац|Заголовок H2|Заголовок H3)"/);
+    for (const label of ['Абзац', 'Заголовок H2', 'Заголовок H3']) assert.ok(full.includes(`aria-label="${label}"`));
+    for (const toolbar of [compact, full]) {
+        for (const label of ['Жирный', 'Курсив', 'Подчёркнутый', 'Ссылка', 'Горизонтальная линия (HR)', 'Отменить', 'Повторить']) assert.ok(toolbar.includes(`aria-label="${label}"`));
+        assert.match(toolbar, /aria-label="Маркированный список"[^>]*><svg/);
+        assert.match(toolbar, /aria-label="Нумерованный список"[^>]*><svg/);
+    }
+    assert.equal(components.MaterialEditor({ value }).props.variant, 'full');
+    let showContacts;
+    const toggle = components.Field({ name: 'showContacts', schema: { type: 'switch', label: 'Отображать контакты' }, value: true, onChange: (value) => { showContacts = value; } });
+    const toggleHtml = renderToString(toggle);
+    assert.match(toggleHtml, /role="switch"[^>]*checked=""/);
+    assert.match(toggleHtml, /Отображать контакты/);
+    toggle.type(toggle.props).props.children[0].props.onChange({ target: { checked: false } });
+    assert.equal(showContacts, false);
 });
 
 function descendants(element) {

@@ -1,3 +1,5 @@
+import { normalizeRichText } from '../../../shared/richText.mjs';
+
 /**
  * @kroy-title Текст
  * @kroy-contract text
@@ -12,18 +14,15 @@
  * @param {string} [props.photoAlt] - Описание фотографии
  *
  * @kroy title widget=textarea
- * @kroy text widget=textarea
+ * @kroy text widget=richtext
  * @kroy lead widget=textarea
  * @kroy photo widget=image maxWidth=1600
  * @kroy photoAlt widget=input
  */
 export default function prepareText({ props }) {
-    const { title = '', text = '' } = props;
+    const { title = '' } = props;
     const lead = typeof props.lead === 'string' ? props.lead.trim() : '';
     const photo = typeof props.photo === 'string' ? props.photo.trim() : '';
     const photoAlt = typeof props.photoAlt === 'string' ? props.photoAlt.trim() : '';
-    const paragraphs = typeof text === 'string'
-        ? text.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean)
-        : [];
-    return { title, paragraphs, lead, photo, photoAlt };
+    return { title, text: normalizeRichText(props.text), lead, photo, photoAlt };
 }

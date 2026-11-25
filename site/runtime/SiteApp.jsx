@@ -127,7 +127,7 @@ export default function SiteApp({
     }, [notFound, pages, pathFromUrl, urlForPath]);
 
     return (
-        <SiteRoot tokens={tokens} theme={theme}>
+        <SiteRoot tokens={page?.theme ? undefined : tokens} theme={page?.theme ? { ...theme, ...page.theme } : theme}>
             {page
                 ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={page.materials} materialSectionId={page.materialSectionId} context={page.context} record={page.record} />
                 : notFound}

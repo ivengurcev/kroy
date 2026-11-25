@@ -15,6 +15,7 @@ dist/
 !/build/site/
 /build/site/*
 !/build/site/createMaterialPages.mjs
+!/build/site/materialPages.test.mjs
 !/build/site/seoFiles.mjs
 !/build/site/seoHead.test.mjs
 .cache/

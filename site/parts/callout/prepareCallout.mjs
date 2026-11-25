@@ -1,4 +1,5 @@
 import { normalizeImageSource } from '../../../shared/imageSource.mjs';
+import { normalizeRichText } from '../../../shared/richText.mjs';
 
 /**
  * @kroy-title Акцентный блок
@@ -12,12 +13,10 @@ import { normalizeImageSource } from '../../../shared/imageSource.mjs';
  * @param {string} [props.icon] - Иконка
  *
  * @kroy title widget=input
- * @kroy text widget=textarea
+ * @kroy text widget=richtext
  * @kroy icon widget=image format=media maxWidth=512
  */
 export default function prepareCallout({ props = {} }) {
     const title = typeof props.title === 'string' ? props.title.trim() : '';
-    const text = typeof props.text === 'string' ? props.text.trim() : '';
-    const paragraphs = text.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
-    return { title, paragraphs, icon: normalizeImageSource(props.icon) };
+    return { title, text: normalizeRichText(props.text), icon: normalizeImageSource(props.icon) };
 }

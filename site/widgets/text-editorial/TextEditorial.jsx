@@ -1,5 +1,6 @@
 import Section from '../../runtime/Section.jsx';
 import Image from '../../components/Image.jsx';
+import RichTextContent from '../../components/RichTextContent.jsx';
 import styles from './textEditorial.module.css';
 
 /**
@@ -12,8 +13,8 @@ import styles from './textEditorial.module.css';
  * @kroy imagePosition optionLabels=left:Слева,center:Центр,right:Справа
  */
 export default function TextEditorial({ data, options = {} }) {
-    const { title, lead, paragraphs = [], photo, photoAlt = '' } = data;
-    const hasCopy = Boolean(lead || paragraphs.length);
+    const { title, lead, text, photo, photoAlt = '' } = data;
+    const hasCopy = Boolean(lead || text);
     const hasText = Boolean(title || hasCopy);
     if (!hasText && !photo) return null;
     const withPhoto = Boolean(photo && hasText);
@@ -32,11 +33,7 @@ export default function TextEditorial({ data, options = {} }) {
                 {hasCopy && (
                     <div className={styles.copy}>
                         {lead && <p className={styles.lead}>{lead}</p>}
-                        {paragraphs.length > 0 && (
-                            <div className={styles.text}>
-                                {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                            </div>
-                        )}
+                        <RichTextContent value={text} className={styles.text} />
                     </div>
                 )}
             </div>

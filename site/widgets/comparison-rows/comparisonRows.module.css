@@ -101,15 +101,12 @@
     white-space: pre-line;
 }
 
-.highlight {
-    font-size: var(--site-font-size-lead);
-    font-weight: 700;
-}
-
 .note {
     border-top: var(--site-line-width) solid var(--comparison-tone);
     padding-top: var(--site-space-4);
 }
+
+.examples { white-space: pre-line; }
 
 .examples ul {
     display: grid;

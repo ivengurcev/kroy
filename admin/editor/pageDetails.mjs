@@ -3,6 +3,7 @@ export function toEditorPage(page) {
         id: page.id,
         title: page.title,
         ...(page.seo ? { seo: page.seo } : {}),
+        ...(page.appearance ? { appearance: page.appearance } : {}),
         path: page.path,
         type: page.type ?? 'standard',
         dataSource: page.dataSource ?? null,

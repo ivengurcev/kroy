@@ -1,4 +1,5 @@
 import { createElement, Fragment } from 'react';
+import { hasRichText, richTextParagraphs } from '../../shared/richText.mjs';
 
 function isSafeLink(value) {
     if (typeof value !== 'string' || !value.trim()) return false;
@@ -12,7 +13,7 @@ function isSafeLink(value) {
 }
 
 function renderText(node, key) {
-    let text = node.text ?? '';
+    let text = typeof node.text === 'string' ? node.text : '';
     const format = Number(node.format) || 0;
     if (format & 1) text = createElement('strong', { key: `${key}-bold` }, text);
     if (format & 2) text = createElement('em', { key: `${key}-italic` }, text);
@@ -29,11 +30,14 @@ export function renderLexicalNode(node, key = 'node') {
     if (!node || typeof node !== 'object') return null;
     if (node.type === 'text') return renderText(node, key);
     if (node.type === 'linebreak') return createElement('br', { key });
+    if (['paragraph', 'heading', 'list', 'listitem'].includes(node.type) && !hasRichText(node)) return null;
 
     const children = renderChildren(node);
     switch (node.type) {
         case 'root':
             return createElement(Fragment, { key }, children);
+        case 'horizontalrule':
+            return createElement('hr', { key });
         case 'paragraph':
             return createElement('p', { key }, children);
         case 'heading':
@@ -51,12 +55,13 @@ export function renderLexicalNode(node, key = 'node') {
                 ...(node.target === '_blank' ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
             }, children);
         default:
-            return node.text !== undefined
+            return typeof node.text === 'string'
                 ? createElement(Fragment, { key }, node.text, children)
                 : createElement(Fragment, { key }, children);
     }
 }
 
 export function renderLexicalContent(value) {
+    if (typeof value === 'string') return richTextParagraphs(value).map((paragraph, index) => createElement('p', { key: index }, paragraph));
     return renderLexicalNode(value?.root ?? value);
 }

@@ -10,16 +10,18 @@ import { discoverParts, discoverWidgets } from '../../build/registry/discoverPar
 import createSiteSvgPlugin from '../../build/site/siteSvgPlugin.mjs';
 import { createMaterialListData } from './materialListData.mjs';
 import { createClientPageRegistry, serializePagePayload } from '../../build/site/sitePageData.mjs';
-import { getThemeTokens } from '../themes/themeRegistry.mjs';
+import { getThemeTokens, getPageTheme } from '../themes/themeRegistry.mjs';
 
 const outputs = [];
 let server;
 let client;
 let definitions;
+let widgetDefinitions;
 
 before(async () => {
     const [parts, widgets] = await Promise.all([discoverParts(), discoverWidgets()]);
     definitions = parts;
+    widgetDefinitions = widgets;
     const imports = [];
     const registries = [];
     for (const [label, components] of [['parts', parts], ['widgets', widgets]]) {
@@ -51,7 +53,7 @@ after(() => Promise.all(outputs.map((path) => rm(path, { force: true }))));
 
 const settings = {
     '@kroy/cta': { title: 'Action heading', subtitle: 'Action subtitle', price: '499 ₽', href: '/action' },
-    '@kroy/comparison': { title: 'Comparison heading', rows: [{ title: 'Category', description: 'Category description', highlight: '70–90%', note: 'Category note', tone: 'success', examples: 'First example\nSecond example' }] },
+    '@kroy/comparison': { title: 'Comparison heading', rows: [{ title: 'Category', description: 'Category description', note: 'Category note', tone: 'success', examples: 'First example\nSecond example' }] },
     '@kroy/callout': { title: 'Callout heading', text: 'First callout paragraph\n\nSecond callout paragraph' },
     '@kroy/cards': { title: 'Cards heading', cards: [{ icon: { src: '/leaf.svg', mimeType: 'image/svg+xml' }, title: 'Card title', description: 'Card description' }] },
     '@kroy/separator': {},
@@ -105,6 +107,11 @@ test('all default widgets preserve visible content and CSS Modules with identica
         };
         const html = render(server, page);
         assert.match(html, expected[definition.name]);
+        if (definition.name === '@kroy/comparison') {
+            assert.equal(Object.keys(definition.fields.rows.fields)[0], 'tone');
+            assert.match(html, /<p>First example\nSecond example<\/p>/);
+            assert.equal((html.match(/<ul\b/g) ?? []).length, 1); // No implicit list for example lines.
+        }
         assert.doesNotMatch(html, /undefined/);
         assert.equal(render(client, JSON.parse(serializePagePayload(page))), html);
         if (definition.name === '@kroy/cta') {
@@ -176,6 +183,18 @@ test('all default widgets preserve visible content and CSS Modules with identica
             assert.match(html, /name="text"/);
         }
         if (definition.name === '@kroy/hero') {
+            for (const widget of ['@kroy/hero', '@kroy/hero-editorial']) {
+                const field = widgetDefinitions.find(({ name }) => name === widget).fields.showContacts;
+                assert.equal(field.type, 'switch');
+                assert.equal(field.default, true);
+                for (const showContacts of [undefined, true, false]) {
+                    const heroPage = { ...page, content: [{ ...page.content[0], view: { name: widget, props: showContacts === undefined ? {} : { showContacts } } }] };
+                    const heroHtml = render(server, heroPage);
+                    if (showContacts === false) assert.doesNotMatch(heroHtml, /aria-label="Социальные сети"|href="\/social"/);
+                    else assert.match(heroHtml, /href="\/social"/);
+                    assert.equal(render(client, heroPage), heroHtml);
+                }
+            }
             const editorialPage = { ...page, content: [{
                 part: definition.name,
                 props: { title: 'Hero', features: [
@@ -224,6 +243,75 @@ test('all default widgets preserve visible content and CSS Modules with identica
             assert.doesNotMatch(render(server, emptyPage), /<ul\b|<header\b|<section\b/);
         }
     }
+});
+
+test('page palettes are present in SSR and identical in the first client render', () => {
+    const settings = { themeId: 'calm', themeMode: 'light', overrides: {} };
+    const theme = { ...getPageTheme(settings), separatorUrl: '/global.svg', separatorMimeType: 'image/svg+xml' };
+    for (const appearance of [{}, { themeMode: 'dark' }, { themeId: 'amber' }, { themeMode: 'system', overrides: { light: { '--site-color-bg': '#abcdef' }, shared: { '--site-font-size-base': '20px' } } }]) {
+        const page = { path: '/', title: 'Page', content: [], theme: getPageTheme(settings, appearance) };
+        const registry = createClientPageRegistry([page]);
+        const input = { pages: registry, path: '/', theme };
+        const renderPage = (module) => renderToString(createElement(module.SiteApp, { ...input, parts: module.parts, widgets: module.widgets }));
+        const initial = renderPage(server);
+        assert.equal(renderPage(client), initial);
+        const palette = appearance.themeMode === 'dark' ? 'dark' : 'light';
+        assert.ok(initial.includes(`--site-color-bg:${page.theme[palette]['--site-color-bg']}`));
+        assert.ok(initial.includes(`color-scheme:${palette}`));
+    }
+});
+
+test('richtext fields keep formatting across all approved widgets, SSR/client and saved page payloads', () => {
+    const rich = { root: { type: 'root', children: [
+        { type: 'heading', tag: 'h2', children: [{ type: 'text', text: 'Rich heading' }] },
+        { type: 'heading', tag: 'h3', children: [{ type: 'text', text: 'Small heading' }] },
+        { type: 'paragraph', children: [{ type: 'text', text: 'Marked text', format: 1 | 2 | 8 }] },
+        { type: 'list', listType: 'bullet', children: [{ type: 'listitem', children: [{ type: 'text', text: 'Bullet item' }] }] },
+        { type: 'list', listType: 'number', children: [{ type: 'listitem', children: [{ type: 'text', text: 'Number item' }] }] },
+        { type: 'paragraph', children: [{ type: 'link', url: '/safe', children: [{ type: 'text', text: 'Link' }] }] },
+        { type: 'horizontalrule', version: 1 },
+    ] } };
+    for (const [part, widget, props] of [
+        ['@kroy/text', '@kroy/text', { title: 'Text', text: rich }],
+        ['@kroy/text', '@kroy/text-editorial', { title: 'Text', text: rich, lead: 'Lead', photo: '/photo.webp' }],
+        ['@kroy/callout', '@kroy/callout', { title: 'Callout', text: rich }],
+        ['@kroy/hero', '@kroy/hero', { title: 'Hero', description: rich }],
+        ['@kroy/hero', '@kroy/hero-editorial', { title: 'Hero', lead: rich, description: rich, features: [{ text: rich }] }],
+        ['@kroy/comparison', '@kroy/comparison-rows', { rows: [{ title: 'Category', description: rich, note: rich, examples: rich }] }],
+        ['@kroy/comparison', '@kroy/comparison-rows', { rows: [{ examples: rich }] }],
+    ]) for (const base of [16, 18, 20]) {
+        const page = { path: '/', title: 'Page', content: [{ part, props, view: { name: widget, props: {} } }] };
+        const input = { path: '/', tokens: { '--site-font-size-base': `${base}px` } };
+        const renderPage = (module, initialPage) => renderToString(createElement(module.SiteApp, { ...input, initialPage, pages: {}, parts: module.parts, widgets: module.widgets }));
+        const html = renderPage(server, page);
+        assert.equal(renderPage(client, JSON.parse(serializePagePayload(page))), html);
+        assert.equal(renderPage(server, createClientPageRegistry([page])['/']), html);
+        assert.match(html, /<h2>Rich heading<\/h2>/);
+        assert.match(html, /<h3>Small heading<\/h3>/);
+        assert.match(html, /<p><u><em><strong>Marked text<\/strong><\/em><\/u><\/p>/);
+        assert.match(html, /<ul><li>Bullet item<\/li><\/ul>/);
+        assert.match(html, /<ol><li>Number item<\/li><\/ol>/);
+        assert.match(html, /href="\/safe"/);
+        assert.match(html, /<hr\/>/);
+        assert.doesNotMatch(html, /<p[^>]*><(?:div|p|h2|h3|ul|ol)\b/);
+    }
+    for (const part of ['@kroy/text', '@kroy/callout', '@kroy/comparison']) {
+        const definition = definitions.find(({ name }) => name === part);
+        const empty = { root: { type: 'root', children: [{ type: 'paragraph', children: [] }] } };
+        const props = part === '@kroy/comparison' ? { rows: [{ description: empty, note: empty, examples: empty }] } : { text: empty };
+        const page = { path: '/', title: 'Empty', content: [{ part, props, view: { name: definition.defaultWidget, props: {} } }] };
+        assert.doesNotMatch(render(server, page), /<section\b|<p\b|<h2\b|<h3\b/);
+    }
+    const paragraph = { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Only paragraph' }] }] } };
+    const page = { path: '/', title: 'Page', content: [{ part: '@kroy/comparison', props: { rows: [{ examples: paragraph }] }, view: { name: '@kroy/comparison-rows', props: {} } }] };
+    const html = render(server, page);
+    assert.match(html, /<p>Only paragraph<\/p>/);
+    assert.equal((html.match(/<ul\b/g) ?? []).length, 1); // Only the outer category list.
+    const divider = { root: { type: 'root', children: [{ type: 'horizontalrule', version: 1 }] } };
+    const dividerPage = { ...page, content: [{ ...page.content[0], props: { rows: [{ description: divider, highlight: 'Removed highlight' }] } }] };
+    const dividerHtml = render(server, dividerPage);
+    assert.match(dividerHtml, /<hr\/>/);
+    assert.doesNotMatch(dividerHtml, /Removed highlight/);
 });
 
 test('both reviews widgets render exactly the supplied selection with the submit button and shared form', () => {

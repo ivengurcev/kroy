@@ -33,6 +33,7 @@ export default function AdminShell({
     onViewPropChange,
     onSave,
     onPageDetailsChange,
+    onPageAppearancePreview,
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [detailsDirty, setDetailsDirty] = useState(false);
@@ -70,6 +71,7 @@ export default function AdminShell({
     }
 
     function closePageDetails() {
+        onPageAppearancePreview?.(null);
         setDetailsOpen(false);
         setDetailsDirty(false);
         requestAnimationFrame(() => detailsButtonRef.current?.focus());
@@ -99,7 +101,7 @@ export default function AdminShell({
                     onViewChange={onViewChange}
                     onViewPropChange={onViewPropChange}
                 />
-                {detailsOpen && <PageDetailsDialog page={page} onDirtyChange={setDetailsDirty} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
+                {detailsOpen && <PageDetailsDialog page={page} onDirtyChange={setDetailsDirty} onAppearancePreview={onPageAppearancePreview} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
                 {deleteError && <p role="alert">{deleteError}</p>}
                 {loadStatus === 'success' && <ActionFooter isDirty={isDirty} saveStatus={saveStatus}>
                     {page.id && page.path !== '/' && <Button variant="danger" disabled={deleting || saveStatus === 'saving'} onClick={deletePage}><Icon name="delete" /> Удалить</Button>}

@@ -41,3 +41,8 @@
 .content ul,
 .content ol { padding-inline-start: 1.5em; }
 .content a { color: var(--site-color-accent); }
+.content hr {
+    border: 0;
+    border-block-start: var(--site-line-width) solid var(--site-color-border);
+    margin-block: var(--site-space-6);
+}

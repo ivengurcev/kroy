@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { listItemSummary, mergeListItem, moveListItem, updateListDraft } from './listFieldModel.mjs';
+import { toLexicalDocument } from '../ui/richTextState.mjs';
 
 const fields = {
     title: { type: 'input' },
@@ -60,4 +61,27 @@ test('late image uploads cannot change a closed or newly opened draft', () => {
     const updated = updateListDraft(current, nextSession, upload);
     assert.equal(updated.draft.icon, upload.icon);
     assert.equal(updated.draft.title, 'Другой элемент');
+});
+
+test('richtext stays in the local category draft; cancel, switching and reopening preserve the right value', () => {
+    const schema = { description: { type: 'richtext' }, note: { type: 'richtext' } };
+    const a = { title: 'A', description: 'Строка A', note: '' };
+    const b = { title: 'B', description: 'Строка B', note: '' };
+    const sessionA = Symbol();
+    let dialog = { session: sessionA, draft: structuredClone(a) };
+    const formatted = toLexicalDocument('Форматированный текст');
+    formatted.root.children[0].children[0].format = 1;
+    dialog = updateListDraft(dialog, sessionA, { description: formatted, note: toLexicalDocument('Примечание') });
+    assert.equal(a.description, 'Строка A');
+    const saved = mergeListItem(a, dialog.draft, schema);
+    assert.deepEqual(structuredClone(saved).description, formatted);
+    dialog = null;
+    assert.equal(updateListDraft(dialog, sessionA, { description: 'Позднее изменение' }), null);
+    const sessionB = Symbol();
+    dialog = { session: sessionB, draft: structuredClone(b) };
+    assert.equal(dialog.draft.description, 'Строка B');
+    assert.equal(updateListDraft(dialog, sessionA, { description: formatted }), dialog);
+    dialog = { session: Symbol(), draft: structuredClone(saved) };
+    assert.deepEqual(dialog.draft.description, formatted);
+    assert.equal(dialog.draft.note.root.children[0].children[0].text, 'Примечание');
 });

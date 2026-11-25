@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveAppearanceSettings, appearanceEditorModel, setPageAppearanceToken, resolveAppearanceTheme } from '../../shared/pageAppearance.mjs';
+import { getTokenMetadata } from './tokenMetadata.mjs';
 
 const THEMES_DIR = dirname(fileURLToPath(import.meta.url));
 const THEME_FILE_PATTERN = /^[a-z][a-z0-9-]*\.json$/;
@@ -65,17 +67,18 @@ function resolveThemeMode(mode, systemMode = 'light') {
     throw new Error(`Некорректный режим темы: ${mode}`);
 }
 
-function sharedDefaults(theme) {
+// Typography and geometry belong to the site/page, not to a color palette.
+function sharedDefaults() {
     return {
         ...SHARED_STATUS_TOKENS,
-        '--site-font-body': theme.tokens.light['--site-font-body'],
-        '--site-font-heading': theme.tokens.light['--site-font-heading'],
-        '--site-font-size-base': theme.tokens.light['--site-font-size-base'],
-        '--site-line-height': theme.tokens.light['--site-line-height'],
-        '--site-space-base': theme.tokens.light['--site-space-base'],
-        '--site-radius-base': theme.tokens.light['--site-radius-base'],
-        '--site-line-width': theme.tokens.light['--site-line-width'] ?? '1px',
-        '--site-container-max': theme.tokens.light['--site-container-max'],
+        '--site-font-body': 'Arial, Helvetica, sans-serif',
+        '--site-font-heading': 'Georgia, "Times New Roman", serif',
+        '--site-font-size-base': '16px',
+        '--site-line-height': '1.5',
+        '--site-space-base': '4px',
+        '--site-radius-base': '16px',
+        '--site-line-width': '1px',
+        '--site-container-max': '1760px',
     };
 }
 
@@ -177,7 +180,7 @@ export function getThemeTokens(themeId, mode, overrides = {}, systemMode = 'ligh
     const theme = getTheme(themeId);
     const palette = resolveThemeMode(mode, systemMode);
     const normalized = normalizeOverrideShape(theme, mode, overrides);
-    return { ...paletteDefaults(theme, palette), ...sharedDefaults(theme), '--site-page-gutter': theme.tokens.light['--site-page-gutter'], ...(normalized[palette] ?? {}), ...(normalized.shared ?? {}), ...computedTokens() };
+    return { ...paletteDefaults(theme, palette), ...sharedDefaults(), '--site-page-gutter': 'clamp(20px, 5vw, 90px)', ...(normalized[palette] ?? {}), ...(normalized.shared ?? {}), ...computedTokens() };
 }
 
 export function normalizeThemeOverrides(themeId, mode, overrides = {}) {
@@ -206,4 +209,69 @@ export function resetThemeOverride(themeId, palette, overrides, token) {
     normalized[palette] ||= {};
     delete normalized[palette][token];
     return normalized;
+}
+
+// Strict page input validation shares the registry's allowed tokens and metadata.
+// Legacy site overrides keep their existing normalization rules.
+export function normalizePageAppearance(site, appearance) {
+    if (!isPlainObject(appearance) || Object.keys(appearance).some((key) => !['themeId', 'themeMode', 'overrides'].includes(key))) {
+        throw new Error('Некорректное оформление страницы');
+    }
+    const next = {};
+    if (appearance.themeId != null) {
+        getTheme(appearance.themeId);
+        next.themeId = appearance.themeId;
+    }
+    if (appearance.themeMode != null) {
+        resolveThemeMode(appearance.themeMode);
+        next.themeMode = appearance.themeMode;
+    }
+    const settings = resolveAppearanceSettings({
+        ...site, overrides: normalizeThemeOverrides(site.themeId, site.themeMode, site.overrides),
+    }, next);
+    const theme = getTheme(settings.themeId);
+    const base = appearanceEditorModel(settings, [getThemeEditorModel(settings.themeId)]);
+    if (appearance.overrides !== undefined) {
+        if (!isPlainObject(appearance.overrides)) throw new Error('Некорректные переопределения');
+        for (const [palette, values] of Object.entries(appearance.overrides)) {
+            if (!['light', 'dark', 'shared'].includes(palette)) throw new Error('Неизвестная палитра');
+            validateOverrides(theme, palette, values);
+            for (const [token, value] of Object.entries(values)) {
+                const info = getTokenMetadata(token);
+                const text = value.trim();
+                let valid = false;
+                if (/[\u0000-\u001f\u007f]/.test(text)) throw new Error(`Некорректное значение токена: ${token}`);
+                if (info.type === 'color') {
+                    const rgb = text.match(/^(rgb|rgba)\(([^()]+)\)$/i);
+                    const channels = rgb?.[2].split(',').map((channel) => channel.trim());
+                    valid = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(text)
+                        || Boolean(rgb && channels.length === (rgb[1].toLowerCase() === 'rgba' ? 4 : 3)
+                            && channels.slice(0, 3).every((channel) => /^\d{1,3}$/.test(channel) && Number(channel) <= 255)
+                            && (channels.length === 3 || /^(?:0|1|0?\.\d+)$/.test(channels[3]) && Number(channels[3]) <= 1));
+                } else if (info.type === 'font') {
+                    valid = text.length <= 300 && /^[\p{L}\p{N} "',-]+$/u.test(text)
+                        && /^(?:"[^"]+"|'[^']+'|[\p{L}\p{N}-]+(?: +[\p{L}\p{N}-]+)*)(?: *, *(?:"[^"]+"|'[^']+'|[\p{L}\p{N}-]+(?: +[\p{L}\p{N}-]+)*))*$/u.test(text);
+                } else {
+                    const match = text.match(/^(\d+(?:\.\d+)?|\.\d+)(px|rem)?$/);
+                    const number = match ? Number(match[1]) : NaN;
+                    valid = Number.isFinite(number) && (info.type === 'number' ? !match[2] && number > 0 : info.units?.includes(match[2]))
+                        && (info.min === undefined || number >= info.min) && (info.max === undefined || number <= info.max)
+                        && (!['--site-font-size-base', '--site-container-max'].includes(token) || number > 0);
+                }
+                if (!valid) throw new Error(`Некорректное значение токена: ${token}`);
+                Object.assign(next, setPageAppearanceToken(next, base, palette, token, text));
+            }
+        }
+    }
+    return next;
+}
+
+// Prepare both palettes once on the server; SSR and hydration consume this same data.
+export function getPageTheme(site, appearance = {}) {
+    const normalizedSite = { ...site, overrides: normalizeThemeOverrides(site.themeId, site.themeMode, site.overrides) };
+    const settings = resolveAppearanceSettings(normalizedSite, appearance);
+    return resolveAppearanceTheme(normalizedSite, appearance, [getThemeEditorModel(settings.themeId)], {
+        light: getThemeTokens(site.themeId, 'light', normalizedSite.overrides),
+        dark: getThemeTokens(site.themeId, 'dark', normalizedSite.overrides),
+    });
 }

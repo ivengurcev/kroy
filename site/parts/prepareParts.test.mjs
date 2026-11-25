@@ -12,11 +12,39 @@ import prepareServices from './services/prepareServices.mjs';
 import prepareReviews from './reviews/prepareReviews.mjs';
 import prepareProductSelection from './product-selection/prepareProductSelection.mjs';
 import prepareCategoryProducts from './category-products/prepareCategoryProducts.mjs';
+import prepareComparison from './comparison/prepareComparison.mjs';
 
 test('prepares material data from record without mixing route context and settings', () => {
     const record = { slug: 'story', title: 'Material', summary: 'Summary', content: { root: {} }, coverUrl: '/cover.webp' };
     assert.deepEqual(prepareMaterial({ props: { title: 'Setting' }, record, context: { params: { slug: 'route' } } }), record);
     assert.equal(prepareMaterial({ props: {}, record: null }), null);
+});
+
+test('approved richtext parts preserve Lexical JSON and omit genuinely empty text', () => {
+    const value = { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Описание', format: 1 }] }] } };
+    const snapshot = JSON.stringify(value);
+    assert.equal(prepareText({ props: { text: value } }).text, value);
+    assert.equal(prepareCallout({ props: { text: value } }).text, value);
+    const hero = prepareHero({ props: { lead: value, description: value, features: [{ text: value }, { text: '' }] } });
+    assert.equal(hero.lead, value);
+    assert.equal(hero.description, value);
+    assert.equal(hero.features[0].text, value);
+    assert.equal(hero.features.length, 1);
+    const row = prepareComparison({ props: { rows: [{ description: value, note: value, examples: 'Один\r\nДва' }] } }).rows[0];
+    assert.equal(row.description, value);
+    assert.equal(row.note, value);
+    assert.equal(row.examples, 'Один\r\nДва');
+    assert.equal('highlight' in prepareComparison({ props: { rows: [{ description: value, highlight: 'Устаревшее поле' }] } }).rows[0], false);
+    assert.deepEqual(prepareComparison({ props: { rows: [{ highlight: 'Устаревшее поле' }] } }).rows, []);
+    const richExamples = prepareComparison({ props: { rows: [{ examples: value }] } }).rows;
+    assert.equal(richExamples.length, 1);
+    assert.equal(richExamples[0].examples, value);
+    assert.equal(JSON.stringify(value), snapshot);
+    for (const text of [null, undefined, '', { root: { type: 'root', children: [{ type: 'paragraph', children: [] }] } }]) {
+        assert.equal(prepareText({ props: { text } }).text, '');
+        assert.equal(prepareCallout({ props: { text } }).text, '');
+        assert.deepEqual(prepareComparison({ props: { rows: [{ description: text, note: text, examples: text }] } }).rows, []);
+    }
 });
 
 test('selects reviews only in the data part and preserves manual order and flags', () => {
@@ -58,7 +86,7 @@ test('prepares shared contacts and normalizes source data without mutating it', 
     assert.equal(links.socials[0].name, 'Link');
     assert.equal(prepareContacts({ props: { title: 'Contacts', zoom: 10 }, contacts }).phone, '+79999999999');
     assert.equal(JSON.stringify(contacts), snapshot);
-    assert.deepEqual(prepareText({ props: { title: 'About', text: ' First\n\n Second ' } }).paragraphs, ['First', 'Second']);
+    assert.equal(prepareText({ props: { title: 'About', text: ' First\n\n Second ' } }).text, 'First\n\n Second');
     const ctaProps = { title: ' Записаться ', subtitle: ' На консультацию ', price: ' от 499 ₽ ', icon: { src: '/cta.svg', mimeType: 'image/svg+xml' }, href: ' /booking#form ' };
     const savedCta = JSON.stringify(ctaProps);
     assert.deepEqual(prepareCta({ props: ctaProps }), {
@@ -102,8 +130,8 @@ test('prepares shared contacts and normalizes source data without mutating it', 
     const calloutProps = { title: ' Примечание ', text: ' Первый абзац \r\n\r\n Второй абзац ', icon: { src: '/api/media/icon', mimeType: 'image/svg+xml' } };
     const calloutSnapshot = JSON.stringify(calloutProps);
     assert.deepEqual(prepareCallout({ props: calloutProps }), {
-        title: 'Примечание', paragraphs: ['Первый абзац', 'Второй абзац'], icon: calloutProps.icon,
+        title: 'Примечание', text: calloutProps.text.trim(), icon: calloutProps.icon,
     });
     assert.equal(JSON.stringify(calloutProps), calloutSnapshot);
-    assert.deepEqual(prepareCallout({ props: { title: 42, text: null, icon: 'none' } }), { title: '', paragraphs: [], icon: '' });
+    assert.deepEqual(prepareCallout({ props: { title: 42, text: null, icon: 'none' } }), { title: '', text: '', icon: '' });
 });

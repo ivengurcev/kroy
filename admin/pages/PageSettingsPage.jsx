@@ -30,7 +30,11 @@ export default function PageSettingsPage() {
     }, [pageId, isNew]);
     return <AdminPageShell title={isNew ? 'Новая страница' : page?.title || 'Настройки страницы'}
         status={status} errorMessage="Не удалось загрузить страницу." isDirty={dirty} saveStatus={saveStatus}
-        formId="page-settings-form" onSave={() => document.getElementById('page-settings-form')?.requestSubmit()}>
+        formId="page-settings-form" onSave={() => document.getElementById('page-settings-form')?.requestSubmit()}
+        footerActions={<>
+            <Button type="submit" form="page-settings-form" variant="primary" disabled={!dirty || saveStatus === 'saving'}><Icon name="save" /> Сохранить</Button>
+            <Button type="reset" form="page-settings-form" disabled={!dirty || saveStatus === 'saving'}><Icon name="close" /> Отмена</Button>
+        </>}>
         <div className={styles.content}>
             <Button onClick={() => navigate?.('/admin/pages')}><Icon name="back" /> К списку страниц</Button>
             <AdminPageHeader title={isNew ? 'Новая страница' : page?.title} />

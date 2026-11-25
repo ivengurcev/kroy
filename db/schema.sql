@@ -180,6 +180,8 @@ CREATE TABLE public.pages (
     route_param text,
     material_section_id uuid,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
+    appearance jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT pages_appearance_check CHECK ((jsonb_typeof(appearance) = 'object'::text)),
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
     CONSTRAINT pages_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
@@ -924,4 +926,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611130002'),
     ('202611130003'),
     ('202611220001'),
-    ('202611220002');
+    ('202611220002'),
+    ('202611240001');

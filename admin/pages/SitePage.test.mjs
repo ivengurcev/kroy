@@ -42,7 +42,7 @@ test('SitePage saves only the active form and retains other settings drafts when
         if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
     });
     t.mock.method(globalThis, 'fetch', async (url) => ({ ok: true, json: async () => url.endsWith('/theme')
-        ? { settings: { themeId: 'calm', themeMode: 'light', overrides: {} }, themes: [{ id: 'calm' }, { id: 'other' }] }
+        ? { settings: { themeId: 'calm', themeMode: 'light', overrides: { light: { '--site-color-bg': '#abcdef' }, shared: { '--site-font-size-base': '20px', '--site-radius-base': '12px' } } }, themes: [{ id: 'calm' }, { id: 'other' }] }
         : { site: { name: 'Site' }, contacts: { address: 'Saved', socials: [] }, seo: {} } }));
 
     const result = await build({
@@ -59,6 +59,7 @@ test('SitePage saves only the active form and retains other settings drafts when
                 if (path === 'jsx') return { contents: 'export const Fragment = "fragment"; export const jsx = (type,props) => ({type,props}); export const jsxs = jsx;' };
                 if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest = (...args) => globalThis.__kroySitePageTest.apiRequest(...args);' };
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const formResponseError = async () => "Error";' };
+                if (path.endsWith('AppearanceControls.jsx')) return { contents: 'export const ThemePicker = "ThemePicker", ThemeModeControl = "ThemeModeControl", TokenTable = "TokenTable";' };
                 return { contents: `export default ${JSON.stringify(path.endsWith('.css') ? {} : path.split('/').pop().replace('.jsx', ''))};` };
             });
         } }],
@@ -81,6 +82,7 @@ test('SitePage saves only the active form and retains other settings drafts when
     render(); await settled();
     assert.equal(tree.props.isDirty, false);
     named('ThemePicker').props.onChange('other'); render();
+    assert.deepEqual(named('TokenTable').props.draft.overrides, { light: {}, dark: {}, shared: { '--site-font-size-base': '20px', '--site-radius-base': '12px' } });
     assert.equal(tree.props.isDirty, true);
     switchTo('seo');
     assert.equal(tree.props.isDirty, false);

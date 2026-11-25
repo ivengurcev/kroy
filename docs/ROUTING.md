@@ -33,7 +33,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin` | Редактор главной страницы |
 | `/admin/pages` | Дерево страниц, удалённые и действующие перенаправления |
 | `/admin/pages/new` | Создание страницы |
-| `/admin/pages/:pageId/settings` | Полноэкранные настройки страницы и SEO |
+| `/admin/pages/:pageId/settings` | Полноэкранные настройки страницы, SEO и оформления |
 | `/admin/pages/trash` | Совместимый старый адрес того же дерева с включёнными удалёнными |
 | `/admin/pages/:pageId` | Редактор страницы по UUID |
 | `/admin/appearance` | Оформление сайта |
@@ -58,9 +58,9 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | Метод и путь | Контракт |
 |---|---|
 | `GET /pages` | Список без content с массивом действующих `redirects`; `?deleted=all` — включая удалённые, `?deleted=1` — только удалённые |
-| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с content |
+| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с content и appearance |
 | `POST /pages` | Создать пустую страницу; title/path, type/dataSource для списка |
-| `PATCH /pages/:pageId` | title/path/seo; у detail — routeParam вместо произвольного path, без seo |
+| `PATCH /pages/:pageId` | title/path/seo/appearance; у detail — routeParam вместо произвольного path, без seo; appearance заменяется целиком, отсутствие поля сохраняет прежнее оформление; при передаче appearance ответ включает готовую theme для редактора |
 | `PUT /pages/:pageId` | Полностью заменить content; формат в [PARTS.md](PARTS.md) |
 | `DELETE /pages/:pageId`, `POST /pages/:pageId/restore` | Мягкое удаление / восстановление |
 | `POST /pages/:pageId/detail-template` | Создать один detail-шаблон для list |
@@ -76,7 +76,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `GET /site/reviews`, `POST /site/reviews`, `PATCH/DELETE /site/reviews/:id` | Управление отзывами; GET допускает status |
 | `GET/POST /site/material-sections`, `PATCH/DELETE /site/material-sections/:id` | Разделы материалов |
 | `GET/POST /site/materials`, `GET/PATCH/DELETE /site/materials/:id` | Материалы; список допускает `sectionId` |
-| `GET /site/preview` | Сохранённые страницы, источники данных и тема |
+| `GET /site/preview` | Сохранённые страницы, источники данных, общая тема и подготовленные page.theme/detailTemplates[].theme для индивидуального оформления |
 | `GET/POST /site/publish` | Статус / запуск публикации |
 | `POST /media` | Загрузка изображения |
 
@@ -105,7 +105,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 также освобождает редирект. Главную нельзя переместить или удалить.
 Удалённая страница сохраняет данные, UUID и путь, но не резервирует адрес.
 Повторное создание переинициализирует существующий UUID: title/type/источник/раздел
-берутся из нового запроса, content становится `[]`, SEO — `{}`, deleted_at,
+берутся из нового запроса, content становится `[]`, SEO и appearance — `{}`, deleted_at,
 detail_parent_id и route_param сбрасываются. Старые редиректы страницы и удалённые
 зависимые detail-шаблоны с их редиректами удаляются. Действующая зависимость вызывает
 409 без удаления данных. Один URL имеет максимум одну запись страницы в БД.

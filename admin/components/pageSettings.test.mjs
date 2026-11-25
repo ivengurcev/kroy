@@ -45,12 +45,13 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
             export { default as PageDetailsForm } from './admin/components/PageDetailsForm.jsx';`, resolveDir: process.cwd() },
         bundle: true, write: false, format: 'esm', jsx: 'automatic',
         plugins: [{ name: 'page-component-unit', setup(builder) {
-            builder.onResolve({ filter: /^(react|react\/jsx-runtime)$|\/(Button|Icon|ValidatedForm|Tabs|SeoFields)\.jsx$|\.module\.css$|\/(apiRequest|formValidation)\.mjs$/ }, ({ path }) => ({ path, namespace: 'unit' }));
+            builder.onResolve({ filter: /^(react|react\/jsx-runtime)$|\/(Button|Icon|ValidatedForm|Tabs|SeoFields|PageAppearanceFields|TokenControls)\.jsx$|\.module\.css$|\/(apiRequest|formValidation)\.mjs$/ }, ({ path }) => ({ path, namespace: 'unit' }));
             builder.onLoad({ filter: /./, namespace: 'unit' }, ({ path }) => {
                 if (path === 'react') return { contents: 'export const { useState, useRef, useEffect } = globalThis.__kroyPageSettingsTest;' };
                 if (path === 'react/jsx-runtime') return { contents: 'export const jsx = (type,props) => ({type,props}); export const jsxs = jsx; export const Fragment = "fragment";' };
                 if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest = (...args) => globalThis.__kroyPageSettingsTest.request(...args);' };
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const fieldValidationMessage = () => ""; export const formResponseError = async () => "Ошибка";' };
+                if (path.endsWith('TokenControls.jsx')) return { contents: 'export const SelectControl = "SelectControl";' };
                 if (path.endsWith('.css')) return { contents: 'export default { expanded: "expanded" };' };
                 return { contents: `export default ${JSON.stringify(path.split('/').at(-1).replace('.jsx', ''))};` };
             });
@@ -136,11 +137,32 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
     assert.equal(dirty, true);
     runtime.request = async (url, options) => {
         request = { url, method: options.method, body: JSON.parse(options.body) };
-        return { ok: true, json: async () => ({ ...props.page, seo: request.body.seo }) };
+        return { ok: true, json: async () => ({ ...props.page, ...request.body }) };
     };
     await tree.find(({ type }) => type === 'ValidatedForm').props.onSubmit({ preventDefault() {}, currentTarget: {} });
-    assert.deepEqual(request, { url: '/api/pages/a', method: 'PATCH', body: { title: 'A', path: '/a', seo: { description: 'Edited SEO' } } });
+    assert.deepEqual(request, { url: '/api/pages/a', method: 'PATCH', body: { title: 'A', path: '/a', seo: { description: 'Edited SEO' }, appearance: {} } });
     render(PageDetailsForm, { ...props, page: saved });
     assert.equal(dirty, false);
     assert.equal(saveStatus, 'success');
+    // Page appearance participates in the same draft/save/cancel lifecycle as SEO.
+    const savedProps = { ...props, page: saved };
+    tree = render(PageDetailsForm, savedProps);
+    tree.find(({ type }) => type === 'PageAppearanceFields').props.onChange({ overrides: { shared: { '--site-font-size-base': '18px' } } });
+    tree = render(PageDetailsForm, savedProps);
+    assert.equal(dirty, true);
+    await tree.find(({ type }) => type === 'ValidatedForm').props.onSubmit({ preventDefault() {}, currentTarget: {} });
+    assert.deepEqual(request.body.appearance, { overrides: { shared: { '--site-font-size-base': '18px' } } });
+    assert.deepEqual(request.body.seo, savedProps.page.seo);
+    tree = render(PageDetailsForm, { ...props, page: saved });
+    assert.equal(dirty, false);
+    const appearanceProps = { ...props, page: saved };
+    tree.find(({ type }) => type === 'SeoFields').props.onChange({ description: 'Cancelled' });
+    tree.find(({ type }) => type === 'PageAppearanceFields').props.onChange({});
+    tree = render(PageDetailsForm, appearanceProps);
+    assert.equal(dirty, true);
+    tree.find(({ type }) => type === 'ValidatedForm').props.onReset({ preventDefault() {} });
+    tree = render(PageDetailsForm, appearanceProps);
+    assert.equal(dirty, false);
+    assert.deepEqual(tree.find(({ type }) => type === 'PageAppearanceFields').props.value, saved.appearance);
+    assert.equal(tree.find(({ type }) => type === 'Tabs').props.items[2].disabled, false);
 });

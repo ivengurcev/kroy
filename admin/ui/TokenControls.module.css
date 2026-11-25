@@ -134,6 +134,7 @@
     text-align: left;
     background: transparent;
     cursor: pointer;
+    overflow-wrap: anywhere;
 }
 
 .option:hover,
@@ -141,3 +142,20 @@
     background: var(--color-sidebar);
     outline: none;
 }
+
+.select { position: relative; display: inline-block; min-width: 0; width: 100%; }
+.select > .trigger { height: var(--control-height-md); gap: var(--space-2); }
+.smallSelect > .trigger { height: var(--control-height-sm); }
+.selectedValue { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activeOption { background: var(--color-sidebar); }
+.option:disabled { color: var(--color-disabled-text); cursor: not-allowed; }
+.nativeSelect {
+    position: absolute;
+    width: 1px !important;
+    height: 1px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    clip-path: inset(50%);
+    pointer-events: none;
+}
+.select:has(.nativeSelect[aria-invalid="true"]) > .trigger { border-color: var(--color-error-text); }

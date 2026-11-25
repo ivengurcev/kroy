@@ -18,3 +18,14 @@ test('requires the exact part/props/view shape and a known compatible widget', (
     ]) assert.equal(isValidContent([invalid], parts, widgets), false);
     assert.equal(isValidContent([item], { '@kroy/reviews': {} }, { '@kroy/cards': {} }), false);
 });
+
+test('part props can keep either historical strings or nested Lexical JSON without conversion', () => {
+    const document = { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Форматирование', format: 1 }] }] } };
+    for (const text of ['Старый текст', document]) {
+        const content = [{ ...item, props: { text, rows: [{ description: text, note: text }] } }];
+        const snapshot = JSON.stringify(content);
+        assert.equal(isValidContent(content, parts, widgets), true);
+        assert.equal(JSON.stringify(content), snapshot);
+        assert.deepEqual(JSON.parse(snapshot)[0].props.text, text);
+    }
+});

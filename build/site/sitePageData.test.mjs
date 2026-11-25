@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createClientPageRegistry, serializePagePayload } from './sitePageData.mjs';
+import { getPageTheme } from '../../site/themes/themeRegistry.mjs';
+
+test('client registry keeps prepared page palettes without administrative appearance data', () => {
+    const theme = getPageTheme({ themeId: 'calm', themeMode: 'system', overrides: {} }, { themeMode: 'dark' });
+    const registry = createClientPageRegistry([{ id: 'private', site_id: 'private', path: '/', title: 'Home', content: [], appearance: { themeMode: 'dark' }, theme }]);
+    assert.deepEqual(registry['/'].theme, theme);
+    assert.doesNotMatch(JSON.stringify(registry), /private|appearance/);
+});
 
 test('keeps dynamic material records out of the shared client page registry', () => {
     const pages = [

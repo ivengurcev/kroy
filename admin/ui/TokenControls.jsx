@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import styles from './TokenControls.module.css';
 import '../../site/styles/fonts.css';
 
@@ -77,25 +77,96 @@ export function DimensionControl({ value, type = 'dimension', units = ['px'], nu
     }
     return <div className={styles.control}>
         <input className={styles.input} type="number" step={type === 'number' ? '0.05' : '1'} min={min} max={max} value={focused ? (parseDimension(draft)?.number ?? '') : current.number} disabled={disabled} title={label} onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); setDraft(value ?? ''); }} onChange={(event) => commitNumber(event.target.value)} />
-        {type === 'dimension' && <select className={styles.input} value={current.unit} disabled={disabled} title="Единица измерения" onChange={(event) => commitUnit(event.target.value)}>{units.map((unit) => <option value={unit} key={unit}>{unit}</option>)}</select>}
+        {type === 'dimension' && <SelectControl value={current.unit} disabled={disabled} label="Единица измерения" size="small" options={units} onChange={commitUnit} />}
     </div>;
 }
 
-export function FontControl({ value, disabled = false, label, onChange, options = FONT_OPTIONS }) {
+export function SelectControl({ value = '', disabled = false, label, onChange, options = [], name, required = false, size = 'medium', renderOption, renderValue = renderOption, className = '', triggerClassName = '', menuClassName = '' }) {
     const [open, setOpen] = useState(false);
+    const [active, setActive] = useState(0);
     const ref = useRef(null);
-    const allOptions = options.includes(value) ? options : [value, ...options];
+    const trigger = useRef(null);
+    const native = useRef(null);
+    const id = useId();
+    const choices = options.map((option) => typeof option === 'string' ? { value: option, label: option } : option);
+    const selectedIndex = choices.findIndex((option) => option.value === value);
+    const selected = choices[selectedIndex];
+    const expanded = open && !disabled;
     useEffect(() => {
-        if (!open) return undefined;
+        if (!expanded) return undefined;
         const close = (event) => { if (!ref.current?.contains(event.target)) setOpen(false); };
-        const escape = (event) => { if (event.key === 'Escape') setOpen(false); };
-        document.addEventListener('mousedown', close); document.addEventListener('keydown', escape);
-        return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
-    }, [open]);
-    return <div className={styles.control}><div className={styles.fontMenu} ref={ref}>
-        <button className={styles.trigger} type="button" disabled={disabled} title={label} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}><span style={{ fontFamily: value }}>{value?.split(',')[0]}</span><span aria-hidden="true">⌄</span></button>
-        {open && <div className={styles.menu} role="listbox" aria-label={label}>{allOptions.map((option) => <button className={styles.option} type="button" role="option" aria-selected={option === value} style={{ fontFamily: option }} key={option} onClick={() => { onChange(option); setOpen(false); }}>{option.split(',')[0]}</button>)}</div>}
-    </div></div>;
+        document.addEventListener('pointerdown', close);
+        return () => document.removeEventListener('pointerdown', close);
+    }, [expanded]);
+    useEffect(() => {
+        if (expanded) ref.current?.querySelector(`[id="${CSS.escape(`${id}-${active}`)}"]`)?.scrollIntoView?.({ block: 'nearest' });
+    }, [expanded, active, id]);
+    function choose(index) {
+        const option = choices[index];
+        if (!option || option.disabled) return;
+        onChange(option.value);
+        setOpen(false);
+        trigger.current?.removeAttribute('aria-invalid');
+        trigger.current?.removeAttribute('aria-errormessage');
+        native.current?.dispatchEvent(new Event('input', { bubbles: true }));
+        trigger.current?.focus();
+    }
+    function nextOption(index, direction) {
+        for (let count = 0; count < choices.length; count++) {
+            index = (index + direction + choices.length) % choices.length;
+            if (!choices[index].disabled) return index;
+        }
+        return -1;
+    }
+    function handleKeyDown(event) {
+        if (disabled || !choices.length) return;
+        if (event.key === 'Escape' && expanded) {
+            event.preventDefault(); event.stopPropagation(); setOpen(false);
+        } else if (event.key === 'Tab') setOpen(false);
+        else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+            event.preventDefault();
+            const direction = event.key === 'ArrowUp' || event.key === 'End' ? -1 : 1;
+            const start = event.key === 'Home' ? -1 : event.key === 'End' ? choices.length : expanded ? active : selectedIndex;
+            setActive(nextOption(start, direction));
+            setOpen(true);
+        } else if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            if (expanded) choose(active);
+            else { setActive(selectedIndex >= 0 ? selectedIndex : nextOption(-1, 1)); setOpen(true); }
+        } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            const match = choices.findIndex((option) => !option.disabled && option.label.toLowerCase().startsWith(event.key.toLowerCase()));
+            if (match >= 0) { event.preventDefault(); setActive(match); setOpen(true); }
+        }
+    }
+    return <span className={`${styles.select} ${size === 'small' ? styles.smallSelect : ''} ${className}`} ref={ref} data-validation-group onKeyDown={handleKeyDown}>
+        {(name || required) && <select ref={native} className={styles.nativeSelect} name={name} required={required} value={value} disabled={disabled} tabIndex={-1} aria-hidden="true"
+            onChange={(event) => choose(choices.findIndex((option) => option.value === event.target.value))}
+            onFocus={(event) => {
+                for (const attribute of ['aria-invalid', 'aria-errormessage']) {
+                    const value = event.currentTarget.getAttribute(attribute);
+                    if (value) trigger.current?.setAttribute(attribute, value);
+                }
+                trigger.current?.focus();
+            }}>
+            {choices.map((option) => <option value={option.value} key={option.value} disabled={option.disabled}>{option.label}</option>)}
+        </select>}
+        <button ref={trigger} className={`${styles.trigger} ${triggerClassName}`} type="button" disabled={disabled} title={label} aria-label={label}
+            role="combobox" aria-haspopup="listbox" aria-expanded={expanded} aria-controls={`${id}-list`} aria-required={required || undefined}
+            aria-activedescendant={expanded && active >= 0 ? `${id}-${active}` : undefined}
+            onClick={() => { setActive(selectedIndex >= 0 ? selectedIndex : nextOption(-1, 1)); setOpen(!expanded); }}>
+            <span className={styles.selectedValue}>{selected ? renderValue?.(selected) ?? selected.label : 'Выбрать…'}</span><span aria-hidden="true">⌄</span>
+        </button>
+        {expanded && <span className={`${styles.menu} ${menuClassName}`} id={`${id}-list`} role="listbox" aria-label={label}>
+            {choices.map((option, index) => <button id={`${id}-${index}`} className={`${styles.option} ${index === active ? styles.activeOption : ''}`} type="button" role="option" aria-selected={option.value === value} disabled={option.disabled} tabIndex={-1} key={option.value} onPointerMove={() => { if (!option.disabled) setActive(index); }} onClick={() => choose(index)}>{renderOption?.(option) ?? option.label}</button>)}
+        </span>}
+    </span>;
+}
+
+export function FontControl({ value, disabled = false, label, onChange, options = FONT_OPTIONS }) {
+    const allOptions = options.includes(value) ? options : [value, ...options];
+    return <SelectControl value={value} disabled={disabled} label={label} size="small" onChange={onChange}
+        options={allOptions.map((option) => ({ value: option, label: option?.split(',')[0] ?? '' }))}
+        renderOption={(option) => <span style={{ fontFamily: option.value }}>{option.label}</span>} />;
 }
 
 export default function TokenControl({ type, value, disabled, label, units, numeric = false, min, max, onChange, compact = false }) {

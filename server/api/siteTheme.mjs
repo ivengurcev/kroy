@@ -1,6 +1,6 @@
 import { getSiteTheme, setSiteTheme } from "../../db/siteThemes.mjs";
 import getCurrentSite from "./siteContext.mjs";
-import { getThemeEditorModel, listThemes, normalizeThemeOverrides } from "../../site/themes/themeRegistry.mjs";
+import { getThemeEditorModel, listThemes, normalizeThemeOverrides, getPageTheme } from "../../site/themes/themeRegistry.mjs";
 import { getAllTokenMetadata } from "../../site/themes/tokenMetadata.mjs";
 import isUuid from './isUuid.mjs';
 
@@ -18,7 +18,7 @@ export async function getSiteThemeSettings(c) {
       ...rawSettings,
       overrides: normalizeThemeOverrides(rawSettings.themeId, rawSettings.themeMode, rawSettings.overrides),
     };
-    return c.json({ themes: themeDetails(), metadata: getAllTokenMetadata(), settings });
+    return c.json({ themes: themeDetails(), metadata: getAllTokenMetadata(), settings, theme: getPageTheme(settings) });
   } catch (error) {
     console.error("Failed to load site theme", error);
     return c.json({ error: "Internal server error" }, 500);

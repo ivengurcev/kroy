@@ -7,7 +7,7 @@
     position: relative;
     isolation: isolate;
     height: 100svh;
-    min-height: 750px;
+    min-height: var(--hero-min-height, 750px);
     max-height: 1150px;
     overflow: hidden;
     color: var(--site-color-text);
@@ -183,7 +183,7 @@
         grid-template-columns: minmax(0, 1fr) minmax(210px, .5fr);
         gap: var(--site-space-8);
         height: auto;
-        min-height: clamp(750px, 100svh, 1150px);
+        min-height: clamp(var(--hero-min-height, 750px), 100svh, 1150px);
         padding: var(--site-space-16) var(--site-page-gutter);
     }
     .content { position: static; grid-column: 1 / -1; align-self: center; width: 62%; min-width: 0; padding-block: var(--site-space-8); }

@@ -5,7 +5,7 @@ import { build, transform } from 'esbuild';
 import { isValidPagePath, isValidPageRoutePattern } from '../../shared/pageFields.mjs';
 import { pool } from '../../db/client.mjs';
 import { getSiteFingerprint } from '../../db/siteFingerprint.mjs';
-import { getThemeTokens } from '../../site/themes/themeRegistry.mjs';
+import { getPageTheme } from '../../site/themes/themeRegistry.mjs';
 import { normalizeSiteContacts } from '../../db/siteContacts.mjs';
 import { getCatalog } from '../../db/catalog.mjs';
 import { getPublishedReviews } from '../../db/reviews.mjs';
@@ -181,7 +181,7 @@ try {
         seoContext = getSiteSeoContext(site, domainsResult.rows.map(({ hostname }) => hostname), process.env);
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content, seo, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
+            `SELECT id, site_id, path, title, content, seo, appearance, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NULL
@@ -189,7 +189,7 @@ try {
             [site.id]
         );
         const detailTemplatesResult = await client.query(
-            `SELECT detail.id, detail.path, detail.route_param, detail.content,
+            `SELECT detail.id, detail.path, detail.route_param, detail.content, detail.appearance,
                     detail.detail_parent_id AS "detailParentId", list.material_section_id AS "materialSectionId"
              FROM pages detail
              JOIN pages list
@@ -293,8 +293,12 @@ try {
         ...redirects.filter(({ deleted_at }) => deleted_at === null).map(({ from_path: path }) => path),
         ...allDetailTemplates.filter(({ id }) => !materialTemplateIds.has(id)).map(({ path }) => path),
     ]);
+    const siteAppearance = { themeId: site.theme_id, themeMode: site.theme_mode, overrides: site.theme_overrides };
     const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages]
-        .map((page) => ({ ...page, meta: resolvePageMeta(site, page, page.record, seoContext) }));
+        .map(({ appearance = {}, ...page }) => ({
+            ...page, meta: resolvePageMeta(site, page, page.record, seoContext),
+            ...(Object.keys(appearance).length ? { theme: getPageTheme(siteAppearance, appearance) } : {}),
+        }));
 
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
@@ -310,11 +314,9 @@ try {
         `export const pages = ${JSON.stringify(pageRegistry)};\n`
     );
     const theme = {
-        mode: site.theme_mode,
+        ...getPageTheme(siteAppearance),
         separatorUrl: separatorMedia ? `${ASSET_BASE}/separator/${separatorMedia.filename}` : '',
         separatorMimeType: separatorMedia?.mime_type ?? null,
-        light: getThemeTokens(site.theme_id, 'light', site.theme_overrides),
-        dark: getThemeTokens(site.theme_id, 'dark', site.theme_overrides),
     };
     await writeFile(
         SITE_THEME_PATH,

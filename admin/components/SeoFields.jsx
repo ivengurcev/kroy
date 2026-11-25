@@ -2,6 +2,7 @@ import ImageField from '../editor/ImageField.jsx';
 import Button from '../ui/Button.jsx';
 import { DEFAULT_TITLE_TEMPLATE, resolvePageMeta, isSeoDomain } from '../../shared/seo.mjs';
 import styles from './SeoFields.module.css';
+import { SelectControl } from '../ui/TokenControls.jsx';
 
 export default function SeoFields({ value, onChange, siteData, page }) {
     const isSite = !page;
@@ -25,9 +26,11 @@ export default function SeoFields({ value, onChange, siteData, page }) {
         {value.imageId && <Button onClick={() => update('imageId', null)}>Убрать изображение</Button>}
         {!isSite && <small>{inheritedImage ? <>По умолчанию — изображение сайта.<img className={styles.inheritedImage} src={`/api/media/${inheritedImage}`} alt="OG-изображение сайта" /></> : 'Изображение сайта не задано.'}</small>}
         {isSite ? <>
-            <label className={styles.field}><span>Основной домен</span><select name="primaryDomain" value={value.primaryDomain ?? ''} onChange={(event) => update('primaryDomain', event.target.value)}><option value="">Автоматически: первый публичный домен</option>{siteData?.domains?.filter(isSeoDomain).map((domain) => <option key={domain} value={domain}>{domain}</option>)}</select><small>Canonical и OG используют HTTPS на этом домене. DNS и TLS настраиваются отдельно.</small></label>
+            <label className={styles.field}><span>Основной домен</span><SelectControl name="primaryDomain" label="Основной домен" value={value.primaryDomain ?? ''} onChange={(next) => update('primaryDomain', next)}
+                options={[{ value: '', label: 'Автоматически: первый публичный домен' }, ...(siteData?.domains?.filter(isSeoDomain) ?? []).map((domain) => ({ value: domain, label: domain }))]} /><small>Canonical и OG используют HTTPS на этом домене. DNS и TLS настраиваются отдельно.</small></label>
             <label className={styles.checkbox}><input name="indexable" type="checkbox" checked={value.indexable !== false} onChange={(event) => update('indexable', event.target.checked)} />Разрешить индексацию</label>
-        </> : <label className={styles.field}><span>Индексация</span><select name={fieldName('indexing')} value={value.indexing ?? 'inherit'} onChange={(event) => update('indexing', event.target.value)}><option value="inherit">Наследовать ({siteData?.seo?.indexable === false ? 'запрещена' : 'разрешена'})</option><option value="allow">Разрешить</option><option value="deny">Запретить</option></select><small>Запрет индексации всего сайта имеет приоритет.</small></label>}
+        </> : <label className={styles.field}><span>Индексация</span><SelectControl name={fieldName('indexing')} label="Индексация" value={value.indexing ?? 'inherit'} onChange={(next) => update('indexing', next)}
+            options={[{ value: 'inherit', label: `Наследовать (${siteData?.seo?.indexable === false ? 'запрещена' : 'разрешена'})` }, { value: 'allow', label: 'Разрешить' }, { value: 'deny', label: 'Запретить' }]} /><small>Запрет индексации всего сайта имеет приоритет.</small></label>}
         {!isSite && <small>Пустые поля наследуют настройки сайта при каждой публикации.</small>}
         {isSite && <small>Изменения вступят в силу после публикации. При запрете индексации страницы получают noindex; обход остаётся доступным, чтобы поисковик прочитал эту директиву.</small>}
     </div>;

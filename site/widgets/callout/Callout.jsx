@@ -1,5 +1,6 @@
 import Section from '../../runtime/Section.jsx';
 import Image from '../../components/Image.jsx';
+import RichTextContent from '../../components/RichTextContent.jsx';
 import styles from './callout.module.css';
 
 /**
@@ -8,8 +9,8 @@ import styles from './callout.module.css';
  * @kroy-contract callout
  */
 export default function Callout({ data = {} }) {
-    const { title, paragraphs = [], icon } = data;
-    if (!title && !paragraphs.length) return null;
+    const { title, text, icon } = data;
+    if (!title && !text) return null;
 
     return (
         <Section className={styles.section}>
@@ -20,9 +21,7 @@ export default function Callout({ data = {} }) {
                     </span>}
                     <div className={styles.copy}>
                         {title && <h2 className={styles.title}>{title}</h2>}
-                        {paragraphs.length > 0 && <div className={styles.text}>
-                            {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                        </div>}
+                        <RichTextContent value={text} className={styles.text} />
                     </div>
                 </div>
             </div>

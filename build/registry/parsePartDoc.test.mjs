@@ -36,11 +36,13 @@ test('reads string and boolean widget defaults from JSDoc', () => {
      * @param {boolean} [props.autoplay=true] - Автопрокрутка
      * @param {'left'|'right'} [props.align='right'] - Выравнивание
      * @param {string} [props.label="Read more"] - Подпись
+     * @kroy autoplay widget=switch
      * @kroy align optionLabels=left:Слева,right:Справа
      */
     export default function Widget() {}`;
     const { fields } = parsePartDoc(doc);
     assert.equal(fields.autoplay.default, true);
+    assert.equal(fields.autoplay.type, 'switch');
     assert.equal(fields.align.default, 'right');
     assert.deepEqual(fields.align.optionLabels, { left: 'Слева', right: 'Справа' });
     assert.throws(() => parsePartDoc(doc.replace('left:Слева', 'top:Сверху')), /подпись варианта/);
@@ -50,4 +52,17 @@ test('reads string and boolean widget defaults from JSDoc', () => {
 test('parses a dynamic material section field', () => {
     const metadata = parsePartDoc(source('@param {string} props.sectionId\n * @kroy sectionId widget=material-section label=Раздел'));
     assert.deepEqual(metadata.fields.sectionId, { type: 'material-section', label: 'Раздел', required: true });
+});
+
+test('richtext reuses string JSDoc fields and supports nested list fields', () => {
+    const metadata = parsePartDoc(source(`@param {string} [props.text] - Текст
+ * @param {{description: string, note: string, examples: string}[]} [props.rows] - Категории
+ * @kroy text widget=richtext
+ * @kroy rows.description widget=richtext
+ * @kroy rows.note widget=richtext
+ * @kroy rows.examples widget=richtext`));
+    assert.deepEqual(metadata.fields.text, { type: 'richtext', label: 'Текст', required: false });
+    assert.equal(metadata.fields.rows.fields.description.type, 'richtext');
+    assert.equal(metadata.fields.rows.fields.note.type, 'richtext');
+    assert.equal(metadata.fields.rows.fields.examples.type, 'richtext');
 });

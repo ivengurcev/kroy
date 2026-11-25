@@ -40,3 +40,34 @@ test('unknown Lexical nodes preserve descendant text', () => {
     const html = markup({ root: { type: 'root', children: [{ type: 'future-node', children: [{ type: 'text', text: 'Readable' }] }] } });
     assert.match(html, /Readable/);
 });
+
+test('legacy strings remain escaped text with historical paragraph breaks', () => {
+    assert.equal(markup(' Первый\r\n\r\nВторой <b>не HTML</b> '), '<div><p>Первый</p><p>Второй &lt;b&gt;не HTML&lt;/b&gt;</p></div>');
+});
+
+test('empty documents and empty blocks do not create public markup', () => {
+    for (const value of [null, undefined, '', { root: { type: 'root', children: [] } }, {
+        root: { type: 'root', children: [
+            { type: 'paragraph', children: [{ type: 'text', text: '  ' }] },
+            { type: 'heading', tag: 'h2', children: [] },
+            { type: 'list', children: [{ type: 'listitem', children: [] }] },
+        ] },
+    }]) assert.equal(markup(value), '<div></div>');
+});
+
+test('renders H3, ordered lists and internal links; rejects executable URLs', () => {
+    const text = { type: 'text', text: 'Содержимое' };
+    const html = markup({ root: { type: 'root', children: [
+        { type: 'heading', tag: 'h3', children: [text] },
+        { type: 'list', listType: 'number', children: [{ type: 'listitem', children: [text] }] },
+        ...['/inside', '#anchor', 'https://example.com', 'javascript:alert(1)', 'data:text/html,hello'].map((url) => ({ type: 'link', url, children: [text] })),
+    ] } });
+    assert.match(html, /<h3>Содержимое<\/h3><ol><li>Содержимое<\/li><\/ol>/);
+    assert.match(html, /href="\/inside"/);
+    assert.match(html, /href="#anchor"/);
+    assert.doesNotMatch(html, /href="(?:javascript:|data:)/);
+});
+
+test('renders explicitly inserted horizontal rules as safe standalone hr elements', () => {
+    assert.equal(markup({ root: { type: 'root', children: [{ type: 'horizontalrule', version: 1 }] } }), '<div><hr/></div>');
+});

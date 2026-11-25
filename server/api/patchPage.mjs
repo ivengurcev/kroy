@@ -14,6 +14,7 @@ import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import { normalizeSeo } from '../../shared/seo.mjs';
 import { seoReferenceErrors } from './seoValidation.mjs';
+import { normalizePageAppearance, getPageTheme } from '../../site/themes/themeRegistry.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -30,6 +31,7 @@ export default async function patchPage(c) {
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const hasTitle = Object.hasOwn(body ?? {}, "title");
   const hasSeo = Object.hasOwn(body ?? {}, 'seo');
+  const hasAppearance = Object.hasOwn(body ?? {}, 'appearance');
   const seoInput = hasSeo ? normalizeSeo(body.seo) : null;
   if (seoInput && Object.keys(seoInput.fields).length) return c.json({ error: 'Проверьте SEO-настройки', fields: Object.fromEntries(Object.entries(seoInput.fields).map(([key, message]) => [`seo.${key}`, message])) }, 400);
   const hasPath = Object.hasOwn(body ?? {}, "path");
@@ -40,8 +42,8 @@ export default async function patchPage(c) {
 
   if (
     keys.length === 0
-    || keys.length > 6
-    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo"].includes(key))
+    || keys.length > 7
+    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo", "appearance"].includes(key))
     || (hasTitle && !title)
     || (hasRouteParam && !isValidRouteParameter(body.routeParam))
     || (hasDataSource && !isPageDataSource(body.dataSource))
@@ -59,7 +61,7 @@ export default async function patchPage(c) {
     await client.query("BEGIN");
 
     const { rows: sites } = await client.query(
-      `SELECT s.id
+      `SELECT s.id, s.theme_id, s.theme_mode, s.theme_overrides
        FROM sites s
        JOIN domains d ON d.site_id = s.id
        WHERE d.hostname = $1
@@ -73,7 +75,7 @@ export default async function patchPage(c) {
 
     const siteId = sites[0].id;
     const { rows: pages } = await client.query(
-      `SELECT id, site_id, path, title, content, seo, page_type, data_source, material_section_id,
+      `SELECT id, site_id, path, title, content, seo, appearance, page_type, data_source, material_section_id,
               detail_parent_id, route_param
        FROM pages
        WHERE id = $1 AND site_id = $2 AND deleted_at IS NULL
@@ -96,6 +98,17 @@ export default async function patchPage(c) {
     }
 
     const nextTitle = hasTitle ? title : page.title;
+    let nextAppearance = page.appearance ?? {};
+    if (hasAppearance) {
+      try {
+        nextAppearance = normalizePageAppearance({
+          themeId: sites[0].theme_id, themeMode: sites[0].theme_mode, overrides: sites[0].theme_overrides,
+        }, body.appearance);
+      } catch {
+        await client.query('ROLLBACK');
+        return c.json({ error: 'Проверьте оформление страницы', fields: { appearance: 'Некорректные настройки оформления' } }, 400);
+      }
+    }
     if (hasSeo) {
       const fields = await seoReferenceErrors(client, siteId, seoInput.seo);
       if (Object.keys(fields).length) {
@@ -217,15 +230,15 @@ export default async function patchPage(c) {
     const { rows } = await client.query(
       `UPDATE pages
        SET title = $2, path = $3, route_param = $4,
-            data_source = $5, material_section_id = $6, seo = $7::jsonb
+             data_source = $5, material_section_id = $6, seo = $7::jsonb, appearance = $8::jsonb
        WHERE id = $1
-        RETURNING id, site_id, path, title, content, seo, page_type AS type,
+         RETURNING id, site_id, path, title, content, seo, appearance, page_type AS type,
                  data_source AS "dataSource", material_section_id AS "materialSectionId",
                  detail_parent_id AS "detailParentId", route_param AS "routeParam"`,
       [pageId, nextTitle, nextPath, page.page_type === "detail" ? nextRouteParam : null,
         page.page_type === "list" ? nextDataSource : null,
         page.page_type === "list" ? nextMaterialSectionId : null,
-        JSON.stringify(hasSeo ? seoInput.seo : page.seo)],
+        JSON.stringify(hasSeo ? seoInput.seo : page.seo), JSON.stringify(nextAppearance)],
     );
 
     if (detailTemplate && nextDetailPath !== detailTemplate.path) {
@@ -256,6 +269,9 @@ export default async function patchPage(c) {
     }
 
     await client.query("COMMIT");
+    if (hasAppearance) rows[0].theme = getPageTheme({
+      themeId: sites[0].theme_id, themeMode: sites[0].theme_mode, overrides: sites[0].theme_overrides,
+    }, nextAppearance);
     return rows[0];
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});

@@ -23,7 +23,7 @@ before(async () => {
         platform: 'node',
         format: 'esm',
         jsx: 'automatic',
-        loader: { '.module.css': 'local-css' },
+        loader: { '.module.css': 'local-css', '.ttf': 'dataurl' },
     });
     const output = result.outputFiles.find(({ path }) => path.endsWith('.mjs'));
     await writeFile(compiledPath, output.contents);

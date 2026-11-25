@@ -247,7 +247,6 @@ export default function SiteMaterialEditorPage() {
                     {imageUrl && <Button type="button" variant="compact" onClick={() => updateField('coverMediaId', null)}><Icon name="delete" /> Удалить обложку</Button>}
                 </div>
                 <div className={styles.editorField}>
-                    <span className={styles.editorLabel}>Текст материала</span>
                     <MaterialEditor value={editorValue} onChange={(content) => updateField('content', content)} disabled={saveStatus === 'saving'} />
                 </div>
                 <Switch label="Показывать на сайте" checked={material.status === 'published'} onChange={(event) => updateField('status', event.target.checked ? 'published' : 'draft')} />

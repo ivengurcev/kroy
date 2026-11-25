@@ -1,5 +1,6 @@
 import Section from '../../runtime/Section.jsx';
 import styles from './comparisonRows.module.css';
+import RichTextContent from '../../components/RichTextContent.jsx';
 
 /**
  * @kroy-title Сравнение — строки
@@ -28,28 +29,13 @@ export default function ComparisonRows({ data }) {
                                         <h3 className={styles.rowTitle}>{row.title}</h3>
                                     </div>
                                 )}
-                                {(row.description.length > 0 || row.highlight || row.note.length > 0) && (
+                                {(row.description || row.note) && (
                                     <div className={styles.details}>
-                                        {row.description.length > 0 && (
-                                            <div className={styles.paragraphs}>
-                                                {row.description.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
-                                            </div>
-                                        )}
-                                        {row.highlight && <p className={styles.highlight}>{row.highlight}</p>}
-                                        {row.note.length > 0 && (
-                                            <div className={styles.note}>
-                                                {row.note.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
-                                            </div>
-                                        )}
+                                        <RichTextContent value={row.description} className={styles.paragraphs} />
+                                        <RichTextContent value={row.note} className={styles.note} />
                                     </div>
                                 )}
-                                {row.examples.length > 0 && (
-                                    <div className={styles.examples}>
-                                        <ul>
-                                            {row.examples.map((example, i) => <li key={i}>{example}</li>)}
-                                        </ul>
-                                    </div>
-                                )}
+                                <RichTextContent value={row.examples} className={styles.examples} />
                             </li>
                         ))}
                     </ul>

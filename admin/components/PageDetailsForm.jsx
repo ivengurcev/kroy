@@ -8,7 +8,9 @@ import { formResponseError, fieldValidationMessage } from '../ui/formValidation.
 import { apiRequest } from '../editor/apiRequest.mjs';
 import Tabs from '../ui/Tabs.jsx';
 import SeoFields from './SeoFields.jsx';
+import PageAppearanceFields from './PageAppearanceFields.jsx';
 import useAutoSlug from '../editor/useAutoSlug.jsx';
+import { SelectControl } from '../ui/TokenControls.jsx';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -37,6 +39,7 @@ export default function PageDetailsForm({
     formId,
     hideActions = false,
     onSaveStatusChange,
+    onAppearancePreview,
 }) {
     const isNew = !page.id;
     const [type, setType] = useState(page.type || 'standard');
@@ -47,6 +50,7 @@ export default function PageDetailsForm({
     const [materialSectionId, setMaterialSectionId] = useState(page.materialSectionId || '');
     const [sections, setSections] = useState([]);
     const [seo, setSeo] = useState(page.seo ?? {});
+    const [appearance, setAppearance] = useState(page.appearance ?? {});
     const [siteData, setSiteData] = useState(null);
     const [tab, setTab] = useState(0);
     const [status, setStatus] = useState('idle');
@@ -58,7 +62,8 @@ export default function PageDetailsForm({
     const isDetail = page.type === 'detail';
     const isDirty = (isNew && Boolean(title || path || type !== 'standard')) || title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
         || (page.type === 'list' && (dataSource !== (page.dataSource || 'materials') || materialSectionId !== (page.materialSectionId || '')))
-        || JSON.stringify(seo) !== JSON.stringify(page.seo ?? {});
+        || JSON.stringify(seo) !== JSON.stringify(page.seo ?? {})
+        || JSON.stringify(appearance) !== JSON.stringify(page.appearance ?? {});
     const isSubmitting = status === 'submitting';
     const saveButton = (
         <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!isDirty || isSubmitting}>
@@ -91,8 +96,9 @@ export default function PageDetailsForm({
         setDataSource(page.dataSource || 'materials');
         setMaterialSectionId(page.materialSectionId || '');
         setSeo(page.seo ?? {});
+        setAppearance(page.appearance ?? {});
         setError('');
-    }, [page.id, page.title, page.path, page.routeParam, page.dataSource, page.materialSectionId, page.seo]);
+    }, [page.id, page.title, page.path, page.routeParam, page.dataSource, page.materialSectionId, page.seo, page.appearance]);
 
     useEffect(() => {
         onDirtyChange?.(isDirty);
@@ -121,7 +127,17 @@ export default function PageDetailsForm({
 
     function cancel() {
         if (isSubmitting) return;
-        onCancel();
+        setTitle(page.title);
+        setPath(page.path);
+        setType(page.type || 'standard');
+        setRouteParam(page.routeParam || 'slug');
+        setDataSource(page.dataSource || 'materials');
+        setMaterialSectionId(page.materialSectionId || '');
+        setSeo(page.seo ?? {});
+        setAppearance(page.appearance ?? {});
+        setStatus('idle');
+        setFormError('');
+        onCancel?.();
     }
 
     function handleKeyDown(event) {
@@ -147,7 +163,7 @@ export default function PageDetailsForm({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(isNew
                     ? { title, path: generatedPath, type, dataSource: type === 'list' ? dataSource : null, materialSectionId: type === 'list' && dataSource === 'materials' ? materialSectionId : null }
-                    : isDetail ? { title, routeParam } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo }),
+                    : isDetail ? { title, routeParam, appearance } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo, appearance }),
             });
 
             if (!response.ok) {
@@ -155,7 +171,7 @@ export default function PageDetailsForm({
                 const result = await response.clone().json().catch(() => ({}));
                 const names = Object.keys(result.fields ?? {});
                 if (names.length) {
-                    setTab(names[0].startsWith('seo.') ? 1 : 0);
+                    setTab(names[0].startsWith('appearance') ? 2 : names[0].startsWith('seo.') ? 1 : 0);
                     requestAnimationFrame(() => form.querySelector('[aria-invalid="true"]')?.focus());
                 }
                 setFormError(await formResponseError(response, form, errorMessage(response.status)));
@@ -171,25 +187,24 @@ export default function PageDetailsForm({
     }
 
     return (
-        <ValidatedForm id={formId} inert={isSubmitting || undefined} className={joinClasses(styles.form, className)} onInput={() => { if (!isSubmitting) setStatus('idle'); }} onSubmitCapture={(event) => {
+        <ValidatedForm id={formId} inert={isSubmitting || undefined} className={joinClasses(styles.form, className)} onReset={(event) => { event.preventDefault(); cancel(); }} onInput={() => { if (!isSubmitting) setStatus('idle'); }} onSubmitCapture={(event) => {
             const invalid = [...event.currentTarget.elements].find((field) => field.closest(`.${styles.basic}`) && !field.disabled && fieldValidationMessage(field));
             if (invalid) { setTab(0); requestAnimationFrame(() => invalid.focus()); }
         }} onSubmit={submit} onKeyDown={handleEscape ? handleKeyDown : undefined}>
-            <Tabs items={[{ label: 'Основное' }, { label: 'SEO', disabled: isDetail || isNew }, { label: 'Внешний вид', disabled: true }]} activeIndex={tab} onSelect={setTab} ariaLabel="Разделы настроек страницы" />
+            <Tabs items={[{ label: 'Основное' }, { label: 'SEO', disabled: isDetail || isNew }, { label: 'Внешний вид', disabled: isNew }]} activeIndex={tab} onSelect={setTab} ariaLabel="Разделы настроек страницы" />
             <div hidden={tab !== 0} className={styles.basic}>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Тип страницы</span>
-                <select name="type" value={type} disabled={!isNew || isSubmitting} onChange={(event) => setType(event.target.value)}>
-                    <option value="standard">Обычная</option><option value="list">Список</option><option value="detail" disabled>Детальный шаблон</option>
-                </select>
+                <SelectControl name="type" label="Тип страницы" value={type} disabled={!isNew || isSubmitting} onChange={setType}
+                    options={[{ value: 'standard', label: 'Обычная' }, { value: 'list', label: 'Список' }, { value: 'detail', label: 'Детальный шаблон', disabled: true }]} />
             </label>
             {type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Источник данных</span>
-                <select value={dataSource} onChange={(event) => { setDataSource(event.target.value); if (event.target.value !== 'materials') setMaterialSectionId(''); }}>
-                    <option value="materials">Материалы</option><option value="products">Товары</option><option value="reviews">Отзывы</option>
-                </select>
+                <SelectControl label="Источник данных" value={dataSource} onChange={(value) => { setDataSource(value); if (value !== 'materials') setMaterialSectionId(''); }}
+                    options={[{ value: 'materials', label: 'Материалы' }, { value: 'products', label: 'Товары' }, { value: 'reviews', label: 'Отзывы' }]} />
             </label>{dataSource === 'materials' && <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
-                <span>Раздел материалов</span><select name="materialSectionId" value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required><option value="">Выберите раздел</option>{sections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+                <span>Раздел материалов</span><SelectControl name="materialSectionId" label="Раздел материалов" value={materialSectionId} onChange={setMaterialSectionId} required
+                    options={[{ value: '', label: 'Выберите раздел' }, ...sections.map((item) => ({ value: item.id, label: item.name }))]} />
             </label>}</>}
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
                 <span>{isDetail ? 'Параметр пути' : 'Путь'}</span>
@@ -215,6 +230,7 @@ export default function PageDetailsForm({
             </label>
             </div>
             {!isDetail && <div hidden={tab !== 1}><SeoFields value={seo} onChange={setSeo} siteData={siteData} page={{ ...page, title }} /></div>}
+            {!isNew && <div hidden={tab !== 2}><PageAppearanceFields value={appearance} onPreviewChange={onAppearancePreview} onChange={(next) => { setAppearance(next); setStatus('idle'); setFormError(''); }} /></div>}
             {!hideActions && <div className={joinClasses(styles.actions, actionsClassName)}>
                 {cancelFirst ? <>{cancelButton}{saveButton}</> : <>{saveButton}{cancelButton}</>}
             </div>}

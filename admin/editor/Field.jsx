@@ -5,6 +5,8 @@ import RelatedItemsField from './RelatedItemsField.jsx';
 import styles from './Field.module.css';
 import TokenControl from '../ui/TokenControls.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
+import RichTextEditor from '../ui/RichTextEditor.jsx';
+import Switch from '../ui/Switch.jsx';
 
 function MaterialSectionField({ value, onChange, materialSections }) {
     return <label className={styles.field}>Раздел материалов<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{(materialSections ?? []).map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}</select></label>;
@@ -17,6 +19,11 @@ function CatalogCategoryField({ value, onChange, catalog }) {
 export default function Field({ name, schema, value, onChange, catalog, reviews, materialSections }) {
     const label = schema.label ?? name;
     const maxLength = schema.validators?.maxLength;
+
+    if (schema.type === 'richtext') return <div className={`${styles.field} ${compactStyles.field} ${compactStyles.long}`}>
+        <RichTextEditor value={value} onChange={onChange} label={label} variant="compact" />
+    </div>;
+    if (schema.type === 'switch') return <Switch label={label} checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />;
 
     if (schema.type === 'catalog-products') return <RelatedItemsField label="Товары" items={catalog?.products?.filter((product) => product.status === 'published') ?? []} value={value} onChange={onChange} getId={(product) => product.id} getLabel={(product) => product.name} />;
     if (schema.type === 'material-section') return <MaterialSectionField value={value} onChange={onChange} materialSections={materialSections} />;

@@ -1,6 +1,6 @@
 import { pool } from '../../db/client.mjs';
 import { getSiteTheme } from '../../db/siteThemes.mjs';
-import { getThemeTokens } from '../../site/themes/themeRegistry.mjs';
+import { getPageTheme } from '../../site/themes/themeRegistry.mjs';
 import getCurrentSite from './siteContext.mjs';
 import { getSiteContacts } from '../../db/siteContacts.mjs';
 import { getCatalog } from '../../db/catalog.mjs';
@@ -13,7 +13,7 @@ export default async function getSitePreview(c) {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
         const { rows } = await pool.query(
-            `SELECT s.id AS site_id, p.id, p.path, p.title, p.content,
+            `SELECT s.id AS site_id, p.id, p.path, p.title, p.content, p.appearance,
                     p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId"
              FROM sites s
              JOIN domains d ON d.site_id = s.id
@@ -34,7 +34,7 @@ export default async function getSitePreview(c) {
             : null;
 
         const { rows: detailTemplates } = await pool.query(
-            `SELECT detail.path, detail.route_param AS "routeParam", detail.detail_parent_id AS "detailParentId",
+            `SELECT detail.id, detail.path, detail.appearance, detail.route_param AS "routeParam", detail.detail_parent_id AS "detailParentId",
                     list.material_section_id AS "materialSectionId"
              FROM pages detail
              JOIN pages list ON list.id = detail.detail_parent_id AND list.site_id = detail.site_id
@@ -58,20 +58,21 @@ export default async function getSitePreview(c) {
         ]));
         const pages = Object.fromEntries(attachMaterialLists(
             rows.filter(({ path }) => path !== null), materialsBySection, detailTemplates,
-        ).map(({ path, title, content, materials, materialSectionId }) => [path, {
+        ).map(({ path, title, content, materials, materialSectionId, appearance = {} }) => [path, {
             path, title, content, materials, materialSectionId,
+            ...(Object.keys(appearance).length ? { theme: getPageTheme(settings, appearance) } : {}),
         }]));
 
         return c.json({
             pages,
-            detailTemplates,
+            detailTemplates: detailTemplates.map(({ appearance = {}, ...template }) => ({
+                ...template, ...(Object.keys(appearance).length ? { theme: getPageTheme(settings, appearance) } : {}),
+            })),
             materialSections,
             theme: {
-                mode: settings.themeMode,
+                ...getPageTheme(settings),
                 separatorUrl: settings.separatorMediaId ? `/api/media/${settings.separatorMediaId}` : '',
                 separatorMimeType: separator?.mime_type ?? null,
-                light: getThemeTokens(settings.themeId, 'light', settings.overrides),
-                dark: getThemeTokens(settings.themeId, 'dark', settings.overrides),
             },
             contacts: await getSiteContacts(site.id),
             catalog: await getCatalog(site.id, { includeHidden: false }),

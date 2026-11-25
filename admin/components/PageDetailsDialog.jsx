@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import PageDetailsForm from './PageDetailsForm.jsx';
 import styles from './PageDetailsDialog.module.css';
 
-export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChange }) {
+export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChange, onAppearancePreview }) {
     const dialogRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,6 +30,7 @@ export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChan
                 handleEscape={false}
                 onSubmittingChange={setIsSubmitting}
                 onDirtyChange={onDirtyChange}
+                onAppearancePreview={onAppearancePreview}
                 onSaved={onSaved}
                 onCancel={onCancel}
             />
