@@ -5,6 +5,7 @@ import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
 import { isPlainObject } from "../../shared/pageContent.mjs";
 import { validateDocumentContent } from "../../shared/pageTemplates.mjs";
+import { putPageLayout } from "./pageTemplates.mjs";
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");
@@ -19,6 +20,17 @@ export default async function putPage(c) {
     body = await c.req.json();
   } catch {
     return c.json({ error: "Invalid request", details: [{ path: "body", code: "invalid_json", message: "Тело запроса должно содержать корректный JSON." }] }, 400);
+  }
+
+  if (isPlainObject(body)) {
+    const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId'];
+    if (Object.keys(body).some((key) => !fields.includes(key))) {
+      return c.json({ error: 'Неизвестные поля запроса' }, 400);
+    }
+    if (Object.keys(body).some((key) => key !== 'content')
+        || (Array.isArray(body.content) && body.content.some((block) => block?.part === '@kroy/header'))) {
+      return putPageLayout(c, pageId, body);
+    }
   }
 
   const details = isPlainObject(body)

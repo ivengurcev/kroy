@@ -28,7 +28,8 @@ test('SitePage saves only the active form and retains other settings drafts when
         },
         async apiRequest(url, options) {
             requests.push({ url, body: JSON.parse(options.body) });
-            return { ok: true, json: async () => JSON.parse(options.body) };
+            return { ok: true, json: async () => url.endsWith('/default-template')
+                ? { defaultTemplateId: JSON.parse(options.body).templateId } : JSON.parse(options.body) };
         },
     };
     globalThis.__kroySitePageTest = runtime;
@@ -41,9 +42,12 @@ test('SitePage saves only the active form and retains other settings drafts when
         if (oldWindow === undefined) delete globalThis.window; else globalThis.window = oldWindow;
         if (oldDocument === undefined) delete globalThis.document; else globalThis.document = oldDocument;
     });
-    t.mock.method(globalThis, 'fetch', async (url) => ({ ok: true, json: async () => url.endsWith('/theme')
-        ? { settings: { themeId: 'calm', themeMode: 'light', overrides: { light: { '--site-color-bg': '#abcdef' }, shared: { '--site-font-size-base': '20px', '--site-radius-base': '12px' } } }, themes: [{ id: 'calm' }, { id: 'other' }] }
-        : { site: { name: 'Site' }, contacts: { address: 'Saved', socials: [] }, seo: {} } }));
+    t.mock.method(globalThis, 'fetch', async (url) => ({ ok: true, json: async () => {
+        if (url.endsWith('/theme')) return { settings: { themeId: 'calm', themeMode: 'light', overrides: { light: { '--site-color-bg': '#abcdef' }, shared: { '--site-font-size-base': '20px', '--site-radius-base': '12px' } } }, themes: [{ id: 'calm' }, { id: 'other' }] };
+        if (url.endsWith('/templates')) return { defaultTemplateId: requests.findLast(({ url }) => url.endsWith('/default-template'))?.body.templateId ?? 'main',
+            templates: [{ id: 'main', name: 'Основной' }, { id: 'extra', name: 'Другой' }] };
+        return { site: { name: 'Site' }, contacts: { address: 'Saved', socials: [] }, seo: {} };
+    } }));
 
     const result = await build({
         entryPoints: ['admin/pages/SitePage.jsx'], bundle: true, write: false, format: 'esm', jsx: 'automatic',
@@ -113,15 +117,16 @@ test('SitePage saves only the active form and retains other settings drafts when
     assert.deepEqual(requests.map(({ url }) => url), ['/api/site/seo', '/api/site/theme', '/api/site/contact']);
     assert.equal(tree.props.hasUnsavedChanges, false);
     assert.equal(listeners.has('beforeunload'), false);
-    switchTo('footer');
-    named('FooterSettings').props.onChange({ description: 'Footer draft' }); render();
+    switchTo('overview'); await settled();
+    const select = () => find((node) => node.type === 'select');
+    select().props.onChange({ target: { value: 'extra' } }); render();
     switchTo('contacts');
     named('ContactSettings').props.onChange({ address: 'Another contact draft' }); render();
-    switchTo('footer');
-    assert.equal(named('FooterSettings').props.value.description, 'Footer draft');
-    named('FooterSettings').props.onSave(); await settled();
-    assert.equal(requests.at(-1).url, '/api/site/footer');
-    assert.deepEqual(requests.at(-1).body, { description: 'Footer draft' });
+    switchTo('overview');
+    assert.equal(select().props.value, 'extra');
+    tree.props.onSave(); await settled(); await settled();
+    assert.equal(requests.at(-1).url, '/api/site/default-template');
+    assert.deepEqual(requests.at(-1).body, { templateId: 'extra', expectedDefaultTemplateId: 'main' });
     assert.equal(tree.props.isDirty, false);
     assert.equal(tree.props.hasUnsavedChanges, true);
     switchTo('contacts');

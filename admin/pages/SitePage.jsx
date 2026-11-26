@@ -15,7 +15,6 @@ import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
 import SeoFields from '../components/SeoFields.jsx';
 import { siteSettingsDirty } from './siteSettingsState.mjs';
-import FooterSettings from '../components/FooterSettings.jsx';
 
 function cloneSettings(settings) {
     return { themeId: settings.themeId, themeMode: settings.themeMode, separatorMediaId: settings.separatorMediaId ?? null, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
@@ -75,8 +74,8 @@ export default function SitePage() {
     const [section, setSection] = useState('appearance');
     const [seo, setSeo] = useState(null);
     const [savedSeo, setSavedSeo] = useState(null);
-    const [footer, setFooter] = useState(null);
-    const [savedFooter, setSavedFooter] = useState(null);
+    const [layoutList, setLayoutList] = useState(null);
+    const [defaultLayout, setDefaultLayout] = useState('');
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -88,12 +87,23 @@ export default function SitePage() {
             return Promise.all([themeResponse.json(), siteResponse.json()]);
         }).then(([themeResult, siteResult]) => {
             setSeo(siteResult.seo ?? {}); setSavedSeo(siteResult.seo ?? {});
-            setFooter(siteResult.footer ?? {}); setSavedFooter(siteResult.footer ?? {});
             const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
             setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
         }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
         return () => controller.abort();
     }, []);
+    useEffect(() => {
+        if (pathname !== '/admin/overview' || layoutList) return undefined;
+        const controller = new AbortController();
+        fetch('/api/templates', { signal: controller.signal })
+            .then(async (response) => {
+                if (!response.ok) throw new Error('Не удалось загрузить шаблоны сайта.');
+                return response.json();
+            })
+            .then((list) => { setLayoutList(list); setDefaultLayout(list.defaultTemplateId); })
+            .catch((loadError) => { if (loadError.name !== 'AbortError') setError(loadError.message); });
+        return () => controller.abort();
+    }, [pathname, layoutList]);
     useEffect(() => {
         const next = SITE_SETTINGS_SECTIONS.find(({ path }) => path === pathname)?.id ?? 'appearance';
         setSection(next);
@@ -101,8 +111,8 @@ export default function SitePage() {
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const seoDirty = Boolean(seo && savedSeo && JSON.stringify(seo) !== JSON.stringify(savedSeo));
-    const footerDirty = Boolean(footer && savedFooter && JSON.stringify(footer) !== JSON.stringify(savedFooter));
-    const { active: sectionDirty, any: dirty } = siteSettingsDirty(section, { appearance: themeDirty, contacts: contactsDirty, seo: seoDirty, footer: footerDirty });
+    const defaultDirty = Boolean(layoutList && defaultLayout !== layoutList.defaultTemplateId);
+    const { active: sectionDirty, any: dirty } = siteSettingsDirty(section, { appearance: themeDirty, contacts: contactsDirty, seo: seoDirty, overview: defaultDirty });
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
@@ -112,14 +122,19 @@ export default function SitePage() {
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() {
         if (saveStatus === 'saving' || !sectionDirty) return;
-        if (section === 'footer') {
-            const requestFooter = JSON.stringify(footer);
+        if (section === 'overview') {
+            const count = layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.inherited ?? 0;
+            if (count && !window.confirm(`Изменение затронет страницы, наследующие шаблон сайта (${count}, включая детальные страницы и все их материалы). Продолжить?`)) return;
             setSaveStatus('saving'); setError('');
             try {
-                const response = await apiRequest('/api/site/footer', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: requestFooter });
-                if (!response.ok) throw new Error(await formResponseError(response, document.getElementById('footer-form'), 'Не удалось сохранить футер.'));
+                const response = await apiRequest('/api/site/default-template', {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ templateId: defaultLayout, expectedDefaultTemplateId: layoutList.defaultTemplateId }),
+                });
+                if (!response.ok) throw new Error(response.status === 409 ? 'Шаблон по умолчанию изменился. Откройте настройки заново.' : 'Не удалось сохранить шаблон по умолчанию.');
                 const result = await response.json();
-                setSavedFooter(result); setFooter((current) => JSON.stringify(current) === requestFooter ? result : current);
+                setLayoutList(null);
+                setDefaultLayout(result.defaultTemplateId);
                 setSaveStatus('success');
             } catch (error) { setError(error.message); setSaveStatus('error'); }
             return;
@@ -162,14 +177,26 @@ export default function SitePage() {
     }
     const activeMode = draft?.themeMode;
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
-    const formId = { contacts: 'contact-form', seo: 'seo-form', appearance: 'appearance-form', footer: 'footer-form' }[section];
+    const formId = { contacts: 'contact-form', seo: 'seo-form', appearance: 'appearance-form', overview: 'default-template-form' }[section];
     const saveAction = formId
         ? () => document.getElementById(formId)?.requestSubmit()
         : undefined;
-    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={sectionDirty} hasUnsavedChanges={dirty} saveStatus={saveStatus} onSave={saveAction} formId={formId}>
-        {section === 'overview' && <Overview siteData={siteData} />}
+    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={sectionDirty} hasUnsavedChanges={dirty} saveStatus={saveStatus} onSave={saveAction} formId={formId}
+        footerActions={section === 'overview' ? <>
+            <Button type="submit" form={formId} variant="primary" disabled={!defaultDirty || saveStatus === 'saving'}>Сохранить</Button>
+            <Button disabled={!defaultDirty || saveStatus === 'saving'} onClick={() => { setDefaultLayout(layoutList.defaultTemplateId); clearSaveError(); }}>Отмена</Button>
+        </> : undefined}>
+        {section === 'overview' && <>
+            <Overview siteData={siteData} />
+            {layoutList && <AdminPanel as="form" id={formId} onSubmit={(event) => { event.preventDefault(); save(); }}>
+                <label className={styles.formField}>Шаблон по умолчанию
+                    <select disabled={saveStatus === 'saving'} value={defaultLayout} onChange={(event) => { setDefaultLayout(event.target.value); clearSaveError(); }}>
+                        {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+                    </select>
+                </label>
+            </AdminPanel>}
+        </>}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
-        {section === 'footer' && footer && <FooterSettings value={footer} onChange={(next) => { clearSaveError(); setFooter(next); }} onSave={save} />}
         {section === 'catalog' && <CatalogEditor />}
         {section === 'seo' && seo && <AdminPanel as="form" id="seo-form" className={styles.contactPanel} onSubmit={(event) => { event.preventDefault(); save(); }}><SeoFields value={seo} onChange={(next) => { clearSaveError(); setSeo(next); }} siteData={siteData} /></AdminPanel>}
         {section === 'appearance' && draft && selectedTheme && <ValidatedForm id="appearance-form" className={styles.content} onSubmit={(event) => { event.preventDefault(); save(); }}>

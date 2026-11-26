@@ -1,41 +1,35 @@
-import { useEffect, useState } from 'react';
-import AdminPanel from '../ui/AdminPanel.jsx';
 import ListField from '../editor/ListField.jsx';
 import { availableFooterPages, FOOTER_DOCUMENTS } from '../../shared/footerSettings.mjs';
 import styles from './FooterSettings.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
 
-export default function FooterSettings({ value, onChange, onSave }) {
-    const [pages, setPages] = useState([]);
-    const [status, setStatus] = useState('loading');
-    useEffect(() => {
-        const controller = new AbortController();
-        fetch('/api/pages', { signal: controller.signal })
-            .then(async (response) => {
-                if (!response.ok) throw new Error();
-                const result = await response.json();
-                if (!Array.isArray(result)) throw new Error();
-                setPages(availableFooterPages(result));
-                setStatus('success');
-            })
-            .catch((error) => { if (error.name !== 'AbortError') setStatus('error'); });
-        return () => controller.abort();
-    }, []);
+function pageSelect(pages, label, name, id, onSelect, required = false) {
+    return <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
+        <span>{label}</span>
+        <select name={name} value={id ?? ''} required={required} onChange={(event) => onSelect(event.target.value || null)}>
+            <option value="">{required ? 'Выберите страницу' : 'Не выбрана'}</option>
+            {id && !pages.some((page) => page.id === id) && <option value={id} disabled>Недоступная страница — выберите другую</option>}
+            {pages.map((page) => <option key={page.id} value={page.id}>{page.title} — {page.path}</option>)}
+        </select>
+    </label>;
+}
+
+export function PageNavigationField({ pages, value, onChange }) {
+    const eligible = availableFooterPages(pages);
+    return <ListField label="Навигация" itemLabel="Страница" value={value ?? []}
+        createItem={() => ({ pageId: null })}
+        itemSummary={({ pageId }) => eligible.find(({ id }) => id === pageId)?.title ?? 'Недоступная страница'}
+        onChange={onChange}
+        renderItem={(item, index, change) => pageSelect(eligible, 'Страница', 'pageId', item.pageId, (pageId) => change({ pageId }), true)} />;
+}
+
+export default function FooterSettings({ value, onChange, pages }) {
+    const eligible = availableFooterPages(pages);
     const settings = value ?? {};
     const documents = settings.documents ?? {};
     const legal = settings.legal ?? {};
     const update = (name, next) => onChange({ ...settings, [name]: next });
-    const pageName = (id) => pages.find((page) => page.id === id)?.title ?? 'Недоступная страница';
-    function pageSelect(label, name, id, onSelect, required = false) {
-        return <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
-            <span>{label}</span>
-            <select name={name} value={id ?? ''} required={required} disabled={status !== 'success'} onChange={(event) => onSelect(event.target.value || null)}>
-                <option value="">{required ? 'Выберите страницу' : 'Не выбрана'}</option>
-                {id && !pages.some((page) => page.id === id) && <option value={id} disabled>Недоступная страница — выберите другую</option>}
-                {pages.map((page) => <option key={page.id} value={page.id}>{page.title} — {page.path}</option>)}
-            </select>
-        </label>;
-    }
+    const pageName = (id) => eligible.find((page) => page.id === id)?.title ?? 'Недоступная страница';
     function textField(label, name, text, maxLength, onUpdate) {
         return <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
             <span>{label}</span>
@@ -43,24 +37,18 @@ export default function FooterSettings({ value, onChange, onSave }) {
         </label>;
     }
 
-    return <AdminPanel as="form" id="footer-form" className={styles.contactPanel} onSubmit={(event) => { event.preventDefault(); onSave(); }}>
-        <p>Футер отображается на всех страницах. Ссылка «Создано на Oysite» обязательна.</p>
+    return <div className={styles.contactPanel}>
         <div className={styles.formGrid}>
             <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                 <span>Краткое описание сайта</span>
                 <textarea rows={3} maxLength={1000} value={settings.description ?? ''} onChange={(event) => update('description', event.target.value)} />
             </label>
         </div>
-        {status === 'loading' && <p role="status">Загрузка страниц…</p>}
-        {status === 'error' && <p role="alert">Не удалось загрузить страницы. Обновите раздел перед изменением ссылок.</p>}
-        <ListField label="Навигация" itemLabel="Страница" value={settings.navigation ?? []}
-            createItem={() => ({ pageId: null })} itemSummary={(item) => pageName(item.pageId)}
-            onChange={(navigation) => update('navigation', navigation)}
-            renderItem={(item, index, change) => pageSelect('Страница', 'pageId', item.pageId, (pageId) => change({ pageId }), true)} />
+        <PageNavigationField pages={pages} value={settings.navigation} onChange={(navigation) => update('navigation', navigation)} />
         <h2>Правовые документы</h2>
         <div className={styles.formGrid}>
             {Object.entries(FOOTER_DOCUMENTS).map(([name, label]) => <div key={name}>
-                {pageSelect(label, `documents.${name}`, documents[name], (pageId) => update('documents', { ...documents, [name]: pageId }))}
+                {pageSelect(eligible, label, `documents.${name}`, documents[name], (pageId) => update('documents', { ...documents, [name]: pageId }))}
             </div>)}
         </div>
         <ListField label="Другие документы" itemLabel="Документ" value={documents.additional ?? []}
@@ -78,7 +66,7 @@ export default function FooterSettings({ value, onChange, onSave }) {
                 {typeof item.url === 'string' ? <>
                     <label className={styles.formField}>Название<input name="label" required maxLength={200} value={item.label ?? ''} onChange={(event) => change({ label: event.target.value })} /></label>
                     <label className={styles.formField}>Ссылка<input name="url" type="url" required pattern="https?://.+" maxLength={2000} value={item.url} onChange={(event) => change({ url: event.target.value })} /></label>
-                </> : pageSelect('Страница', 'pageId', item.pageId, (pageId) => change({ pageId }), true)}
+                </> : pageSelect(eligible, 'Страница', 'pageId', item.pageId, (pageId) => change({ pageId }), true)}
             </>} />
         <h2>Реквизиты</h2>
         <div className={styles.formGrid}>
@@ -87,5 +75,5 @@ export default function FooterSettings({ value, onChange, onSave }) {
             {textField('ОГРН/ОГРНИП', 'legal.registrationNumber', legal.registrationNumber, 15, (registrationNumber) => update('legal', { ...legal, registrationNumber }))}
         </div>
         <p>Телефон, email, адрес и социальные сети берутся из раздела <a href="/admin/contacts">«Контакты»</a>.</p>
-    </AdminPanel>;
+    </div>;
 }

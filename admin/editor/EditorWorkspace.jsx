@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Page from '../../site/runtime/Page.jsx';
-import SiteRoot, { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
-import { footerBlock } from '../../shared/footerSettings.mjs';
+import { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
+import { availableFooterPages, projectHeader } from '../../shared/footerSettings.mjs';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
@@ -78,6 +78,12 @@ export default function EditorWorkspace({
     theme,
     contacts,
     footer,
+    footerPreview,
+    sharedBefore = [],
+    sharedAfter = [],
+    templateName,
+    linkPages = [],
+    siteName,
     globalTheme,
     catalog,
     reviews,
@@ -89,6 +95,8 @@ export default function EditorWorkspace({
     onPropChange,
     onViewChange,
     onViewPropChange,
+    onFooterChange,
+    onSharedPropChange,
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
@@ -104,7 +112,7 @@ export default function EditorWorkspace({
         return () => cancelAnimationFrame(frame);
     }, [editingPartId]);
     const record = page?.type === 'detail' ? preview?.record : null;
-    const context = { params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
+    const context = { siteName, params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
     const previewMessage = page?.type === 'detail' && {
         loading: 'Загрузка материала для предпросмотра…',
         empty: 'Нет опубликованных материалов для предпросмотра. Опубликуйте материал в настройках сайта.',
@@ -171,13 +179,17 @@ export default function EditorWorkspace({
         );
     }
 
-    return (
-        <div className={styles.workspace}>
-            <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
-                {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
-                {content.flatMap((item, index) => [
-                    insertionPoint(index, `insertion-${item.id}`),
-                    <AdminPanel
+    const eligible = availableFooterPages(linkPages);
+    function renderBlock(item, index, kind) {
+        if (item.slot) return <Card key={item.id}>Содержимое страницы</Card>;
+        const own = kind === 'own';
+        const isFooter = kind === 'footer';
+        const notice = isFooter ? 'Общий элемент сайта. Изменения затронут все страницы сайта'
+            : own ? undefined : `Общий элемент шаблона. Изменения затронут все страницы, использующие шаблон „${templateName}“`;
+        const fields = metadata[item.part]?.fields ?? {};
+        const displayed = isFooter ? { ...item, props: footerPreview } : projectHeader(item, eligible);
+        const canEdit = metadata[item.part] && (own || isFooter || Object.keys(fields).length);
+        return <AdminPanel
                         ref={item.id === editingPartId ? editingPartRef : undefined}
                         className={styles.previewPart}
                         noPadding
@@ -194,10 +206,11 @@ export default function EditorWorkspace({
                                 isFirst={index === 0}
                                 isLast={index === content.length - 1}
                                 isEditing={item.id === editingPartId}
-                                onEdit={editPart}
+                                onEdit={canEdit ? editPart : undefined}
                                 onClose={closePartEditor}
-                                onMove={onMovePart}
-                                onRemove={removePart}
+                                onMove={own ? onMovePart : undefined}
+                                onRemove={own ? removePart : undefined}
+                                notice={notice}
                             />
                         </StickyPartHeader>
                         {item.id === editingPartId && metadata[item.part] ? (
@@ -207,14 +220,18 @@ export default function EditorWorkspace({
                                         key={item.id}
                                         title={partTitle(item.part, metadata)}
                                         props={item.props}
-                                        fields={metadata[item.part]?.fields ?? {}}
+                                        fields={fields}
+                                        part={item.part}
+                                        pages={linkPages}
+                                        propsOnly={!own}
+                                        onPropsChange={isFooter ? onFooterChange : undefined}
                                         partContract={metadata[item.part]?.contract}
                                         view={item.view}
                                         widgetMetadata={widgetMetadata}
                                         catalog={catalog}
                                         reviews={reviews}
                     materialSections={materialSections}
-                                        onPropChange={(name, value) => onPropChange(item.id, name, value)}
+                                        onPropChange={(name, value) => (own ? onPropChange : onSharedPropChange)(item.id, name, value)}
                                         onViewChange={(name) => onViewChange(item.id, name)}
                                         onViewPropChange={(name, value) => onViewPropChange(item.id, name, value)}
                                     />
@@ -222,17 +239,26 @@ export default function EditorWorkspace({
                             </div>
                         ) : (
                             <div className={styles.partContent} inert={false}>
-                                <SiteRoot theme={theme}>
-                                    <Page content={[item]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={preview?.materials} materialSectionId={page?.materialSectionId} record={record} context={context} />
-                                </SiteRoot>
+                                 <SiteTheme theme={own ? theme : globalTheme}>
+                                     <Page content={[displayed]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={preview?.materials} materialSectionId={page?.materialSectionId} record={record} context={context} />
+                                 </SiteTheme>
                             </div>
                         )}
-                    </AdminPanel>,
+                    </AdminPanel>;
+    }
+
+    return (
+        <div className={styles.workspace}>
+            <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
+                {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
+                {sharedBefore.map((item, index) => renderBlock(item, index, 'shared'))}
+                {content.flatMap((item, index) => [
+                    insertionPoint(index, `insertion-${item.id}`),
+                    renderBlock(item, index, 'own'),
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
-                <SiteTheme theme={globalTheme}>
-                    {footer && <Page content={[footerBlock(footer)]} parts={parts} widgets={widgets} contacts={contacts} />}
-                </SiteTheme>
+                {sharedAfter.map((item, index) => renderBlock(item, index, 'shared'))}
+                {footer && renderBlock(footer, 0, 'footer')}
             </section>
 
             {picker && (

@@ -1,4 +1,4 @@
-const SETTINGS_PATHS = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/footer'];
+const SETTINGS_PATHS = ['/admin/overview', '/admin/appearance', '/admin/contacts', '/admin/seo'];
 
 export function siteSettingsWorkspaceKey(pathname) {
     return SETTINGS_PATHS.includes(pathname) ? 'site-settings' : pathname;

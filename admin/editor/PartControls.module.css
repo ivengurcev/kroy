@@ -14,3 +14,41 @@
     pointer-events: none;
     transition: opacity 120ms ease;
 }
+.notice {
+    position: relative;
+    display: inline-flex;
+}
+
+.notice button {
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    background: #ffe06b;
+    color: #392500;
+    font: inherit;
+    font-weight: 700;
+    min-width: 34px;
+    min-height: 34px;
+    cursor: help;
+}
+
+.notice [role='tooltip'] {
+    position: absolute;
+    inset-block-start: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 2;
+    width: max-content;
+    max-width: min(240px, 65vw);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: #392500;
+    color: #fff;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.notice:hover [data-dismissed='false'],
+.notice:focus-within [data-dismissed='false'] {
+    opacity: 1;
+}

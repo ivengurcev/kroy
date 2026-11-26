@@ -1,6 +1,7 @@
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import styles from './PartControls.module.css';
+import { useId, useState } from 'react';
 
 export default function PartControls({
     className = '',
@@ -12,10 +13,20 @@ export default function PartControls({
     onClose,
     onMove,
     onRemove,
+    notice,
 }) {
+    const tooltipId = useId();
+    const [dismissed, setDismissed] = useState(false);
     return (
         <div className={`${styles.controls} ${className}`} data-editor-control>
-            <Button
+            {notice && <span className={styles.notice}
+                onMouseEnter={() => setDismissed(false)} onFocus={() => setDismissed(false)}
+                onKeyDown={(event) => { if (event.key === 'Escape') setDismissed(true); }}>
+                <button type="button" aria-label="Область действия изменений" aria-describedby={tooltipId}
+                    onClick={() => setDismissed(false)}>⚠</button>
+                <span id={tooltipId} role="tooltip" data-dismissed={dismissed}>{notice}</span>
+            </span>}
+            {onEdit && <Button
                 variant="iconCompact"
                 title={isEditing ? 'Закрыть редактор запчасти' : 'Редактировать свойства запчасти'}
                 aria-label={isEditing ? 'Закрыть редактор запчасти' : 'Редактировать свойства запчасти'}
@@ -27,8 +38,8 @@ export default function PartControls({
                 }}
             >
                 <Icon name={isEditing ? 'close' : 'edit'} size={18} />
-            </Button>
-            <Button
+            </Button>}
+            {onMove && <><Button
                 variant="iconCompact"
                 aria-label="Переместить запчасть вверх"
                 title="Переместить запчасть вверх"
@@ -40,8 +51,8 @@ export default function PartControls({
                 }}
             >
                 <Icon name="up" size={18} />
-            </Button>
-            <Button
+            </Button></>}
+            {onRemove && <Button
                 variant="iconCompact"
                 aria-label="Переместить запчасть вниз"
                 title="Переместить запчасть вниз"
@@ -53,7 +64,7 @@ export default function PartControls({
                 }}
             >
                 <Icon name="down" size={18} />
-            </Button>
+            </Button>}
             <Button
                 variant="iconCompact"
                 aria-label="Удалить запчасть"

@@ -3,8 +3,8 @@ import test from 'node:test';
 import { isPreservedSiteSettingsNavigation, siteSettingsDirty, siteSettingsWorkspaceKey } from './siteSettingsState.mjs';
 
 test('save availability belongs to the active section; global warnings retain all changes', () => {
-    for (const changed of ['appearance', 'contacts', 'seo', 'footer']) {
-        const changes = { appearance: false, contacts: false, seo: false, footer: false, [changed]: true };
+    for (const changed of ['appearance', 'contacts', 'seo', 'overview']) {
+        const changes = { appearance: false, contacts: false, seo: false, overview: false, [changed]: true };
         for (const section of ['appearance', 'contacts', 'seo', 'footer', 'overview']) {
             assert.deepEqual(siteSettingsDirty(section, changes), { active: section === changed, any: true });
         }
@@ -12,7 +12,7 @@ test('save availability belongs to the active section; global warnings retain al
     assert.deepEqual(siteSettingsDirty('seo', { appearance: false, contacts: false, seo: false }), { active: false, any: false });
 });
 test('switching settings sections does not remount SitePage; unrelated routes retain their keys', () => {
-    const keys = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/footer'].map(siteSettingsWorkspaceKey);
+    const keys = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/overview'].map(siteSettingsWorkspaceKey);
     assert.equal(new Set(keys).size, 1);
     assert.equal(siteSettingsWorkspaceKey('/admin/pages/page-id'), '/admin/pages/page-id');
     assert.equal(siteSettingsWorkspaceKey('/admin/materials'), '/admin/materials');
@@ -20,13 +20,13 @@ test('switching settings sections does not remount SitePage; unrelated routes re
 
 test('only same-origin transitions within preserved settings routes skip confirmation', () => {
     const url = (path) => new URL(path, 'https://site.example.org');
-    const settings = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/footer'];
+    const settings = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/overview'];
     for (const from of settings) {
         for (const to of settings) {
             assert.equal(isPreservedSiteSettingsNavigation(url(from), url(`${to}?tab=details#field`)), true);
             assert.equal(siteSettingsWorkspaceKey(url(from).pathname), siteSettingsWorkspaceKey(url(to).pathname));
         }
-        for (const other of ['/admin/materials', '/admin/pages/page-id', '/admin/catalog', '/admin/overview', '/admin/seo/nested', '/admin/seo/']) {
+        for (const other of ['/admin/materials', '/admin/pages/page-id', '/admin/catalog', '/admin/templates', '/admin/seo/nested', '/admin/seo/']) {
             assert.equal(isPreservedSiteSettingsNavigation(url(from), url(other)), false);
             assert.equal(isPreservedSiteSettingsNavigation(url(other), url(from)), false);
         }

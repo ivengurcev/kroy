@@ -13,5 +13,6 @@ export async function readApiError(response) {
     const error = new Error(description || body.error || `Ошибка сохранения (HTTP ${response.status}).`);
     error.details = details;
     error.status = response.status;
+    error.code = body.code;
     return error;
 }

@@ -36,6 +36,11 @@ export default function AdminShell({
     onSave,
     onPageDetailsChange,
     onPageAppearancePreview,
+    isTemplate,
+    editorSettings,
+    workspaceSettings,
+    onCancel,
+    saveBlocked,
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [detailsDirty, setDetailsDirty] = useState(false);
@@ -81,8 +86,9 @@ export default function AdminShell({
 
     return (
         <div className={styles.shell}>
-                <div className={styles.actions}>{actions}</div>
+                {loadStatus === 'success' && <div className={styles.actions}>{!isTemplate && actions}{editorSettings}</div>}
                 <EditorWorkspace
+                    {...workspaceSettings}
                     page={page}
                     content={content}
                     metadata={metadata}
@@ -108,8 +114,9 @@ export default function AdminShell({
                 {detailsOpen && <PageDetailsDialog page={page} onDirtyChange={setDetailsDirty} onAppearancePreview={onPageAppearancePreview} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
                 {deleteError && <p role="alert">{deleteError}</p>}
                 {loadStatus === 'success' && <ActionFooter isDirty={isDirty} saveStatus={saveStatus}>
-                    {page.id && page.path !== '/' && <Button variant="danger" disabled={deleting || saveStatus === 'saving'} onClick={deletePage}><Icon name="delete" /> Удалить</Button>}
-                    <Button variant="primary" disabled={!isDirty || deleting || saveStatus === 'saving'} onClick={onSave}><Icon name="save" /> Сохранить</Button>
+                    {!isTemplate && page.id && page.path !== '/' && <Button variant="danger" disabled={deleting || saveStatus === 'saving'} onClick={deletePage}><Icon name="delete" /> Удалить</Button>}
+                    <Button disabled={!isDirty || saveStatus === 'saving'} onClick={onCancel}>Отмена</Button>
+                    <Button variant="primary" disabled={!isDirty || saveBlocked || deleting || saveStatus === 'saving'} onClick={onSave}><Icon name="save" /> Сохранить</Button>
                 </ActionFooter>}
         </div>
     );

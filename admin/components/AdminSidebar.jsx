@@ -4,6 +4,7 @@ import styles from './AdminSidebar.module.css';
 const groups = [
     { label: 'Основное', items: [
         { label: 'Страницы', path: '/admin/pages', icon: 'pages', match: (path) => path === '/admin' || path === '/admin/pages' || path.startsWith('/admin/pages/') },
+        { label: 'Шаблоны', path: '/admin/templates', icon: 'pages', match: (path) => path === '/admin/templates' || path.startsWith('/admin/templates/') },
     ] },
     { label: 'Содержимое', items: [
         { label: 'Материалы', path: '/admin/materials', icon: 'materials', match: (path) => path === '/admin/materials' || path.startsWith('/admin/materials/') },
@@ -12,6 +13,7 @@ const groups = [
         { label: 'Отзывы', path: '/admin/reviews', icon: 'reviews', match: (path) => path === '/admin/reviews' },
     ] },
     { label: 'Настройки', items: [
+        { label: 'Главное', path: '/admin/overview', icon: 'home', match: (path) => path === '/admin/overview' },
         { label: 'Оформление', path: '/admin/appearance', icon: 'sun', match: (path) => path === '/admin/appearance' },
         { label: 'Контакты', path: '/admin/contacts', icon: 'phone', match: (path) => path === '/admin/contacts' },
         { label: 'Платежи', path: '/admin/payments', icon: 'payments', match: (path) => path === '/admin/payments' },

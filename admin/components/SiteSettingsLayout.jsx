@@ -4,7 +4,6 @@ export const SITE_SETTINGS_SECTIONS = [
     { id: 'overview', label: 'Главное', icon: 'home', path: '/admin/overview' },
     { id: 'appearance', label: 'Оформление', icon: 'sun', path: '/admin/appearance' },
     { id: 'contacts', label: 'Контакты', icon: 'phone', path: '/admin/contacts' },
-    { id: 'footer', label: 'Футер', icon: 'settings', path: '/admin/footer' },
     { id: 'catalog', label: 'Каталог', icon: 'catalog', path: '/admin/catalog' },
     { id: 'payments', label: 'Платежи', icon: 'payments', path: '/admin/payments' },
     { id: 'reviews', label: 'Отзывы', icon: 'reviews', path: '/admin/reviews' },

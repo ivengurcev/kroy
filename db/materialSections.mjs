@@ -71,7 +71,11 @@ export async function hasMaterialSectionReferences(siteId, id, client = pool) {
                     WHERE block->>'part' = '@kroy/material-list'
                       AND block #>> '{props,sectionId}' = $2::text
                   ))
-            ) AS is_referenced`,
+             ) OR EXISTS (
+                 SELECT 1 FROM page_templates, LATERAL jsonb_array_elements(content) AS block
+                 WHERE site_id = $1 AND block->>'part' = '@kroy/material-list'
+                   AND lower(block #>> '{props,sectionId}') = $2::text
+             ) AS is_referenced`,
         [siteId, id],
     );
     return row?.is_referenced === true;

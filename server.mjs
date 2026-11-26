@@ -15,7 +15,7 @@ import restorePage from './server/api/restorePage.mjs';
 import { getSiteThemeSettings, patchSiteTheme } from './server/api/siteTheme.mjs';
 import getSiteSettings from './server/api/siteSettings.mjs';
 import { patchSiteSeo } from './server/api/siteSeo.mjs';
-import { patchSiteFooter } from './server/api/siteFooter.mjs';
+import { getTemplates, createTemplate, getTemplate, putTemplate, deleteTemplate, patchDefaultTemplate } from './server/api/pageTemplates.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './server/api/siteContact.mjs';
 import { deleteSiteCatalogCategory, deleteSiteCatalogProduct, getSiteCatalog, getSiteCatalogCategories, getSiteCatalogProducts, patchSiteCatalog, saveSiteCatalogCategory, saveSiteCatalogProduct } from './server/api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
@@ -133,11 +133,18 @@ await createApp({
             component: './admin/pages/SitePage.jsx',
         },
         {
-            path: '/admin/footer',
+            path: '/admin/templates',
             isPrivate: true,
             disableSSR: true,
-            title: 'Футер Oysite',
-            component: './admin/pages/SitePage.jsx',
+            title: 'Шаблоны Oysite',
+            component: './admin/pages/TemplatesPage.jsx',
+        },
+        {
+            path: '/admin/templates/:templateId',
+            isPrivate: true,
+            disableSSR: true,
+            title: 'Редактор шаблона Oysite',
+            component: './admin/pages/EditorPage.jsx',
         },
         {
             path: '/admin/seo',
@@ -257,7 +264,12 @@ await createApp({
             { method: 'GET', private: true },
             getSiteSettings,
         ],
-        ['/site/footer', { method: 'PATCH', private: true }, patchSiteFooter],
+        ['/templates', { method: 'GET', private: true }, getTemplates],
+        ['/templates', { method: 'POST', private: true }, createTemplate],
+        ['/templates/:templateId', { method: 'GET', private: true }, getTemplate],
+        ['/templates/:templateId', { method: 'PUT', private: true }, putTemplate],
+        ['/templates/:templateId', { method: 'DELETE', private: true }, deleteTemplate],
+        ['/site/default-template', { method: 'PATCH', private: true }, patchDefaultTemplate],
         [
             '/site/contact',
             { method: 'GET', private: true },

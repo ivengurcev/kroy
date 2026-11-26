@@ -3,6 +3,7 @@ import Tabs from '../ui/Tabs.jsx';
 import { spacingFields } from '../../shared/widgetDisplay.js';
 import Field from './Field.jsx';
 import styles from './PartEditor.module.css';
+import FooterSettings, { PageNavigationField } from '../components/FooterSettings.jsx';
 
 export default function PartEditor({
     title,
@@ -17,12 +18,16 @@ export default function PartEditor({
     onPropChange,
     onViewChange,
     onViewPropChange,
+    part,
+    pages = [],
+    propsOnly = false,
+    onPropsChange,
 }) {
     const compatibleWidgets = Object.entries(widgetMetadata)
         .filter(([, metadata]) => partContract && metadata.contract === partContract);
     const hasData = Object.keys(fields).length > 0;
     const [activeTab, setActiveTab] = useState(0);
-    const widgetTab = !hasData || activeTab === 1;
+    const widgetTab = !propsOnly && (!hasData || activeTab === 1);
     const widgetFields = widgetMetadata[view.name]?.fields ?? {};
     const specificFields = Object.entries(widgetFields).filter(([name]) => name !== 'heightMode');
     function viewField(name, schema) {
@@ -41,15 +46,18 @@ export default function PartEditor({
     return (
         <section className={styles.editor}>
             <h3>{title}</h3>
-            <Tabs
+            {!propsOnly && <Tabs
                 items={hasData ? [{ label: 'Данные' }, { label: 'Виджет' }] : [{ label: 'Виджет' }]}
                 activeIndex={hasData ? activeTab : 0}
                 ariaLabel="Настройки запчасти"
                 onSelect={setActiveTab}
-            />
+            />}
 
             <div className={styles.section} hidden={widgetTab}>
-                {Object.entries(fields).map(([name, schema]) => (
+                {part === '@kroy/footer' ? <FooterSettings pages={pages} value={props} onChange={onPropsChange} /> : Object.entries(fields).map(([name, schema]) => (
+                    part === '@kroy/header' && name === 'navigation'
+                        ? <PageNavigationField key={name} pages={pages} value={props[name]} onChange={(value) => onPropChange(name, value)} />
+                        :
                     <Field
                         key={name}
                         name={name}
@@ -63,7 +71,7 @@ export default function PartEditor({
                 ))}
             </div>
 
-            {compatibleWidgets.length > 0 && (
+            {!propsOnly && compatibleWidgets.length > 0 && (
                 <div className={styles.section} hidden={!widgetTab}>
                     <label className={styles.viewField}>
                         Виджет

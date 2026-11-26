@@ -12,7 +12,7 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
     const result = await build({
         entryPoints: [new URL('./PartEditor.jsx', import.meta.url).pathname],
         outfile: outfile.pathname, bundle: true, write: false, format: 'esm',
-        platform: 'node', packages: 'external', jsx: 'automatic',
+        platform: 'node', packages: 'external', jsx: 'automatic', loader: { '.svg': 'text' },
         plugins: [{
             name: 'field-isolation',
             setup(build) {

@@ -89,8 +89,15 @@ export default async function getPage(c) {
     const { rows } = await pool.query(
        `SELECT p.id, p.site_id, p.path, p.title, p.content, p.seo, p.appearance,
               p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId",
-              p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam"
+              p.detail_parent_id AS "detailParentId", p.route_param AS "routeParam",
+              p.template_mode AS "templateMode", p.template_id AS "templateId",
+              CASE p.template_mode
+                WHEN 'template' THEN p.template_id
+                WHEN 'inherit' THEN COALESCE(s.default_template_id,
+                    (SELECT id FROM page_templates WHERE site_id = s.id AND is_main))
+              END AS "effectiveTemplateId"
        FROM pages p
+       JOIN sites s ON s.id = p.site_id
        JOIN domains d ON d.site_id = p.site_id
        WHERE ${condition}
          AND p.deleted_at IS NULL
