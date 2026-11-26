@@ -329,7 +329,9 @@ CREATE TABLE public.sites (
     order_notification_email text,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
     separator_media_id uuid,
+    footer_settings jsonb DEFAULT '{}'::jsonb NOT NULL,
     CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
+    CONSTRAINT sites_footer_settings_check CHECK ((jsonb_typeof(footer_settings) = 'object'::text)),
     CONSTRAINT sites_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
     CONSTRAINT sites_theme_overrides_check CHECK ((jsonb_typeof(theme_overrides) = 'object'::text))
@@ -927,4 +929,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611130003'),
     ('202611220001'),
     ('202611220002'),
-    ('202611240001');
+    ('202611240001'),
+    ('202611260001');

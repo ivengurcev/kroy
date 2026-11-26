@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { getPageTheme } from '../themes/themeRegistry.mjs';
 
 // Exercise the existing navigation/effect handlers without a browser or DOM library.
-test('SiteApp switches page tokens on links and Back/Forward; SiteRoot tracks the system palette and global HR', async (t) => {
+test('SiteApp switches page tokens on links and Back/Forward while footer keeps global tokens and one payment interface', async (t) => {
     let cursor = 0;
     const cells = [];
     let effects = [];
@@ -47,9 +47,10 @@ test('SiteApp switches page tokens on links and Back/Forward; SiteRoot tracks th
             builder.onResolve({ filter: /^(react|react\/jsx-runtime)$|\/(Page|PaymentResult)\.jsx$|separatorContext\.js$|\.module\.css$/ }, ({ path }) => ({ path, namespace: 'unit' }));
             builder.onLoad({ filter: /./, namespace: 'unit' }, ({ path }) => {
                 if (path === 'react') return { contents: 'export const {useState,useEffect} = globalThis.__kroyAppearanceRuntime;' };
-                if (path === 'react/jsx-runtime') return { contents: 'export const jsx = (type,props) => ({type,props}); export const jsxs = jsx;' };
+                if (path === 'react/jsx-runtime') return { contents: 'export const Fragment = "fragment"; export const jsx = (type,props) => ({type,props}); export const jsxs = jsx;' };
                 if (path.endsWith('separatorContext.js')) return { contents: 'export default {Provider:"separator"};' };
                 if (path.endsWith('.css')) return { contents: 'export default {theme:"site-theme"};' };
+                if (path.endsWith('PaymentResult.jsx')) return { contents: 'export default function PaymentResult(){return {type:"payment-result",props:{}};}' };
                 return { contents: 'export default function Component(){return null;}' };
             });
         } }],
@@ -74,6 +75,12 @@ test('SiteApp switches page tokens on links and Back/Forward; SiteRoot tracks th
         }
         visit(SiteApp({ pages, path: '/', theme, parts: {}, widgets: {} }));
         const root = nodes.find(({ props }) => props?.className === 'site-theme');
+        const roots = nodes.filter(({ props }) => props?.className === 'site-theme');
+        assert.equal(roots.length, 2);
+        assert.deepEqual(roots[1].props.style, { ...theme.light, colorScheme: 'light' });
+        assert.equal(nodes.filter(({ type }) => type === 'footer').length, 1);
+        assert.equal(nodes.filter(({ type }) => type === 'payment-result').length, 1);
+        assert.equal(nodes.filter(({ type, props }) => type === 'a' && props.href === 'https://oysite.ru/').length, 1);
         assert.deepEqual(nodes.find(({ type }) => type === 'separator').props.value, { src: '/global.svg', mimeType: 'image/svg+xml' });
         for (const effect of effects) effect();
         return root.props.style;

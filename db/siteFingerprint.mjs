@@ -12,7 +12,7 @@ export async function getSiteFingerprint(siteId, client = pool) {
         SELECT md5(jsonb_build_object(
             'site', (SELECT jsonb_build_object('name', name, 'theme_id', theme_id,
                 'theme_mode', theme_mode, 'theme_overrides', theme_overrides, 'contact_settings', contact_settings, 'seo', seo,
-                'separator_media_id', separator_media_id)
+                'separator_media_id', separator_media_id, 'footer_settings', footer_settings)
                 FROM sites WHERE id = $1),
             ${collections.join(',')}
         )::text) AS fingerprint`, [siteId]);

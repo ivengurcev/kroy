@@ -53,7 +53,7 @@ test('registered navigation guard exempts preserved settings only, for navigate 
     const header = { isDirty: true, saveStatus: 'idle' };
     tree.props.value.registerHeader(header);
     const url = (path) => new URL(path, 'https://site.example.org');
-    const settings = ['/admin/appearance', '/admin/contacts', '/admin/seo'];
+    const settings = ['/admin/appearance', '/admin/contacts', '/admin/seo', '/admin/footer'];
     for (const type of ['navigate', 'popstate']) {
         for (const from of settings) {
             for (const to of settings) assert.equal(guard({ from: url(from), to: url(`${to}?test=1#field`), type }), true);

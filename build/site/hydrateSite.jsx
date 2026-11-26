@@ -4,6 +4,7 @@ import { parts, widgets } from '../../dist/kroy/site-parts.mjs';
 import { pages } from '../../dist/kroy/site-pages.mjs';
 import { theme } from '../../dist/kroy/site-theme.mjs';
 import { contacts } from '../../dist/kroy/site-contacts.mjs';
+import { footer } from '../../dist/kroy/site-footer.mjs';
 import { catalog } from '../../dist/kroy/site-catalog.mjs';
 import { reviews } from '../../dist/kroy/site-reviews.mjs';
 import '../../site/styles/site.css';
@@ -26,6 +27,7 @@ hydrateRoot(
         widgets={widgets}
         theme={theme}
         contacts={contacts}
+        footer={footer}
         catalog={catalog}
         reviews={reviews}
     />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Page from './Page.jsx';
-import SiteRoot from './SiteRoot.jsx';
+import SiteRoot, { SiteTheme } from './SiteRoot.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import updatePageMeta from './updatePageMeta.mjs';
 
 const RESERVED_PATHS = [
@@ -45,6 +46,7 @@ export default function SiteApp({
     tokens,
     theme,
     contacts,
+    footer,
     catalog,
     reviews,
 }) {
@@ -127,10 +129,15 @@ export default function SiteApp({
     }, [notFound, pages, pathFromUrl, urlForPath]);
 
     return (
+        <>
         <SiteRoot tokens={page?.theme ? undefined : tokens} theme={page?.theme ? { ...theme, ...page.theme } : theme}>
             {page
                 ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={page.materials} materialSectionId={page.materialSectionId} context={page.context} record={page.record} />
                 : notFound}
         </SiteRoot>
+        <SiteTheme tokens={tokens} theme={theme}>
+            <SiteFooter footer={footer} contacts={contacts} />
+        </SiteTheme>
+        </>
     );
 }

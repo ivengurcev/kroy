@@ -1,6 +1,7 @@
 import { getSiteContacts, normalizeSiteContacts, setSiteContacts } from '../../db/siteContacts.mjs';
 import getCurrentSite from './siteContext.mjs';
 import { normalizeSocialLink } from '../../shared/socialLinks.mjs';
+import { isValidContactEmail } from '../../shared/contactLinks.mjs';
 
 export async function getSiteContactSettings(c) {
     const site = await getCurrentSite(c);
@@ -18,6 +19,10 @@ export async function patchSiteContactSettings(c) {
 
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return c.json({ error: 'Invalid contact settings' }, 400);
+    }
+    if (body.email !== undefined && (typeof body.email !== 'string'
+        || (body.email.trim() && !isValidContactEmail(body.email.trim())))) {
+        return c.json({ error: 'Проверьте email', fields: { email: 'Введите корректный email' } }, 400);
     }
 
     const site = await getCurrentSite(c);

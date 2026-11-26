@@ -7,6 +7,7 @@ import { parts, widgets } from '../../dist/kroy/site-parts.mjs';
 import { pages as pageRegistry } from '../../dist/kroy/site-pages.mjs';
 import { theme } from '../../dist/kroy/site-theme.mjs';
 import { contacts } from '../../dist/kroy/site-contacts.mjs';
+import { footer } from '../../dist/kroy/site-footer.mjs';
 import { catalog } from '../../dist/kroy/site-catalog.mjs';
 import { reviews } from '../../dist/kroy/site-reviews.mjs';
 import { serializePagePayload } from './sitePageData.mjs';
@@ -62,6 +63,7 @@ export default async function renderSite(site, pages, outputDirectory, assetBase
                             widgets={widgets}
                             theme={theme}
                             contacts={contacts}
+                            footer={footer}
                             catalog={catalog}
                             reviews={reviews}
                         />

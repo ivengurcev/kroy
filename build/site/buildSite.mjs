@@ -18,6 +18,7 @@ import { createClientPageRegistry } from './sitePageData.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
 import { getSiteSeoContext, resolvePageMeta } from '../../shared/seo.mjs';
 import { createRobots, createSitemap } from './seoFiles.mjs';
+import { prepareSiteFooter } from '../../shared/footerSettings.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'build', 'site', 'hydrateSite.jsx');
@@ -147,7 +148,7 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo, separator_media_id
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo, separator_media_id, footer_settings
              FROM sites
              WHERE slug = $1`,
             [siteSlug]
@@ -178,6 +179,7 @@ try {
         if (domainsResult.rows.length === 0) {
             throw new Error(`У сайта ${site.slug} нет доменов`);
         }
+        site.domains = domainsResult.rows.map(({ hostname }) => hostname);
         seoContext = getSiteSeoContext(site, domainsResult.rows.map(({ hostname }) => hostname), process.env);
 
         const pagesResult = await client.query(
@@ -325,6 +327,10 @@ try {
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-contacts.mjs'),
         `export const contacts = ${JSON.stringify(normalizeSiteContacts(site.contact_settings))};\n`
+    );
+    await writeFile(
+        join(ROOT, 'dist', 'kroy', 'site-footer.mjs'),
+        `export const footer = ${JSON.stringify(prepareSiteFooter(site, site.footer_settings, pages))};\n`
     );
     const catalog = await getCatalog(site.id, { includeHidden: false });
     await writeFile(

@@ -21,6 +21,8 @@ export default function AdminShell({
     isDirty,
     theme,
     contacts,
+    footer,
+    globalTheme,
     catalog,
     reviews,
     materialSections,
@@ -90,6 +92,8 @@ export default function AdminShell({
                     loadStatus={loadStatus}
                     theme={theme}
                     contacts={contacts}
+                    footer={footer}
+                    globalTheme={globalTheme}
                     catalog={catalog}
                     reviews={reviews}
                     materialSections={materialSections}

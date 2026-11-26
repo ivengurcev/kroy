@@ -98,6 +98,9 @@ function render(module, page) {
     }));
 }
 
+// Assertions about a widget must not count the mandatory global footer.
+const widgetMarkup = (html) => html.split('<footer')[0];
+
 test('all default widgets preserve visible content and CSS Modules with identical server/client initial markup', () => {
     for (const definition of definitions) {
         const page = {
@@ -141,8 +144,8 @@ test('all default widgets preserve visible content and CSS Modules with identica
                         assert.match(initial, /<a\b/);
                         assert.match(initial, /data-native-navigation=""/);
                         assert.ok(initial.includes(`href="${href}"`));
-                        assert.equal((initial.match(/<a\b/g) ?? []).length, 1);
-                    } else assert.doesNotMatch(initial, /<a\b|href=/);
+                        assert.equal((widgetMarkup(initial).match(/<a\b/g) ?? []).length, 1);
+                    } else assert.doesNotMatch(widgetMarkup(initial), /<a\b|href=/);
                     if (!props.icon) assert.doesNotMatch(initial, /<img\b|mask-image/);
                     if (props.icon?.mimeType === 'image/svg+xml') assert.match(initial, /mask-image:url\(&quot;\/cta.svg&quot;\)/);
                     if (props.icon?.mimeType === 'image/webp') assert.match(initial, /<img[^>]*src="\/cta.webp"[^>]*alt=""/);
@@ -300,7 +303,7 @@ test('richtext fields keep formatting across all approved widgets, SSR/client an
         const empty = { root: { type: 'root', children: [{ type: 'paragraph', children: [] }] } };
         const props = part === '@kroy/comparison' ? { rows: [{ description: empty, note: empty, examples: empty }] } : { text: empty };
         const page = { path: '/', title: 'Empty', content: [{ part, props, view: { name: definition.defaultWidget, props: {} } }] };
-        assert.doesNotMatch(render(server, page), /<section\b|<p\b|<h2\b|<h3\b/);
+        assert.doesNotMatch(widgetMarkup(render(server, page)), /<section\b|<p\b|<h2\b|<h3\b/);
     }
     const paragraph = { root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text: 'Only paragraph' }] }] } };
     const page = { path: '/', title: 'Page', content: [{ part: '@kroy/comparison', props: { rows: [{ examples: paragraph }] }, view: { name: '@kroy/comparison-rows', props: {} } }] };
@@ -435,7 +438,7 @@ test('material cards show an empty state or unlinked summaries when there is no 
     assert.match(render(server, { ...base, materials: { section: createMaterialListData([], null) } }), /Опубликованных материалов пока нет/);
     const html = render(server, { ...base, materials: { section: createMaterialListData([{ ...listMaterial, coverUrl: null }], null) } });
     assert.match(html, /List material/);
-    assert.doesNotMatch(html, /<a\b|Читать|<img\b/);
+    assert.doesNotMatch(widgetMarkup(html), /<a\b|Читать|<img\b/);
 });
 
 test('per-page material data survives client navigation and serialization', () => {

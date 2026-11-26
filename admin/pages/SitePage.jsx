@@ -15,6 +15,7 @@ import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
 import SeoFields from '../components/SeoFields.jsx';
 import { siteSettingsDirty } from './siteSettingsState.mjs';
+import FooterSettings from '../components/FooterSettings.jsx';
 
 function cloneSettings(settings) {
     return { themeId: settings.themeId, themeMode: settings.themeMode, separatorMediaId: settings.separatorMediaId ?? null, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
@@ -38,6 +39,10 @@ function ContactSettings({ value, onChange, onSave }) {
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Телефон</span>
                     <input type="tel" value={contacts.phone ?? ''} onChange={(event) => update('phone', event.target.value)} />
+                </label>
+                <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
+                    <span>Email</span>
+                    <input name="email" type="email" maxLength={254} value={contacts.email ?? ''} onChange={(event) => update('email', event.target.value)} />
                 </label>
                 <div className={styles.coordinateGrid}>
                     <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
@@ -70,6 +75,8 @@ export default function SitePage() {
     const [section, setSection] = useState('appearance');
     const [seo, setSeo] = useState(null);
     const [savedSeo, setSavedSeo] = useState(null);
+    const [footer, setFooter] = useState(null);
+    const [savedFooter, setSavedFooter] = useState(null);
     const [themes, setThemes] = useState([]); const [metadata, setMetadata] = useState({}); const [saved, setSaved] = useState(null); const [draft, setDraft] = useState(null); const [siteData, setSiteData] = useState(null); const [savedContacts, setSavedContacts] = useState(null); const [contacts, setContacts] = useState(null); const [status, setStatus] = useState('loading'); const [saveStatus, setSaveStatus] = useState('idle'); const [error, setError] = useState('');
     useEffect(() => {
         const controller = new AbortController();
@@ -81,6 +88,7 @@ export default function SitePage() {
             return Promise.all([themeResponse.json(), siteResponse.json()]);
         }).then(([themeResult, siteResult]) => {
             setSeo(siteResult.seo ?? {}); setSavedSeo(siteResult.seo ?? {});
+            setFooter(siteResult.footer ?? {}); setSavedFooter(siteResult.footer ?? {});
             const next = cloneSettings(themeResult.settings); const nextContacts = siteResult.contacts;
             setThemes(themeResult.themes); setMetadata(themeResult.metadata || {}); setSaved(next); setDraft(next); setSiteData(siteResult); setSavedContacts(nextContacts); setContacts(nextContacts); setStatus('success');
         }).catch((loadError) => { if (loadError.name !== 'AbortError') { setError(loadError.message); setStatus('error'); } });
@@ -93,7 +101,8 @@ export default function SitePage() {
     const themeDirty = Boolean(draft && saved && JSON.stringify(draft) !== JSON.stringify(saved));
     const contactsDirty = Boolean(contacts && savedContacts && JSON.stringify(contacts) !== JSON.stringify(savedContacts));
     const seoDirty = Boolean(seo && savedSeo && JSON.stringify(seo) !== JSON.stringify(savedSeo));
-    const { active: sectionDirty, any: dirty } = siteSettingsDirty(section, { appearance: themeDirty, contacts: contactsDirty, seo: seoDirty });
+    const footerDirty = Boolean(footer && savedFooter && JSON.stringify(footer) !== JSON.stringify(savedFooter));
+    const { active: sectionDirty, any: dirty } = siteSettingsDirty(section, { appearance: themeDirty, contacts: contactsDirty, seo: seoDirty, footer: footerDirty });
     useEffect(() => { if (!dirty) return undefined; const warn = (event) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
     const selectedTheme = useMemo(() => themes.find((theme) => theme.id === draft?.themeId), [themes, draft?.themeId]);
     function clearSaveError() { setSaveStatus((current) => current === 'saving' ? current : 'idle'); setError(''); }
@@ -103,6 +112,18 @@ export default function SitePage() {
     function resetToken(palette, token) { setDraft((current) => ({ ...current, overrides: { ...current.overrides, [palette]: Object.fromEntries(Object.entries(current.overrides[palette]).filter(([key]) => key !== token)) } })); }
     async function save() {
         if (saveStatus === 'saving' || !sectionDirty) return;
+        if (section === 'footer') {
+            const requestFooter = JSON.stringify(footer);
+            setSaveStatus('saving'); setError('');
+            try {
+                const response = await apiRequest('/api/site/footer', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: requestFooter });
+                if (!response.ok) throw new Error(await formResponseError(response, document.getElementById('footer-form'), 'Не удалось сохранить футер.'));
+                const result = await response.json();
+                setSavedFooter(result); setFooter((current) => JSON.stringify(current) === requestFooter ? result : current);
+                setSaveStatus('success');
+            } catch (error) { setError(error.message); setSaveStatus('error'); }
+            return;
+        }
         if (section === 'seo') {
             if (!seoDirty) return;
             const requestSeo = JSON.stringify(seo);
@@ -141,12 +162,14 @@ export default function SitePage() {
     }
     const activeMode = draft?.themeMode;
     const sectionTitle = SITE_SETTINGS_SECTIONS.find(({ id }) => id === section)?.label || 'Оформление';
-    const saveAction = section === 'contacts' || section === 'appearance' || section === 'seo'
-        ? () => document.getElementById(section === 'contacts' ? 'contact-form' : section === 'seo' ? 'seo-form' : 'appearance-form')?.requestSubmit()
+    const formId = { contacts: 'contact-form', seo: 'seo-form', appearance: 'appearance-form', footer: 'footer-form' }[section];
+    const saveAction = formId
+        ? () => document.getElementById(formId)?.requestSubmit()
         : undefined;
-    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={sectionDirty} hasUnsavedChanges={dirty} saveStatus={saveStatus} onSave={saveAction} formId={section === 'contacts' ? 'contact-form' : section === 'appearance' ? 'appearance-form' : section === 'seo' ? 'seo-form' : undefined}>
+    return <SiteSettingsLayout title={sectionTitle} list={section === 'catalog'} status={status} errorMessage={error} isDirty={sectionDirty} hasUnsavedChanges={dirty} saveStatus={saveStatus} onSave={saveAction} formId={formId}>
         {section === 'overview' && <Overview siteData={siteData} />}
         {section === 'contacts' && contacts && <ContactSettings value={contacts} onChange={updateContacts} onSave={save} />}
+        {section === 'footer' && footer && <FooterSettings value={footer} onChange={(next) => { clearSaveError(); setFooter(next); }} onSave={save} />}
         {section === 'catalog' && <CatalogEditor />}
         {section === 'seo' && seo && <AdminPanel as="form" id="seo-form" className={styles.contactPanel} onSubmit={(event) => { event.preventDefault(); save(); }}><SeoFields value={seo} onChange={(next) => { clearSaveError(); setSeo(next); }} siteData={siteData} /></AdminPanel>}
         {section === 'appearance' && draft && selectedTheme && <ValidatedForm id="appearance-form" className={styles.content} onSubmit={(event) => { event.preventDefault(); save(); }}>

@@ -100,3 +100,37 @@ test('site and page SEO edits use the same publication state and a matching rele
     await publish();
     assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
 });
+
+test('footer edits use existing publication state; switching back to an old release preserves its snapshot and marks changes', async (t) => {
+    const root = await mkdtemp('/tmp/opencode/kroy-footer-publication-');
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const options = { nginxDir: join(root, 'nginx'), sitesDir: join(root, 'sites') };
+    const site = { id: 'site-a', slug: 'footer' };
+    const saved = { footer_settings: { description: 'Original footer' } };
+    const digest = () => createHash('md5').update(JSON.stringify(saved)).digest('hex');
+    t.mock.method(pool, 'query', async (sql) => {
+        assert.match(sql, /'footer_settings', footer_settings/);
+        return { rows: [{ fingerprint: digest() }] };
+    });
+    await mkdir(join(options.nginxDir, 'sites'), { recursive: true });
+    const select = (releaseId) => writeFile(join(options.nginxDir, 'sites', 'footer.conf'), `# Kroy release: ${releaseId}\n`);
+    async function publish(releaseId) {
+        const directory = join(options.sitesDir, site.slug, releaseId);
+        await mkdir(directory, { recursive: true });
+        await writeFile(join(directory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: digest() }));
+        await writeFile(join(directory, 'index.html'), `<footer>${saved.footer_settings.description}</footer>`);
+        await select(releaseId);
+    }
+    const first = '20261126000000000';
+    const second = '20261126000000001';
+    await publish(first);
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
+    saved.footer_settings.description = 'Updated footer';
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, true);
+    await publish(second);
+    assert.equal((await getSitePublicationState(site, options)).hasChanges, false);
+    await select(first);
+    assert.deepEqual(await getSitePublicationState(site, options), { releaseId: first, hasChanges: true });
+    assert.equal(await readFile(join(options.sitesDir, site.slug, first, 'index.html'), 'utf8'), '<footer>Original footer</footer>');
+    assert.equal(saved.footer_settings.description, 'Updated footer'); // rollback does not mutate DB.
+});

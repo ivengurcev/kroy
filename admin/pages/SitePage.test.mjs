@@ -113,4 +113,17 @@ test('SitePage saves only the active form and retains other settings drafts when
     assert.deepEqual(requests.map(({ url }) => url), ['/api/site/seo', '/api/site/theme', '/api/site/contact']);
     assert.equal(tree.props.hasUnsavedChanges, false);
     assert.equal(listeners.has('beforeunload'), false);
+    switchTo('footer');
+    named('FooterSettings').props.onChange({ description: 'Footer draft' }); render();
+    switchTo('contacts');
+    named('ContactSettings').props.onChange({ address: 'Another contact draft' }); render();
+    switchTo('footer');
+    assert.equal(named('FooterSettings').props.value.description, 'Footer draft');
+    named('FooterSettings').props.onSave(); await settled();
+    assert.equal(requests.at(-1).url, '/api/site/footer');
+    assert.deepEqual(requests.at(-1).body, { description: 'Footer draft' });
+    assert.equal(tree.props.isDirty, false);
+    assert.equal(tree.props.hasUnsavedChanges, true);
+    switchTo('contacts');
+    assert.equal(named('ContactSettings').props.value.address, 'Another contact draft');
 });

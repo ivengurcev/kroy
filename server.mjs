@@ -15,6 +15,7 @@ import restorePage from './server/api/restorePage.mjs';
 import { getSiteThemeSettings, patchSiteTheme } from './server/api/siteTheme.mjs';
 import getSiteSettings from './server/api/siteSettings.mjs';
 import { patchSiteSeo } from './server/api/siteSeo.mjs';
+import { patchSiteFooter } from './server/api/siteFooter.mjs';
 import { getSiteContactSettings, patchSiteContactSettings } from './server/api/siteContact.mjs';
 import { deleteSiteCatalogCategory, deleteSiteCatalogProduct, getSiteCatalog, getSiteCatalogCategories, getSiteCatalogProducts, patchSiteCatalog, saveSiteCatalogCategory, saveSiteCatalogProduct } from './server/api/siteCatalog.mjs';
 import { getSitePayments, patchSitePaymentSettings, patchSitePaymentActivation, deleteSitePaymentSecretKey } from './server/api/sitePayments.mjs';
@@ -129,6 +130,13 @@ await createApp({
             isPrivate: true,
             disableSSR: true,
             title: 'Контакты Oysite',
+            component: './admin/pages/SitePage.jsx',
+        },
+        {
+            path: '/admin/footer',
+            isPrivate: true,
+            disableSSR: true,
+            title: 'Футер Oysite',
             component: './admin/pages/SitePage.jsx',
         },
         {
@@ -249,6 +257,7 @@ await createApp({
             { method: 'GET', private: true },
             getSiteSettings,
         ],
+        ['/site/footer', { method: 'PATCH', private: true }, patchSiteFooter],
         [
             '/site/contact',
             { method: 'GET', private: true },

@@ -25,6 +25,7 @@ export default function Editor() {
     const [pageThemes, setPageThemes] = useState({});
     const [appearancePreview, setAppearancePreview] = useState(null);
     const [contacts, setContacts] = useState();
+    const [footer, setFooter] = useState();
     const [catalog, setCatalog] = useState();
     const [reviews, setReviews] = useState();
     const [materialSections, setMaterialSections] = useState([]);
@@ -88,10 +89,11 @@ export default function Editor() {
                 if (!response.ok) throw new Error('Не удалось загрузить тему сайта.');
                 return response.json();
             })
-            .then(({ theme: nextTheme, pages = {}, detailTemplates = [], contacts: nextContacts, catalog: nextCatalog, reviews: nextReviews, materialSections: nextMaterialSections }) => {
+            .then(({ theme: nextTheme, pages = {}, detailTemplates = [], contacts: nextContacts, footer: nextFooter, catalog: nextCatalog, reviews: nextReviews, materialSections: nextMaterialSections }) => {
                 setTheme(nextTheme);
                 setPageThemes(Object.fromEntries([...Object.values(pages), ...detailTemplates].filter(({ theme }) => theme).map(({ path, theme }) => [path, theme])));
                 setContacts(nextContacts);
+                setFooter(nextFooter);
                 setCatalog(nextCatalog);
                 setReviews(nextReviews);
                 setMaterialSections(nextMaterialSections ?? []);
@@ -271,6 +273,8 @@ export default function Editor() {
             isDirty={isDirty}
             theme={appearancePreview || pageThemes[page.path] ? { ...theme, ...(appearancePreview ?? pageThemes[page.path]) } : theme}
             contacts={contacts}
+            footer={footer}
+            globalTheme={theme}
             catalog={catalog}
             reviews={reviews}
             materialSections={materialSections}

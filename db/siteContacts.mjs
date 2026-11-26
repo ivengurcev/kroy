@@ -1,10 +1,12 @@
 import { pool } from './client.mjs';
 import { normalizeSocialLinks } from '../shared/socialLinks.mjs';
+import { isValidContactEmail } from '../shared/contactLinks.mjs';
 
 export const EMPTY_SITE_CONTACTS = {
     address: '',
     hours: '',
     phone: '',
+    email: '',
     latitude: null,
     longitude: null,
     socials: [],
@@ -24,11 +26,13 @@ export function normalizeSiteContacts(value = {}, { strictSocials = false } = {}
     const source = value && typeof value === 'object' && !Array.isArray(value)
         ? value
         : {};
+    const email = typeof source.email === 'string' ? source.email.trim() : '';
 
     return {
         address: text(source.address, 1000),
         hours: text(source.hours, 1000),
         phone: text(source.phone, 100),
+        email: isValidContactEmail(email) ? email : '',
         latitude: coordinate(source.latitude, -90, 90),
         longitude: coordinate(source.longitude, -180, 180),
         socials: normalizeSocialLinks(source.socials, { strict: strictSocials }),

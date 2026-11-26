@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Page from '../../site/runtime/Page.jsx';
-import SiteRoot from '../../site/runtime/SiteRoot.jsx';
+import SiteRoot, { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
+import SiteFooter from '../../site/runtime/SiteFooter.jsx';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
@@ -76,6 +77,8 @@ export default function EditorWorkspace({
     loadStatus,
     theme,
     contacts,
+    footer,
+    globalTheme,
     catalog,
     reviews,
     materialSections,
@@ -227,6 +230,9 @@ export default function EditorWorkspace({
                     </AdminPanel>,
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
+                <SiteTheme theme={globalTheme}>
+                    <SiteFooter footer={footer} contacts={contacts} />
+                </SiteTheme>
             </section>
 
             {picker && (

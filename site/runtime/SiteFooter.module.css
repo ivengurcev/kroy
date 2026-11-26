@@ -1,0 +1,109 @@
+.footer {
+    color: var(--site-color-text);
+    background: var(--site-color-surface-soft);
+    border-top: var(--site-line-width) solid var(--site-color-border);
+    font-size: var(--site-font-size-body);
+    overflow-wrap: anywhere;
+}
+
+.inner {
+    width: min(100%, var(--site-container-max));
+    margin-inline: auto;
+    padding: var(--site-space-8) var(--site-page-gutter);
+}
+
+.columns {
+    display: grid;
+    gap: var(--site-space-8);
+}
+
+.columns > *,
+.bottom > * {
+    min-width: 0;
+}
+
+.name,
+.heading {
+    margin: 0 0 var(--site-space-3);
+    font: 600 var(--site-font-size-h5)/1.2 var(--site-font-heading);
+}
+
+.description,
+.contacts p,
+.details p {
+    margin: 0;
+    white-space: pre-line;
+}
+
+.description {
+    color: var(--site-color-text-secondary);
+}
+
+.contacts {
+    display: grid;
+    gap: var(--site-space-2);
+    font-style: normal;
+}
+
+.links {
+    display: grid;
+    gap: var(--site-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.footer a {
+    display: inline-block;
+    max-width: 100%;
+    padding-block: var(--site-space-2);
+    color: var(--site-color-accent);
+    text-underline-offset: .2em;
+}
+
+.footer a:hover {
+    color: var(--site-color-accent-hover);
+}
+
+.footer a:focus-visible {
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
+    outline-offset: var(--site-space-1);
+}
+
+.bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--site-space-4);
+    margin-top: var(--site-space-8);
+    padding-top: var(--site-space-6);
+    border-top: var(--site-line-width) solid var(--site-color-border);
+}
+
+.details {
+    display: grid;
+    gap: var(--site-space-2);
+    font-size: var(--site-font-size-small);
+}
+
+.branding {
+    flex: 0 0 auto;
+}
+
+@container (min-width: 768px) {
+    .columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}
+
+@container (min-width: 1200px) {
+    .columns {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}

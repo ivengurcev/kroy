@@ -1,6 +1,7 @@
 import { pool } from '../../db/client.mjs';
 import { getSiteContacts } from '../../db/siteContacts.mjs';
 import getCurrentSite from './siteContext.mjs';
+import { getSiteFooterSettings } from '../../db/siteFooter.mjs';
 
 export default async function getSiteSettings(c) {
     const site = await getCurrentSite(c);
@@ -16,5 +17,6 @@ export default async function getSiteSettings(c) {
         seo: (await pool.query('SELECT seo FROM sites WHERE id = $1', [site.id])).rows[0].seo,
         domains: domains.map(({ hostname }) => hostname),
         contacts: await getSiteContacts(site.id),
+        footer: await getSiteFooterSettings(site.id),
     });
 }

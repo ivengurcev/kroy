@@ -39,6 +39,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin/appearance` | Оформление сайта |
 | `/admin/overview` | Общие сведения о сайте |
 | `/admin/contacts` | Контакты сайта |
+| `/admin/footer` | Глобальный обязательный футер |
 | `/admin/catalog` | Каталог |
 | `/admin/payments` | Платёжная интеграция |
 | `/admin/orders` | Заказы текущего сайта, подробности в модальном окне |
@@ -65,6 +66,7 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `DELETE /pages/:pageId`, `POST /pages/:pageId/restore` | Мягкое удаление / восстановление |
 | `POST /pages/:pageId/detail-template` | Создать один detail-шаблон для list |
 | `GET /site/settings` | Общие данные настроек |
+| `PATCH /site/footer` | Полностью заменить настройки футера; чтение footer через `/site/settings`, контракт в [FOOTER.md](FOOTER.md) |
 | `PATCH /site/seo` | Полностью заменить общие SEO-настройки; чтение через `/site/settings` |
 | `GET/PATCH /site/theme`, `GET/PATCH /site/contact` | Тема и контакты |
 | `GET/PATCH /site/catalog` | Категории и позиции каталога |

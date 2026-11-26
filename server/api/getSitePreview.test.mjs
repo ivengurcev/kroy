@@ -27,6 +27,8 @@ test('saved-page preview has published summary sources scoped to material-list p
             ] };
         }
         if (sql.startsWith('SELECT contact_settings')) return { rows: [{ contact_settings: {} }] };
+        if (sql.startsWith('SELECT footer_settings')) return { rows: [{ footer_settings: {} }] };
+        if (sql.includes('FROM pages') && !sql.includes('FROM pages detail')) return { rows: [] };
         if (sql.includes('FROM product_') || sql.includes('FROM products') || sql.includes('FROM reviews')) return { rows: [] };
         assert.fail(`Unexpected preview query: ${sql}`);
     });
@@ -40,4 +42,5 @@ test('saved-page preview has published summary sources scoped to material-list p
         { themeMode: 'dark', overrides: { shared: { '--site-font-size-base': '18px' } } }));
     assert.equal(snapshot.pages['/news'].theme, undefined);
     assert.equal(snapshot.pages['/'].appearance, undefined);
+    assert.deepEqual(snapshot.footer.navigation, []);
 });

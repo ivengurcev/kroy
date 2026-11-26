@@ -7,6 +7,7 @@ import { getCatalog } from '../../db/catalog.mjs';
 import { getPublishedReviews } from '../../db/reviews.mjs';
 import { getMaterialSections } from '../../db/materialSections.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
+import { getSiteFooter } from '../../db/siteFooter.mjs';
 
 export default async function getSitePreview(c) {
     try {
@@ -75,6 +76,7 @@ export default async function getSitePreview(c) {
                 separatorMimeType: separator?.mime_type ?? null,
             },
             contacts: await getSiteContacts(site.id),
+            footer: await getSiteFooter(site),
             catalog: await getCatalog(site.id, { includeHidden: false }),
             reviews: await getPublishedReviews(site.id),
         });
