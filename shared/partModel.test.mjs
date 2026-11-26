@@ -54,3 +54,13 @@ test('loads stored settings with the selected view and fills widget defaults wit
     assert.deepEqual(missing.props, savedProps);
     assert.deepEqual(missing.view, savedView);
 });
+
+test('widget changes preserve only common spacing and initialize specific settings', () => {
+    const item = createPart('@kroy/reviews', partMetadata, widgets, {}, {
+        name: '@kroy/slider', props: { spacingTop: 'none', spacingBottom: 'large', autoplay: false, heightMode: 'compact', minHeight: 900 },
+    });
+    const next = changePartView(item, '@kroy/cards', partMetadata, widgets);
+    assert.deepEqual(next.view.props, { columns: 3, spacingTop: 'none', spacingBottom: 'large' });
+    const stored = JSON.parse(JSON.stringify({ part: next.part, props: next.props, view: next.view }));
+    assert.deepEqual(createPart(stored.part, partMetadata, widgets, stored.props, stored.view).view, next.view);
+});

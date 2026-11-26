@@ -1,5 +1,6 @@
 import Image from '../../components/Image.jsx';
 import styles from './cta.module.css';
+import { useWidgetSpacing } from '../../runtime/widgetDisplay.js';
 
 /**
  * @kroy-title Кнопка действия
@@ -7,12 +8,13 @@ import styles from './cta.module.css';
  * @kroy-contract cta
  */
 export default function Cta({ data = {} }) {
+    const spacing = useWidgetSpacing();
     const { title, subtitle, price, icon, href } = data;
     if (!title && !subtitle && !price) return null;
     const Panel = href ? 'a' : 'div';
 
     return (
-        <section className={styles.section}>
+        <section className={styles.section} style={spacing}>
             <div className={styles.inner}>
                 <Panel className={styles.panel} href={href || undefined} data-native-navigation={href ? '' : undefined}>
                     {icon && <Image src={icon} monochrome alt="" className={styles.icon} />}

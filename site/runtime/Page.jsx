@@ -1,3 +1,5 @@
+import { WidgetDisplayContext } from './widgetDisplay.js';
+
 export default function Page({ content, parts, widgets = {}, contacts, catalog, reviews, materials, materialSectionId, context = { params: {} }, record = null }) {
     return content.map(({ id, part, props, view }, index) => {
         const prepare = Object.hasOwn(parts, part) ? parts[part] : null;
@@ -12,6 +14,10 @@ export default function Page({ content, parts, widgets = {}, contacts, catalog, 
         const Widget = widgets[view.name];
         if (!Widget) throw new Error(`Виджет не найден: ${view.name}`);
 
-        return <Widget key={id ?? index} data={data} options={view.props} context={context} />;
+        return (
+            <WidgetDisplayContext.Provider key={id ?? index} value={view.props ?? {}}>
+                <Widget data={data} options={view.props} context={context} />
+            </WidgetDisplayContext.Provider>
+        );
     });
 }

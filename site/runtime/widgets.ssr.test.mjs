@@ -373,6 +373,48 @@ test('reviews slider with reviews preserves slides, navigation and optional subm
 });
 
 const listContent = [{ part: '@kroy/material-list', props: { sectionId: 'section' }, view: { name: '@kroy/material-cards', props: {} } }];
+
+test('spacing applies to existing roots of all widgets, stays local, and matches serialized client markup', () => {
+    for (const widget of widgetDefinitions) {
+        const definition = definitions.find(({ contract }) => contract === widget.contract);
+        const item = { part: definition.name, props: settings[definition.name], view: { name: widget.name, props: {} } };
+        const page = { path: '/', record, content: [item], materials: { section: createMaterialListData([], null) } };
+        const original = render(server, page);
+        const auto = { ...page, content: [{ ...item, view: { ...item.view, props: { spacingTop: 'auto', spacingBottom: 'auto' } } }] };
+        assert.equal(render(server, auto), original);
+        for (const [spacingTop, spacingBottom] of [['none', 'large'], ['small', 'normal']]) {
+            const changed = { ...item, view: { ...item.view, props: { spacingTop, spacingBottom } } };
+            const spaced = { ...page, content: [changed, item] };
+            const html = render(server, spaced);
+            assert.equal((html.match(/padding-top:/g) ?? []).length, 1, widget.name);
+            assert.equal((html.match(/padding-bottom:/g) ?? []).length, 1, widget.name);
+            assert.equal(render(client, JSON.parse(serializePagePayload(spaced))), html);
+            const rootTags = (text) => text.match(/<(?:section|article)\b/g)?.length ?? 0;
+            assert.equal(rootTags(html), rootTags(original) * 2, 'no extra section wrapper');
+        }
+    }
+});
+
+test('both Hero schemas expose height modes, preserve legacy normal height and ignore it in other modes', () => {
+    for (const name of ['@kroy/hero', '@kroy/hero-editorial']) {
+        const fields = widgetDefinitions.find((widget) => widget.name === name).fields;
+        assert.equal(fields.minHeight, undefined);
+        assert.deepEqual(fields.heightMode.options, ['compact', 'normal', 'spacious']);
+        assert.equal(fields.heightMode.default, 'normal');
+        for (const heightMode of [undefined, 'normal', 'compact', 'spacious']) {
+            const page = { path: '/', content: [{
+                part: '@kroy/hero', props: { title: 'Long title '.repeat(100), photo: '/hero.webp', description: 'Long description '.repeat(100) },
+                view: { name, props: { heightMode, minHeight: 900 } },
+            }] };
+            const html = render(server, page);
+            assert.match(html, new RegExp(`data-height-mode="${heightMode ?? 'normal'}"`));
+            assert.equal(html.includes('--hero-min-height:900px'), !heightMode || heightMode === 'normal');
+            assert.equal(render(client, JSON.parse(serializePagePayload(page))), html);
+            assert.ok(html.includes('Long title '.repeat(100).trim()));
+        }
+    }
+});
+
 const listMaterial = { slug: 'example', title: 'List material', summary: 'Short description', coverUrl: '/cover.webp', status: 'published' };
 
 test('SSR material cards show covers, summaries, section detail links, and matching hydration markup', () => {

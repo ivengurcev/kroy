@@ -63,6 +63,13 @@ HTML/auth layouts. API страниц, настроек, каталога, мо�
 
 ## Данные
 
+Общие вертикальные отступы виджетов определены в `shared/widgetDisplay.js`
+и хранятся в существующем `view.props`, без расширения схемы БД.
+Публичный `Page` изолирует настройки каждого блока React-контекстом;
+`Section` и исключения с собственными корнями используют общий hook.
+Явные отступы применяются к существующим DOM-элементам inline, `auto`
+не переопределяет штатный CSS. Предпросмотр, SSR и клиент используют этот же runtime.
+
 PostgreSQL хранит `sites`, `domains`, `pages`, `redirects`, `users`,
 `site_memberships`, `media`, `product_categories`, `products`, `reviews`,
 `material_sections`, `materials`, `site_payment_integrations`, `orders`, `order_items`,

@@ -3,32 +3,30 @@ import Image from '../../components/Image.jsx';
 import HR from '../../components/HR.jsx';
 import RichTextContent from '../../components/RichTextContent.jsx';
 import styles from './heroEditorial.module.css';
+import { heroHeightMode, heroHeightStyle } from '../../runtime/heroHeight.js';
 
 /**
  * @kroy-title Первый экран — журнальный
  * @kroy-category Основное
  * @kroy-contract hero
  * @param {boolean} [props.showContacts=true] - Отображать контакты
- * @param {number} [props.minHeight=760] - Минимальная высота, px
+ * @param {'compact'|'normal'|'spacious'} [props.heightMode=normal] - Высота первого экрана
  * @param {'left'|'center'|'right'} [props.photoPosition=center] - Положение фотографии
  * @kroy showContacts widget=switch
- * @kroy minHeight min=0
+ * @kroy heightMode optionLabels=compact:Компактный,normal:Обычный,spacious:Просторный
  * @kroy photoPosition optionLabels=left:Слева,center:Центр,right:Справа
  */
 export default function HeroEditorial({ data, options = {} }) {
     const { eyebrow, title, subtitle, lead, features = [], photo, captionTitle, description, topNote, bottomNote, socials = [] } = data;
     const photoPosition = ['left', 'center', 'right'].includes(options.photoPosition) ? options.photoPosition : 'center';
     const hasCaption = captionTitle || description;
-    const minHeight = typeof options.minHeight === 'number' && Number.isFinite(options.minHeight) && options.minHeight >= 0
-        ? `${options.minHeight}px` : undefined;
-
     return (
-        <Section className={styles.section} fullBleed style={{ '--hero-min-height': minHeight }}>
+        <Section className={styles.section} fullBleed style={heroHeightStyle(options)} data-height-mode={heroHeightMode(options)}>
             <div className={`${styles.scene} ${photo ? styles.withPhoto : ''}`}>
                 {photo && (
                     <div className={styles.photo} aria-hidden="true" style={{
                         backgroundImage: `url(${JSON.stringify(photo)})`,
-                        backgroundPosition: `${photoPosition} center`,
+                        backgroundPosition: `${photoPosition} top`,
                     }} />
                 )}
                 <div className={styles.inner}>

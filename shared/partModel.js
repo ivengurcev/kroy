@@ -1,4 +1,6 @@
 
+import { commonWidgetProps } from './widgetDisplay.js';
+
 let sequence = 0;
 
 export function defaultValue(schema) {
@@ -58,7 +60,7 @@ function partView(name, metadata, widgetMetadata, props) {
 }
 
 export function changePartView(item, name, metadata, widgetMetadata) {
-    return { ...item, view: partView(name, metadata, widgetMetadata) };
+    return { ...item, view: partView(name, metadata, widgetMetadata, commonWidgetProps(item.view.props)) };
 }
 
 export function createPart(part, metadata, widgetMetadata, props = {}, view) {

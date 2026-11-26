@@ -201,6 +201,7 @@ export default function EditorWorkspace({
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
                                     <PartEditor
+                                        key={item.id}
                                         title={partTitle(item.part, metadata)}
                                         props={item.props}
                                         fields={metadata[item.part]?.fields ?? {}}

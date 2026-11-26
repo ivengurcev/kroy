@@ -6,10 +6,6 @@
 .hero {
     position: relative;
     isolation: isolate;
-    height: 100svh;
-    min-height: var(--hero-min-height, 750px);
-    max-height: 1150px;
-    overflow: hidden;
     color: var(--site-color-text);
     background: var(--site-color-bg);
 }
@@ -20,7 +16,7 @@
     inset: 0 0 0 auto;
     width: 54%;
     background-color: var(--site-color-surface-soft);
-    background-position: 50% 12%;
+    background-position: center top;
     background-size: cover;
     background-repeat: no-repeat;
 }
@@ -154,7 +150,7 @@
 @container hero (max-width: 800px) {
     .hero { display: flex; height: auto; min-height: 0; max-height: none; overflow: visible; flex-direction: column; }
     .inner { display: contents; }
-    .photo { position: relative; inset: auto; order: 2; width: 100%; height: clamp(220px, 72cqw, 420px); background-position: 50% 50%; background-size: cover; }
+    .photo { position: relative; inset: auto; order: 2; width: 100%; height: clamp(220px, 72cqw, 420px); background-position: center top; background-size: cover; }
     .photoEmpty { display: none; }
     .photo::before {
         background: linear-gradient(
@@ -183,7 +179,7 @@
         grid-template-columns: minmax(0, 1fr) minmax(210px, .5fr);
         gap: var(--site-space-8);
         height: auto;
-        min-height: clamp(var(--hero-min-height, 750px), 100svh, 1150px);
+        min-height: clamp(var(--hero-min-height, 750px), var(--hero-preferred-height, 100svh), var(--hero-max-height, 1150px));
         padding: var(--site-space-16) var(--site-page-gutter);
     }
     .content { position: static; grid-column: 1 / -1; align-self: center; width: 62%; min-width: 0; padding-block: var(--site-space-8); }
@@ -191,6 +187,20 @@
     .social { white-space: normal; overflow-wrap: anywhere; }
     .caption { position: static; grid-column: 2; align-self: end; width: 100%; min-width: 0; }
     .captionTitle { white-space: normal; overflow-wrap: anywhere; }
+    .withoutPhoto .inner { min-height: 0; }
+    .withoutPhoto .photoEmpty { display: none; }
+}
+
+.heroContainer[data-height-mode='compact'] {
+    --hero-min-height: 420px;
+    --hero-preferred-height: 65svh;
+    --hero-max-height: 760px;
+}
+
+.heroContainer[data-height-mode='spacious'] {
+    --hero-min-height: 850px;
+    --hero-preferred-height: 115svh;
+    --hero-max-height: 1350px;
 }
 
 @container hero (max-width: 390px) {

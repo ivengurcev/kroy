@@ -2,6 +2,7 @@ import styles from './hero.module.css';
 import Section from '../../runtime/Section.jsx';
 import Icon from '../../components/Icon.jsx';
 import RichTextContent from '../../components/RichTextContent.jsx';
+import { heroHeightMode, heroHeightStyle } from '../../runtime/heroHeight.js';
 
 function SocialLink({ name, link, type }) {
     return (
@@ -17,19 +18,16 @@ function SocialLink({ name, link, type }) {
  * @kroy-category Основное
  * @kroy-contract hero
  * @param {boolean} [props.showContacts=true] - Отображать контакты
- * @param {number} [props.minHeight=750] - Минимальная высота, px
+ * @param {'compact'|'normal'|'spacious'} [props.heightMode=normal] - Высота первого экрана
  * @kroy showContacts widget=switch
- * @kroy minHeight min=0
+ * @kroy heightMode optionLabels=compact:Компактный,normal:Обычный,spacious:Просторный
  */
 export default function Hero({ data, options = {} }) {
     const { eyebrow, title, captionTitle, description, photo, socials = [] } = data;
     const hasCaption = captionTitle || description;
-    const minHeight = typeof options.minHeight === 'number' && Number.isFinite(options.minHeight) && options.minHeight >= 0
-        ? `${options.minHeight}px` : undefined;
-
     return (
-        <Section className={styles.heroContainer} fullBleed style={{ '--hero-min-height': minHeight }}>
-            <div className={styles.hero}>
+        <Section className={styles.heroContainer} fullBleed style={heroHeightStyle(options)} data-height-mode={heroHeightMode(options)}>
+            <div className={`${styles.hero} ${photo ? '' : styles.withoutPhoto}`}>
                 <div
                     className={`${styles.photo} ${photo ? '' : styles.photoEmpty}`}
                     style={{ backgroundImage: photo ? `url(${JSON.stringify(photo)})` : 'none' }}
