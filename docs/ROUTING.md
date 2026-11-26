@@ -37,9 +37,9 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `/admin/pages/trash` | Совместимый старый адрес того же дерева с включёнными удалёнными |
 | `/admin/pages/:pageId` | Редактор страницы по UUID |
 | `/admin/appearance` | Оформление сайта |
-| `/admin/overview` | Общие сведения о сайте |
+| `/admin/overview` | Общие сведения о сайте и шаблон по умолчанию |
 | `/admin/contacts` | Контакты сайта |
-| `/admin/footer` | Глобальный обязательный футер |
+| `/admin/templates`, `/admin/templates/:templateId` | Список и редактор шаблонов |
 | `/admin/catalog` | Каталог |
 | `/admin/payments` | Платёжная интеграция |
 | `/admin/orders` | Заказы текущего сайта, подробности в модальном окне |
@@ -59,14 +59,16 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | Метод и путь | Контракт |
 |---|---|
 | `GET /pages` | Список без content с массивом действующих `redirects`; `?deleted=all` — включая удалённые, `?deleted=1` — только удалённые |
-| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с content и appearance |
+| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с `content`, `appearance`, `templateMode`, `templateId` и `effectiveTemplateId` |
 | `POST /pages` | Создать пустую страницу; title/path, type/dataSource для списка |
 | `PATCH /pages/:pageId` | title/path/seo/appearance; у detail — routeParam вместо произвольного path, без seo; appearance заменяется целиком, отсутствие поля сохраняет прежнее оформление; при передаче appearance ответ включает готовую theme для редактора |
-| `PUT /pages/:pageId` | Полностью заменить content; формат в [PARTS.md](PARTS.md) |
+| `PUT /pages/:pageId` | `{ content }` заменяет только блоки страницы. Можно передать выбор шаблона, правки его `props` и/или `footerChanges` в той же транзакции. |
 | `DELETE /pages/:pageId`, `POST /pages/:pageId/restore` | Мягкое удаление / восстановление |
 | `POST /pages/:pageId/detail-template` | Создать один detail-шаблон для list |
-| `GET /site/settings` | Общие данные настроек |
-| `PATCH /site/footer` | Полностью заменить настройки футера; чтение footer через `/site/settings`, контракт в [FOOTER.md](FOOTER.md) |
+| `GET /site/settings` | Общие данные, эффективный `defaultTemplateId`, `footer: { props, version }` |
+| `GET/POST /templates` | Список с основным и назначенным по умолчанию шаблоном; создание по `{ name }` |
+| `GET/PUT/DELETE /templates/:templateId` | Чтение, сохранение документа `{ name, content, slotIndex, expectedVersion }` и/или `footerChanges`, удаление свободного дополнительного шаблона |
+| `PATCH /site/default-template` | `{ templateId, expectedDefaultTemplateId }`; `null` назначает основной, ожидание сверяется с эффективным ID |
 | `PATCH /site/seo` | Полностью заменить общие SEO-настройки; чтение через `/site/settings` |
 | `GET/PATCH /site/theme`, `GET/PATCH /site/contact` | Тема и контакты |
 | `GET/PATCH /site/catalog` | Категории и позиции каталога |
@@ -78,9 +80,17 @@ admin/api/public/static/uploads. Это не полный список инфр�
 | `GET /site/reviews`, `POST /site/reviews`, `PATCH/DELETE /site/reviews/:id` | Управление отзывами; GET допускает status |
 | `GET/POST /site/material-sections`, `PATCH/DELETE /site/material-sections/:id` | Разделы материалов |
 | `GET/POST /site/materials`, `GET/PATCH/DELETE /site/materials/:id` | Материалы; список допускает `sectionId` |
-| `GET /site/preview` | Сохранённые страницы, источники данных, общая тема и подготовленные page.theme/detailTemplates[].theme для индивидуального оформления |
+| `GET /site/preview` | Снимок страниц, шаблонов, глобального футера, источников и подготовленных тем; обычные страницы ссылаются на шаблоны по `templateIndex` |
 | `GET/POST /site/publish` | Статус / запуск публикации |
 | `POST /media` | Загрузка изображения |
+
+`PUT /pages/:pageId` принимает `templateSelection: { mode, id }` и/или
+`templateChanges: { id, expectedVersion, propsByIndex }`. При этих правках
+нужен `expectedSelection: { mode, id }`; для итогового `inherit` —
+`expectedDefaultTemplateId`. Структуру шаблона из страницы изменить нельзя.
+При `footerChanges: { props, expectedVersion }` и успешной записи ответ
+содержит `footer: { props, version }`. При конфликте любой версии возвращается
+`409` и транзакция целиком откатывается. См. [FOOTER.md](FOOTER.md).
 
 Приватный API платёжных настроек — в [prodamus.md](prodamus.md).
 Точный состав полей ответов определяется обработчиками в `server/api/`;
