@@ -6,7 +6,7 @@ import styles from './SiteFooter.module.css';
 function Links({ links, label }) {
     const safeLinks = (links ?? []).filter((link) => link.label && normalizeHref(link.href));
     if (!safeLinks.length) return null;
-    return <nav aria-label={label}>
+    return <nav className={styles.section} aria-label={label}>
         <h2 className={styles.heading}>{label}</h2>
         <ul className={styles.links}>{safeLinks.map(({ href, label }, index) => <li key={`${href}-${index}`}><a href={href}>{label}</a></li>)}</ul>
     </nav>;
@@ -25,18 +25,18 @@ export default function SiteFooter({ footer = {}, contacts = {} }) {
 
     return <footer className={styles.footer} aria-label="Подвал сайта">
         <div className={styles.inner}>
-            <div className={styles.columns}>
+            <div className={styles.sections}>
                 {(siteName || description) && <div>
                     {siteName && <p className={styles.name}>{siteName}</p>}
                     {description && <p className={styles.description}>{description}</p>}
                 </div>}
                 <Links links={navigation} label="Навигация" />
-                {hasContacts && <div>
+                {hasContacts && <div className={styles.section}>
                     <h2 className={styles.heading}>Контакты</h2>
                     <address className={styles.contacts}>
                         {contacts.phone && <p>{phoneHref ? <a href={phoneHref}>{contacts.phone}</a> : contacts.phone}</p>}
                         {email && <p><a href={`mailto:${email}`}>{email}</a></p>}
-                        {contacts.address && <p>{contacts.address}</p>}
+                        {contacts.address && <p className={styles.address}>{contacts.address}</p>}
                         {socials.length > 0 && <ul className={styles.links}>{socials.map(({ name, href }, index) => <li key={`${href}-${index}`}><a href={href}>{name}</a></li>)}</ul>}
                     </address>
                 </div>}
