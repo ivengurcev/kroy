@@ -82,7 +82,7 @@
 
     display: flex;
     flex-wrap: nowrap;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--card-carousel-gap);
     margin: 0;
     padding: 0;
@@ -104,6 +104,8 @@
 }
 
 .item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     flex: 0 0 calc((100% - (var(--card-carousel-slots) - 1) * var(--card-carousel-gap)) / var(--card-carousel-slots));
     min-width: 0;
     max-width: 100%;
