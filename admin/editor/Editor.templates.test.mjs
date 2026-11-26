@@ -12,6 +12,7 @@ test('page and template editors save and cancel the shared footer in their docum
     const result = await build({
         entryPoints: ['admin/editor/Editor.jsx'], bundle: true, write: false, platform: 'node', format: 'esm',
         outfile: file.pathname, jsx: 'automatic',
+        loader: { '.ttf': 'dataurl' },
         external: ['react', 'react/jsx-runtime'],
         plugins: [{ name: 'isolate-editor-io', setup(builder) {
             builder.onResolve({ filter: /AdminShell\.jsx$|@vyaz\/core\/Context\.js$|\/dist\/kroy\/.*\.mjs$/ },
@@ -71,6 +72,16 @@ test('page and template editors save and cancel the shared footer in their docum
             assert.equal(shell().footer.props.description, 'Saved');
             assert.equal(shell().isDirty, false);
             await act(() => shell().workspaceSettings.onFooterChange({ description: 'New footer' }));
+            if (!isTemplate) {
+                const select = () => shell().editorSettings.props.children.props;
+                assert.deepEqual(select().options.map(({ value }) => value), ['inherit', 'layout', 'none']);
+                await act(() => select().onChange('none'));
+                assert.equal(select().value, 'none');
+                assert.equal(shell().workspaceSettings.sharedBefore, undefined);
+                assert.equal(shell().footer.props.description, 'New footer');
+                await act(() => select().onChange('inherit'));
+                assert.equal(select().value, 'inherit');
+            }
             if (isTemplate) {
                 const block = shell().content[0];
                 await act(() => shell().onMovePart(block.id, 1));

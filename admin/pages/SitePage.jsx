@@ -15,6 +15,7 @@ import { formResponseError } from '../ui/formValidation.mjs';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
 import SeoFields from '../components/SeoFields.jsx';
 import { siteSettingsDirty } from './siteSettingsState.mjs';
+import { SelectControl } from '../ui/TokenControls.jsx';
 
 function cloneSettings(settings) {
     return { themeId: settings.themeId, themeMode: settings.themeMode, separatorMediaId: settings.separatorMediaId ?? null, overrides: { light: { ...(settings.overrides?.light ?? {}) }, dark: { ...(settings.overrides?.dark ?? {}) }, shared: { ...(settings.overrides?.shared ?? {}) } } };
@@ -190,9 +191,9 @@ export default function SitePage() {
             <Overview siteData={siteData} />
             {layoutList && <AdminPanel as="form" id={formId} onSubmit={(event) => { event.preventDefault(); save(); }}>
                 <label className={styles.formField}>Шаблон по умолчанию
-                    <select disabled={saveStatus === 'saving'} value={defaultLayout} onChange={(event) => { setDefaultLayout(event.target.value); clearSaveError(); }}>
-                        {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                    </select>
+                    <SelectControl label="Шаблон по умолчанию" disabled={saveStatus === 'saving'} value={defaultLayout}
+                        options={layoutList.templates.map(({ id, name }) => ({ value: id, label: name }))}
+                        onChange={(value) => { setDefaultLayout(value); clearSaveError(); }} />
                 </label>
             </AdminPanel>}
         </>}

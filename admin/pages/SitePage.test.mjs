@@ -64,6 +64,7 @@ test('SitePage saves only the active form and retains other settings drafts when
                 if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest = (...args) => globalThis.__kroySitePageTest.apiRequest(...args);' };
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const formResponseError = async () => "Error";' };
                 if (path.endsWith('AppearanceControls.jsx')) return { contents: 'export const ThemePicker = "ThemePicker", ThemeModeControl = "ThemeModeControl", TokenTable = "TokenTable";' };
+                if (path.endsWith('TokenControls.jsx')) return { contents: 'export const SelectControl = "SelectControl";' };
                 return { contents: `export default ${JSON.stringify(path.endsWith('.css') ? {} : path.split('/').pop().replace('.jsx', ''))};` };
             });
         } }],
@@ -118,8 +119,8 @@ test('SitePage saves only the active form and retains other settings drafts when
     assert.equal(tree.props.hasUnsavedChanges, false);
     assert.equal(listeners.has('beforeunload'), false);
     switchTo('overview'); await settled();
-    const select = () => find((node) => node.type === 'select');
-    select().props.onChange({ target: { value: 'extra' } }); render();
+    const select = () => named('SelectControl');
+    select().props.onChange('extra'); render();
     switchTo('contacts');
     named('ContactSettings').props.onChange({ address: 'Another contact draft' }); render();
     switchTo('overview');

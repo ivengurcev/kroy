@@ -8,6 +8,11 @@ import { widgets } from '../../dist/kroy/widgets.mjs';
 import widgetMetadata from '../../dist/kroy/widgets.json';
 
 import AdminShell from '../components/AdminShell.jsx';
+import Button from '../ui/Button.jsx';
+import FormField from '../ui/FormField.jsx';
+import { SelectControl } from '../ui/TokenControls.jsx';
+import fieldStyles from '../components/PageDetailsForm.module.css';
+import listStyles from '../components/AdminList.module.css';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
@@ -415,7 +420,10 @@ export default function Editor() {
 
     return (
         <>
-        {saveError && <p role="alert">{saveError.message}{saveError.code && <button type="button" disabled={switching} onClick={reloadConflict}>Загрузить актуальные данные</button>}</p>}
+        {saveError && <div className={listStyles.error}>
+            <p role="alert">{saveError.message}</p>
+            {saveError.code && <Button disabled={switching} onClick={reloadConflict}>Загрузить актуальные данные</Button>}
+        </div>}
         <div inert={saveStatus === 'saving' || switching || undefined} aria-busy={saveStatus === 'saving' || switching}>
         <AdminShell
             page={page}
@@ -445,12 +453,16 @@ export default function Editor() {
             saveBlocked={Boolean(saveError?.code)}
             onCancel={cancel}
             isTemplate={isTemplate}
-            editorSettings={isTemplate ? <label>Название шаблона <input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} /></label>
-                : layoutList && <label>Использовать шаблон <select value={selection.id ?? selection.mode} onChange={(event) => selectTemplate(event.target.value)}>
-                    <option value="inherit">Наследовать шаблон сайта ({layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})</option>
-                    {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                    <option value="none">Без шаблона</option>
-                </select></label>}
+            editorSettings={isTemplate ? <FormField label="Название шаблона" className={fieldStyles.field}>
+                <input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} />
+            </FormField> : layoutList && <FormField label="Использовать шаблон" className={fieldStyles.field}>
+                <SelectControl label="Использовать шаблон" value={selection.id ?? selection.mode}
+                    disabled={switching || saveStatus === 'saving'} onChange={selectTemplate} options={[
+                        { value: 'inherit', label: `Наследовать шаблон сайта (${layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})` },
+                        ...layoutList.templates.map(({ id, name }) => ({ value: id, label: name })),
+                        { value: 'none', label: 'Без шаблона' },
+                    ]} />
+            </FormField>}
             workspaceSettings={{
                 footerPreview: footer && site ? prepareSiteFooter(site, footer, linkPages.map((page) => ({ ...page, site_id: site.id }))) : undefined,
                 sharedBefore: layout?.content.slice(0, layout.slotIndex),

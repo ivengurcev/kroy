@@ -86,7 +86,10 @@ export default function AdminShell({
 
     return (
         <div className={styles.shell}>
-                {loadStatus === 'success' && <div className={styles.actions}>{!isTemplate && actions}{editorSettings}</div>}
+                {loadStatus === 'success' && <div className={styles.actions}>
+                    {editorSettings && <div className={styles.editorSettings}>{editorSettings}</div>}
+                    {!isTemplate && actions}
+                </div>}
                 <EditorWorkspace
                     {...workspaceSettings}
                     page={page}
