@@ -104,7 +104,8 @@ export default async function postDetailTemplate(c) {
             reusedId
                 ? `UPDATE pages SET title = $2, path = $3, content = $4::jsonb, page_type = 'detail',
                         detail_parent_id = $5, route_param = $6, deleted_at = NULL,
-                        seo = '{}'::jsonb, data_source = NULL, material_section_id = NULL
+                         seo = '{}'::jsonb, data_source = NULL, material_section_id = NULL,
+                         template_mode = 'inherit', template_id = NULL
                    WHERE site_id = $1 AND id = $7
                    RETURNING id, site_id, path, title, content, page_type AS type,
                         data_source AS "dataSource", detail_parent_id AS "detailParentId",

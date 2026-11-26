@@ -29,7 +29,7 @@ test('URL reuse, template dependencies and concurrent route mutations in Postgre
         await t.test('deleted URL reuses one UUID with empty data and no former section or redirects', async () => {
             const section = (await pool.query("INSERT INTO material_sections (site_id, name, slug) VALUES ($1, 'Old section', 'old') RETURNING id", [site.id])).rows[0];
             const old = (await create('/old', { type: 'list', dataSource: 'materials', materialSectionId: section.id })).value;
-            await pool.query(`UPDATE pages SET content = '[{"old":true}]', seo = '{"title":"Old SEO"}' WHERE id = $1`, [old.id]);
+            await pool.query(`UPDATE pages SET content = '[{"old":true}]', seo = '{"title":"Old SEO"}', template_mode = 'none' WHERE id = $1`, [old.id]);
             await pool.query('INSERT INTO redirects VALUES ($1, $2, $3)', [site.id, '/old-alias', old.id]);
             await deletePage(context(null, old.id));
             const result = await create('/old');
@@ -45,18 +45,29 @@ test('URL reuse, template dependencies and concurrent route mutations in Postgre
             assert.equal(fresh.material_section_id, null);
             assert.equal(fresh.detail_parent_id, null);
             assert.equal(fresh.route_param, null);
+            assert.equal(fresh.template_mode, 'inherit');
+            assert.equal(fresh.template_id, null);
             assert.equal((await pool.query('SELECT 1 FROM redirects WHERE page_id = $1', [fresh.id])).rowCount, 0);
             assert.equal(fresh.deleted_at, null);
             assert.equal((await restorePage(context(null, old.id))).status, 404);
         });
         await t.test('explicit restoration preserves content, SEO, title and type', async () => {
             const old = (await create('/restore', { title: 'Original' })).value;
-            await pool.query(`UPDATE pages SET content = '[{"preserved":true}]', seo = '{"title":"Original SEO"}' WHERE id = $1`, [old.id]);
+            const { rows: [layout] } = await pool.query(
+                "INSERT INTO page_templates (site_id, name, slot_index) VALUES ($1, 'Restore layout', 0) RETURNING id", [site.id],
+            );
+            await pool.query(`UPDATE pages SET content = '[{"preserved":true}]', seo = '{"title":"Original SEO"}',
+                template_mode = 'template', template_id = $2 WHERE id = $1`, [old.id, layout.id]);
             await deletePage(context(null, old.id));
             const restored = await restorePage(context(null, old.id));
             assert.equal(restored.id, old.id);
-            const row = (await pool.query('SELECT title, content, seo, page_type, deleted_at FROM pages WHERE id = $1', [old.id])).rows[0];
-            assert.deepEqual(row, { title: 'Original', content: [{ preserved: true }], seo: { title: 'Original SEO' }, page_type: 'standard', deleted_at: null });
+            const row = (await pool.query(
+                'SELECT title, content, seo, page_type, deleted_at, template_mode, template_id FROM pages WHERE id = $1', [old.id],
+            )).rows[0];
+            assert.deepEqual(row, {
+                title: 'Original', content: [{ preserved: true }], seo: { title: 'Original SEO' },
+                page_type: 'standard', deleted_at: null, template_mode: 'template', template_id: layout.id,
+            });
         });
         await t.test('301 URL is reclaimed without changing the target page', async () => {
             const target = (await create('/target')).value;

@@ -164,6 +164,25 @@ CREATE TABLE public.orders (
 
 
 --
+-- Name: page_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.page_templates (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    site_id uuid NOT NULL,
+    name text NOT NULL,
+    content jsonb DEFAULT '[]'::jsonb NOT NULL,
+    slot_index integer NOT NULL,
+    is_main boolean DEFAULT false NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    CONSTRAINT page_templates_check CHECK (((slot_index >= 0) AND (slot_index <= jsonb_array_length(content)))),
+    CONSTRAINT page_templates_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
+    CONSTRAINT page_templates_name_check CHECK (((name = btrim(name)) AND ((char_length(name) >= 1) AND (char_length(name) <= 100)))),
+    CONSTRAINT page_templates_version_check CHECK ((version >= 1))
+);
+
+
+--
 -- Name: pages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -181,10 +200,13 @@ CREATE TABLE public.pages (
     material_section_id uuid,
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
     appearance jsonb DEFAULT '{}'::jsonb NOT NULL,
+    template_mode text DEFAULT 'inherit'::text NOT NULL,
+    template_id uuid,
     CONSTRAINT pages_appearance_check CHECK ((jsonb_typeof(appearance) = 'object'::text)),
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
     CONSTRAINT pages_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
+    CONSTRAINT pages_template_mode_check CHECK ((((template_mode = ANY (ARRAY['inherit'::text, 'none'::text])) AND (template_id IS NULL)) OR ((template_mode = 'template'::text) AND (template_id IS NOT NULL)))),
     CONSTRAINT pages_type_fields_check CHECK ((((page_type = 'standard'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'list'::text) AND (data_source = ANY (ARRAY['materials'::text, 'products'::text, 'reviews'::text])) AND (((data_source = 'materials'::text) AND (material_section_id IS NOT NULL)) OR ((data_source = ANY (ARRAY['products'::text, 'reviews'::text])) AND (material_section_id IS NULL))) AND (detail_parent_id IS NULL) AND (route_param IS NULL)) OR ((page_type = 'detail'::text) AND (data_source IS NULL) AND (material_section_id IS NULL) AND (detail_parent_id IS NOT NULL) AND (route_param ~ '^[A-Za-z][A-Za-z0-9_]*$'::text))))
 );
 
@@ -330,8 +352,11 @@ CREATE TABLE public.sites (
     seo jsonb DEFAULT '{}'::jsonb NOT NULL,
     separator_media_id uuid,
     footer_settings jsonb DEFAULT '{}'::jsonb NOT NULL,
+    footer_version integer DEFAULT 1 NOT NULL,
+    default_template_id uuid,
     CONSTRAINT sites_contact_settings_check CHECK ((jsonb_typeof(contact_settings) = 'object'::text)),
     CONSTRAINT sites_footer_settings_check CHECK ((jsonb_typeof(footer_settings) = 'object'::text)),
+    CONSTRAINT sites_footer_version_check CHECK ((footer_version >= 1)),
     CONSTRAINT sites_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT sites_theme_mode_check CHECK ((theme_mode = ANY (ARRAY['light'::text, 'dark'::text, 'system'::text]))),
     CONSTRAINT sites_theme_overrides_check CHECK ((jsonb_typeof(theme_overrides) = 'object'::text))
@@ -471,6 +496,22 @@ ALTER TABLE ONLY public.orders
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT orders_site_id_id_key UNIQUE (site_id, id);
+
+
+--
+-- Name: page_templates page_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.page_templates
+    ADD CONSTRAINT page_templates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: page_templates page_templates_site_id_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.page_templates
+    ADD CONSTRAINT page_templates_site_id_id_key UNIQUE (site_id, id);
 
 
 --
@@ -638,6 +679,20 @@ CREATE INDEX orders_site_created_idx ON public.orders USING btree (site_id, crea
 
 
 --
+-- Name: page_templates_one_main_per_site; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX page_templates_one_main_per_site ON public.page_templates USING btree (site_id) WHERE is_main;
+
+
+--
+-- Name: page_templates_site_name_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX page_templates_site_name_key ON public.page_templates USING btree (site_id, lower(name));
+
+
+--
 -- Name: pages_one_active_material_list_per_section; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -649,6 +704,13 @@ CREATE UNIQUE INDEX pages_one_active_material_list_per_section ON public.pages U
 --
 
 CREATE UNIQUE INDEX pages_one_detail_template_per_list ON public.pages USING btree (site_id, detail_parent_id) WHERE (page_type = 'detail'::text);
+
+
+--
+-- Name: pages_template_lookup; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX pages_template_lookup ON public.pages USING btree (site_id, template_id) WHERE (template_id IS NOT NULL);
 
 
 --
@@ -766,6 +828,14 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: page_templates page_templates_site_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.page_templates
+    ADD CONSTRAINT page_templates_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id) ON DELETE CASCADE;
+
+
+--
 -- Name: pages pages_detail_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -787,6 +857,14 @@ ALTER TABLE ONLY public.pages
 
 ALTER TABLE ONLY public.pages
     ADD CONSTRAINT pages_site_id_fkey FOREIGN KEY (site_id) REFERENCES public.sites(id);
+
+
+--
+-- Name: pages pages_template_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pages
+    ADD CONSTRAINT pages_template_fkey FOREIGN KEY (site_id, template_id) REFERENCES public.page_templates(site_id, id) ON DELETE RESTRICT;
 
 
 --
@@ -886,6 +964,14 @@ ALTER TABLE ONLY public.site_payment_integrations
 
 
 --
+-- Name: sites sites_default_template_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sites
+    ADD CONSTRAINT sites_default_template_fkey FOREIGN KEY (id, default_template_id) REFERENCES public.page_templates(site_id, id);
+
+
+--
 -- Name: sites sites_separator_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -930,4 +1016,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611220001'),
     ('202611220002'),
     ('202611240001'),
-    ('202611260001');
+    ('202611260001'),
+    ('202611270001');

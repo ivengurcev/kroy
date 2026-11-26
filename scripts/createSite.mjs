@@ -1,5 +1,6 @@
 import { pool } from "../db/client.mjs";
-import isValidHostname from "./isValidHostname.mjs";
+import { createMainPageTemplate } from "../db/pageTemplates.mjs";
+import isValidHostname from "../build/nginx/isValidHostname.mjs";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const [slug, hostname, providedName] = process.argv.slice(2);
@@ -65,6 +66,7 @@ try {
     [site.id, name],
   );
 
+  await createMainPageTemplate(client, site.id);
   await client.query("COMMIT");
   console.log(`Создан сайт: ${site.slug}`);
   console.log(`Название: ${site.name}`);

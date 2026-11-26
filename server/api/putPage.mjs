@@ -3,7 +3,8 @@ import widgetCatalog from "../../dist/kroy/widgets.json" with { type: "json" };
 import { pool } from "../../db/client.mjs";
 import getHostname from "./getHostname.mjs";
 import isUuid from "./isUuid.mjs";
-import { isPlainObject, validateContent } from "../../shared/pageContent.mjs";
+import { isPlainObject } from "../../shared/pageContent.mjs";
+import { validateDocumentContent } from "../../shared/pageTemplates.mjs";
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");
@@ -21,7 +22,7 @@ export default async function putPage(c) {
   }
 
   const details = isPlainObject(body)
-    ? validateContent(body.content, partCatalog, widgetCatalog)
+    ? validateDocumentContent(body.content, partCatalog, widgetCatalog)
     : [{ path: "content", code: "invalid_format", message: "Тело запроса должно быть объектом." }];
   if (details.length) {
     return c.json({ error: "Invalid content", details }, 400);

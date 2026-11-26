@@ -2,6 +2,7 @@ import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import pageContent from "../demo/page.json" with { type: "json" };
 import { pool } from "./client.mjs";
+import { createMainPageTemplate } from "./pageTemplates.mjs";
 
 if (!stdin.isTTY) {
   console.error("Заполнение базы требует интерактивного терминала.");
@@ -105,6 +106,8 @@ try {
     [testSiteId, "/", "Тестовая главная", JSON.stringify(testPageContent)],
   );
 
+  await createMainPageTemplate(client, siteId);
+  await createMainPageTemplate(client, testSiteId);
   await client.query("COMMIT");
   console.log("Demo and test data are ready.");
 } catch (error) {

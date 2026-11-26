@@ -80,7 +80,7 @@ export default async function postPage(c) {
       reusedId
         ? `UPDATE pages SET title = $2, path = $3, content = '[]'::jsonb, seo = '{}'::jsonb, appearance = '{}'::jsonb,
              deleted_at = NULL, page_type = $4, data_source = $5, material_section_id = $6,
-             detail_parent_id = NULL, route_param = NULL
+             detail_parent_id = NULL, route_param = NULL, template_mode = 'inherit', template_id = NULL
            WHERE id = $7 AND site_id = $1
            RETURNING id, site_id, path, title, content, appearance, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`
         : `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
