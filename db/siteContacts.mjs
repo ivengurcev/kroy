@@ -43,8 +43,8 @@ function fromRow(row) {
     return row ? normalizeSiteContacts(row.contact_settings) : null;
 }
 
-export async function getSiteContacts(siteId) {
-    const { rows: [row] } = await pool.query(
+export async function getSiteContacts(siteId, client = pool) {
+    const { rows: [row] } = await client.query(
         'SELECT contact_settings FROM sites WHERE id = $1',
         [siteId],
     );

@@ -124,8 +124,8 @@ export function projectHeader(block, pages) {
         ...block,
         props: {
             title: block.props.title,
-            navigation: (block.props.navigation ?? []).flatMap(({ pageId }) => {
-                const page = pages.find(({ id }) => id === pageId);
+            navigation: (Array.isArray(block.props.navigation) ? block.props.navigation : []).flatMap((link) => {
+                const page = pages.find(({ id }) => id === link?.pageId?.toLowerCase?.());
                 return page ? [{ href: page.path, label: page.title }] : [];
             }),
         },

@@ -130,6 +130,8 @@ try {
 
     let site;
     let pageTemplates;
+    let catalog;
+    let publishedReviews;
     let sourceFingerprint;
     let pages;
     let allDetailTemplates;
@@ -258,6 +260,8 @@ try {
             throw new Error(`Сайт ${site.slug} содержит некорректный шаблон детального маршрута`);
         }
 
+        catalog = await getCatalog(site.id, { includeHidden: false }, client);
+        publishedReviews = await getPublishedReviews(site.id, client);
         await client.query('COMMIT');
         transactionStarted = false;
     } catch (error) {
@@ -342,12 +346,10 @@ try {
         join(ROOT, 'dist', 'kroy', 'site-footer.mjs'),
         `export const footer = ${JSON.stringify(footer)};\n`
     );
-    const catalog = await getCatalog(site.id, { includeHidden: false });
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-catalog.mjs'),
         `export const catalog = ${JSON.stringify(catalog)};\n`
     );
-    const publishedReviews = await getPublishedReviews(site.id);
     const reviews = publishedReviews.map(({ mediaFilename, ...review }) => ({
         ...review,
         mediaUrl: mediaFilename ? `${ASSET_BASE}/reviews/${mediaFilename}` : null,

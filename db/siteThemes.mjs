@@ -15,10 +15,10 @@ function toSiteTheme(row) {
   };
 }
 
-export async function getSiteTheme(siteId) {
+export async function getSiteTheme(siteId, client = pool) {
   const {
     rows: [row],
-  } = await pool.query(
+  } = await client.query(
     `SELECT theme_id, theme_mode, theme_overrides, separator_media_id
      FROM sites
      WHERE id = $1`,

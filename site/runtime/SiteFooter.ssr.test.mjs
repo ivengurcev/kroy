@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test, { before, after } from 'node:test';
-import { createElement } from 'react';
+import { act, createElement } from 'react';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { build } from 'esbuild';
 import { randomUUID } from 'node:crypto';
@@ -103,5 +104,51 @@ test('static SSR and hydration consume the same release-owned footer snapshot, w
         assert.match(source, /import \{ footer \} from '\.\.\/\.\.\/dist\/kroy\/site-footer.mjs'/);
         assert.match(source, /footer=\{footer\}/);
         assert.doesNotMatch(source, /fetch\(/);
+    }
+});
+
+test('hydrated site switches layouts without remounting its footer or branding', async () => {
+    const block = { part: '@kroy/header', props: { title: 'Shared heading' }, view: { name: '@kroy/header', props: {} } };
+    const input = {
+        pages: { '/': { path: '/', content: [], templateIndex: 0 }, '/other': { path: '/other', content: [] } },
+        templates: [{ before: [block], after: [] }],
+        footer: { siteName: 'Site', year: 2026, navigation: [{ href: '/other', label: 'Next' }] }, path: '/',
+    };
+    const render = (entry) => createElement(entry.SiteApp, {
+        ...input,
+        parts: { '@kroy/header': entry.prepareHeader, '@kroy/footer': entry.prepareFooter },
+        widgets: { '@kroy/header': entry.Header, '@kroy/footer': entry.Footer },
+    });
+    const dom = new JSDOM(`<div id="root">${renderToString(render(server))}</div>`, { url: 'https://example.test/' });
+    const globals = { window: dom.window, document: dom.window.document, Element: dom.window.Element,
+        history: dom.window.history, IS_REACT_ACT_ENVIRONMENT: true };
+    const previous = Object.fromEntries(Object.keys(globals).map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+    let root;
+    try {
+        for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
+        const errors = [];
+        const footer = document.querySelector('footer');
+        const brand = document.querySelector('a[href="https://oysite.ru/"]');
+        await act(async () => { root = hydrateRoot(document.getElementById('root'), render(client), { onRecoverableError: (error) => errors.push(error) }); });
+        await act(async () => {
+            footer.querySelector('a').dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+        });
+        assert.equal(window.location.pathname, '/other');
+        assert.equal(document.querySelector('header'), null);
+        assert.equal(document.querySelector('footer'), footer);
+        assert.equal(document.querySelector('a[href="https://oysite.ru/"]'), brand);
+        await act(async () => {
+            history.replaceState(null, '', '/');
+            window.dispatchEvent(new window.PopStateEvent('popstate'));
+        });
+        assert.equal(document.querySelector('header').textContent, 'Shared heading');
+        assert.deepEqual(errors, []);
+    } finally {
+        if (root) await act(async () => root.unmount());
+        for (const [key, descriptor] of Object.entries(previous)) {
+            if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+            else delete globalThis[key];
+        }
+        dom.window.close();
     }
 });

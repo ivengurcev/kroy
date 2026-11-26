@@ -42,17 +42,13 @@ export default async function getSitePreview(c) {
         const projected = projectPageLayouts(linkPages, rows[0].default_template_id, layouts, linkPages);
         const footer = prepareSiteFooter({ ...site, name: rows[0].site_name, domains: domains.map(({ hostname }) => hostname) },
             rows[0].footer_settings, linkPages);
-        await client.query('COMMIT');
-        client.release();
-        client = null;
-        const settings = await getSiteTheme(site.id);
-        if (!settings) return c.json({ error: 'Site not found' }, 404);
+        const settings = await getSiteTheme(site.id, client);
 
         const separator = settings.separatorMediaId
-            ? (await pool.query('SELECT mime_type FROM media WHERE id = $1 AND site_id = $2', [settings.separatorMediaId, site.id])).rows[0]
+            ? (await client.query('SELECT mime_type FROM media WHERE id = $1 AND site_id = $2', [settings.separatorMediaId, site.id])).rows[0]
             : null;
 
-        const { rows: detailTemplates } = await pool.query(
+        const { rows: detailTemplates } = await client.query(
             `SELECT detail.id, detail.path, detail.appearance, detail.route_param AS "routeParam", detail.detail_parent_id AS "detailParentId",
                     list.material_section_id AS "materialSectionId"
              FROM pages detail
@@ -61,14 +57,16 @@ export default async function getSitePreview(c) {
                AND detail.deleted_at IS NULL AND list.deleted_at IS NULL`,
             [site.id],
         );
-        const [materialSections, materialRows] = await Promise.all([
-            getMaterialSections(site.id),
-            pool.query(
-                `SELECT section_id, slug, title, summary, status, cover_media_id AS "coverMediaId"
-                 FROM materials WHERE site_id = $1 AND status = 'published' ORDER BY section_id, slug`,
-                [site.id],
-            ).then(({ rows: materialRows }) => materialRows),
-        ]);
+        const materialSections = await getMaterialSections(site.id, client);
+        const { rows: materialRows } = await client.query(
+            `SELECT section_id, slug, title, summary, status, cover_media_id AS "coverMediaId"
+             FROM materials WHERE site_id = $1 AND status = 'published' ORDER BY section_id, slug`,
+            [site.id],
+        );
+        const contacts = await getSiteContacts(site.id, client);
+        const catalog = await getCatalog(site.id, { includeHidden: false }, client);
+        const reviews = await getPublishedReviews(site.id, client);
+        await client.query('COMMIT');
         const materialsBySection = Object.fromEntries(materialSections.map((section) => [section.id,
             materialRows.filter(({ section_id: sectionId }) => sectionId === section.id).map((material) => ({
                 slug: material.slug, title: material.title, summary: material.summary, status: material.status,
@@ -95,10 +93,10 @@ export default async function getSitePreview(c) {
                 separatorUrl: settings.separatorMediaId ? `/api/media/${settings.separatorMediaId}` : '',
                 separatorMimeType: separator?.mime_type ?? null,
             },
-            contacts: await getSiteContacts(site.id),
+            contacts,
             footer,
-            catalog: await getCatalog(site.id, { includeHidden: false }),
-            reviews: await getPublishedReviews(site.id),
+            catalog,
+            reviews,
         });
     } catch (error) {
         await client?.query('ROLLBACK').catch(() => {});

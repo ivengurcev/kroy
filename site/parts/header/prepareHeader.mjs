@@ -8,7 +8,7 @@
  */
 export default function prepareHeader({ props, context }) {
     return {
-        title: props.title?.trim() || context.siteName,
+        title: (typeof props.title === 'string' && props.title.trim()) || context.siteName,
         navigation: (props.navigation ?? []).filter(({ href }) => href),
     };
 }

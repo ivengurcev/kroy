@@ -162,13 +162,11 @@ export async function deleteCatalogProduct(siteId, productId) {
     return rowCount > 0;
 }
 
-export async function getCatalog(siteId, { includeHidden = true } = {}) {
-    const [categories, products] = await Promise.all([
-        pool.query('SELECT id, name, sort_order FROM product_categories WHERE site_id = $1 ORDER BY sort_order, id', [siteId]),
-        pool.query(`SELECT id, category_id, name, description, media_id, price, type, sort_order, status
-                    FROM products WHERE site_id = $1 ${includeHidden ? '' : "AND status = 'published'"}
-                    ORDER BY category_id NULLS FIRST, sort_order, id`, [siteId]),
-    ]);
+export async function getCatalog(siteId, { includeHidden = true } = {}, client = pool) {
+    const categories = await client.query('SELECT id, name, sort_order FROM product_categories WHERE site_id = $1 ORDER BY sort_order, id', [siteId]);
+    const products = await client.query(`SELECT id, category_id, name, description, media_id, price, type, sort_order, status
+        FROM products WHERE site_id = $1 ${includeHidden ? '' : "AND status = 'published'"}
+        ORDER BY category_id NULLS FIRST, sort_order, id`, [siteId]);
     return { categories: categories.rows.map(mapCategory), products: products.rows.map(mapProduct) };
 }
 

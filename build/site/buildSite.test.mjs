@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 test('build writes source fingerprint after renderSite clears and renders the staging directory', async () => {
     const source = await readFile(fileURLToPath(new URL('./buildSite.mjs', import.meta.url)), 'utf8');
-    const renderPosition = source.indexOf('await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);');
+    const renderPosition = source.indexOf('await renderSite(site, projected.pages, temporaryDirectory, ASSET_BASE);');
     const fingerprintPosition = source.indexOf("await writeFile(join(temporaryDirectory, 'source-fingerprint.json')");
     assert.ok(renderPosition >= 0);
     assert.ok(fingerprintPosition > renderPosition);

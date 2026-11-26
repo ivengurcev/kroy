@@ -51,6 +51,7 @@ test('SiteApp switches page tokens on links and Back/Forward while footer keeps 
                 if (path.endsWith('separatorContext.js')) return { contents: 'export default {Provider:"separator"};' };
                 if (path.endsWith('.css')) return { contents: 'export default {theme:"site-theme"};' };
                 if (path.endsWith('PaymentResult.jsx')) return { contents: 'export default function PaymentResult(){return {type:"payment-result",props:{}};}' };
+                if (path.endsWith('Page.jsx')) return { contents: 'export default ({content}) => content.map(({part}) => part === "@kroy/footer" ? {type:"footer",props:{}} : null);' };
                 return { contents: 'export default function Component(){return null;}' };
             });
         } }],
@@ -73,7 +74,7 @@ test('SiteApp switches page tokens on links and Back/Forward while footer keeps 
             nodes.push(element);
             visit(element.props?.children);
         }
-        visit(SiteApp({ pages, path: '/', theme, parts: {}, widgets: {} }));
+        visit(SiteApp({ pages, path: '/', theme, parts: {}, widgets: {}, footer: { year: 2026 } }));
         const root = nodes.find(({ props }) => props?.className === 'site-theme');
         const roots = nodes.filter(({ props }) => props?.className === 'site-theme');
         assert.equal(roots.length, 2);

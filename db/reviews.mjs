@@ -41,8 +41,8 @@ export async function getReviews(siteId, status = null) {
     return rows.map(mapReview);
 }
 
-export async function getPublishedReviews(siteId) {
-    const { rows } = await pool.query(
+export async function getPublishedReviews(siteId, client = pool) {
+    const { rows } = await client.query(
         `SELECT r.id, r.author_name, r.author_subtitle, r.text, r.media_id, r.review_date::text AS review_date, m.filename
          FROM reviews r
          LEFT JOIN media m ON m.id = r.media_id AND m.site_id = r.site_id

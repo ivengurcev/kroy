@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
     FOOTER_PART,
+    projectPageLayouts,
     resolvePageTemplate,
     splitTemplateContent,
     validateTemplateContent,
@@ -45,4 +46,20 @@ test('template validation preserves the widget contract and reserves the global 
     assert.deepEqual(validateTemplateContent({
         content: [{ part: FOOTER_PART, props: {}, view: widget(FOOTER_PART) }], slotIndex: 0,
     }, parts, widgets).map(({ code }) => code), ['global_footer']);
+});
+
+test('publication shares one layout across its public pages, including the expanded detail', () => {
+    const link = { id: 'destination', path: '/current-path', title: 'Current title', type: 'standard' };
+    const before = { part: '@kroy/header', props: { navigation: [{ pageId: link.id }] }, view: { name: '@kroy/header', props: {} } };
+    const template = { ...main, slotIndex: 1, content: [before] };
+    const pages = [
+        { path: '/', content: [], templateMode: 'inherit' },
+        { path: '/cases/example', content: [], templateMode: 'template', templateId: main.id, record: { slug: 'example' } },
+        { path: '/plain', content: [], templateMode: 'none' },
+    ];
+    const projected = projectPageLayouts(pages, null, [template, alternate], [link]);
+    assert.deepEqual(projected.pages.map(({ templateIndex }) => templateIndex), [0, 0, undefined]);
+    assert.equal(projected.templates.length, 1);
+    assert.deepEqual(projected.templates[0].before[0].props.navigation, [{ href: link.path, label: link.title }]);
+    assert.doesNotMatch(JSON.stringify(projected), /destination|templateMode|templateId/);
 });
