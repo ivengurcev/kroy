@@ -172,6 +172,7 @@
 }
 
 @container hero (min-width: 801px) {
+    .photo { background-position: right center; background-size: auto 100%; }
     /* Keep the same composition while allowing enlarged or long copy to grow. */
     .hero { height: auto; max-height: none; overflow: visible; }
     .inner {
