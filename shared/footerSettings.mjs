@@ -113,3 +113,21 @@ export function prepareSiteFooter(site, value, pages, year = new Date().getFullY
         legal: settings.legal,
     };
 }
+
+export function footerBlock(props) {
+    return { part: '@kroy/footer', props, view: { name: '@kroy/footer', props: {} } };
+}
+
+export function projectHeader(block, pages) {
+    if (block.part !== '@kroy/header') return block;
+    return {
+        ...block,
+        props: {
+            title: block.props.title,
+            navigation: (block.props.navigation ?? []).flatMap(({ pageId }) => {
+                const page = pages.find(({ id }) => id === pageId);
+                return page ? [{ href: page.path, label: page.title }] : [];
+            }),
+        },
+    };
+}

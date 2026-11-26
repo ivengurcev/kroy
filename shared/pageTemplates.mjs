@@ -1,4 +1,5 @@
 import { validateContent } from './pageContent.mjs';
+import { availableFooterPages, projectHeader } from './footerSettings.mjs';
 
 export const FOOTER_PART = '@kroy/footer';
 
@@ -29,6 +30,26 @@ function hasValidSlot(content, slotIndex) {
 export function splitTemplateContent({ content, slotIndex }) {
     if (!hasValidSlot(content, slotIndex)) throw new Error('Некорректная позиция содержимого страницы.');
     return { before: content.slice(0, slotIndex), after: content.slice(slotIndex) };
+}
+
+export function projectPageLayouts(pages, defaultId, templates, linkPages) {
+    const eligible = availableFooterPages(linkPages);
+    const project = (content) => content.map((block) => projectHeader(block, eligible));
+    const layouts = [];
+    const indexes = new Map();
+    const rendered = pages.map(({ templateMode, templateId, ...page }) => {
+        const template = resolvePageTemplate({ templateMode, templateId }, defaultId, templates);
+        const result = { ...page, content: project(page.content) };
+        if (!template) return result;
+        const { before, after } = splitTemplateContent(template);
+        if (!before.length && !after.length) return result;
+        if (!indexes.has(template.id)) {
+            indexes.set(template.id, layouts.length);
+            layouts.push({ before: project(before), after: project(after) });
+        }
+        return { ...result, templateIndex: indexes.get(template.id) };
+    });
+    return { pages: rendered, templates: layouts };
 }
 
 export function validateDocumentContent(content, parts, widgets, options) {

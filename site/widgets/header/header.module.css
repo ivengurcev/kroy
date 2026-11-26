@@ -1,0 +1,20 @@
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--site-space-2, 8px) var(--site-space-4, 16px);
+    padding: var(--site-space-4, 16px);
+    overflow-wrap: anywhere;
+}
+
+.header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--site-space-2, 8px) var(--site-space-4, 16px);
+}
+
+.header a {
+    color: inherit;
+    padding-block: 0.5em;
+}

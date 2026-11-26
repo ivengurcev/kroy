@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Page from '../../site/runtime/Page.jsx';
 import SiteRoot, { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
-import SiteFooter from '../../site/runtime/SiteFooter.jsx';
+import { footerBlock } from '../../shared/footerSettings.mjs';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
@@ -231,7 +231,7 @@ export default function EditorWorkspace({
                 ])}
                 {insertionPoint(content.length, 'insertion-last')}
                 <SiteTheme theme={globalTheme}>
-                    <SiteFooter footer={footer} contacts={contacts} />
+                    {footer && <Page content={[footerBlock(footer)]} parts={parts} widgets={widgets} contacts={contacts} />}
                 </SiteTheme>
             </section>
 

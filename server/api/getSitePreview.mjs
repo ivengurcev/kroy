@@ -7,17 +7,23 @@ import { getCatalog } from '../../db/catalog.mjs';
 import { getPublishedReviews } from '../../db/reviews.mjs';
 import { getMaterialSections } from '../../db/materialSections.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
-import { getSiteFooter } from '../../db/siteFooter.mjs';
+import { listPageTemplates } from '../../db/pageTemplates.mjs';
+import { prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { projectPageLayouts } from '../../shared/pageTemplates.mjs';
 
 export default async function getSitePreview(c) {
+    let client;
     try {
         const site = await getCurrentSite(c);
         if (!site) return c.json({ error: 'Site not found' }, 404);
-        const { rows } = await pool.query(
-            `SELECT s.id AS site_id, p.id, p.path, p.title, p.content, p.appearance,
+        client = await pool.connect();
+        await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+        const { rows } = await client.query(
+            `SELECT s.id AS site_id, s.name AS site_name, s.default_template_id, s.footer_settings,
+                    p.id, p.path, p.title, p.content, p.appearance,
+                    p.template_mode AS "templateMode", p.template_id AS "templateId",
                     p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId"
              FROM sites s
-             JOIN domains d ON d.site_id = s.id
              LEFT JOIN pages p ON p.site_id = s.id
               AND p.deleted_at IS NULL AND p.page_type <> 'detail'
              WHERE s.id = $1
@@ -25,8 +31,20 @@ export default async function getSitePreview(c) {
             [site.id],
         );
 
-        if (rows.length === 0) return c.json({ error: 'Site not found' }, 404);
+        if (rows.length === 0) {
+            await client.query('ROLLBACK');
+            return c.json({ error: 'Site not found' }, 404);
+        }
 
+        const layouts = await listPageTemplates(client, site.id);
+        const { rows: domains } = await client.query('SELECT hostname FROM domains WHERE site_id = $1', [site.id]);
+        const linkPages = rows.filter(({ path }) => path !== null);
+        const projected = projectPageLayouts(linkPages, rows[0].default_template_id, layouts, linkPages);
+        const footer = prepareSiteFooter({ ...site, name: rows[0].site_name, domains: domains.map(({ hostname }) => hostname) },
+            rows[0].footer_settings, linkPages);
+        await client.query('COMMIT');
+        client.release();
+        client = null;
         const settings = await getSiteTheme(site.id);
         if (!settings) return c.json({ error: 'Site not found' }, 404);
 
@@ -58,14 +76,16 @@ export default async function getSitePreview(c) {
             })),
         ]));
         const pages = Object.fromEntries(attachMaterialLists(
-            rows.filter(({ path }) => path !== null), materialsBySection, detailTemplates,
-        ).map(({ path, title, content, materials, materialSectionId, appearance = {} }) => [path, {
+            projected.pages, materialsBySection, detailTemplates,
+        ).map(({ path, title, content, materials, materialSectionId, templateIndex, appearance = {} }) => [path, {
             path, title, content, materials, materialSectionId,
+            ...(templateIndex !== undefined ? { templateIndex } : {}),
             ...(Object.keys(appearance).length ? { theme: getPageTheme(settings, appearance) } : {}),
         }]));
 
         return c.json({
             pages,
+            templates: projected.templates,
             detailTemplates: detailTemplates.map(({ appearance = {}, ...template }) => ({
                 ...template, ...(Object.keys(appearance).length ? { theme: getPageTheme(settings, appearance) } : {}),
             })),
@@ -76,12 +96,15 @@ export default async function getSitePreview(c) {
                 separatorMimeType: separator?.mime_type ?? null,
             },
             contacts: await getSiteContacts(site.id),
-            footer: await getSiteFooter(site),
+            footer,
             catalog: await getCatalog(site.id, { includeHidden: false }),
             reviews: await getPublishedReviews(site.id),
         });
     } catch (error) {
+        await client?.query('ROLLBACK').catch(() => {});
         console.error('Failed to load site preview', error);
         return c.json({ error: 'Internal server error' }, 500);
+    } finally {
+        client?.release();
     }
 }

@@ -1,7 +1,7 @@
 import { hydrateRoot } from 'react-dom/client';
 import SiteApp, { normalizePathname } from '../../site/runtime/SiteApp.jsx';
 import { parts, widgets } from '../../dist/kroy/site-parts.mjs';
-import { pages } from '../../dist/kroy/site-pages.mjs';
+import { pages, templates } from '../../dist/kroy/site-pages.mjs';
 import { theme } from '../../dist/kroy/site-theme.mjs';
 import { contacts } from '../../dist/kroy/site-contacts.mjs';
 import { footer } from '../../dist/kroy/site-footer.mjs';
@@ -28,6 +28,7 @@ hydrateRoot(
         theme={theme}
         contacts={contacts}
         footer={footer}
+        templates={templates}
         catalog={catalog}
         reviews={reviews}
     />

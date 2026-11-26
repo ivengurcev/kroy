@@ -1,6 +1,4 @@
-import { buildSocialLink, socialLabel, socialType } from '../../shared/socialLinks.mjs';
-import { contactPhoneHref, isValidContactEmail } from '../../shared/contactLinks.mjs';
-import { normalizeHref } from '../../shared/safeHref.mjs';
+import { normalizeHref } from '../../../shared/safeHref.mjs';
 import styles from './SiteFooter.module.css';
 
 function Links({ links, label }) {
@@ -12,15 +10,10 @@ function Links({ links, label }) {
     </nav>;
 }
 
-export default function SiteFooter({ footer = {}, contacts = {} }) {
-    const { siteName = '', description = '', navigation = [], documents = [], legal = {} } = footer;
-    const year = footer.year ?? new Date().getFullYear();
-    const phoneHref = contactPhoneHref(contacts.phone);
-    const email = isValidContactEmail(contacts.email) ? contacts.email : '';
-    const socials = (contacts.socials ?? []).map((social) => {
-        const type = socialType(social);
-        return { name: social.name || socialLabel(type), href: buildSocialLink(type, social.value || social.link) };
-    }).filter(({ href }) => href);
+/** @kroy-contract footer */
+export default function Footer({ data }) {
+    const { siteName = '', description = '', navigation = [], documents = [], legal = {},
+        year, contacts, phoneHref, email, socials } = data;
     const hasContacts = contacts.phone || email || contacts.address || socials.length > 0;
 
     return <footer className={styles.footer} aria-label="Подвал сайта">
@@ -49,7 +42,6 @@ export default function SiteFooter({ footer = {}, contacts = {} }) {
                     {legal.inn && <p>ИНН {legal.inn}</p>}
                     {legal.registrationNumber && <p>ОГРН/ОГРНИП {legal.registrationNumber}</p>}
                 </div>
-                <a className={styles.branding} href="https://oysite.ru/">Создано на Oysite</a>
             </div>
         </div>
     </footer>;

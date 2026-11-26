@@ -1,0 +1,11 @@
+.link {
+    position: fixed;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 2;
+    padding: 0.2em 0.55em;
+    color: #fff;
+    background: #232323;
+    border-radius: 0.4em;
+    font: 0.75rem/1.5 system-ui, sans-serif;
+}

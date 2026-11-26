@@ -73,6 +73,7 @@ export default function PreviewPage() {
             theme={snapshot.theme}
             contacts={snapshot.contacts}
             footer={snapshot.footer}
+            templates={snapshot.templates}
             catalog={snapshot.catalog}
             reviews={snapshot.reviews}
             pathFromUrl={pathFromPreviewUrl}

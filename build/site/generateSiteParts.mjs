@@ -3,14 +3,17 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { discoverParts, discoverWidgets, validateDefaultWidgets } from '../registry/discoverParts.mjs';
 import { isValidContent } from '../../shared/pageContent.mjs';
+import { validateDocumentContent } from '../../shared/pageTemplates.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUTPUT_DIR = join(ROOT, 'dist', 'kroy');
 const OUTPUT_PATH = join(OUTPUT_DIR, 'site-parts.mjs');
 
-export default async function generateSiteParts(pages, siteSlug) {
+export default async function generateSiteParts(pages, siteSlug, { layouts = [], footer } = {}) {
+    const documents = [...pages.map(({ content }) => content), ...layouts.flatMap(({ before, after }) => [before, after])];
+    const allContent = [...documents.flat(), ...(footer ? [footer] : [])];
     const names = [...new Set(
-        pages.flatMap(({ content }) => content.map(({ part }) => part))
+        allContent.map(({ part }) => part)
     )];
     const [discoveredParts, discoveredWidgets] = await Promise.all([
         discoverParts(),
@@ -21,15 +24,18 @@ export default async function generateSiteParts(pages, siteSlug) {
     validateDefaultWidgets(discoveredParts, discoveredWidgets);
     const partCatalog = Object.fromEntries(availableParts);
     const widgetCatalog = Object.fromEntries(availableWidgets);
-    for (const page of pages) {
-        if (!isValidContent(page.content, partCatalog, widgetCatalog, { allowMissingParts: true })) {
+    for (const content of documents) {
+        if (validateDocumentContent(content, partCatalog, widgetCatalog, { allowMissingParts: true }).length) {
             throw new Error(`Некорректный content сайта ${siteSlug}: каждая запчасть требует совместимый виджет`);
         }
     }
+    if (footer && !isValidContent([footer], partCatalog, widgetCatalog)) {
+        throw new Error(`Глобальный футер сайта ${siteSlug} требует зарегистрированные запчасть и виджет`);
+    }
     const widgetNames = [...new Set(
-        pages.flatMap(({ content }) => content
+        allContent
             .filter(({ part }) => availableParts.has(part))
-            .map(({ view }) => view.name))
+            .map(({ view }) => view.name)
     )];
     const imports = [];
     const partEntries = [];

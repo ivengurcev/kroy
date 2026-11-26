@@ -101,10 +101,6 @@
     font-size: var(--site-font-size-small);
 }
 
-.branding {
-    flex: 0 0 auto;
-}
-
 @container (min-width: 768px) {
     .section {
         display: grid;

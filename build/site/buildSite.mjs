@@ -18,7 +18,9 @@ import { createClientPageRegistry } from './sitePageData.mjs';
 import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
 import { getSiteSeoContext, resolvePageMeta } from '../../shared/seo.mjs';
 import { createRobots, createSitemap } from './seoFiles.mjs';
-import { prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { footerBlock, prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { listPageTemplates } from '../../db/pageTemplates.mjs';
+import { projectPageLayouts } from '../../shared/pageTemplates.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CLIENT_ENTRY_PATH = join(ROOT, 'build', 'site', 'hydrateSite.jsx');
@@ -127,6 +129,7 @@ try {
     }
 
     let site;
+    let pageTemplates;
     let sourceFingerprint;
     let pages;
     let allDetailTemplates;
@@ -148,7 +151,7 @@ try {
         transactionStarted = true;
 
         const siteResult = await client.query(
-            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo, separator_media_id, footer_settings
+            `SELECT id, slug, name, theme_id, theme_mode, theme_overrides, contact_settings, seo, separator_media_id, footer_settings, default_template_id
              FROM sites
              WHERE slug = $1`,
             [siteSlug]
@@ -167,6 +170,7 @@ try {
             if (!separatorMedia) throw new Error('Изображение разделителя не найдено');
         }
         sourceFingerprint = await getSiteFingerprint(site.id, client);
+        pageTemplates = await listPageTemplates(client, site.id);
 
         const domainsResult = await client.query(
             `SELECT hostname
@@ -183,7 +187,8 @@ try {
         seoContext = getSiteSeoContext(site, domainsResult.rows.map(({ hostname }) => hostname), process.env);
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content, seo, appearance, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId"
+            `SELECT id, site_id, path, title, content, seo, appearance, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId",
+                    template_mode AS "templateMode", template_id AS "templateId"
              FROM pages
              WHERE site_id = $1
                AND deleted_at IS NULL
@@ -192,6 +197,7 @@ try {
         );
         const detailTemplatesResult = await client.query(
             `SELECT detail.id, detail.path, detail.route_param, detail.content, detail.appearance,
+                    detail.template_mode AS "templateMode", detail.template_id AS "templateId",
                     detail.detail_parent_id AS "detailParentId", list.material_section_id AS "materialSectionId"
              FROM pages detail
              JOIN pages list
@@ -296,11 +302,13 @@ try {
         ...allDetailTemplates.filter(({ id }) => !materialTemplateIds.has(id)).map(({ path }) => path),
     ]);
     const siteAppearance = { themeId: site.theme_id, themeMode: site.theme_mode, overrides: site.theme_overrides };
-    const renderPages = [...attachMaterialLists(pages, materialsBySection, detailTemplates), ...materialPages]
+    const renderPages = attachMaterialLists([...pages, ...materialPages], materialsBySection, detailTemplates)
         .map(({ appearance = {}, ...page }) => ({
             ...page, meta: resolvePageMeta(site, page, page.record, seoContext),
             ...(Object.keys(appearance).length ? { theme: getPageTheme(siteAppearance, appearance) } : {}),
         }));
+    const projected = projectPageLayouts(renderPages, site.default_template_id, pageTemplates, pages);
+    const footer = prepareSiteFooter(site, site.footer_settings, pages);
 
     const preparedDirectory = join(STAGING_DIR, site.slug);
     temporaryDirectory = join(STAGING_DIR, `${site.slug}.tmp`);
@@ -309,11 +317,13 @@ try {
 
     await rm(temporaryDirectory, { recursive: true, force: true });
     await mkdir(temporaryDirectory, { recursive: true });
-    await generateSiteParts(renderPages, site.slug);
-    const pageRegistry = createClientPageRegistry(renderPages);
+    await generateSiteParts(renderPages, site.slug, {
+        layouts: projected.templates, footer: footerBlock(footer),
+    });
+    const pageRegistry = createClientPageRegistry(projected.pages);
     await writeFile(
         SITE_PAGES_PATH,
-        `export const pages = ${JSON.stringify(pageRegistry)};\n`
+        `export const pages = ${JSON.stringify(pageRegistry)};\nexport const templates = ${JSON.stringify(projected.templates)};\n`
     );
     const theme = {
         ...getPageTheme(siteAppearance),
@@ -330,7 +340,7 @@ try {
     );
     await writeFile(
         join(ROOT, 'dist', 'kroy', 'site-footer.mjs'),
-        `export const footer = ${JSON.stringify(prepareSiteFooter(site, site.footer_settings, pages))};\n`
+        `export const footer = ${JSON.stringify(footer)};\n`
     );
     const catalog = await getCatalog(site.id, { includeHidden: false });
     await writeFile(
@@ -378,7 +388,7 @@ try {
         `${pathToFileURL(rendererPath).href}?${Date.now()}`
     );
 
-    await renderSite(site, renderPages, temporaryDirectory, ASSET_BASE);
+    await renderSite(site, projected.pages, temporaryDirectory, ASSET_BASE);
     await writeFile(join(temporaryDirectory, 'robots.txt'), createRobots(seoContext.origin));
     await writeFile(join(temporaryDirectory, 'sitemap.xml'), createSitemap(renderPages, seoContext));
     await writeFile(join(temporaryDirectory, 'source-fingerprint.json'), JSON.stringify({ fingerprint: sourceFingerprint }));

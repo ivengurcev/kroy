@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import Page from './Page.jsx';
 import SiteRoot, { SiteTheme } from './SiteRoot.jsx';
-import SiteFooter from './SiteFooter.jsx';
+import OysiteBranding from './OysiteBranding.jsx';
+import { footerBlock } from '../../shared/footerSettings.mjs';
 import updatePageMeta from './updatePageMeta.mjs';
 
 const RESERVED_PATHS = [
@@ -47,6 +48,8 @@ export default function SiteApp({
     theme,
     contacts,
     footer,
+    templates = [],
+    siteName = footer?.siteName,
     catalog,
     reviews,
 }) {
@@ -62,7 +65,7 @@ export default function SiteApp({
     useEffect(() => {
         function navigate(url, push) {
             const nextPath = normalizePathname(pathFromUrl(url));
-            const nextPage = pages[nextPath];
+            const nextPage = initialPage?.path === nextPath ? initialPage : pages[nextPath];
 
             if (!nextPage && notFound === undefined) {
                 window.location.assign(url.href);
@@ -126,18 +129,29 @@ export default function SiteApp({
             document.removeEventListener('click', handleClick);
             window.removeEventListener('popstate', handlePopState);
         };
-    }, [notFound, pages, pathFromUrl, urlForPath]);
+    }, [initialPage, notFound, pages, pathFromUrl, urlForPath]);
+
+    const template = templates[page?.templateIndex];
+    const sources = { parts, widgets, contacts, catalog, reviews, materials: page?.materials,
+        materialSectionId: page?.materialSectionId, context: { params: {}, siteName, ...page?.context }, record: page?.record };
 
     return (
         <>
+        {!!template?.before.length && <SiteTheme tokens={tokens} theme={theme}>
+            <Page key={page.path} content={template.before} {...sources} />
+        </SiteTheme>}
         <SiteRoot tokens={page?.theme ? undefined : tokens} theme={page?.theme ? { ...theme, ...page.theme } : theme}>
             {page
-                ? <Page key={page.path} content={page.content} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={page.materials} materialSectionId={page.materialSectionId} context={page.context} record={page.record} />
+                ? <Page key={page.path} content={page.content} {...sources} />
                 : notFound}
         </SiteRoot>
-        <SiteTheme tokens={tokens} theme={theme}>
-            <SiteFooter footer={footer} contacts={contacts} />
-        </SiteTheme>
+        {!!template?.after.length && <SiteTheme tokens={tokens} theme={theme}>
+            <Page key={page.path} content={template.after} {...sources} />
+        </SiteTheme>}
+        {footer && <SiteTheme tokens={tokens} theme={theme}>
+            <Page content={[footerBlock(footer)]} parts={parts} widgets={widgets} contacts={contacts} />
+        </SiteTheme>}
+        <OysiteBranding />
         </>
     );
 }

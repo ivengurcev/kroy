@@ -15,6 +15,8 @@ export function createMaterialPages(templates, materialsBySection) {
             title: material.title,
             dataSource: 'materials',
             content: template.content,
+            templateMode: template.templateMode,
+            templateId: template.templateId,
             ...(template.appearance ? { appearance: template.appearance } : {}),
             context: { params: { [template.route_param]: material.slug } },
             record: {
