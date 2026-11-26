@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Section from '../../runtime/Section.jsx';
 import ReviewForm from '../../components/ReviewForm.jsx';
+import ReviewCard from './ReviewCard.jsx';
 import styles from './reviewCards.module.css';
 
 /**
@@ -29,17 +30,7 @@ export default function ReviewCards({ data = {}, options = {} }) {
                 {title && <h2 className={styles.title}>{title}</h2>}
                 {reviews.length > 0 && (
                     <div className={styles.grid} data-columns={columnCount} style={{ '--review-card-columns': columnCount }}>
-                        {reviews.map((review) => (
-                            <article className={styles.card} key={review.id}>
-                                {review.mediaUrl && <img className={styles.photo} src={review.mediaUrl} alt="" />}
-                                <blockquote className={styles.quote}>{review.text}</blockquote>
-                                <footer className={styles.author}>
-                                    <strong>{review.authorName}</strong>
-                                    {review.authorSubtitle && <span>{review.authorSubtitle}</span>}
-                                    <time dateTime={review.reviewDate}>{review.reviewDate?.split('-').reverse().join('.')}</time>
-                                </footer>
-                            </article>
-                        ))}
+                        {reviews.map((review) => <ReviewCard key={review.id} review={review} />)}
                     </div>
                 )}
                 {showSubmitButton && (

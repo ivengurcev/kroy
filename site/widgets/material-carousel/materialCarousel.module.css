@@ -1,0 +1,15 @@
+.section {
+    color: var(--site-color-text);
+    background: var(--site-color-bg);
+}
+
+.inner {
+    width: min(var(--site-container-max), calc(100% - var(--site-page-gutter) * 2));
+    margin-inline: auto;
+}
+
+.empty {
+    margin: 0;
+    color: var(--site-color-text-secondary);
+    font: 400 var(--site-font-size-body)/var(--site-line-height) var(--site-font-body);
+}
