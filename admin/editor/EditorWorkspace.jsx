@@ -182,7 +182,13 @@ export default function EditorWorkspace({
 
     const eligible = availableFooterPages(linkPages);
     function renderBlock(item, index, kind) {
-        if (item.slot) return <Card key={item.id}>Содержимое страницы</Card>;
+        if (item.slot) return (
+            <div key={item.id} className={styles.pageContentSlot}>
+                <span className={styles.slotSkeleton} aria-hidden="true"><span /></span>
+                <strong>Контент страницы</strong>
+                <span className={styles.slotSkeleton} aria-hidden="true"><span /><span /></span>
+            </div>
+        );
         const own = kind === 'own';
         const structureEditable = own && !page?.isLegalDocument;
         const isFooter = kind === 'footer';
