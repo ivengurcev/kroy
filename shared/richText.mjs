@@ -5,11 +5,12 @@ export function isLexicalDocument(value) {
 
 // The structure enforced by Lexical's registered paragraph, heading, list and link nodes.
 const inlineNodes = ['text', 'tab', 'linebreak', 'link', 'autolink'];
-const blockNodes = ['paragraph', 'heading', 'list', 'horizontalrule', 'table'];
+const blockNodes = ['paragraph', 'heading', 'list', 'horizontalrule', 'table', 'callout'];
 const childrenByType = {
     root: blockNodes,
     paragraph: inlineNodes,
     heading: inlineNodes,
+    callout: inlineNodes,
     link: ['text', 'tab', 'linebreak'],
     autolink: ['text', 'tab', 'linebreak'],
     list: ['listitem'],
@@ -19,14 +20,22 @@ const childrenByType = {
     tablecell: blockNodes.filter((type) => type !== 'table'),
 };
 
-export function hasLexicalTables(value) {
+function hasNodeType(value, type) {
     const stack = [value?.root ?? value];
     while (stack.length) {
         const node = stack.pop();
-        if (node?.type === 'table') return true;
+        if (node?.type === type) return true;
         if (Array.isArray(node?.children)) stack.push(...node.children);
     }
     return false;
+}
+
+export const hasLexicalTables = (value) => hasNodeType(value, 'table');
+export const hasLexicalCallouts = (value) => hasNodeType(value, 'callout');
+
+// Only these serialized values may reach CSS in the public renderer.
+export function richTextAlignment(format) {
+    return ['left', 'center', 'right', 'justify', 'start', 'end'].includes(format) ? format : null;
 }
 
 function validTable(node) {
@@ -63,6 +72,7 @@ export function isSupportedLexicalDocument(value, variant = 'full') {
                 || (node.format !== undefined && typeof node.format !== 'string')
                 || (node.indent !== undefined && !Number.isInteger(node.indent))) return false;
             if (node.type === 'heading' && !/^h[1-6]$/.test(node.tag)) return false;
+            if (node.type === 'callout' && variant !== 'full') return false;
             if (['link', 'autolink'].includes(node.type) && typeof node.url !== 'string') return false;
             if (node.type === 'list' && (!['bullet', 'number', 'check'].includes(node.listType)
                 || node.tag !== (node.listType === 'number' ? 'ol' : 'ul') || !Number.isFinite(node.start))) return false;

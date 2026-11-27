@@ -27,12 +27,15 @@ import { registerNodeStructure } from '@lexical/extension';
 import { getRichTextHtml, getRichTextNodes } from '../../shared/lexicalEditor.mjs';
 import { TableToolsButton } from './RichTextTableTools.jsx';
 import ToolbarButton from './RichTextToolbarButton.jsx';
-import { $readToolbarState, $toggleBlock, $toggleList } from './richTextToolbar.mjs';
+import RichTextAlignmentTools from './RichTextAlignmentTools.jsx';
+import { registerCalloutPaste } from './richTextCallout.mjs';
+import { $readToolbarState, $toggleBlock, $toggleCallout, $toggleList } from './richTextToolbar.mjs';
 import styles from './RichTextEditor.module.css';
 import { EXTERNAL_RICHTEXT_TAG, repairRichTextValue, richTextValueKey, syncRichTextValue, toLexicalDocument } from './richTextState.mjs';
 
 const EDITOR_THEME = {
     paragraph: styles.paragraph,
+    callout: styles.callout,
     heading: {
         h2: styles.heading2,
         h3: styles.heading3,
@@ -158,6 +161,11 @@ export function RichTextToolbar({ variant = 'compact' }) {
                 <ToolbarButton label="Заголовок H2" icon="heading2" pressed={active.block === 'h2'} onClick={() => run(() => $toggleBlock('h2'))} />
                 <ToolbarButton label="Заголовок H3" icon="heading3" pressed={active.block === 'h3'} onClick={() => run(() => $toggleBlock('h3'))} />
             </div>}
+            {variant === 'full' && <div className={styles.toolbarGroup}>
+                <RichTextAlignmentTools selection={selection} alignment={active.alignment} disabled={!active.canAlign} />
+                <ToolbarButton label="Выделенный блок (Callout)" icon="callout" pressed={Boolean(active.callout)}
+                    disabled={!active.canCallout} onClick={() => run($toggleCallout)} />
+            </div>}
             <div className={styles.toolbarGroup}>
                 <ToolbarButton label="Жирный" icon="bold" pressed={Boolean(active.bold)} onClick={() => run(() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold'))} />
                 <ToolbarButton label="Курсив" icon="italic" pressed={Boolean(active.italic)} onClick={() => run(() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic'))} />
@@ -192,6 +200,12 @@ function StructurePlugin() {
     // RichTextPlugin keeps Lexical's own HTML/clipboard importer. Repair imported
     // blocks in the same update, before serialization, without replacing selection/history.
     useEffect(() => registerNodeStructure(editor), [editor]);
+    return null;
+}
+
+function CalloutPlugin() {
+    const [editor] = useLexicalComposerContext();
+    useEffect(() => registerCalloutPaste(editor), [editor]);
     return null;
 }
 
@@ -247,6 +261,7 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
             <LexicalComposer key={variant} initialConfig={initialConfig}>
                 <EditablePlugin disabled={disabled} />
                 <StructurePlugin />
+                {variant === 'full' && <CalloutPlugin />}
                 <ValuePlugin value={value} prepared={prepared.value} tracker={tracker} onChange={onChange} />
                 <RichTextToolbar variant={variant} />
                 <div className={styles.editableArea}>

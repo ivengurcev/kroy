@@ -1,5 +1,5 @@
 import { createElement, Fragment } from 'react';
-import { hasRichText, richTextParagraphs } from '../../shared/richText.mjs';
+import { hasRichText, richTextAlignment, richTextParagraphs } from '../../shared/richText.mjs';
 
 function isSafeLink(value) {
     if (typeof value !== 'string' || !value.trim()) return false;
@@ -82,21 +82,25 @@ function segments(node, depth = 0) {
     if (node.type === 'linebreak') return [{ kind: 'inline', tag: 'br' }];
     if (['paragraph', 'heading', 'list', 'listitem'].includes(node.type) && !hasRichText(node)) return [];
     const children = (Array.isArray(node.children) ? node.children : []).flatMap((child) => segments(child, depth + 1));
+    const alignment = richTextAlignment(node.format);
+    const blockProps = alignment ? { style: { textAlign: alignment } } : {};
     switch (node.type) {
         case 'root':
             return wrapRuns(wrapOrphanItems(children), 'p');
         case 'horizontalrule':
             return [{ kind: 'block', tag: 'hr' }];
         case 'paragraph':
-            return wrapRuns(wrapOrphanItems(children), 'p');
+            return wrapRuns(wrapOrphanItems(children), 'p', blockProps);
+        case 'callout':
+            return wrapRuns(wrapOrphanItems(children), 'p', { ...blockProps, 'data-oysite-callout': 'true' });
         case 'heading':
-            return wrapRuns(wrapOrphanItems(children), /^h[1-6]$/.test(node.tag) ? node.tag : 'h2');
+            return wrapRuns(wrapOrphanItems(children), /^h[1-6]$/.test(node.tag) ? node.tag : 'h2', blockProps);
         case 'list':
             return [{ kind: 'block', tag: node.listType === 'number' ? 'ol' : 'ul',
-                props: node.listType === 'number' && Number.isFinite(node.start) && node.start !== 1 ? { start: node.start } : {},
+                props: { ...blockProps, ...(node.listType === 'number' && Number.isFinite(node.start) && node.start !== 1 ? { start: node.start } : {}) },
                 children: listItems(children) }];
         case 'listitem':
-            return [{ kind: 'item', tag: 'li', children: wrapOrphanItems(children) }];
+            return [{ kind: 'item', tag: 'li', props: blockProps, children: wrapOrphanItems(children) }];
         case 'table': {
             const rows = children.map((child) => child.kind === 'row' ? child
                 : { kind: 'row', tag: 'tr', children: [{ kind: 'cell', tag: 'td', children: [child] }] });
@@ -116,6 +120,7 @@ function segments(node, depth = 0) {
             const header = Number.isInteger(node.headerState) ? node.headerState & 3 : 0;
             return [{ kind: 'cell', tag: header ? 'th' : 'td', header,
                 props: {
+                    ...blockProps,
                     ...(header ? { scope: header & 1 ? 'col' : 'row' } : {}),
                     ...(Number.isInteger(node.colSpan) && node.colSpan > 1 && node.colSpan <= 1000 ? { colSpan: node.colSpan } : {}),
                     ...(Number.isInteger(node.rowSpan) && node.rowSpan > 1 && node.rowSpan <= 10000 ? { rowSpan: node.rowSpan } : {}),

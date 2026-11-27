@@ -6,10 +6,11 @@ import { ListNode, ListItemNode } from '@lexical/list';
 import { AutoLinkNode, LinkNode, registerLink } from '@lexical/link';
 import { HorizontalRuleNode } from '@lexical/react/LexicalHorizontalRuleNode';
 import { TableNode, TableRowNode, TableCellNode, registerTablePlugin, registerTableCellUnmergeTransform } from '@lexical/table';
-import { hasLexicalTables, isLexicalDocument, isSupportedLexicalDocument } from './richText.mjs';
+import { hasLexicalCallouts, hasLexicalTables, isLexicalDocument, isSupportedLexicalDocument } from './richText.mjs';
+import { CalloutNode } from './lexicalCallout.mjs';
 
 export const RICH_TEXT_NODES = [HeadingNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, HorizontalRuleNode];
-export const FULL_RICH_TEXT_NODES = [...RICH_TEXT_NODES, TableNode, TableRowNode, TableCellNode];
+export const FULL_RICH_TEXT_NODES = [...RICH_TEXT_NODES, TableNode, TableRowNode, TableCellNode, CalloutNode];
 export const getRichTextNodes = (variant) => variant === 'full' ? FULL_RICH_TEXT_NODES : RICH_TEXT_NODES;
 
 const headingImports = getStaticNodeConfig(HeadingNode).ownNodeConfig.importDOM;
@@ -81,6 +82,7 @@ function documentText(value) {
 export function normalizeLexicalDocument(value, variant = 'full') {
     if (!isLexicalDocument(value)) throw new Error('Ожидается Lexical JSON.');
     if (variant !== 'full' && hasLexicalTables(value)) throw new Error('Таблицы доступны только в полном редакторе.');
+    if (variant !== 'full' && hasLexicalCallouts(value)) throw new Error('Выделенные блоки доступны только в полном редакторе.');
     if (value.root.children.length && isSupportedLexicalDocument(value, variant)) return value;
     const editor = createEditor({ nodes: getRichTextNodes(variant), onError: (error) => { throw error; } });
     if (value.root.children.length) editor.setEditorState(editor.parseEditorState(value));

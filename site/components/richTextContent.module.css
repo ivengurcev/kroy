@@ -8,6 +8,12 @@
 }
 
 :where(.content) p { margin: 0; }
+:where(.content) [data-oysite-callout="true"] {
+    padding: var(--site-space-3) var(--site-space-4);
+    border: var(--site-line-width) solid var(--site-color-border);
+    border-radius: 0;
+    background: var(--site-color-surface-soft);
+}
 :where(.content) > * + * { margin-top: var(--site-space-4); }
 :where(.content) :is(h1, h2, h3, h4, h5, h6) {
     margin-block: var(--site-space-6) var(--site-space-3);

@@ -45,8 +45,18 @@ import UnderlineIcon from './icons/underline.svg';
 import LinkIcon from './icons/link.svg';
 import HorizontalRuleIcon from './icons/horizontal-rule.svg';
 import TableIcon from './icons/table.svg';
+import AlignLeftIcon from './icons/align-left.svg';
+import AlignCenterIcon from './icons/align-center.svg';
+import AlignRightIcon from './icons/align-right.svg';
+import AlignJustifyIcon from './icons/align-justify.svg';
+import CalloutIcon from './icons/callout.svg';
 
 const icons = {
+    alignLeft: AlignLeftIcon,
+    alignCenter: AlignCenterIcon,
+    alignRight: AlignRightIcon,
+    alignJustify: AlignJustifyIcon,
+    callout: CalloutIcon,
     paragraph: ParagraphIcon,
     heading2: Heading2Icon,
     heading3: Heading3Icon,
