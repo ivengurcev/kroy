@@ -1,3 +1,5 @@
+import FormError from '../ui/FormError.jsx';
+import { Input, Select } from '../ui/NativeControls.jsx';
 import { useEffect, useState } from 'react';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import PaymentIntegrationEditor from '../components/PaymentIntegrationEditor.jsx';
@@ -108,9 +110,9 @@ export default function SitePaymentsPage() {
             <p className={styles.status} role="status">{active ? `Активная система: ${active.name}` : 'Нет активной платёжной системы.'}</p>
             <label className={`${compactStyles.field} ${compactStyles.compact} ${styles.selector}`}>
                 <span>Платёжная система</span>
-                <select value={selected} disabled={Boolean(action) || saveStatus === 'saving'} onChange={(event) => selectProvider(event.target.value)}>
+                <Select value={selected} disabled={Boolean(action) || saveStatus === 'saving'} onChange={(event) => selectProvider(event.target.value)}>
                     {providers.map((item) => <option value={item.provider} key={item.provider}>{item.name}</option>)}
-                </select>
+                </Select>
             </label>
             {provider && <>
                 <div>
@@ -120,7 +122,7 @@ export default function SitePaymentsPage() {
                         <li>В кабинете Prodamus в поле «URL адреса для уведомлений» укажите адрес ниже. Собственный sys для подключения не требуется.</li>
                         <li>Рекомендуем сделать телефон и email обязательными на стороне Prodamus. Покупатель вводит их на платёжной странице.</li>
                     </ol>
-                    <label className={compactStyles.field}><span>URL webhook</span><input readOnly value={webhookUrl} onFocus={(event) => event.target.select()} /></label>
+                    <label className={compactStyles.field}><span>URL webhook</span><Input readOnly value={webhookUrl} onFocus={(event) => event.target.select()} /></label>
                     <p>Тестовый режим создаёт отдельные тестовые заказы. Для проверки используйте тестовые карты Prodamus и отдельную демо-форму; не включайте деморежим в кабинете боевой формы.</p>
                 </div>
                 <PaymentIntegrationEditor provider={provider} settings={draft} validateRequired={dirty} disabled={Boolean(action) || saveStatus === 'saving'} onChange={(settings) => { setDraft(settings); setSaveStatus('idle'); setError(''); }} onDeleteSecretKey={() => performAction('delete-secret')} />
@@ -131,7 +133,7 @@ export default function SitePaymentsPage() {
                 </div>
                 {dirty && <p className={styles.hint}>Сохраните настройки перед активацией.</p>}
             </>}
-            {error && <p className={styles.error} role="alert">{error}</p>}
+            {error && <FormError>{error}</FormError>}
             <OrderNotificationSettings state={notifications} disabled={saveStatus === 'saving'} />
         </AdminPanel>
     </SiteSettingsLayout>;

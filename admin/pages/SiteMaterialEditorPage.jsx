@@ -1,3 +1,5 @@
+import FormError from '../ui/FormError.jsx';
+import { Input, Select, Textarea } from '../ui/NativeControls.jsx';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
@@ -218,22 +220,22 @@ export default function SiteMaterialEditorPage() {
                 </div>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Раздел</span>
-                    <select name="sectionId" value={material.sectionId || ''} onChange={(event) => updateField('sectionId', event.target.value)} required>
+                    <Select name="sectionId" value={material.sectionId || ''} onChange={(event) => updateField('sectionId', event.target.value)} required>
                         <option value="">Выберите раздел</option>
                         {sections.map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}
-                    </select>
+                    </Select>
                 </label>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Заголовок</span>
-                    <input name="title" value={material.title} onChange={(event) => updateField('title', event.target.value)} required maxLength="300" autoFocus />
+                    <Input name="title" value={material.title} onChange={(event) => updateField('title', event.target.value)} required maxLength="300" autoFocus />
                 </label>
                 <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Slug</span>
-                    <input name="slug" value={slug} onChange={(event) => changeSlug(event.target.value)} required maxLength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
+                    <Input name="slug" value={slug} onChange={(event) => changeSlug(event.target.value)} required maxLength="200" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
                 </label>
                 <label className={`${compactStyles.field} ${compactStyles.long}`}>
                     <span>Краткое описание</span>
-                    <textarea name="summary" rows="3" value={material.summary ?? ''} onChange={(event) => updateField('summary', event.target.value)} maxLength="2000" />
+                    <Textarea name="summary" rows="3" value={material.summary ?? ''} onChange={(event) => updateField('summary', event.target.value)} maxLength="2000" />
                 </label>
                 <div className={`${compactStyles.field} ${compactStyles.long} ${styles.coverField}`}>
                     <span>Обложка</span>
@@ -251,7 +253,7 @@ export default function SiteMaterialEditorPage() {
                 </div>
                 <Switch label="Показывать на сайте" checked={material.status === 'published'} onChange={(event) => updateField('status', event.target.checked ? 'published' : 'draft')} />
                 </fieldset>
-                {formError && <p className={styles.formError} role="alert">{formError}</p>}
+                {formError && <FormError>{formError}</FormError>}
             </AdminPanel>}
             <MaterialActions materialId={materialId} dirty={dirty} saveStatus={saveStatus} onDelete={deleteCurrentMaterial} />
         </SiteSettingsLayout>

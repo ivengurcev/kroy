@@ -47,6 +47,7 @@ test('template list creates in a modal, preserves the draft on failure and prote
                 if (path === 'react/jsx-runtime') return { contents: 'export const Fragment = "fragment"; export const jsx = (type, props) => ({ type, props }); export const jsxs = jsx;' };
                 if (path.endsWith('AdminWorkspaceContext.jsx')) return { contents: 'export const useAppNavigate = () => globalThis.__templatesPageTest.navigate;' };
                 if (path.endsWith('AdminList.jsx')) return { contents: 'export const AdminListToolbar = "AdminListToolbar";' };
+                if (path.endsWith('NativeControls.jsx')) return { contents: 'export const Input = "input";' };
                 if (path.endsWith('Tree.jsx')) return { contents: 'export const TreeEmpty = "TreeEmpty", TreeItem = "TreeItem"; export default "Tree";' };
                 const name = path.split('/').at(-1).replace('.jsx', '');
                 return { contents: `export default ${JSON.stringify(path.endsWith('.css') ? {} : name)};` };
@@ -84,7 +85,7 @@ test('template list creates in a modal, preserves the draft on failure and prote
     resolveCreate({ ok: false, status: 409, json: async () => ({}) });
     await failure;
     assert.equal(input().props.value, 'Новый');
-    assert.equal(find(component('Modal'), ({ props }) => props.role === 'alert').props.children, 'Не удалось создать шаблон.');
+    assert.equal(component('FormError').props.children, 'Не удалось создать шаблон.');
     const success = submit();
     resolveCreate({ ok: true, json: async () => ({ id: 'new' }) });
     await success;

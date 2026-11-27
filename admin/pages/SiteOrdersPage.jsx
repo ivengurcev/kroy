@@ -1,3 +1,4 @@
+import { Select } from '../ui/NativeControls.jsx';
 import { useEffect, useState } from 'react';
 import AdminPageShell from '../components/AdminPageShell.jsx';
 import { AdminListToolbar, AdminListField, Pagination } from '../components/AdminList.jsx';
@@ -71,9 +72,9 @@ export default function SiteOrdersPage() {
         <div className={styles.content}>
             <AdminListToolbar actions={<Button size="compact" onClick={() => setRevision((value) => value + 1)}>Обновить</Button>}>
                 <AdminListField label="Статус заказа">
-                    <select value={filter} onChange={(event) => { setFilter(event.target.value); setOffset(0); }}>
+                    <Select value={filter} onChange={(event) => { setFilter(event.target.value); setOffset(0); }}>
                         <option value="">Все заказы</option><option value="pending">Ожидает оплаты</option><option value="paid">Оплачен</option><option value="completed">Выполнен</option>
-                    </select>
+                    </Select>
                 </AdminListField>
             </AdminListToolbar>
                 <Table className={listStyles.table} aria-label="Заказы текущего сайта">

@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './PaymentIntegrationEditor.module.css';
 import Button from '../ui/Button.jsx';
@@ -7,7 +8,7 @@ export default function PaymentIntegrationEditor({ provider, settings, disabled,
         {Object.entries(provider.fields).map(([name, field]) => <div key={name}>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>{field.label}</span>
-                <input
+                <Input
                     name={name}
                     type={field.type}
                     {...(field.type === 'checkbox' ? { checked: settings[name] === true } : { value: settings[name] ?? '' })}

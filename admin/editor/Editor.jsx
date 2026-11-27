@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 
 import { useContext, useEffect, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
@@ -454,7 +455,7 @@ export default function Editor() {
             onCancel={cancel}
             isTemplate={isTemplate}
             editorSettings={isTemplate ? <FormField label="Название шаблона" className={fieldStyles.field}>
-                <input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} />
+                <Input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} />
             </FormField> : layoutList && <FormField label="Использовать шаблон" className={fieldStyles.field}>
                 <SelectControl label="Использовать шаблон" value={selection.id ?? selection.mode}
                     disabled={switching || saveStatus === 'saving'} onChange={selectTemplate} options={[

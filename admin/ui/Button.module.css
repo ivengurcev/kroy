@@ -62,7 +62,6 @@
     background: transparent;
 }
 .listIcon:not(:disabled):hover { color: var(--color-primary); background: var(--color-primary-soft); }
-.listIcon:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .listIcon:disabled { border-color: transparent; background: transparent; }
 
 .button:disabled {
@@ -71,4 +70,9 @@
     background: var(--color-disabled-bg);
     box-shadow: none;
     cursor: default;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }

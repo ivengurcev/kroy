@@ -1,3 +1,5 @@
+import FormError from '../ui/FormError.jsx';
+import { Input } from '../ui/NativeControls.jsx';
 import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -208,7 +210,7 @@ export default function PageDetailsForm({
             </label>}</>}
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
                 <span>{isDetail ? 'Параметр пути' : 'Путь'}</span>
-                <input
+                <Input
                     name={isDetail ? 'routeParam' : 'path'}
                     required
                     ref={pathInputRef}
@@ -219,7 +221,7 @@ export default function PageDetailsForm({
             </label>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, titleClassName)}>
                 <span>Название</span>
-                <input
+                <Input
                     name="title"
                     required
                     ref={titleInputRef}
@@ -235,7 +237,7 @@ export default function PageDetailsForm({
                 {cancelFirst ? <>{cancelButton}{saveButton}</> : <>{saveButton}{cancelButton}</>}
             </div>}
             {showError && error && (
-                <div className={styles.error} role="alert">{error}</div>
+                <FormError>{error}</FormError>
             )}
         </ValidatedForm>
     );

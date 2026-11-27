@@ -1,3 +1,4 @@
+import { Input, Select, Textarea } from '../ui/NativeControls.jsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
@@ -59,15 +60,15 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
             </div>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Имя автора</span>
-                <input name="authorName" value={review.authorName} onChange={setField('authorName')} required maxLength="200" autoFocus={!editing} />
+                <Input name="authorName" value={review.authorName} onChange={setField('authorName')} required maxLength="200" autoFocus={!editing} />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Подпись</span>
-                <input name="authorSubtitle" value={review.authorSubtitle ?? ''} onChange={setField('authorSubtitle')} maxLength="300" />
+                <Input name="authorSubtitle" value={review.authorSubtitle ?? ''} onChange={setField('authorSubtitle')} maxLength="300" />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact} ${styles.textField}`}>
                 <span>Текст отзыва</span>
-                <textarea name="text" rows="4" value={review.text} onChange={setField('text')} required maxLength="5000" />
+                <Textarea name="text" rows="4" value={review.text} onChange={setField('text')} required maxLength="5000" />
             </label>
             <div className={`${compactStyles.field} ${compactStyles.compact} ${styles.imageField}`}>
                 <span>Фотография</span>
@@ -85,15 +86,15 @@ function ReviewForm({ review, editing, busy, error, onChange, onSubmit, onCancel
             </div>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Дата отзыва</span>
-                <input name="reviewDate" type="date" value={review.reviewDate} onChange={setField('reviewDate')} required />
+                <Input name="reviewDate" type="date" value={review.reviewDate} onChange={setField('reviewDate')} required />
             </label>
             <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>Статус</span>
-                <select value={review.status} onChange={setField('status')}>
+                <Select value={review.status} onChange={setField('status')}>
                     <option value="pending">Ожидает</option>
                     <option value="published">Опубликован</option>
                     <option value="rejected">Отклонён</option>
-                </select>
+                </Select>
             </label>
             {error && <p className={styles.formError} role="alert">{error}</p>}
             <div className={styles.formActions}>
@@ -196,11 +197,11 @@ export default function SiteReviewsPage() {
         >
             <div className={styles.content}>
                 <AdminListToolbar actions={actions}>
-                    <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Автор или текст" /></AdminListField>
+                    <AdminListField label="Поиск"><Input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Автор или текст" /></AdminListField>
                     <AdminListField label="Статус">
-                        <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+                        <Select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
-                        </select>
+                        </Select>
                     </AdminListField>
                 </AdminListToolbar>
                 {form && <ReviewForm review={form} editing={Boolean(form.id)} busy={saving} error={formError} onChange={(next) => { setForm(next); setFormError(''); }} onSubmit={saveReview} onCancel={() => setForm(null)} />}

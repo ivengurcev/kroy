@@ -1,23 +1,9 @@
 .catalog { display: grid; gap: var(--space-3); min-width: 0; }
-.dialog { width: min(460px, calc(100vw - var(--space-8))); max-width: 100%; max-height: calc(100dvh - var(--space-8)); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg); color: var(--color-text); background: var(--color-surface); box-shadow: var(--shadow-panel); }
-.dialog::backdrop { background: rgb(32 51 48 / 45%); }
-.productDialog { width: min(80vw, var(--admin-content-max)); }
-.dialogForm { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; max-height: calc(100dvh - var(--space-8)); }
-.dialogHeader { padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--color-border-subtle); }
-.dialogHeader h2 { margin: 0; font-size: var(--font-size-xl); }
-.dialogBody { display: grid; align-content: start; gap: var(--space-4); min-height: 0; padding: var(--space-6); overflow: auto; }
-.productForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dialogBody { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--space-4); min-width: 0; }
 .fullField { grid-column: 1 / -1; min-width: 0; }
 .checkboxField { display: flex; gap: var(--space-2); align-items: center; align-self: center; }
-.dialogError { margin: 0; color: var(--color-error-text); }
-.dialogActions { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-4) var(--space-6); border-top: 1px solid var(--color-border-subtle); background: var(--color-surface); }
-
-@media (max-width: 760px) {
-    .productDialog { width: calc(100vw - var(--space-4)); }
-    .dialogHeader { padding: var(--space-4); }
-    .dialogBody { padding: var(--space-4); }
-    .productForm { grid-template-columns: minmax(0, 1fr); }
-    .dialogActions { padding: var(--space-3) var(--space-4); }
+@media (min-width: 761px) {
+    .productForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .toolbarActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }

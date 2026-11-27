@@ -1,3 +1,4 @@
+import { Select } from '../ui/NativeControls.jsx';
 import { useState } from 'react';
 import Tabs from '../ui/Tabs.jsx';
 import { spacingFields } from '../../shared/widgetDisplay.js';
@@ -75,11 +76,11 @@ export default function PartEditor({
                 <div className={styles.section} hidden={!widgetTab}>
                     <label className={styles.viewField}>
                         Виджет
-                        <select value={view.name} onChange={(event) => onViewChange(event.target.value)}>
+                        <Select value={view.name} onChange={(event) => onViewChange(event.target.value)}>
                             {compatibleWidgets.map(([name, metadata]) => (
                                 <option value={name} key={name}>{metadata.title}</option>
                             ))}
-                        </select>
+                        </Select>
                     </label>
 
                     <div className={styles.section}>

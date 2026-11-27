@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import FormError from '../ui/FormError.jsx';
+import { Checkbox, Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import { useEffect, useState } from 'react';
+import Modal from '../ui/Modal.jsx';
 import Button from '../ui/Button.jsx';
 import Tree, { TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
 import { AdminListToolbar, AdminListField, Pagination } from './AdminList.jsx';
@@ -37,15 +40,6 @@ export default function CatalogEditor() {
     const [listError, setListError] = useState('');
     const [saving, setSaving] = useState(false);
     const [listRevision, setListRevision] = useState(0);
-    const dialogRef = useRef(null);
-
-    useEffect(() => {
-        const element = dialogRef.current;
-        if (!element) return;
-        if (dialog && !element.open) element.showModal();
-        else if (!dialog && element.open) element.close();
-    }, [dialog]);
-
     useEffect(() => {
         const controller = new AbortController();
         fetch('/api/site/catalog/categories', { signal: controller.signal }).then(async (response) => {
@@ -103,11 +97,6 @@ export default function CatalogEditor() {
         setDialog(null);
         setDialogDraft(null);
         setDialogError('');
-    }
-
-    function handleDialogCancel(event) {
-        event.preventDefault();
-        closeDialog();
     }
 
     async function saveDialog(event) {
@@ -198,9 +187,9 @@ export default function CatalogEditor() {
             <Button size="compact" onClick={() => openCategory()}><Icon name="add" /> Добавить раздел</Button>
             <Button variant="primary" size="compact" onClick={() => openProduct()}><Icon name="add" /> Добавить товар/услугу</Button>
         </div>}>
-            <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => changeQuery(() => setSearch(event.target.value))} placeholder="Название или описание" /></AdminListField>
-            <AdminListField label="Статус"><select value={filter} onChange={(event) => changeQuery(() => setFilter(event.target.value))}><option value="">Все статусы</option><option value="published">Опубликованные</option><option value="hidden">Скрытые</option></select></AdminListField>
-            <AdminListField label="Тип"><select value={typeFilter} onChange={(event) => changeQuery(() => setTypeFilter(event.target.value))}><option value="">Все типы</option><option value="goods">Товары</option><option value="service">Услуги</option></select></AdminListField>
+            <AdminListField label="Поиск"><Input type="search" value={search} onChange={(event) => changeQuery(() => setSearch(event.target.value))} placeholder="Название или описание" /></AdminListField>
+            <AdminListField label="Статус"><Select value={filter} onChange={(event) => changeQuery(() => setFilter(event.target.value))}><option value="">Все статусы</option><option value="published">Опубликованные</option><option value="hidden">Скрытые</option></Select></AdminListField>
+            <AdminListField label="Тип"><Select value={typeFilter} onChange={(event) => changeQuery(() => setTypeFilter(event.target.value))}><option value="">Все типы</option><option value="goods">Товары</option><option value="service">Услуги</option></Select></AdminListField>
         </AdminListToolbar>
         {listError && <p className={listStyles.error} role="alert">{listError}</p>}
         <Tree aria-label="Разделы каталога">
@@ -236,67 +225,59 @@ export default function CatalogEditor() {
             })}
         </Tree>
 
-        <dialog
-            ref={dialogRef}
-            className={`${styles.dialog} ${dialog?.type === 'product' ? styles.productDialog : ''}`}
-            aria-labelledby="catalog-dialog-title"
-            onCancel={handleDialogCancel}
-            onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }}
-        >
-            {dialog && dialogDraft && <ValidatedForm className={styles.dialogForm} onSubmit={saveDialog}>
-                <header className={styles.dialogHeader}>
-                    <h2 id="catalog-dialog-title">{dialog.type === 'category'
-                        ? dialog.mode === 'create' ? 'Новый раздел' : 'Редактировать раздел'
-                        : dialog.mode === 'create' ? 'Новый товар' : 'Редактировать товар'}</h2>
-                </header>
-
+        {dialog && dialogDraft && <Modal
+            title={dialog.type === 'category'
+                ? dialog.mode === 'create' ? 'Новый раздел' : 'Редактировать раздел'
+                : dialog.mode === 'create' ? 'Новый товар' : 'Редактировать товар'}
+            narrow={dialog.type === 'category'} busy={saving} closeOnBackdrop onClose={() => closeDialog()}
+            actions={<>
+                <Button disabled={saving} onClick={() => closeDialog()}>Отмена</Button>
+                <Button type="submit" form="catalog-editor-form" variant="primary" disabled={saving}>{saving ? 'Сохранение…' : 'Сохранить'}</Button>
+            </>}>
+            <ValidatedForm id="catalog-editor-form" onSubmit={saveDialog}>
                 {dialog.type === 'category' ? <div className={styles.dialogBody}>
                     <label className={fieldStyles.field}>
                         <span>Название</span>
-                        <input name="name" autoFocus required maxLength="200" value={dialogDraft.name} disabled={saving} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                        <Input name="name" autoFocus required maxLength="200" value={dialogDraft.name} disabled={saving} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
                     </label>
-                    {dialogError && <p className={styles.dialogError} role="alert">{dialogError}</p>}
+                    {dialogError && <FormError>{dialogError}</FormError>}
                 </div> : <div className={`${styles.dialogBody} ${styles.productForm}`}>
                     <label className={`${fieldStyles.field} ${styles.fullField}`}>
                         <span>Название</span>
-                        <input name="name" autoFocus required maxLength="200" value={dialogDraft.name} disabled={saving} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
+                        <Input name="name" autoFocus required maxLength="200" value={dialogDraft.name} disabled={saving} onChange={(event) => setDialogDraft((current) => ({ ...current, name: event.target.value }))} />
                     </label>
                     <label className={fieldStyles.field}>
                         <span>Цена, ₽</span>
-                        <input name="price" inputMode="decimal" pattern="[0-9]{1,10}([.,][0-9]{1,2})?" data-format-message="Укажите неотрицательную цену: до 10 цифр и двух знаков после точки" value={dialogDraft.price} onChange={(event) => setDialogDraft((current) => ({ ...current, price: event.target.value.replace(',', '.') }))} />
+                        <Input name="price" inputMode="decimal" pattern="[0-9]{1,10}([.,][0-9]{1,2})?" data-format-message="Укажите неотрицательную цену: до 10 цифр и двух знаков после точки" value={dialogDraft.price} onChange={(event) => setDialogDraft((current) => ({ ...current, price: event.target.value.replace(',', '.') }))} />
                     </label>
                     <label className={fieldStyles.field}>
                         <span>Тип позиции</span>
-                        <select value={dialogDraft.type} onChange={(event) => setDialogDraft((current) => ({ ...current, type: event.target.value }))}>
+                        <Select value={dialogDraft.type} onChange={(event) => setDialogDraft((current) => ({ ...current, type: event.target.value }))}>
                             <option value="service">Услуга</option><option value="goods">Товар</option>
-                        </select>
+                        </Select>
                     </label>
                     <label className={fieldStyles.field}>
                         <span>Раздел</span>
-                        <select value={dialogDraft.categoryId ?? ''} onChange={(event) => setDialogDraft((current) => ({ ...current, categoryId: event.target.value || null }))}>
+                        <Select value={dialogDraft.categoryId ?? ''} onChange={(event) => setDialogDraft((current) => ({ ...current, categoryId: event.target.value || null }))}>
                             <option value="">Без раздела</option>
                             {categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
-                        </select>
+                        </Select>
                     </label>
                     <label className={`${fieldStyles.field} ${styles.checkboxField}`}>
-                        <input type="checkbox" checked={dialogDraft.status === 'published'} onChange={(event) => setDialogDraft((current) => ({ ...current, status: event.target.checked ? 'published' : 'hidden' }))} />
+                        <Checkbox checked={dialogDraft.status === 'published'} onChange={(event) => setDialogDraft((current) => ({ ...current, status: event.target.checked ? 'published' : 'hidden' }))} />
                         <span>Опубликован</span>
                     </label>
                     <label className={`${fieldStyles.field} ${styles.fullField}`}>
                         <span>Описание</span>
-                        <textarea rows="5" value={dialogDraft.description} onChange={(event) => setDialogDraft((current) => ({ ...current, description: event.target.value }))} />
+                        <Textarea rows="5" value={dialogDraft.description} onChange={(event) => setDialogDraft((current) => ({ ...current, description: event.target.value }))} />
                     </label>
                     <div className={styles.fullField}>
                         <ImageField label="Изображение" value={dialogDraft.mediaId ? `/api/media/${dialogDraft.mediaId}` : ''} aspectRatio="4:3" maxWidth={1200} onChange={(url) => setDialogDraft((current) => ({ ...current, mediaId: url.split('/').pop() || null }))} />
                     </div>
-                    {dialogError && <p className={`${styles.dialogError} ${styles.fullField}`} role="alert">{dialogError}</p>}
+                    {dialogError && <FormError className={styles.fullField}>{dialogError}</FormError>}
                 </div>}
 
-                <footer className={styles.dialogActions}>
-                    <Button variant="secondary" disabled={saving} onClick={() => closeDialog()}>Отмена</Button>
-                    <Button type="submit" variant="primary" disabled={saving}>{saving ? 'Сохранение…' : 'Сохранить'}</Button>
-                </footer>
-            </ValidatedForm>}
-        </dialog>
+            </ValidatedForm>
+        </Modal>}
     </div>;
 }

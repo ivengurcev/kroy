@@ -1,7 +1,5 @@
 .content { display: grid; gap: var(--space-3); min-width: 0; }
-.actionError { margin: 0; color: var(--color-error-text); }
 .sectionForm { display: grid; gap: var(--space-3); min-width: 0; }
-.sectionFormActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
 
 .toolbarActions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .itemLabel { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }

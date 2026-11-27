@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 import { useEffect, useState } from 'react';
 import AdminPageShell from '../components/AdminPageShell.jsx';
 import { AdminListToolbar } from '../components/AdminList.jsx';
@@ -5,6 +6,7 @@ import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
 import FormField from '../ui/FormField.jsx';
+import FormError from '../ui/FormError.jsx';
 import Modal from '../ui/Modal.jsx';
 import Tree, { TreeEmpty, TreeItem } from '../ui/Tree.jsx';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
@@ -115,16 +117,16 @@ export default function TemplatesPage() {
                         </>} />;
                 })}
             </Tree> : <TreeEmpty>У сайта пока нет шаблонов.</TreeEmpty>}
-            {creating && <Modal title="Новый шаблон" busy={busy} onClose={closeCreate} actions={<>
+            {creating && <Modal title="Новый шаблон" narrow busy={busy} onClose={closeCreate} actions={<>
                 <Button disabled={busy} onClick={closeCreate}>Отмена</Button>
                 <Button type="submit" form={createForm} variant="primary" disabled={busy || !name.trim()}>Создать</Button>
             </>}>
                 <ValidatedForm id={createForm} onSubmit={create} aria-busy={busy}>
                     <FormField label="Название" className={fieldStyles.field}>
-                        <input name="name" autoFocus required maxLength={100} readOnly={busy} value={name}
+                        <Input name="name" autoFocus required maxLength={100} readOnly={busy} value={name}
                             onChange={(event) => { setName(event.target.value); setCreateError(''); }} />
                     </FormField>
-                    {createError && <p className={listStyles.error} role="alert">{createError}</p>}
+                    {createError && <FormError>{createError}</FormError>}
                 </ValidatedForm>
             </Modal>}
         </>}

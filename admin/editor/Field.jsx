@@ -1,3 +1,4 @@
+import { Checkbox, Input, Select, Textarea } from '../ui/NativeControls.jsx';
 
 import ListField from './ListField.jsx';
 import ImageField from './ImageField.jsx';
@@ -9,11 +10,11 @@ import RichTextEditor from '../ui/RichTextEditor.jsx';
 import Switch from '../ui/Switch.jsx';
 
 function MaterialSectionField({ value, onChange, materialSections }) {
-    return <label className={styles.field}>Раздел материалов<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{(materialSections ?? []).map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}</select></label>;
+    return <label className={styles.field}>Раздел материалов<Select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option>{(materialSections ?? []).map((section) => <option value={section.id} key={section.id}>{section.name}</option>)}</Select></label>;
 }
 
 function CatalogCategoryField({ value, onChange, catalog }) {
-    return <label className={styles.field}>Категория<select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>;
+    return <label className={styles.field}>Категория<Select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</Select></label>;
 }
 
 export default function Field({ name, schema, value, onChange, catalog, reviews, materialSections }) {
@@ -59,8 +60,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
     if (schema.type === 'checkbox') {
         return (
             <label className={styles.checkboxField}>
-                <input
-                    type="checkbox"
+                <Checkbox
                     checked={Boolean(value)}
                     onChange={(event) => onChange(event.target.checked)}
                 />
@@ -82,7 +82,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
                 }[schema.validators?.type] ?? 'text';
 
                 control = (
-                    <input
+                    <Input
                         type={inputType}
                         value={value ?? ''}
                         maxLength={maxLength}
@@ -94,7 +94,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
 
             case 'textarea':
                 control = (
-                    <textarea
+                    <Textarea
                         rows={4}
                         value={value ?? ''}
                         maxLength={maxLength}
@@ -105,7 +105,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
 
             case 'select':
                 control = (
-                    <select
+                    <Select
                         value={value ?? ''}
                         onChange={(event) => onChange(event.target.value)}
                     >
@@ -115,7 +115,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
                                 {schema.optionLabels?.[option] ?? option}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 );
                 break;
 

@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 import { useEffect, useState } from 'react';
 import compactStyles from '../ui/CompactForm.module.css';
 import { formResponseError } from '../ui/formValidation.mjs';
@@ -38,7 +39,7 @@ export default function OrderNotificationSettings({ state, disabled = false }) {
     return <div>
         <h2>Уведомления о заказах</h2>
         <label className={`${compactStyles.field} ${compactStyles.compact}`}><span>Email для уведомлений</span>
-            <input name="email" type="email" maxLength={320} value={email} disabled={!settings || busy || disabled} placeholder={settings?.defaultEmail || 'Укажите email получателя'} onChange={(event) => setEmail(event.target.value)} />
+            <Input name="email" type="email" maxLength={320} value={email} disabled={!settings || busy || disabled} placeholder={settings?.defaultEmail || 'Укажите email получателя'} onChange={(event) => setEmail(event.target.value)} />
         </label>
         <p>{settings?.defaultEmail ? `Если поле пустое, используется email администратора сайта: ${settings.defaultEmail}.` : 'У сайта нет единственного администратора. Укажите адрес получателя явно.'}</p>
         <p>Почтовый транспорт пока не подключён. Уведомления сохраняются в очереди, заказы и платежи работают независимо от отправки писем.</p>

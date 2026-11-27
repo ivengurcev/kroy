@@ -1,3 +1,4 @@
+import { Input, Textarea } from '../ui/NativeControls.jsx';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 import Button from '../ui/Button.jsx';
@@ -30,28 +31,28 @@ function ContactSettings({ value, onChange, onSave }) {
             <div className={styles.formGrid}>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Адрес</span>
-                    <textarea rows="3" value={contacts.address ?? ''} onChange={(event) => update('address', event.target.value)} />
+                    <Textarea rows="3" value={contacts.address ?? ''} onChange={(event) => update('address', event.target.value)} />
                 </label>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.long}`}>
                     <span>Режим работы</span>
-                    <textarea rows="3" value={contacts.hours ?? ''} onChange={(event) => update('hours', event.target.value)} />
+                    <Textarea rows="3" value={contacts.hours ?? ''} onChange={(event) => update('hours', event.target.value)} />
                 </label>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Телефон</span>
-                    <input type="tel" value={contacts.phone ?? ''} onChange={(event) => update('phone', event.target.value)} />
+                    <Input type="tel" value={contacts.phone ?? ''} onChange={(event) => update('phone', event.target.value)} />
                 </label>
                 <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                     <span>Email</span>
-                    <input name="email" type="email" maxLength={254} value={contacts.email ?? ''} onChange={(event) => update('email', event.target.value)} />
+                    <Input name="email" type="email" maxLength={254} value={contacts.email ?? ''} onChange={(event) => update('email', event.target.value)} />
                 </label>
                 <div className={styles.coordinateGrid}>
                     <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Широта</span>
-                        <input name="latitude" type="number" min="-90" max="90" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
+                        <Input name="latitude" type="number" min="-90" max="90" step="any" value={contacts.latitude ?? ''} onChange={(event) => update('latitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
                     <label className={`${styles.formField} ${compactStyles.field} ${compactStyles.compact}`}>
                         <span>Долгота</span>
-                        <input name="longitude" type="number" min="-180" max="180" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
+                        <Input name="longitude" type="number" min="-180" max="180" step="any" value={contacts.longitude ?? ''} onChange={(event) => update('longitude', event.target.value === '' ? null : Number(event.target.value))} />
                     </label>
                 </div>
             </div>

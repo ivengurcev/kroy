@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 import { useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Card from '../ui/Card.jsx';
@@ -84,8 +85,7 @@ export default function SignInPage() {
 
                 <ValidatedForm className={styles.form} onSubmit={handleSubmit}>
                     <FormField label="Email">
-                        <input
-                            className={styles.input}
+                        <Input
                             type="email"
                             name="email"
                             autoComplete="email"
@@ -97,8 +97,7 @@ export default function SignInPage() {
                     </FormField>
 
                     <FormField label="Пароль">
-                        <input
-                            className={styles.input}
+                        <Input
                             type="password"
                             name="password"
                             autoComplete="current-password"

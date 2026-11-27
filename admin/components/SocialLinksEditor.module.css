@@ -1,6 +1,4 @@
 .fields { display: grid; gap: var(--space-2); min-width: 0; }
 .formField { min-width: 0; color: var(--color-text-secondary); }
-.formField input, .formField select { box-sizing: border-box; width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; background: var(--color-surface); }
-.formField input:focus, .formField select:focus { border-color: var(--color-primary); outline: 3px solid rgb(12 129 122 / 12%); }
 .preview { min-width: 0; overflow-wrap: anywhere; color: var(--color-primary); font-size: var(--font-size-sm); }
 .error { margin: 0; color: var(--color-error-text); font-size: var(--font-size-sm); }

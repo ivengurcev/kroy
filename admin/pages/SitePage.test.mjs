@@ -65,6 +65,7 @@ test('SitePage saves only the active form and retains other settings drafts when
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const formResponseError = async () => "Error";' };
                 if (path.endsWith('AppearanceControls.jsx')) return { contents: 'export const ThemePicker = "ThemePicker", ThemeModeControl = "ThemeModeControl", TokenTable = "TokenTable";' };
                 if (path.endsWith('TokenControls.jsx')) return { contents: 'export const SelectControl = "SelectControl";' };
+                if (path.endsWith('NativeControls.jsx')) return { contents: 'export const Input = "input", Textarea = "textarea";' };
                 return { contents: `export default ${JSON.stringify(path.endsWith('.css') ? {} : path.split('/').pop().replace('.jsx', ''))};` };
             });
         } }],

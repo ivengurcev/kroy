@@ -20,14 +20,10 @@
 }
 
 .notice button {
-    border: 1px solid currentColor;
-    border-radius: var(--radius-sm);
-    background: #ffe06b;
-    color: #392500;
-    font: inherit;
+    border-color: var(--color-warning-text);
+    background: var(--color-warning-soft);
+    color: var(--color-warning-text);
     font-weight: 700;
-    min-width: 34px;
-    min-height: 34px;
     cursor: help;
 }
 
@@ -40,8 +36,8 @@
     max-width: min(240px, 65vw);
     padding: var(--space-2);
     border-radius: var(--radius-sm);
-    background: #392500;
-    color: #fff;
+    background: var(--color-text);
+    color: var(--color-surface);
     white-space: normal;
     overflow-wrap: anywhere;
     opacity: 0;

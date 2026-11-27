@@ -126,7 +126,7 @@ test('payment fields render the provider schema and send edited settings without
     const settings = { payformDomain: '' };
     let changed;
     const element = components.PaymentIntegrationEditor({ provider, settings, disabled: false, onChange: (value) => { changed = value; } });
-    const input = descendants(element).find(({ type }) => type === 'input');
+    const input = descendants(element).find(({ props }) => props?.name === 'payformDomain');
     assert.equal(input.props.required, true);
     input.props.onChange({ target: { value: 'example.payform.ru' } });
     assert.deepEqual(changed, { payformDomain: 'example.payform.ru' });

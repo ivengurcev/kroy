@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import FormError from '../ui/FormError.jsx';
+import { Input, Select } from '../ui/NativeControls.jsx';
+import { useEffect, useMemo, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Tree, { TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
 import { AdminListToolbar, AdminListField, Pagination, useListPage } from '../components/AdminList.jsx';
@@ -7,7 +9,7 @@ import Icon from '../ui/Icon.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import SiteSettingsLayout from '../components/SiteSettingsLayout.jsx';
 import fieldStyles from '../editor/Field.module.css';
-import dialogStyles from '../components/PageDetailsDialog.module.css';
+import Modal from '../ui/Modal.jsx';
 import styles from './SiteMaterialsPage.module.css';
 import { useAppNavigate } from '../components/AdminWorkspaceContext.jsx';
 import { slugifyPageTitle } from '../../shared/pageFields.mjs';
@@ -48,7 +50,6 @@ function createSectionSlug(name, sections) {
 
 export default function SiteMaterialsPage() {
     const navigate = useAppNavigate();
-    const sectionDialogRef = useRef(null);
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [materials, setMaterials] = useState([]);
@@ -62,13 +63,6 @@ export default function SiteMaterialsPage() {
     const [error, setError] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [collapsedSections, setCollapsedSections] = useState(new Set());
-
-    useEffect(() => {
-        const dialog = sectionDialogRef.current;
-        if (!dialog) return;
-        if (sectionDialog && !dialog.open) dialog.showModal();
-        else if (!sectionDialog && dialog.open) dialog.close();
-    }, [sectionDialog]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -201,12 +195,12 @@ export default function SiteMaterialsPage() {
                     <Button size="compact" onClick={() => openSectionDialog()}><Icon name="add" /> Добавить раздел</Button>
                     <Button variant="primary" size="compact" onClick={() => navigate?.(`/admin/materials/new${sectionId ? `?sectionId=${encodeURIComponent(sectionId)}` : ''}`)}><Icon name="add" /> Добавить материал</Button>
                 </div>}>
-                    <AdminListField label="Раздел"><select value={sectionId} onChange={(event) => setSectionId(event.target.value)}><option value="">Все разделы</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</select></AdminListField>
-                    <AdminListField label="Поиск"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название или адрес" /></AdminListField>
+                    <AdminListField label="Раздел"><Select value={sectionId} onChange={(event) => setSectionId(event.target.value)}><option value="">Все разделы</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</Select></AdminListField>
+                    <AdminListField label="Поиск"><Input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название или адрес" /></AdminListField>
                     <AdminListField label="Статус">
-                        <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+                        <Select value={filter} onChange={(event) => setFilter(event.target.value)}>
                             {FILTERS.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
-                        </select>
+                        </Select>
                     </AdminListField>
                 </AdminListToolbar>
 
@@ -245,25 +239,19 @@ export default function SiteMaterialsPage() {
                 <Pagination {...page.pagination} />
             </div>
 
-            <dialog
-                ref={sectionDialogRef}
-                className={dialogStyles.dialog}
-                aria-labelledby="material-section-dialog-title"
-                onCancel={(event) => { event.preventDefault(); closeSectionDialog(); }}
-            >
-                <h2 id="material-section-dialog-title">{sectionDialog?.id ? 'Переименовать раздел' : 'Новый раздел'}</h2>
-                <ValidatedForm className={styles.sectionForm} onSubmit={saveSection}>
+            {sectionDialog && <Modal narrow title={sectionDialog.id ? 'Переименовать раздел' : 'Новый раздел'}
+                busy={sectionSaving} onClose={closeSectionDialog} actions={<>
+                    <Button onClick={closeSectionDialog} disabled={sectionSaving}>Отмена</Button>
+                    <Button type="submit" form="material-section-form" variant="primary" disabled={sectionSaving}>{sectionSaving ? 'Сохранение…' : 'Сохранить'}</Button>
+                </>}>
+                <ValidatedForm id="material-section-form" className={styles.sectionForm} onSubmit={saveSection}>
                     <label className={fieldStyles.field}>
                         <span>Название</span>
-                        <input name="name" value={sectionName} onChange={(event) => { setSectionName(event.target.value); setSectionError(''); }} required maxLength="200" autoFocus />
+                        <Input name="name" value={sectionName} onChange={(event) => { setSectionName(event.target.value); setSectionError(''); }} required maxLength="200" autoFocus />
                     </label>
-                    {sectionError && <p className={styles.actionError} role="alert">{sectionError}</p>}
-                    <div className={styles.sectionFormActions}>
-                        <Button type="button" variant="secondary" onClick={closeSectionDialog} disabled={sectionSaving}>Отмена</Button>
-                        <Button type="submit" variant="primary" disabled={sectionSaving}>{sectionSaving ? 'Сохранение…' : 'Сохранить'}</Button>
-                    </div>
+                    {sectionError && <FormError>{sectionError}</FormError>}
                 </ValidatedForm>
-            </dialog>
+            </Modal>}
         </SiteSettingsLayout>
     );
 }

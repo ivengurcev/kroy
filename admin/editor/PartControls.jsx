@@ -22,8 +22,8 @@ export default function PartControls({
             {notice && <span className={styles.notice}
                 onMouseEnter={() => setDismissed(false)} onFocus={() => setDismissed(false)}
                 onKeyDown={(event) => { if (event.key === 'Escape') setDismissed(true); }}>
-                <button type="button" aria-label="Область действия изменений" aria-describedby={tooltipId}
-                    onClick={() => setDismissed(false)}>⚠</button>
+                <Button variant="iconCompact" aria-label="Область действия изменений" aria-describedby={tooltipId}
+                    onClick={() => setDismissed(false)}>⚠</Button>
                 <span id={tooltipId} role="tooltip" data-dismissed={dismissed}>{notice}</span>
             </span>}
             {onEdit && <Button

@@ -1,30 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import PageDetailsForm from './PageDetailsForm.jsx';
-import styles from './PageDetailsDialog.module.css';
+import Modal from '../ui/Modal.jsx';
 
 export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChange, onAppearancePreview }) {
-    const dialogRef = useRef(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        dialogRef.current?.showModal();
-    }, []);
-
-    function handleCancel(event) {
-        event.preventDefault();
-        if (!isSubmitting) onCancel();
-    }
-
     return (
-        <dialog
-            className={styles.dialog}
-            ref={dialogRef}
-            aria-labelledby="page-details-title"
-            onCancel={handleCancel}
-        >
-            <h2 id="page-details-title">Настройки страницы</h2>
+        <Modal title="Настройки страницы" narrow busy={isSubmitting} onClose={onCancel}>
             <PageDetailsForm
-                className={styles.form}
                 page={page}
                 cancelFirst
                 handleEscape={false}
@@ -34,6 +17,6 @@ export default function PageDetailsDialog({ page, onSaved, onCancel, onDirtyChan
                 onSaved={onSaved}
                 onCancel={onCancel}
             />
-        </dialog>
+        </Modal>
     );
 }

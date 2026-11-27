@@ -1,3 +1,4 @@
+import { Select } from '../ui/NativeControls.jsx';
 import { useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -43,10 +44,10 @@ export default function RelatedItemsField({ label, items, value, onChange, getId
                 })}
                 <div className={`${styles.addRow} ${selected.length ? styles.divided : ''}`}>
                     {adding ? (
-                        <select className={styles.addSelect} autoFocus value="" aria-label={`Добавить: ${label}`} onChange={(event) => add(event.target.value)}>
+                        <Select autoFocus value="" aria-label={`Добавить: ${label}`} onChange={(event) => add(event.target.value)}>
                             <option value="" disabled>Выберите элемент</option>
                             {availableItems.map((item) => <option key={getId(item)} value={getId(item)}>{getLabel(item) || getId(item)}</option>)}
-                        </select>
+                        </Select>
                     ) : (
                         <Button variant="compact" disabled={!availableItems.length} onClick={() => setAdding(true)}>
                             <Icon name="add" size={18} /> Добавить

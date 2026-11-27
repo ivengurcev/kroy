@@ -246,7 +246,7 @@ export default function AdminHeader({
                 {publication.status === 'error' && !publicationErrorDismissed && (
                     <div className={styles.publishError}>
                         <span role="alert">{publication.message || 'Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.'}</span>
-                        <button className={styles.dismissError} type="button" aria-label="Закрыть сообщение об ошибке" onClick={() => setPublicationErrorDismissed(true)}>×</button>
+                        <Button variant="listIcon" className={styles.dismissError} aria-label="Закрыть сообщение об ошибке" onClick={() => setPublicationErrorDismissed(true)}><Icon name="close" size={18} /></Button>
                     </div>
                 )}
                 {logoutError && (

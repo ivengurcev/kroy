@@ -1,3 +1,4 @@
+import { Input } from '../ui/NativeControls.jsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Button from '../ui/Button.jsx';
@@ -115,8 +116,7 @@ export default function PartPicker({ anchor, metadata, onClose, onSelect }) {
                     <Icon name="close" />
                 </Button>
             </header>
-            <input
-                className={styles.search}
+            <Input
                 ref={searchRef}
                 type="search"
                 placeholder="Поиск"
