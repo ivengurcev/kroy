@@ -4,7 +4,7 @@ import { rm, writeFile } from 'node:fs/promises';
 import test from 'node:test';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
-import { act, createElement } from 'react';
+import { act, Children, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 test('page and template editors save and cancel the shared footer in their document transaction', async (t) => {
@@ -12,7 +12,6 @@ test('page and template editors save and cancel the shared footer in their docum
     const result = await build({
         entryPoints: ['admin/editor/Editor.jsx'], bundle: true, write: false, platform: 'node', format: 'esm',
         outfile: file.pathname, jsx: 'automatic',
-        loader: { '.ttf': 'dataurl' },
         external: ['react', 'react/jsx-runtime'],
         plugins: [{ name: 'isolate-editor-io', setup(builder) {
             builder.onResolve({ filter: /AdminShell\.jsx$|@vyaz\/core\/Context\.js$|\/dist\/kroy\/.*\.mjs$/ },
@@ -74,12 +73,12 @@ test('page and template editors save and cancel the shared footer in their docum
             await act(() => shell().workspaceSettings.onFooterChange({ description: 'New footer' }));
             if (!isTemplate) {
                 const select = () => shell().editorSettings.props.children.props;
-                assert.deepEqual(select().options.map(({ value }) => value), ['inherit', 'layout', 'none']);
-                await act(() => select().onChange('none'));
+                assert.deepEqual(Children.map(select().children, ({ props }) => props.value), ['inherit', 'layout', 'none']);
+                await act(() => select().onChange({ target: { value: 'none' } }));
                 assert.equal(select().value, 'none');
                 assert.equal(shell().workspaceSettings.sharedBefore, undefined);
                 assert.equal(shell().footer.props.description, 'New footer');
-                await act(() => select().onChange('inherit'));
+                await act(() => select().onChange({ target: { value: 'inherit' } }));
                 assert.equal(select().value, 'inherit');
             }
             if (isTemplate) {

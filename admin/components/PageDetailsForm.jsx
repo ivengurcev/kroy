@@ -1,5 +1,5 @@
 import FormError from '../ui/FormError.jsx';
-import { Input } from '../ui/NativeControls.jsx';
+import { Input, Select } from '../ui/NativeControls.jsx';
 import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
@@ -12,7 +12,6 @@ import Tabs from '../ui/Tabs.jsx';
 import SeoFields from './SeoFields.jsx';
 import PageAppearanceFields from './PageAppearanceFields.jsx';
 import useAutoSlug from '../editor/useAutoSlug.jsx';
-import { SelectControl } from '../ui/TokenControls.jsx';
 
 function joinClasses(...classes) {
     return classes.filter(Boolean).join(' ');
@@ -197,16 +196,29 @@ export default function PageDetailsForm({
             <div hidden={tab !== 0} className={styles.basic}>
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Тип страницы</span>
-                <SelectControl name="type" label="Тип страницы" value={type} disabled={!isNew || isSubmitting} onChange={setType}
-                    options={[{ value: 'standard', label: 'Обычная' }, { value: 'list', label: 'Список' }, { value: 'detail', label: 'Детальный шаблон', disabled: true }]} />
+                <Select name="type" value={type} disabled={!isNew || isSubmitting} onChange={(event) => setType(event.target.value)}>
+                    <option value="standard">Обычная</option>
+                    <option value="list">Список</option>
+                    <option value="detail" disabled>Детальный шаблон</option>
+                </Select>
             </label>
             {type === 'list' && <><label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Источник данных</span>
-                <SelectControl label="Источник данных" value={dataSource} onChange={(value) => { setDataSource(value); if (value !== 'materials') setMaterialSectionId(''); }}
-                    options={[{ value: 'materials', label: 'Материалы' }, { value: 'products', label: 'Товары' }, { value: 'reviews', label: 'Отзывы' }]} />
+                <Select value={dataSource} onChange={(event) => {
+                    const value = event.target.value;
+                    setDataSource(value);
+                    if (value !== 'materials') setMaterialSectionId('');
+                }}>
+                    <option value="materials">Материалы</option>
+                    <option value="products">Товары</option>
+                    <option value="reviews">Отзывы</option>
+                </Select>
             </label>{dataSource === 'materials' && <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
-                <span>Раздел материалов</span><SelectControl name="materialSectionId" label="Раздел материалов" value={materialSectionId} onChange={setMaterialSectionId} required
-                    options={[{ value: '', label: 'Выберите раздел' }, ...sections.map((item) => ({ value: item.id, label: item.name }))]} />
+                <span>Раздел материалов</span>
+                <Select name="materialSectionId" value={materialSectionId} onChange={(event) => setMaterialSectionId(event.target.value)} required>
+                    <option value="">Выберите раздел</option>
+                    {sections.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+                </Select>
             </label>}</>}
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact, pathClassName)}>
                 <span>{isDetail ? 'Параметр пути' : 'Путь'}</span>

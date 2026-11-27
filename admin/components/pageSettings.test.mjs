@@ -45,13 +45,12 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
             export { default as PageDetailsForm } from './admin/components/PageDetailsForm.jsx';`, resolveDir: process.cwd() },
         bundle: true, write: false, format: 'esm', jsx: 'automatic',
         plugins: [{ name: 'page-component-unit', setup(builder) {
-            builder.onResolve({ filter: /^(react|react\/jsx-runtime)$|\/(Button|Icon|ValidatedForm|Tabs|SeoFields|PageAppearanceFields|TokenControls)\.jsx$|\.module\.css$|\/(apiRequest|formValidation)\.mjs$/ }, ({ path }) => ({ path, namespace: 'unit' }));
+            builder.onResolve({ filter: /^(react|react\/jsx-runtime)$|\/(Button|Icon|ValidatedForm|Tabs|SeoFields|PageAppearanceFields)\.jsx$|\.module\.css$|\/(apiRequest|formValidation)\.mjs$/ }, ({ path }) => ({ path, namespace: 'unit' }));
             builder.onLoad({ filter: /./, namespace: 'unit' }, ({ path }) => {
                 if (path === 'react') return { contents: 'export const { useState, useRef, useEffect } = globalThis.__kroyPageSettingsTest;' };
                 if (path === 'react/jsx-runtime') return { contents: 'export const jsx = (type,props) => ({type,props}); export const jsxs = jsx; export const Fragment = "fragment";' };
                 if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest = (...args) => globalThis.__kroyPageSettingsTest.request(...args);' };
                 if (path.endsWith('formValidation.mjs')) return { contents: 'export const fieldValidationMessage = () => ""; export const formResponseError = async () => "Ошибка";' };
-                if (path.endsWith('TokenControls.jsx')) return { contents: 'export const SelectControl = "SelectControl";' };
                 if (path.endsWith('.css')) return { contents: 'export default { expanded: "expanded" };' };
                 return { contents: `export default ${JSON.stringify(path.split('/').at(-1).replace('.jsx', ''))};` };
             });

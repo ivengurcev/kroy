@@ -1,4 +1,4 @@
-import { Input } from '../ui/NativeControls.jsx';
+import { Input, Select } from '../ui/NativeControls.jsx';
 
 import { useContext, useEffect, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
@@ -11,7 +11,6 @@ import widgetMetadata from '../../dist/kroy/widgets.json';
 import AdminShell from '../components/AdminShell.jsx';
 import Button from '../ui/Button.jsx';
 import FormField from '../ui/FormField.jsx';
-import { SelectControl } from '../ui/TokenControls.jsx';
 import fieldStyles from '../components/PageDetailsForm.module.css';
 import listStyles from '../components/AdminList.module.css';
 import { createPart, changePartView } from '../../shared/partModel.js';
@@ -457,12 +456,12 @@ export default function Editor() {
             editorSettings={isTemplate ? <FormField label="Название шаблона" className={fieldStyles.field}>
                 <Input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} />
             </FormField> : layoutList && <FormField label="Использовать шаблон" className={fieldStyles.field}>
-                <SelectControl label="Использовать шаблон" value={selection.id ?? selection.mode}
-                    disabled={switching || saveStatus === 'saving'} onChange={selectTemplate} options={[
-                        { value: 'inherit', label: `Наследовать шаблон сайта (${layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})` },
-                        ...layoutList.templates.map(({ id, name }) => ({ value: id, label: name })),
-                        { value: 'none', label: 'Без шаблона' },
-                    ]} />
+                <Select value={selection.id ?? selection.mode} disabled={switching || saveStatus === 'saving'}
+                    onChange={(event) => selectTemplate(event.target.value)}>
+                    <option value="inherit">Наследовать шаблон сайта ({layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})</option>
+                    {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+                    <option value="none">Без шаблона</option>
+                </Select>
             </FormField>}
             workspaceSettings={{
                 footerPreview: footer && site ? prepareSiteFooter(site, footer, linkPages.map((page) => ({ ...page, site_id: site.id }))) : undefined,

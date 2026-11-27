@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { Select } from './NativeControls.jsx';
 import styles from './TokenControls.module.css';
 import '../../site/styles/fonts.css';
 
@@ -77,7 +78,11 @@ export function DimensionControl({ value, type = 'dimension', units = ['px'], nu
     }
     return <div className={styles.control}>
         <input className={styles.input} type="number" step={type === 'number' ? '0.05' : '1'} min={min} max={max} value={focused ? (parseDimension(draft)?.number ?? '') : current.number} disabled={disabled} title={label} onFocus={() => setFocused(true)} onBlur={() => { setFocused(false); setDraft(value ?? ''); }} onChange={(event) => commitNumber(event.target.value)} />
-        {type === 'dimension' && <SelectControl value={current.unit} disabled={disabled} label="Единица измерения" size="small" options={units} onChange={commitUnit} />}
+        {type === 'dimension' && <Select className={styles.unitSelect} value={current.unit} disabled={disabled}
+            aria-label="Единица измерения" onChange={(event) => commitUnit(event.target.value)}>
+            {current.unit && !units.includes(current.unit) && <option value={current.unit} disabled>{current.unit}</option>}
+            {units.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+        </Select>}
     </div>;
 }
 
