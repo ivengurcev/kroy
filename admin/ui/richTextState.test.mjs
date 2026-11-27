@@ -27,6 +27,9 @@ test('converts plain strings using Lexical serialization, preserving paragraphs,
     assert.equal(document.root.children[2].children[1].text, 'Конец ');
     assert.equal(value, ' Первый\r\nвторой\r\n\r\n<b>Не HTML</b>\n\n\nКонец ');
     assert.equal(toLexicalDocument(document), document);
+    const reordered = JSON.parse(JSON.stringify(document, (_, item) => item && typeof item === 'object' && !Array.isArray(item)
+        ? Object.fromEntries(Object.entries(item).reverse()) : item));
+    assert.equal(richTextValueKey(reordered), richTextValueKey(document));
     for (const empty of [null, undefined, '', { root: { type: 'root', children: [] } }]) {
         const next = toLexicalDocument(empty);
         assert.equal(next.root.children[0].type, 'paragraph');

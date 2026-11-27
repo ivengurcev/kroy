@@ -5,6 +5,7 @@ import { listPageTemplates, templateColumns } from '../../db/pageTemplates.mjs';
 import { isPlainObject } from '../../shared/pageContent.mjs';
 import { resolvePageTemplate, validateDocumentContent, validateTemplateContent } from '../../shared/pageTemplates.mjs';
 import { isLegalPagePath } from '../../shared/legalDocuments.mjs';
+import { repairDocumentBlocks } from '../../shared/lexicalEditor.mjs';
 import { availableFooterPages, footerPageIds, isSiteFooterUrl, legacyFooterDocuments, normalizeFooterSettings } from '../../shared/footerSettings.mjs';
 import getHostname from './getHostname.mjs';
 import getCurrentSite from './siteContext.mjs';
@@ -137,6 +138,7 @@ async function saveFooter(client, site, change) {
 }
 
 async function updateTemplate(client, siteId, template, { name, content, slotIndex }) {
+    content = repairDocumentBlocks(content);
     const details = validateTemplateContent({ content, slotIndex }, partCatalog, widgetCatalog);
     if (details.length) reject(400, 'Проверьте содержимое шаблона', { details });
     await validateBlockReferences(client, siteId, content, template.content);
@@ -301,7 +303,7 @@ export function putPageLayout(c, pageId, body) {
         }
         const footer = hasFooter ? await saveFooter(client, site, body.footerChanges) : undefined;
         if (hasContent || hasLegalFlag) {
-            const content = hasContent ? body.content : page.content;
+            const content = repairDocumentBlocks(hasContent ? body.content : page.content);
             const details = validateDocumentContent(content, partCatalog, widgetCatalog, { isLegalDocument: nextLegal });
             if (details.length) reject(400, 'Проверьте содержимое страницы', { details });
             await validateBlockReferences(client, site.id, content, page.content, page);

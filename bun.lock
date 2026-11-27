@@ -4,7 +4,9 @@
   "workspaces": {
     "": {
       "dependencies": {
+        "@lexical/extension": "^0.53.0",
         "@lexical/history": "^0.53.0",
+        "@lexical/html": "^0.53.0",
         "@lexical/link": "^0.53.0",
         "@lexical/list": "^0.53.0",
         "@lexical/react": "^0.53.0",

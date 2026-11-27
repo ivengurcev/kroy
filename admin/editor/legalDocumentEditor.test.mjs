@@ -67,7 +67,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
             builder.onResolve({ filter: /^react$|^react\/jsx-runtime$|^@vyaz\/core\/Context\.js$|\/(AdminShell|Button|FormField)\.jsx$|\.module\.css$|dist\/kroy\/(parts|widgets)\.mjs$|\/apiRequest\.mjs$/ },
                 ({ path }) => ({ path, namespace: 'unit' }));
             builder.onLoad({ filter: /./, namespace: 'unit' }, ({ path }) => {
-                if (path === 'react') return { contents: 'export const {useState,useRef,useEffect,useCallback,useMemo,useContext} = globalThis.__kroyLegalEditorTest;' };
+                if (path === 'react') return { contents: 'export const {useState,useRef,useEffect,useCallback,useMemo,useContext} = globalThis.__kroyLegalEditorTest; export const createContext=()=>({});' };
                 if (path === 'react/jsx-runtime') return { contents: 'export const Fragment="fragment"; export const jsx=(type,props)=>({type,props}); export const jsxs=jsx;' };
                 if (path.endsWith('parts.mjs')) return { contents: 'export const parts={};' };
                 if (path.endsWith('widgets.mjs')) return { contents: 'export const widgets={};' };

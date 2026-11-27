@@ -16,6 +16,7 @@ import { normalizeSeo } from '../../shared/seo.mjs';
 import { seoReferenceErrors } from './seoValidation.mjs';
 import { normalizePageAppearance, getPageTheme } from '../../site/themes/themeRegistry.mjs';
 import { isDocumentText, isLegalDocumentContent, isLegalPagePath, updateFirstDocumentText, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
+import { repairDocumentBlocks, repairDocumentText } from '../../shared/lexicalEditor.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -40,6 +41,7 @@ export default async function patchPage(c) {
   const hasDataSource = Object.hasOwn(body ?? {}, "dataSource");
   const hasMaterialSectionId = Object.hasOwn(body ?? {}, "materialSectionId");
   const hasContent = keys.includes('content');
+  if (hasContent) body = { ...body, content: repairDocumentText(body.content) };
   const hasLegalFlag = keys.includes('isLegalDocument');
   const title = hasTitle ? normalizePageTitle(body.title) : null;
 
@@ -93,6 +95,7 @@ export default async function patchPage(c) {
       await client.query("ROLLBACK");
       return c.json({ error: "Page not found" }, 404);
     }
+    const documentContent = repairDocumentBlocks(page.content);
 
     const nextLegal = hasLegalFlag ? body.isLegalDocument : page.is_legal_document;
     if ((page.is_legal_document || hasLegalFlag || keys.includes('expectedLegalVersion'))
@@ -102,7 +105,7 @@ export default async function patchPage(c) {
     }
     if ((hasLegalFlag && page.page_type !== 'standard')
         || (hasContent && !page.is_legal_document)
-        || ((hasContent || nextLegal) && !isLegalDocumentContent(page.content))) {
+        || ((hasContent || nextLegal) && !isLegalDocumentContent(documentContent))) {
       await client.query("ROLLBACK");
       return c.json({ error: 'Проверьте содержимое документа', fields: { content: LEGAL_CONTENT_ERROR } }, 400);
     }

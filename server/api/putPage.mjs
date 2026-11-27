@@ -6,6 +6,7 @@ import isUuid from "./isUuid.mjs";
 import { isPlainObject } from "../../shared/pageContent.mjs";
 import { validateDocumentContent } from "../../shared/pageTemplates.mjs";
 import { putPageLayout } from "./pageTemplates.mjs";
+import { repairDocumentBlocks } from '../../shared/lexicalEditor.mjs';
 
 export default async function putPage(c) {
   const pageId = c.req.param("pageId");
@@ -23,6 +24,7 @@ export default async function putPage(c) {
   }
 
   if (isPlainObject(body)) {
+    if (Object.hasOwn(body, 'content')) body = { ...body, content: repairDocumentBlocks(body.content) };
     const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId', 'expectedLegalVersion', 'isLegalDocument'];
     const unknown = Object.keys(body).filter((key) => !fields.includes(key));
     if (unknown.length) {

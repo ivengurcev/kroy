@@ -1,10 +1,11 @@
 import { $createLineBreakNode, $createParagraphNode, $createTextNode, $getRoot, CLEAR_HISTORY_COMMAND, createEditor } from 'lexical';
 import { isLexicalDocument } from '../../shared/richText.mjs';
+import { normalizeLexicalDocument } from '../../shared/lexicalEditor.mjs';
 
 export const EXTERNAL_RICHTEXT_TAG = 'kroy-external-richtext';
 
 export function toLexicalDocument(value) {
-    if (isLexicalDocument(value) && value.root.children.length) return value;
+    if (isLexicalDocument(value) && value.root.children.length) return normalizeLexicalDocument(value);
     const editor = createEditor({ namespace: 'KroyTextConversion', onError: (error) => { throw error; } });
     editor.update(() => {
         const root = $getRoot();
@@ -23,17 +24,28 @@ export function toLexicalDocument(value) {
 }
 
 export function richTextValueKey(value) {
-    return JSON.stringify(value ?? null);
+    // PostgreSQL JSONB and Lexical serialize object keys in different orders.
+    return JSON.stringify(value ?? null, (_, item) => item && typeof item === 'object' && !Array.isArray(item)
+        ? Object.fromEntries(Object.keys(item).sort().map((key) => [key, item[key]])) : item);
 }
 
 // Parent echoes must not replace the editor state: that would lose selection/history.
-export function syncRichTextValue(editor, value, tracker) {
+export function syncRichTextValue(editor, value, tracker, prepared = toLexicalDocument(value)) {
     const key = richTextValueKey(value);
     if (key === tracker.incoming) return false;
     tracker.incoming = key;
     if (key === tracker.emitted) return false;
     tracker.emitted = null;
-    editor.setEditorState(editor.parseEditorState(toLexicalDocument(value)), { tag: EXTERNAL_RICHTEXT_TAG });
+    tracker.document = richTextValueKey(prepared);
+    editor.setEditorState(editor.parseEditorState(prepared), { tag: EXTERNAL_RICHTEXT_TAG });
     editor.dispatchCommand(CLEAR_HISTORY_COMMAND, undefined);
+    return true;
+}
+
+export function repairRichTextValue(value, prepared, tracker, onChange) {
+    if (!isLexicalDocument(value) || richTextValueKey(value) === richTextValueKey(prepared)) return false;
+    tracker.emitted = richTextValueKey(prepared);
+    tracker.document = tracker.emitted;
+    onChange(prepared);
     return true;
 }

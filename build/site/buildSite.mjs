@@ -19,6 +19,7 @@ import { attachMaterialLists } from '../../site/runtime/materialListData.mjs';
 import { getSiteSeoContext, resolvePageMeta } from '../../shared/seo.mjs';
 import { createRobots, createSitemap } from './seoFiles.mjs';
 import { footerBlock, prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { repairDocumentBlocks } from '../../shared/lexicalEditor.mjs';
 import { listPageTemplates } from '../../db/pageTemplates.mjs';
 import { projectPageLayouts } from '../../shared/pageTemplates.mjs';
 
@@ -172,7 +173,9 @@ try {
             if (!separatorMedia) throw new Error('Изображение разделителя не найдено');
         }
         sourceFingerprint = await getSiteFingerprint(site.id, client);
-        pageTemplates = await listPageTemplates(client, site.id);
+        pageTemplates = (await listPageTemplates(client, site.id)).map((template) => ({
+            ...template, content: repairDocumentBlocks(template.content),
+        }));
 
         const domainsResult = await client.query(
             `SELECT hostname
@@ -243,9 +246,13 @@ try {
             [site.id]
         );
 
-        pages = pagesResult.rows.filter(({ type }) => type !== 'detail');
+        pages = pagesResult.rows.filter(({ type }) => type !== 'detail').map((page) => ({
+            ...page, content: repairDocumentBlocks(page.content),
+        }));
         allDetailTemplates = pagesResult.rows.filter(({ type }) => type === 'detail');
-        detailTemplates = detailTemplatesResult.rows.map((template) => ({ ...template, routeParam: template.route_param }));
+        detailTemplates = detailTemplatesResult.rows.map((template) => ({
+            ...template, content: repairDocumentBlocks(template.content), routeParam: template.route_param,
+        }));
         publishedMaterials = materialsResult.rows;
         redirects = redirectsResult.rows;
         deletedPages = deletedPagesResult.rows.filter(({ page_type }) => page_type !== 'detail');

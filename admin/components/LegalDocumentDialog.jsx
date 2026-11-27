@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react';
-import { firstDocumentBlock, isLegalDocumentContent } from '../../shared/legalDocuments.mjs';
+import { firstDocumentBlock } from '../../shared/legalDocuments.mjs';
+import { isLexicalDocument } from '../../shared/richText.mjs';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import useAutoSlug from '../editor/useAutoSlug.jsx';
 import Button from '../ui/Button.jsx';
@@ -106,7 +107,8 @@ export default function LegalDocumentDialog({ id, onCancel, onSaved, onUnavailab
         return () => controller.abort();
     }, [id, onUnavailable]);
 
-    const compatible = page?.type === 'standard' && page.isLegalDocument && isLegalDocumentContent(page.content);
+    const compatible = page?.type === 'standard' && page.isLegalDocument
+        && isLexicalDocument(firstDocumentBlock(page.content)?.props?.content);
     if (!id || compatible) {
         return <DocumentForm page={page}
             onCancel={onCancel} onSaved={onSaved} onUnavailable={onUnavailable} onDirtyChange={onDirtyChange} />;

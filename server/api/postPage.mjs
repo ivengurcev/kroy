@@ -12,6 +12,7 @@ import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import reusePagePath from './reusePagePath.mjs';
 import { isDocumentText, isLegalPagePath, legalDocumentBlock, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
 import { legacyFooterDocuments, omitLegacyFooterDocument } from '../../shared/footerSettings.mjs';
+import { repairDocumentText } from '../../shared/lexicalEditor.mjs';
 
 export default async function postPage(c) {
   let body;
@@ -22,6 +23,7 @@ export default async function postPage(c) {
     return c.json({ error: "Invalid request" }, 400);
   }
 
+  if (isPlainObject(body) && Object.hasOwn(body, 'content')) body = { ...body, content: repairDocumentText(body.content) };
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const title = normalizePageTitle(body?.title);
   const type = body?.type ?? "standard";

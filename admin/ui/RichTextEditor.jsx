@@ -8,7 +8,7 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { HorizontalRuleNode, INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontalRuleNode';
+import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontalRuleNode';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 import {
     $createParagraphNode,
@@ -21,19 +21,19 @@ import {
     REDO_COMMAND,
     UNDO_COMMAND,
 } from 'lexical';
-import { $createHeadingNode, HeadingNode } from '@lexical/rich-text';
+import { $createHeadingNode } from '@lexical/rich-text';
 import {
     INSERT_ORDERED_LIST_COMMAND,
     INSERT_UNORDERED_LIST_COMMAND,
-    ListItemNode,
-    ListNode,
 } from '@lexical/list';
-import { LinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
+import { registerNodeStructure } from '@lexical/extension';
+import { RICH_TEXT_HTML, RICH_TEXT_NODES } from '../../shared/lexicalEditor.mjs';
 import Button from './Button.jsx';
 import Icon from './Icon.jsx';
 import styles from './RichTextEditor.module.css';
-import { EXTERNAL_RICHTEXT_TAG, richTextValueKey, syncRichTextValue, toLexicalDocument } from './richTextState.mjs';
+import { EXTERNAL_RICHTEXT_TAG, repairRichTextValue, richTextValueKey, syncRichTextValue, toLexicalDocument } from './richTextState.mjs';
 
 const EDITOR_THEME = {
     paragraph: styles.paragraph,
@@ -134,16 +134,31 @@ function EditablePlugin({ disabled }) {
     return null;
 }
 
-function ValuePlugin({ value, tracker }) {
+function StructurePlugin() {
     const [editor] = useLexicalComposerContext();
-    useEffect(() => { syncRichTextValue(editor, value, tracker.current); }, [editor, value, tracker]);
+    // RichTextPlugin keeps Lexical's own HTML/clipboard importer. Repair imported
+    // blocks in the same update, before serialization, without replacing selection/history.
+    useEffect(() => registerNodeStructure(editor), [editor]);
+    return null;
+}
+
+function ValuePlugin({ value, prepared, tracker, onChange }) {
+    const [editor] = useLexicalComposerContext();
+    useEffect(() => {
+        syncRichTextValue(editor, value, tracker.current, prepared);
+        repairRichTextValue(value, prepared, tracker.current, onChange);
+    }, [editor, value, prepared, tracker, onChange]);
     return null;
 }
 
 export default function RichTextEditor({ value, onChange, disabled = false, label = 'Текст', minHeight = '180px', name, variant = 'compact' }) {
     const [mounted, setMounted] = useState(false);
     const labelId = useId();
-    const tracker = useRef({ incoming: richTextValueKey(value), emitted: null });
+    const prepared = useMemo(() => {
+        try { return { value: toLexicalDocument(value) }; }
+        catch { return { error: 'Не удалось безопасно восстановить структуру текста. Исходные данные сохранены: скопируйте их перед дальнейшими действиями.' }; }
+    }, [value]);
+    const tracker = useRef({ incoming: richTextValueKey(value), emitted: null, document: richTextValueKey(prepared.value) });
 
     useEffect(() => setMounted(true), []);
 
@@ -151,12 +166,19 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
     const initialConfig = useMemo(() => ({
         namespace: 'KroyRichTextEditor',
         theme: EDITOR_THEME,
-        nodes: [HeadingNode, ListNode, ListItemNode, LinkNode, HorizontalRuleNode],
+        nodes: RICH_TEXT_NODES,
+        html: RICH_TEXT_HTML,
         onError(error) {
             console.error('Rich text editor error', error);
         },
-        editorState: JSON.stringify(toLexicalDocument(value)),
+        editorState: prepared.value ? JSON.stringify(prepared.value) : undefined,
     }), []);
+
+    if (prepared.error) return <div className={styles.field}>
+        <span>{label}</span>
+        <p role="alert">{prepared.error}</p>
+        <details><summary>Исходный Lexical JSON</summary><pre className={styles.source}>{JSON.stringify(value, null, 2)}</pre></details>
+    </div>;
 
     if (!mounted) {
         return <div className={styles.field} style={{ '--richtext-min-height': minHeight }}>
@@ -171,7 +193,8 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
         <div className={`${styles.editor} ${disabled ? styles.disabled : ''}`} inert={disabled || undefined}>
             <LexicalComposer initialConfig={initialConfig}>
                 <EditablePlugin disabled={disabled} />
-                <ValuePlugin value={value} tracker={tracker} />
+                <StructurePlugin />
+                <ValuePlugin value={value} prepared={prepared.value} tracker={tracker} onChange={onChange} />
                 <RichTextToolbar variant={variant} />
                 <div className={styles.editableArea}>
                     <RichTextPlugin
@@ -188,7 +211,10 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
                     onChange={(editorState, editor, tags) => {
                         if (tags.has(EXTERNAL_RICHTEXT_TAG)) return;
                         const next = editorState.toJSON();
-                        tracker.current.emitted = richTextValueKey(next);
+                        const key = richTextValueKey(next);
+                        if (key === tracker.current.document) return;
+                        tracker.current.document = key;
+                        tracker.current.emitted = key;
                         onChange(next);
                     }}
                     ignoreSelectionChange
