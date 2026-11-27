@@ -1,6 +1,6 @@
 import { Input, Select } from '../ui/NativeControls.jsx';
 
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 
 import { parts } from '../../dist/kroy/parts.mjs';
@@ -9,12 +9,10 @@ import { widgets } from '../../dist/kroy/widgets.mjs';
 import widgetMetadata from '../../dist/kroy/widgets.json';
 
 import AdminShell from '../components/AdminShell.jsx';
-import Button from '../ui/Button.jsx';
 import FormField from '../ui/FormField.jsx';
 import fieldStyles from '../components/PageDetailsForm.module.css';
 import shellStyles from '../components/AdminShell.module.css';
 import Switch from '../ui/Switch.jsx';
-import listStyles from '../components/AdminList.module.css';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
@@ -24,6 +22,7 @@ import { footerBlock, prepareSiteFooter } from '../../shared/footerSettings.mjs'
 import { firstDocumentBlock, LEGAL_DOCUMENT_PART } from '../../shared/legalDocuments.mjs';
 import { toLexicalDocument } from '../ui/richTextState.mjs';
 import { ensureLegalDocumentBlock, reconcileLegalDocumentDraft } from './legalDocumentDraft.mjs';
+import { isSaveConflict, saveErrorMessage } from './saveErrors.mjs';
 
 const addEditorIds = (content) => content.map(({ part, props, view }) => createPart(part, metadata[part], widgetMetadata, props, view));
 const slot = { id: 'page-content-slot', slot: true };
@@ -235,21 +234,14 @@ export default function Editor() {
 
     async function reloadConflict() {
         const code = saveError?.code;
-        const message = code === 'save_unknown'
-            ? 'Итог сохранения неизвестен. Перезагрузить редактор и показать сохранённую версию?'
-            : 'Загрузить актуальные данные и сбросить конфликтующие правки?';
-        if (!window.confirm(message)) return;
-        if (code === 'save_unknown') {
-            window.location.reload();
-            return;
-        }
+        if (!window.confirm('Загрузить актуальные данные и сбросить только конфликтующие правки? Остальные черновики останутся в редакторе.')) return;
         setSwitching(true);
         try {
             if (code === 'footer_conflict') {
                 const settings = await read('/api/site/settings');
                 saved.current.footer = settings.footer;
                 setFooter(settings.footer.props);
-            } else if (code === 'legal_document_conflict') {
+            } else if (code === 'legal_document_conflict' || (code === 'document_conflict' && !isTemplate)) {
                 const next = await read(`/api/pages/${page.id}`);
                 const nextContent = addEditorIds(next.content);
                 saved.current.content = nextContent;
@@ -290,7 +282,7 @@ export default function Editor() {
     }
 
     async function savePage() {
-        if (!page.id || !isDirty || saveStatus === 'saving' || switching || saveError?.code) return;
+        if (!page.id || !isDirty || saveStatus === 'saving' || switching || isSaveConflict(saveError)) return;
         const base = saved.current;
         const payload = {};
         if (documentDirty) {
@@ -357,6 +349,7 @@ export default function Editor() {
             setSaveStatus('success');
         } catch (error) {
             if (!error.status) error.code = 'save_unknown';
+            if (error.status === 409 && !error.code) error.code = 'document_conflict';
             if (error.status === 404) error.code = 'selection_conflict';
             setSaveError(error);
             setSaveStatus('error');
@@ -504,12 +497,17 @@ export default function Editor() {
         markDirty();
     }
 
+    const saveNotice = useMemo(() => saveError ? {
+        id: saveError,
+        variant: 'error',
+        message: saveErrorMessage(saveError),
+        ...(isSaveConflict(saveError) ? {
+            action: { label: 'Загрузить актуальные данные', onClick: reloadConflict, disabled: switching },
+        } : {}),
+    } : null, [saveError, switching]);
+
     return (
         <>
-        {saveError && <div className={listStyles.error}>
-            <p role="alert">{saveError.message}</p>
-            {saveError.code && <Button disabled={switching} onClick={reloadConflict}>Загрузить актуальные данные</Button>}
-        </div>}
         <div inert={saveStatus === 'saving' || switching || undefined} aria-busy={saveStatus === 'saving' || switching}>
         <AdminShell
             page={page}
@@ -537,7 +535,10 @@ export default function Editor() {
             onViewChange={changeView}
             onViewPropChange={updateViewProp}
             onSave={savePage}
-            saveBlocked={Boolean(saveError?.code)}
+            notice={saveNotice}
+            saveBlocked={isSaveConflict(saveError)}
+            onReloadConflict={reloadConflict}
+            conflictLoading={switching}
             onCancel={cancel}
             isTemplate={isTemplate}
             editorSettings={isTemplate ? <FormField label="Название шаблона" className={fieldStyles.field}>

@@ -19,9 +19,10 @@ export default function AdminPageShell({
     onSave,
     footerActions,
     formId,
+    notice,
     children,
 }) {
-    useAdminHeader({ mode: headerMode, title, list, isDirty: hasUnsavedChanges, loadStatus: status, saveStatus, onSave });
+    useAdminHeader({ mode: headerMode, title, list, isDirty: hasUnsavedChanges, loadStatus: status, saveStatus, onSave, notice });
 
     return (
         <div className={list ? listStyles.page : styles.page} data-admin-list={list || undefined}>

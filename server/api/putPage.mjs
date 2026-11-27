@@ -24,8 +24,10 @@ export default async function putPage(c) {
 
   if (isPlainObject(body)) {
     const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId', 'expectedLegalVersion', 'isLegalDocument'];
-    if (Object.keys(body).some((key) => !fields.includes(key))) {
-      return c.json({ error: 'Неизвестные поля запроса' }, 400);
+    const unknown = Object.keys(body).filter((key) => !fields.includes(key));
+    if (unknown.length) {
+      return c.json({ error: 'Неизвестные поля запроса', code: 'unknown_fields',
+        details: unknown.map((key) => ({ path: key, code: 'unknown_field', message: 'Поле не поддерживается обработчиком сохранения страницы.' })) }, 400);
     }
     if (Object.keys(body).some((key) => key !== 'content')
         || (Array.isArray(body.content) && body.content.some((block) => block?.part === '@kroy/header'))) {

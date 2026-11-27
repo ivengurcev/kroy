@@ -19,12 +19,14 @@ export default function AdminHeader({
     sidebarCollapsed = false,
     mobileMenuOpen = false,
     onAllowUnload,
+    notice,
 }) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [logoutError, setLogoutError] = useState('');
     const [publication, setPublication] = useState({ status: 'idle' });
     const [publicationNotice, setPublicationNotice] = useState('');
-    const [publicationErrorDismissed, setPublicationErrorDismissed] = useState(false);
+    const [publicationError, setPublicationError] = useState('');
+    const [dismissedNotice, setDismissedNotice] = useState(null);
     const previousPublicationStatus = useRef('idle');
     const publishRequestRef = useRef(false);
     const publicationRequests = useRef(null);
@@ -105,13 +107,13 @@ export default function AdminHeader({
     useEffect(() => {
         const previous = previousPublicationStatus.current;
         previousPublicationStatus.current = publication.status;
-        if (previous !== publication.status && publication.status === 'error') setPublicationErrorDismissed(false);
+        if (publication.status === 'error') setPublicationError(publication.message || 'Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.');
         if ((previous === 'building' || previous === 'publishing') && publication.status === 'success') {
             setPublicationNotice(publication.releaseId ? `Опубликован релиз ${publication.releaseId}` : 'Сайт опубликован');
         } else if (publication.status === 'building' || publication.status === 'publishing' || publication.status === 'error') {
             setPublicationNotice('');
         }
-    }, [publication.status, publication.releaseId]);
+    }, [publication.status, publication.releaseId, publication.message]);
 
     useEffect(() => {
         if (!publicationNotice) return undefined;
@@ -130,6 +132,7 @@ export default function AdminHeader({
         if (blocked) return;
 
         publishRequestRef.current = true;
+        setPublicationError('');
         publicationRequests.current.next();
         setPublication({ status: 'building', message: 'Запуск публикации…' });
 
@@ -242,16 +245,26 @@ export default function AdminHeader({
                 </div>
 
                 {blocked && <span id="publication-blocked" className={styles.visuallyHidden}>Сначала сохраните изменения</span>}
-                {publicationNotice && <span className={styles.publishNotice} role="status">{publicationNotice}</span>}
-                {publication.status === 'error' && !publicationErrorDismissed && (
-                    <div className={styles.publishError}>
-                        <span role="alert">{publication.message || 'Не удалось опубликовать сайт или проверить публикацию. Повторите попытку.'}</span>
-                        <Button variant="listIcon" className={styles.dismissError} aria-label="Закрыть сообщение об ошибке" onClick={() => setPublicationErrorDismissed(true)}><Icon name="close" size={18} /></Button>
-                    </div>
-                )}
-                {logoutError && (
-                    <span className={styles.saveError} role="alert">{logoutError}</span>
-                )}
+                <section className={styles.notifications} aria-label="Уведомления">
+                    {[
+                        notice && dismissedNotice !== (notice.id ?? notice) ? {
+                            ...notice, key: 'workspace', dismiss: () => setDismissedNotice(notice.id ?? notice),
+                        } : null,
+                        publicationError ? { key: 'publication-error', variant: 'error', message: publicationError, dismiss: () => setPublicationError('') } : null,
+                        logoutError ? { key: 'logout-error', variant: 'error', message: logoutError, dismiss: () => setLogoutError('') } : null,
+                        publicationNotice ? { key: 'publication-success', variant: 'success', message: publicationNotice, dismiss: () => setPublicationNotice('') } : null,
+                    ].filter(Boolean).map((item) => (
+                        <div key={item.key} className={styles.notification} data-variant={item.variant ?? 'info'}>
+                            <div className={styles.notificationContent}>
+                                <span role={item.variant === 'error' ? 'alert' : 'status'}>{item.message}</span>
+                                {item.action && <Button disabled={item.action.disabled} onClick={item.action.onClick}>{item.action.label}</Button>}
+                            </div>
+                            <Button variant="listIcon" className={styles.dismissNotice} aria-label="Закрыть уведомление" onClick={item.dismiss}>
+                                <Icon name="close" size={18} />
+                            </Button>
+                        </div>
+                    ))}
+                </section>
             </div>
 
         </>

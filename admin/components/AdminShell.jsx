@@ -42,6 +42,9 @@ export default function AdminShell({
     workspaceSettings,
     onCancel,
     saveBlocked,
+    notice,
+    onReloadConflict,
+    conflictLoading,
 }) {
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [detailsDirty, setDetailsDirty] = useState(false);
@@ -63,7 +66,7 @@ export default function AdminShell({
         title="Настройки страницы"
         onClick={() => setDetailsOpen(true)}
     ><Icon name="settings" /><span className={styles.settingsLabel}> Настройки страницы</span></Button>, [loadStatus, page.id]);
-    useAdminHeader({ mode: 'editor', title, page, loadStatus, saveStatus, isDirty: isDirty || detailsDirty || legalDocumentDirty, onSave, onPageDetailsChange });
+    useAdminHeader({ mode: 'editor', title, page, loadStatus, saveStatus, isDirty: isDirty || detailsDirty || legalDocumentDirty, onSave, onPageDetailsChange, notice });
 
     async function deletePage() {
         if (!page.id || page.path === '/' || deleting || !window.confirm(`Удалить страницу «${page.title}»?`)) return;
@@ -118,6 +121,7 @@ export default function AdminShell({
                 {detailsOpen && <PageDetailsDialog page={page} onDirtyChange={setDetailsDirty} onAppearancePreview={onPageAppearancePreview} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
                 {deleteError && <p role="alert">{deleteError}</p>}
                 {loadStatus === 'success' && <ActionFooter isDirty={isDirty} saveStatus={saveStatus}>
+                    {saveBlocked && onReloadConflict && <Button disabled={conflictLoading} onClick={onReloadConflict}>Загрузить актуальные данные</Button>}
                     {!isTemplate && page.id && page.path !== '/' && <Button variant="danger" disabled={deleting || saveStatus === 'saving'} onClick={deletePage}><Icon name="delete" /> Удалить</Button>}
                     <Button disabled={!isDirty || saveStatus === 'saving'} onClick={onCancel}>Отмена</Button>
                     <Button variant="primary" disabled={!isDirty || saveBlocked || deleting || saveStatus === 'saving'} onClick={onSave}><Icon name="save" /> Сохранить</Button>

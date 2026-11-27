@@ -3,6 +3,7 @@ import test from 'node:test';
 import { build } from 'esbuild';
 import { isDocumentText } from '../../shared/legalDocuments.mjs';
 import { toLexicalDocument } from '../ui/richTextState.mjs';
+import { readApiError } from './apiRequest.mjs';
 
 function nodes(element) {
     if (Array.isArray(element)) return element.flatMap(nodes);
@@ -28,6 +29,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
             cells[index] = deps;
         },
         useCallback(fn) { return fn; },
+        useMemo(fn) { return fn(); },
         useContext() { return { pathname: '/admin/pages/page' }; },
     };
     globalThis.__kroyLegalEditorTest = runtime;
@@ -44,11 +46,20 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
                     : { pages: {}, materialSections: [] },
     }));
     let request;
+    let failure;
+    runtime.readApiError = readApiError;
     runtime.request = async (url, options) => {
         request = JSON.parse(options.body);
+        if (failure === 'network') throw new TypeError('Failed to fetch');
+        if (failure) return { ok: false, status: failure, json: async () => ({
+            error: failure === 400 ? 'Проверьте содержимое страницы' : 'Save failed',
+            ...(failure === 409 ? { code: 'legal_document_conflict' } : {}),
+        }) };
         stored = { ...stored, content: request.content ?? stored.content,
             isLegalDocument: request.isLegalDocument ?? stored.isLegalDocument, legalVersion: String(Number(stored.legalVersion) + 1) };
-        return { ok: true, json: async () => stored };
+        return { ok: true, json: async () => ({ ...stored, ...(request.footerChanges ? {
+            footer: { props: request.footerChanges.props, version: request.footerChanges.expectedVersion + 1 },
+        } : {}) }) };
     };
     const compiled = await build({
         entryPoints: ['admin/editor/Editor.jsx'], bundle: true, write: false, format: 'esm', jsx: 'automatic',
@@ -56,11 +67,11 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
             builder.onResolve({ filter: /^react$|^react\/jsx-runtime$|^@vyaz\/core\/Context\.js$|\/(AdminShell|Button|FormField)\.jsx$|\.module\.css$|dist\/kroy\/(parts|widgets)\.mjs$|\/apiRequest\.mjs$/ },
                 ({ path }) => ({ path, namespace: 'unit' }));
             builder.onLoad({ filter: /./, namespace: 'unit' }, ({ path }) => {
-                if (path === 'react') return { contents: 'export const {useState,useRef,useEffect,useCallback,useContext} = globalThis.__kroyLegalEditorTest;' };
+                if (path === 'react') return { contents: 'export const {useState,useRef,useEffect,useCallback,useMemo,useContext} = globalThis.__kroyLegalEditorTest;' };
                 if (path === 'react/jsx-runtime') return { contents: 'export const Fragment="fragment"; export const jsx=(type,props)=>({type,props}); export const jsxs=jsx;' };
                 if (path.endsWith('parts.mjs')) return { contents: 'export const parts={};' };
                 if (path.endsWith('widgets.mjs')) return { contents: 'export const widgets={};' };
-                if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest=(...args)=>globalThis.__kroyLegalEditorTest.request(...args); export const readApiError=async()=>new Error();' };
+                if (path.endsWith('apiRequest.mjs')) return { contents: 'export const apiRequest=(...args)=>globalThis.__kroyLegalEditorTest.request(...args); export const readApiError=(...args)=>globalThis.__kroyLegalEditorTest.readApiError(...args);' };
                 return { contents: `export default ${JSON.stringify(path.endsWith('.css') || path.includes('Context') ? {} : path.split('/').at(-1).replace('.jsx', ''))};` };
             });
         } }],
@@ -172,4 +183,51 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     await editor.onSave();
     assert.equal(request.expectedLegalVersion, beforeModal);
     assert.equal(request.footerChanges.props.description, footerDraft.description);
+
+    for (const status of [400, 500, 'network']) {
+        editor = render();
+        editor.onPropChange(editor.content[0].id, 'content', toLexicalDocument(`Черновик ${status}`));
+        editor = render();
+        const draft = editor.content;
+        failure = status;
+        await editor.onSave();
+        editor = render();
+        assert.equal(editor.saveStatus, 'error');
+        assert.equal(editor.isDirty, true);
+        assert.equal(editor.content, draft);
+        assert.equal(editor.notice.variant, 'error');
+        assert.equal(editor.saveBlocked, false);
+        assert.match(editor.notice.message, status === 400 ? /Проверьте/ : status === 500 ? /HTTP 500/ : /ошибки связи/);
+        failure = null;
+        await editor.onSave();
+        editor = render();
+        assert.equal(editor.saveStatus, 'success');
+        assert.equal(editor.isDirty, false);
+        assert.equal(editor.notice, null);
+    }
+    editor.onPropChange(editor.content[0].id, 'content', toLexicalDocument('Конфликтующий черновик'));
+    editor = render();
+    const conflictFooter = { description: 'Другие несохранённые настройки футера' };
+    editor.workspaceSettings.onFooterChange(conflictFooter);
+    editor = render();
+    failure = 409;
+    await editor.onSave();
+    editor = render();
+    const conflictDraft = editor.content;
+    assert.equal(editor.saveBlocked, true);
+    assert.equal(editor.notice.action.label, 'Загрузить актуальные данные');
+    assert.equal(editor.content, conflictDraft);
+    const previousWindow = globalThis.window;
+    t.after(() => { if (previousWindow === undefined) delete globalThis.window; else globalThis.window = previousWindow; });
+    globalThis.window = { confirm: () => false };
+    await editor.notice.action.onClick();
+    editor = render();
+    assert.equal(editor.content, conflictDraft);
+    globalThis.window.confirm = () => true;
+    await editor.notice.action.onClick();
+    editor = render();
+    assert.equal(editor.saveBlocked, false);
+    assert.equal(editor.notice, null);
+    assert.equal(editor.footer.props, conflictFooter);
+    assert.equal(editor.isDirty, true);
 });

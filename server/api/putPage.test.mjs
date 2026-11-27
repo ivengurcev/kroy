@@ -3,6 +3,8 @@ import test from 'node:test';
 import { pool } from '../../db/client.mjs';
 import putPage from './putPage.mjs';
 import getPage from './getPage.mjs';
+import { legalDocumentBlock } from '../../shared/legalDocuments.mjs';
+import { toLexicalDocument } from '../../admin/ui/richTextState.mjs';
 
 const pageId = '11111111-1111-4111-8111-111111111111';
 const content = [{ part: '@kroy/reviews', props: { reviewIds: ['second', 'first'], mode: 'manual' }, view: { name: '@kroy/review-cards', props: { columns: 4 } } }];
@@ -88,4 +90,31 @@ test('rejects missing, unknown and incompatible views before any database operat
         const response = await putPage(context({ content: [item] }));
         assert.equal(response.status, 400);
     }
+});
+
+test('accepts the actual legal-page editor payload and rejects only unsupported top-level fields', async (t) => {
+    const blocks = [legalDocumentBlock(JSON.parse(JSON.stringify(toLexicalDocument())))];
+    const page = { id: pageId, site_id: 'site-id', path: '/terms', page_type: 'standard',
+        content: [], isLegalDocument: false, legalVersion: '7', templateMode: 'inherit', templateId: null };
+    let update;
+    t.mock.method(pool, 'connect', async () => ({
+        release() {},
+        async query(sql, values) {
+            if (sql.includes('FOR UPDATE OF s')) return { rows: [{ id: 'site-id' }] };
+            if (sql.includes('FROM pages WHERE')) return { rows: [structuredClone(page)] };
+            if (sql.startsWith('UPDATE pages')) { update = values; return { rows: [] }; }
+            if (sql.includes('xmin::text')) return { rows: [{ legalVersion: '8' }] };
+            return { rows: [] };
+        },
+    }));
+    const payload = { content: blocks, expectedLegalVersion: '7', isLegalDocument: true };
+    const result = await putPage(context(payload));
+    assert.equal(result.status, 200);
+    assert.equal(result.value.isLegalDocument, true);
+    assert.deepEqual(JSON.parse(update[2]), blocks);
+    assert.equal(update[3], true);
+    const rejected = await putPage(context({ ...payload, editorOnly: 'must not be stored' }));
+    assert.equal(rejected.status, 400);
+    assert.equal(rejected.value.code, 'unknown_fields');
+    assert.equal(rejected.value.details[0].path, 'editorOnly');
 });

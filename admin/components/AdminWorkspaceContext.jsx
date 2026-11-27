@@ -15,8 +15,12 @@ export function useAdminHeader(config) {
             ...current,
             onSave: (...args) => configRef.current.onSave?.(...args),
             onPageDetailsChange: (...args) => configRef.current.onPageDetailsChange?.(...args),
+            ...(current.notice?.action ? { notice: {
+                ...current.notice,
+                action: { ...current.notice.action, onClick: (...args) => configRef.current.notice?.action?.onClick?.(...args) },
+            } } : {}),
         });
-    }, [workspace, config.mode, config.title, config.list, config.page?.id, config.page?.path, config.isDirty, config.loadStatus, config.saveStatus, config.actions]);
+    }, [workspace, config.mode, config.title, config.list, config.page?.id, config.page?.path, config.isDirty, config.loadStatus, config.saveStatus, config.actions, config.notice]);
 
     return workspace;
 }
