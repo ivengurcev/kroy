@@ -2,23 +2,25 @@ import { Input } from '../ui/NativeControls.jsx';
 import compactStyles from '../ui/CompactForm.module.css';
 import styles from './PaymentIntegrationEditor.module.css';
 import Button from '../ui/Button.jsx';
+import Switch from '../ui/Switch.jsx';
 
 export default function PaymentIntegrationEditor({ provider, settings, disabled, onChange, onDeleteSecretKey, validateRequired = true }) {
     return <div className={styles.fields}>
         {Object.entries(provider.fields).map(([name, field]) => <div key={name}>
-            <label className={`${compactStyles.field} ${compactStyles.compact}`}>
+            {field.type === 'checkbox' ? <Switch name={name} label={field.label} checked={settings[name] === true} disabled={disabled}
+                onChange={(event) => onChange({ ...settings, [name]: event.target.checked })} /> : <label className={`${compactStyles.field} ${compactStyles.compact}`}>
                 <span>{field.label}</span>
                 <Input
                     name={name}
                     type={field.type}
-                    {...(field.type === 'checkbox' ? { checked: settings[name] === true } : { value: settings[name] ?? '' })}
+                    value={settings[name] ?? ''}
                     placeholder={field.configured ? 'Ключ сохранён; оставьте поле пустым, чтобы не менять' : field.placeholder}
                     autoComplete={field.type === 'password' ? 'new-password' : undefined}
                     required={validateRequired && field.required}
                     disabled={disabled}
-                    onChange={(event) => onChange({ ...settings, [name]: field.type === 'checkbox' ? event.target.checked : event.target.value })}
+                    onChange={(event) => onChange({ ...settings, [name]: event.target.value })}
                 />
-            </label>
+            </label>}
             {name === 'secretKey' && field.configured && <div className={styles.secretActions}>
                 <span>Ключ сохранён</span>
                 <Button variant="danger" disabled={disabled} onClick={() => {

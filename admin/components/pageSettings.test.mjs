@@ -88,6 +88,17 @@ test('tree toggles are independent; settings submit SEO and clear dirty state on
     tree = render(PageList, { pages });
     assert.ok(tree.some(({ props }) => props.href === '/admin/pages/b'));
 
+    tree = render(PageList, { pages: [{ ...pages[0], isLegalDocument: true }] });
+    const legalLink = tree.find(({ props }) => props.href === '/admin/pages/a');
+    assert.match(legalLink.props.title, /Правовой документ/);
+    assert.equal(legalLink.props['aria-describedby'], 'legal-document-a');
+    assert.equal(tree.find(({ props }) => props.id === 'legal-document-a').props.children, 'Правовой документ');
+    assert.ok(tree.some(({ props }) => props.title === 'Правовой документ'));
+    assert.ok(tree.some(({ type, props }) => type === 'Icon' && props.name === 'document'));
+    assert.equal(tree.filter(({ type, props }) => type === 'small' && props.children === 'Правовой документ').length, 0);
+    assert.ok(tree.some(({ props }) => props.children === 'A'));
+    assert.ok(tree.some(({ props }) => props.children === '/a'));
+
     cells = [];
     tree = render(PageList, { pages: [pages[1]] });
     assertChevron(branch(tree, 'Ветка'), true);

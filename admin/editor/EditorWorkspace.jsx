@@ -10,6 +10,7 @@ import Icon from '../ui/Icon.jsx';
 import PartControls from './PartControls.jsx';
 import PartPicker from './PartPicker.jsx';
 import AdminPanel from '../ui/AdminPanel.jsx';
+import { firstDocumentBlock } from '../../shared/legalDocuments.mjs';
 
 function StickyPartHeader({ children }) {
     const sentinelRef = useRef(null);
@@ -69,6 +70,7 @@ function partTitle(identifier, metadata) {
 
 export default function EditorWorkspace({
     page,
+    isLegalDocument = page?.isLegalDocument,
     content,
     metadata,
     parts,
@@ -190,7 +192,7 @@ export default function EditorWorkspace({
             </div>
         );
         const own = kind === 'own';
-        const structureEditable = own && !page?.isLegalDocument;
+        const protectedDocument = own && isLegalDocument && item === firstDocumentBlock(content);
         const isFooter = kind === 'footer';
         const notice = isFooter ? 'Общий элемент сайта. Изменения затронут все страницы сайта'
             : own ? undefined : `Общий элемент шаблона. Изменения затронут все страницы, использующие шаблон „${templateName}“`;
@@ -216,8 +218,8 @@ export default function EditorWorkspace({
                                 isEditing={item.id === editingPartId}
                                 onEdit={canEdit ? editPart : undefined}
                                 onClose={closePartEditor}
-                                onMove={structureEditable ? onMovePart : undefined}
-                                onRemove={structureEditable ? removePart : undefined}
+                                onMove={own ? onMovePart : undefined}
+                                onRemove={own && !protectedDocument ? removePart : undefined}
                                 notice={notice}
                             />
                         </StickyPartHeader>
@@ -262,10 +264,10 @@ export default function EditorWorkspace({
                 {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
                 {sharedBefore.map((item, index) => renderBlock(item, index, 'shared'))}
                 {content.flatMap((item, index) => [
-                    !page?.isLegalDocument && insertionPoint(index, `insertion-${item.id}`),
+                    insertionPoint(index, `insertion-${item.id}`),
                     renderBlock(item, index, 'own'),
                 ])}
-                {!page?.isLegalDocument && insertionPoint(content.length, 'insertion-last')}
+                {insertionPoint(content.length, 'insertion-last')}
                 {sharedAfter.map((item, index) => renderBlock(item, index, 'shared'))}
                 {footer && renderBlock(footer, 0, 'footer')}
             </section>

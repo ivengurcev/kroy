@@ -1,7 +1,7 @@
 import { isPlainObject, isValidPagePath } from './pageFields.mjs';
 
 export const LEGAL_DOCUMENT_PART = '@kroy/document';
-export const LEGAL_CONTENT_ERROR = 'Содержимое должно быть одним блоком «Правовой документ» с корректным форматированным текстом.';
+export const LEGAL_CONTENT_ERROR = 'Добавьте хотя бы один блок «Правовой документ» с корректным форматированным текстом.';
 
 export function isLegalPagePath(path) {
     return isValidPagePath(path) && !/^\/(?:auth|assets)(?:\/|$)/.test(path);
@@ -49,8 +49,16 @@ export function legalDocumentBlock(content, viewProps = {}) {
 }
 
 export function isLegalDocumentContent(content) {
-    return Array.isArray(content) && content.length === 1
-        && content[0]?.part === LEGAL_DOCUMENT_PART
-        && content[0].view?.name === LEGAL_DOCUMENT_PART
-        && isDocumentText(content[0].props?.content);
+    const documents = Array.isArray(content) ? content.filter((item) => item?.part === LEGAL_DOCUMENT_PART) : [];
+    return documents.length > 0 && documents.every((item) =>
+        item.view?.name === LEGAL_DOCUMENT_PART && isDocumentText(item.props?.content));
+}
+
+export function firstDocumentBlock(content) {
+    return content.find((item) => item?.part === LEGAL_DOCUMENT_PART);
+}
+
+export function updateFirstDocumentText(content, text) {
+    const first = firstDocumentBlock(content);
+    return content.map((item) => item === first ? { ...item, props: { ...item.props, content: text } } : item);
 }

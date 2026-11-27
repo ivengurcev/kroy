@@ -128,6 +128,58 @@ test('legal pages follow page transactions, URL lifecycle and the site snapshot'
     assert.deepEqual(restored.content, [legalDocumentBlock(text)]);
     assert.deepEqual((await call(getSitePreview)).value.footer.documents, [{ label: 'Через настройки', href: saved.path }]);
 
+    await t.test('legal flag and mixed page blocks save atomically; modal changes only the first document', async () => {
+        const { value: page } = await call(postPage, { title: 'Смешанная страница', path: '/mixed' });
+        const get = () => call(getPage, null, page.id);
+        const other = { part: '@kroy/text', props: { title: 'Обычный блок', text: 'Не менять' }, view: { name: '@kroy/text', props: {} } };
+        const secondDocument = legalDocumentBlock(revisedText, { spacingBottom: 'large' });
+        const content = [other, legalDocumentBlock(text), secondDocument];
+        const invalid = await call(putPage, {
+            isLegalDocument: true, content: [other], expectedLegalVersion: page.legalVersion,
+            footerChanges: { expectedVersion: 1, props: { description: 'Not saved' } },
+        }, page.id);
+        assert.equal(invalid.status, 400);
+        assert.equal((await get()).isLegalDocument, false);
+        assert.deepEqual((await get()).content, []);
+        assert.equal((await call(getSitePreview)).value.footer.description, '');
+        const enabled = await call(putPage, { isLegalDocument: true, content, expectedLegalVersion: page.legalVersion }, page.id);
+        assert.equal(enabled.value.isLegalDocument, true);
+        assert.deepEqual((await get()).content, content);
+        const links = async () => (await call(getSitePreview)).value.footer.documents.filter(({ href }) => href === page.path);
+        assert.equal((await links()).length, 1);
+        const modal = await call(patchPage, {
+            title: 'Обновлено из футера', path: page.path, content: revisedText, expectedLegalVersion: enabled.value.legalVersion,
+        }, page.id);
+        assert.deepEqual(modal.content, [other, legalDocumentBlock(revisedText), secondDocument]);
+        assert.equal((await call(putPage, {
+            isLegalDocument: false, expectedLegalVersion: enabled.value.legalVersion,
+        }, page.id)).value.code, 'legal_document_conflict');
+        const disabled = await call(putPage, { isLegalDocument: false, expectedLegalVersion: modal.legalVersion }, page.id);
+        assert.equal(disabled.value.isLegalDocument, false);
+        assert.deepEqual(disabled.value.content, modal.content);
+        assert.deepEqual(await links(), []);
+        assert.equal((await call(patchPage, {
+            content: text, expectedLegalVersion: disabled.value.legalVersion,
+        }, page.id)).status, 400);
+        const reenabled = await call(putPage, { isLegalDocument: true, expectedLegalVersion: disabled.value.legalVersion }, page.id);
+        assert.equal(reenabled.value.content.length, content.length);
+        assert.equal((await links()).length, 1);
+        const reordered = [secondDocument, other, legalDocumentBlock(text)];
+        const moved = await call(putPage, { content: reordered, expectedLegalVersion: reenabled.value.legalVersion }, page.id);
+        assert.deepEqual(moved.value.content, reordered);
+        const afterRemoval = await call(putPage, { content: [secondDocument, other], expectedLegalVersion: moved.value.legalVersion }, page.id);
+        assert.deepEqual(afterRemoval.value.content, [secondDocument, other]);
+        assert.equal((await call(putPage, { content: [other], expectedLegalVersion: afterRemoval.value.legalVersion }, page.id)).status, 400);
+        const patchDisabled = await call(patchPage, { isLegalDocument: false, expectedLegalVersion: afterRemoval.value.legalVersion }, page.id);
+        assert.equal(patchDisabled.isLegalDocument, false);
+        assert.deepEqual(patchDisabled.content, [secondDocument, other]);
+        const cleared = await call(putPage, { content: [other], expectedLegalVersion: patchDisabled.legalVersion }, page.id);
+        assert.deepEqual(cleared.value.content, [other]);
+        const noDocument = await call(patchPage, { isLegalDocument: true, expectedLegalVersion: cleared.value.legalVersion }, page.id);
+        assert.equal(noDocument.status, 400);
+        assert.equal((await get()).isLegalDocument, false);
+    });
+
     const external = { label: 'Внешняя ссылка', url: 'https://example.org/legal' };
     const legacyFooter = { description: 'Existing', documents: {
         privacyPageId: ordinary.id, offerPageId: ordinary.id, additional: [{ pageId: ordinary.id }, external],

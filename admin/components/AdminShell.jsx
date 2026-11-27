@@ -62,7 +62,7 @@ export default function AdminShell({
         aria-label="Настройки страницы"
         title="Настройки страницы"
         onClick={() => setDetailsOpen(true)}
-    ><Icon name="settings" /><span> Настройки страницы</span></Button>, [loadStatus, page.id]);
+    ><Icon name="settings" /><span className={styles.settingsLabel}> Настройки страницы</span></Button>, [loadStatus, page.id]);
     useAdminHeader({ mode: 'editor', title, page, loadStatus, saveStatus, isDirty: isDirty || detailsDirty || legalDocumentDirty, onSave, onPageDetailsChange });
 
     async function deletePage() {

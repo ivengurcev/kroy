@@ -10,12 +10,17 @@ import { createRoot } from 'react-dom/client';
 test('part tabs keep field instances and drafts, do not save, and reset for another block', async () => {
     const outfile = new URL(`.PartEditor-${randomUUID()}.mjs`, import.meta.url);
     const result = await build({
-        entryPoints: [new URL('./PartEditor.jsx', import.meta.url).pathname],
+        stdin: { contents: `export { default } from './admin/editor/PartEditor.jsx';
+            export { default as PartControls } from './admin/editor/PartControls.jsx';`, resolveDir: process.cwd() },
         outfile: outfile.pathname, bundle: true, write: false, format: 'esm',
         platform: 'node', packages: 'external', jsx: 'automatic', loader: { '.svg': 'text' },
         plugins: [{
             name: 'field-isolation',
             setup(build) {
+                build.onResolve({ filter: /\.svg$/ }, () => ({ path: 'icon', namespace: 'icon-unit' }));
+                build.onLoad({ filter: /.*/, namespace: 'icon-unit' }, () => ({
+                    contents: 'export default function Icon(){return null;}',
+                }));
                 build.onResolve({ filter: /^\.\/Field\.jsx$/ }, () => ({ path: 'field', namespace: 'unit' }));
                 build.onLoad({ filter: /.*/, namespace: 'unit' }, () => ({
                      contents: `import {createElement} from 'react'; export default function Field({name, value, onChange, richTextVariant}) {
@@ -31,7 +36,7 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
     let root;
     try {
         await writeFile(outfile, result.outputFiles.find(({ path }) => path.endsWith('.mjs')).contents);
-        const { default: PartEditor } = await import(outfile.href);
+        const { default: PartEditor, PartControls } = await import(outfile.href);
         globalThis.window = dom.window;
         globalThis.document = dom.window.document;
         globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -79,6 +84,16 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
             widgetMetadata: { [documentPart]: { contract: 'document', title: 'Документ', fields: {} } },
         })));
         assert.equal(document.querySelector('[data-field="content"]').dataset.richTextVariant, 'full');
+
+        await act(() => root.render(createElement(PartControls, { partId: 'protected', onMove: (...args) => calls.push(args) })));
+        assert.equal(document.querySelector('[aria-label="Удалить запчасть"]'), null);
+        assert.ok(document.querySelector('[aria-label="Переместить запчасть вверх"]'));
+        assert.ok(document.querySelector('[aria-label="Переместить запчасть вниз"]'));
+        await act(() => document.querySelector('[aria-label="Переместить запчасть вниз"]').click());
+        assert.deepEqual(calls.at(-1), ['protected', 1]);
+        await act(() => root.render(createElement(PartControls, { partId: 'additional', onMove() {}, onRemove: (...args) => calls.push(args) })));
+        await act(() => document.querySelector('[aria-label="Удалить запчасть"]').click());
+        assert.deepEqual(calls.at(-1), ['additional']);
     } finally {
         if (root) await act(() => root.unmount());
         dom.window.close();

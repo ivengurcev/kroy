@@ -52,7 +52,7 @@ export default function PartControls({
             >
                 <Icon name="up" size={18} />
             </Button></>}
-            {onRemove && <Button
+            {onMove && <Button
                 variant="iconCompact"
                 aria-label="Переместить запчасть вниз"
                 title="Переместить запчасть вниз"
@@ -65,7 +65,7 @@ export default function PartControls({
             >
                 <Icon name="down" size={18} />
             </Button>}
-            <Button
+            {onRemove && <Button
                 variant="iconCompact"
                 aria-label="Удалить запчасть"
                 title="Удалить запчасть"
@@ -76,7 +76,7 @@ export default function PartControls({
                 }}
             >
                 <Icon name="delete" size={18} />
-            </Button>
+            </Button>}
         </div>
     );
 }

@@ -4,6 +4,7 @@ import { pool } from '../../db/client.mjs';
 import { listPageTemplates, templateColumns } from '../../db/pageTemplates.mjs';
 import { isPlainObject } from '../../shared/pageContent.mjs';
 import { resolvePageTemplate, validateDocumentContent, validateTemplateContent } from '../../shared/pageTemplates.mjs';
+import { isLegalPagePath } from '../../shared/legalDocuments.mjs';
 import { availableFooterPages, footerPageIds, isSiteFooterUrl, legacyFooterDocuments, normalizeFooterSettings } from '../../shared/footerSettings.mjs';
 import getHostname from './getHostname.mjs';
 import getCurrentSite from './siteContext.mjs';
@@ -258,8 +259,14 @@ export function putPageLayout(c, pageId, body) {
         const hasSelection = Object.hasOwn(body, 'templateSelection');
         const hasTemplate = Object.hasOwn(body, 'templateChanges');
         const hasFooter = Object.hasOwn(body, 'footerChanges');
-        if (!hasContent && !hasSelection && !hasTemplate && !hasFooter) reject(400, 'Нет изменений для сохранения');
-        if ((hasContent || hasSelection) && (page.isLegalDocument || Object.hasOwn(body, 'expectedLegalVersion'))
+        const hasLegalFlag = Object.hasOwn(body, 'isLegalDocument');
+        if (hasLegalFlag && (typeof body.isLegalDocument !== 'boolean' || page.page_type !== 'standard')) {
+            reject(400, 'Признак правового документа доступен только обычным страницам');
+        }
+        const nextLegal = hasLegalFlag ? body.isLegalDocument : page.isLegalDocument;
+        if (nextLegal && !isLegalPagePath(page.path)) reject(400, 'Адрес недоступен для правового документа');
+        if (!hasContent && !hasSelection && !hasTemplate && !hasFooter && !hasLegalFlag) reject(400, 'Нет изменений для сохранения');
+        if ((hasContent || hasSelection || hasLegalFlag) && (page.isLegalDocument || hasLegalFlag || Object.hasOwn(body, 'expectedLegalVersion'))
             && body.expectedLegalVersion !== page.legalVersion) {
             reject(409, 'Правовой документ изменился. Загрузите актуальную версию.', { code: 'legal_document_conflict' });
         }
@@ -293,13 +300,15 @@ export function putPageLayout(c, pageId, body) {
             }
         }
         const footer = hasFooter ? await saveFooter(client, site, body.footerChanges) : undefined;
-        if (hasContent) {
-            const details = validateDocumentContent(body.content, partCatalog, widgetCatalog, { isLegalDocument: page.isLegalDocument });
+        if (hasContent || hasLegalFlag) {
+            const content = hasContent ? body.content : page.content;
+            const details = validateDocumentContent(content, partCatalog, widgetCatalog, { isLegalDocument: nextLegal });
             if (details.length) reject(400, 'Проверьте содержимое страницы', { details });
-            await validateBlockReferences(client, site.id, body.content, page.content, page);
-            await client.query('UPDATE pages SET content = $3::jsonb WHERE site_id = $1 AND id = $2',
-                [site.id, pageId, JSON.stringify(body.content)]);
-            page.content = body.content;
+            await validateBlockReferences(client, site.id, content, page.content, page);
+            await client.query('UPDATE pages SET content = $3::jsonb, is_legal_document = $4 WHERE site_id = $1 AND id = $2',
+                [site.id, pageId, JSON.stringify(content), nextLegal]);
+            page.content = content;
+            page.isLegalDocument = nextLegal;
         }
         if (hasSelection) {
             await client.query('UPDATE pages SET template_mode = $3, template_id = $4 WHERE site_id = $1 AND id = $2',
@@ -312,7 +321,7 @@ export function putPageLayout(c, pageId, body) {
             const content = template.content.map((block, index) => Object.hasOwn(propsByIndex, index) ? { ...block, props: propsByIndex[index] } : block);
             template = await updateTemplate(client, site.id, template, { ...template, content });
         }
-        if (page.isLegalDocument && (hasContent || hasSelection)) {
+        if (hasContent || hasSelection || hasLegalFlag) {
             const { rows: [revision] } = await client.query(
                 'SELECT xmin::text AS "legalVersion" FROM pages WHERE site_id = $1 AND id = $2', [site.id, pageId],
             );

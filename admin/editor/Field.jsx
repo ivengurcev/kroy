@@ -1,4 +1,4 @@
-import { Checkbox, Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import { Input, Select, Textarea } from '../ui/NativeControls.jsx';
 
 import ListField from './ListField.jsx';
 import ImageField from './ImageField.jsx';
@@ -24,7 +24,7 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
     if (schema.type === 'richtext') return <div className={`${styles.field} ${compactStyles.field} ${compactStyles.long}`}>
         <RichTextEditor value={value} onChange={onChange} label={label} variant={richTextVariant} />
     </div>;
-    if (schema.type === 'switch') return <Switch label={label} checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />;
+    if (schema.type === 'switch' || schema.type === 'checkbox') return <Switch label={label} checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />;
 
     if (schema.type === 'catalog-products') return <RelatedItemsField label="Товары" items={catalog?.products?.filter((product) => product.status === 'published') ?? []} value={value} onChange={onChange} getId={(product) => product.id} getLabel={(product) => product.name} />;
     if (schema.type === 'material-section') return <MaterialSectionField value={value} onChange={onChange} materialSections={materialSections} />;
@@ -54,18 +54,6 @@ export default function Field({ name, schema, value, onChange, catalog, reviews,
                 format={schema.format}
                 onChange={onChange}
             />
-        );
-    }
-
-    if (schema.type === 'checkbox') {
-        return (
-            <label className={styles.checkboxField}>
-                <Checkbox
-                    checked={Boolean(value)}
-                    onChange={(event) => onChange(event.target.checked)}
-                />
-                {label}
-            </label>
         );
     }
 

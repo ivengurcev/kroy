@@ -23,9 +23,29 @@
 }
 
 .documentForm {
+    container: document-form / inline-size;
     display: grid;
     gap: var(--space-4);
     grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+}
+
+.documentFields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.documentFields > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@container document-form (min-width: 32rem) {
+    .documentFields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .documentForm [contenteditable] {

@@ -1,14 +1,18 @@
-.shell { min-width: 0; }
+.shell { min-width: 0; container: page-editor / inline-size; }
 .actions {
     display: flex;
-    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: flex-end;
     gap: var(--space-2) var(--space-4);
     margin-bottom: var(--space-4);
 }
-.editorSettings { flex: 1 1 100%; min-width: 0; margin-inline-end: auto; }
+.editorSettings { display: flex; align-items: flex-end; gap: var(--space-4); flex: 1 1 0; min-width: 0; margin-inline-end: auto; }
+.templateField { flex: 1 1 0; max-width: 28rem; }
+.documentSwitch { min-width: 0; max-width: 9rem; min-height: var(--control-height-md); }
+.documentSwitch > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.actions > button { flex: 0 0 auto; }
+.settingsLabel { display: none; }
 
-@media (min-width: 600px) {
-    .editorSettings { flex-basis: 18rem; max-width: 28rem; }
+@container page-editor (min-width: 40rem) {
+    .settingsLabel { display: inline; }
 }

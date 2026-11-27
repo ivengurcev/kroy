@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { isLegalDocumentContent } from '../../shared/legalDocuments.mjs';
+import { firstDocumentBlock, isLegalDocumentContent } from '../../shared/legalDocuments.mjs';
 import { apiRequest } from '../editor/apiRequest.mjs';
 import useAutoSlug from '../editor/useAutoSlug.jsx';
 import Button from '../ui/Button.jsx';
@@ -13,9 +13,9 @@ import ValidatedForm from '../ui/ValidatedForm.jsx';
 import { formResponseError } from '../ui/formValidation.mjs';
 import styles from './FooterSettings.module.css';
 
-function DocumentForm({ page, convert, onCancel, onSaved, onUnavailable, onDirtyChange }) {
+function DocumentForm({ page, onCancel, onSaved, onUnavailable, onDirtyChange }) {
     const formId = useId();
-    const [initialContent] = useState(() => page ? page.content[0].props.content : toLexicalDocument());
+    const [initialContent] = useState(() => page ? firstDocumentBlock(page.content).props.content : toLexicalDocument());
     const [title, setTitle] = useState(page?.title ?? '');
     const [path, setPath] = useState(page?.path ?? '');
     const [content, setContent] = useState(initialContent);
@@ -34,7 +34,7 @@ function DocumentForm({ page, convert, onCancel, onSaved, onUnavailable, onDirty
 
     async function submit(event) {
         event.preventDefault();
-        if (busy || (!dirty && !convert)) return;
+        if (busy || !dirty) return;
         const form = event.currentTarget;
         setBusy(true);
         setError('');
@@ -44,7 +44,7 @@ function DocumentForm({ page, convert, onCancel, onSaved, onUnavailable, onDirty
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title, path: slug, content,
-                    ...(!page || convert ? { isLegalDocument: true } : {}),
+                    ...(!page ? { isLegalDocument: true } : {}),
                     ...(page ? { expectedLegalVersion: page.legalVersion } : {}),
                 }),
             });
@@ -65,18 +65,23 @@ function DocumentForm({ page, convert, onCancel, onSaved, onUnavailable, onDirty
         }
     }
 
-    return <Modal title={convert ? 'Преобразовать прежнюю страницу' : page ? 'Редактировать документ' : 'Добавить документ'}
+    return <Modal title={page ? 'Редактировать документ' : 'Добавить документ'}
         busy={busy} onClose={close} actions={<>
             <Button disabled={busy} onClick={close}>Отмена</Button>
-            <Button type="submit" form={formId} variant="primary" disabled={busy || (!dirty && !convert)}>
+            <Button type="submit" form={formId} variant="primary" disabled={busy || !dirty}>
                 {busy ? 'Сохранение…' : page ? 'Сохранить' : 'Создать'}
             </Button>
         </>}>
         <ValidatedForm id={formId} className={styles.documentForm} inert={busy || undefined} onSubmit={submit}>
-            {convert && <p>Страница будет добавлена в автоматический список документов с тем же адресом и настройками.</p>}
-            <FormField label="Название документа"><Input name="title" required value={title} onChange={(event) => setTitle(event.target.value)} /></FormField>
-            <FormField label="URL страницы"><Input name="path" required disabled={page?.path === '/'} value={slug}
-                onChange={(event) => changeSlug(event.target.value)} /></FormField>
+            <div className={styles.documentFields}>
+                <FormField label="Название документа">
+                    <Input name="title" required value={title} onInput={(event) => setTitle(event.currentTarget.value)} />
+                </FormField>
+                <FormField label="URL страницы">
+                    <Input name="path" required disabled={page?.path === '/'} autoComplete="off" value={slug}
+                        onInput={(event) => changeSlug(event.currentTarget.value)} />
+                </FormField>
+            </div>
             <RichTextEditor name="content" label="Содержимое" value={content} onChange={setContent} variant="full" minHeight="240px" />
             {error && <FormError>{error}</FormError>}
         </ValidatedForm>
@@ -101,16 +106,15 @@ export default function LegalDocumentDialog({ id, onCancel, onSaved, onUnavailab
         return () => controller.abort();
     }, [id, onUnavailable]);
 
-    const compatible = page?.type === 'standard' && isLegalDocumentContent(page.content);
+    const compatible = page?.type === 'standard' && page.isLegalDocument && isLegalDocumentContent(page.content);
     if (!id || compatible) {
-        return <DocumentForm page={page} convert={Boolean(page && !page.isLegalDocument)}
+        return <DocumentForm page={page}
             onCancel={onCancel} onSaved={onSaved} onUnavailable={onUnavailable} onDirtyChange={onDirtyChange} />;
     }
     return <Modal title="Правовой документ" onClose={onCancel} actions={<Button onClick={onCancel}>Закрыть</Button>}>
         {error ? <FormError>{error}</FormError> : page ? <p>
-            Прежняя ссылка продолжит работать. Чтобы перейти на автоматический список, перенесите текст вручную
-            в единственный блок «Правовой документ» в <a href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}>редакторе страницы</a>,
-            сохраните её и вновь выберите «Преобразовать» в настройках футера.
+            Откройте <a href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}>редактор страницы</a>,
+            включите «Правовой документ» и сохраните изменения. Содержимое страницы останется на месте.
         </p> : <p role="status">Загрузка документа…</p>}
     </Modal>;
 }

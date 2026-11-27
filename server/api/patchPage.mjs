@@ -15,7 +15,7 @@ import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import { normalizeSeo } from '../../shared/seo.mjs';
 import { seoReferenceErrors } from './seoValidation.mjs';
 import { normalizePageAppearance, getPageTheme } from '../../site/themes/themeRegistry.mjs';
-import { isDocumentText, isLegalDocumentContent, isLegalPagePath, legalDocumentBlock, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
+import { isDocumentText, isLegalDocumentContent, isLegalPagePath, updateFirstDocumentText, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -40,13 +40,13 @@ export default async function patchPage(c) {
   const hasDataSource = Object.hasOwn(body ?? {}, "dataSource");
   const hasMaterialSectionId = Object.hasOwn(body ?? {}, "materialSectionId");
   const hasContent = keys.includes('content');
-  const promoteDocument = body?.isLegalDocument === true;
+  const hasLegalFlag = keys.includes('isLegalDocument');
   const title = hasTitle ? normalizePageTitle(body.title) : null;
 
   if (
     !keys.some((key) => key !== 'expectedLegalVersion')
     || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo", "appearance", "content", "isLegalDocument", "expectedLegalVersion"].includes(key))
-    || (keys.includes('isLegalDocument') && !promoteDocument)
+    || (hasLegalFlag && typeof body.isLegalDocument !== 'boolean')
     || (hasTitle && !title)
     || (hasRouteParam && !isValidRouteParameter(body.routeParam))
     || (hasDataSource && !isPageDataSource(body.dataSource))
@@ -94,13 +94,15 @@ export default async function patchPage(c) {
       return c.json({ error: "Page not found" }, 404);
     }
 
-    if ((page.is_legal_document || promoteDocument || keys.includes('expectedLegalVersion'))
+    const nextLegal = hasLegalFlag ? body.isLegalDocument : page.is_legal_document;
+    if ((page.is_legal_document || hasLegalFlag || keys.includes('expectedLegalVersion'))
         && body.expectedLegalVersion !== page.legalVersion) {
       await client.query("ROLLBACK");
       return c.json({ error: 'Страница изменилась. Откройте актуальную версию и перенесите правки.', code: 'legal_document_conflict' }, 409);
     }
-    if ((hasContent && !page.is_legal_document && !promoteDocument)
-        || ((hasContent || promoteDocument) && (page.page_type !== 'standard' || !isLegalDocumentContent(page.content)))) {
+    if ((hasLegalFlag && page.page_type !== 'standard')
+        || (hasContent && !page.is_legal_document)
+        || ((hasContent || nextLegal) && !isLegalDocumentContent(page.content))) {
       await client.query("ROLLBACK");
       return c.json({ error: 'Проверьте содержимое документа', fields: { content: LEGAL_CONTENT_ERROR } }, 400);
     }
@@ -182,7 +184,7 @@ export default async function patchPage(c) {
       await client.query("ROLLBACK");
       return c.json({ error: "Main page path cannot be changed", fields: { path: 'Путь главной страницы нельзя изменить.' } }, 400);
     }
-    if ((page.is_legal_document || promoteDocument) && !isLegalPagePath(nextPath)) {
+    if (nextLegal && !isLegalPagePath(nextPath)) {
       await client.query("ROLLBACK");
       return c.json({ error: 'Проверьте путь страницы', fields: { path: 'Этот адрес недоступен для правового документа.' } }, 400);
     }
@@ -253,7 +255,7 @@ export default async function patchPage(c) {
        SET title = $2, path = $3, route_param = $4,
              data_source = $5, material_section_id = $6, seo = $7::jsonb, appearance = $8::jsonb,
              content = CASE WHEN $9::boolean THEN $10::jsonb ELSE content END,
-             is_legal_document = is_legal_document OR $11::boolean
+             is_legal_document = $11::boolean
        WHERE id = $1
          RETURNING id, site_id, path, title, content, seo, appearance, page_type AS type,
                  data_source AS "dataSource", material_section_id AS "materialSectionId",
@@ -263,7 +265,7 @@ export default async function patchPage(c) {
         page.page_type === "list" ? nextDataSource : null,
         page.page_type === "list" ? nextMaterialSectionId : null,
         JSON.stringify(hasSeo ? seoInput.seo : page.seo), JSON.stringify(nextAppearance), hasContent,
-        hasContent ? JSON.stringify([legalDocumentBlock(body.content, page.content[0].view.props)]) : null, promoteDocument],
+        hasContent ? JSON.stringify(updateFirstDocumentText(page.content, body.content)) : null, nextLegal],
     );
 
     if (detailTemplate && nextDetailPath !== detailTemplate.path) {

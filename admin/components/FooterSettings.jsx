@@ -43,7 +43,7 @@ function LegalDocuments({ pages, documents, onChange, actions }) {
     return <>
         <TreeGroup label="Правовые документы">
             <div><Button variant="compact" onClick={() => setDialog({})}><Icon name="add" /> Добавить документ</Button></div>
-            {automatic.length ? <Tree>{automatic.map((page) => <TreeItem key={page.id} icon="materials"
+            {automatic.length ? <Tree>{automatic.map((page) => <TreeItem key={page.id} icon="document"
                 label={<span className={styles.documentLink}>{page.title}<small>{page.path}</small></span>} title={`${page.title} — ${page.path}`}
                 actions={<Button variant="listIcon" title="Редактировать документ" aria-label={`Редактировать «${page.title}»`}
                     onClick={() => setDialog(page)}><Icon name="edit" size={16} /></Button>} />)}</Tree>
@@ -56,9 +56,9 @@ function LegalDocuments({ pages, documents, onChange, actions }) {
                     label={page ? `${label ?? page.title} — ${page.path}` : label ?? 'Недоступная страница'}
                     href={page && (page.path === '/' ? '/admin' : `/admin/pages/${page.id}`)}
                     actions={<>
-                        {page?.type === 'standard' && <Button variant="listIcon" title="Преобразовать в правовой документ"
-                            aria-label={`Преобразовать «${page.title}» в правовой документ`}
-                            onClick={() => setDialog(page)}><Icon name="edit" size={16} /></Button>}
+                        {page?.type === 'standard' && <a href={page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}
+                            title="Отметить как правовой документ в редакторе страницы"
+                            aria-label={`Настроить признак «Правовой документ» страницы «${page.title}»`}><Icon name="edit" size={16} /></a>}
                         <Button variant="listIcon" title="Убрать прежнюю ссылку" aria-label={`Убрать прежнюю ссылку «${label ?? page?.title ?? 'Недоступная страница'}»`}
                             onClick={() => onChange(omitLegacyFooterDocument(documents, key))}><Icon name="delete" size={16} /></Button>
                     </>} />;

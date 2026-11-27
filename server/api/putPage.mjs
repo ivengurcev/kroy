@@ -23,7 +23,7 @@ export default async function putPage(c) {
   }
 
   if (isPlainObject(body)) {
-    const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId', 'expectedLegalVersion'];
+    const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId', 'expectedLegalVersion', 'isLegalDocument'];
     if (Object.keys(body).some((key) => !fields.includes(key))) {
       return c.json({ error: 'Неизвестные поля запроса' }, 400);
     }

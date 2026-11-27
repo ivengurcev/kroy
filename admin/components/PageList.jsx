@@ -34,9 +34,11 @@ export default function PageList({ pages, showDeleted = false, busyPageId = null
                 const redirectsOpen = expandedRedirects.has(page.id);
                 const legalLabel = page.isLegalDocument ? 'Правовой документ' : '';
                 return <TreeItem key={page.id} folder={hasChildren} expanded={expanded} muted={deleted}
-                    icon={page.isLegalDocument ? 'materials' : undefined}
+                    icon={page.isLegalDocument ? 'document' : undefined}
+                    description={legalLabel || undefined}
+                    descriptionId={legalLabel ? `legal-document-${page.id}` : undefined}
                     title={[page.title, page.path, legalLabel].filter(Boolean).join(' · ')} count={hasChildren ? node.children.length : undefined}
-                    label={<span className={styles.label}><span className={styles.name}>{page.title}</span><small className={styles.path}>{page.path}</small>{legalLabel && <small className={`${styles.badge} ${styles.legalBadge}`}>{legalLabel}</small>}{deleted && <small className={styles.badge}>Удалена</small>}</span>}
+                    label={<span className={styles.label}><span className={styles.name}>{page.title}</span><small className={styles.path}>{page.path}</small>{deleted && <small className={styles.badge}>Удалена</small>}</span>}
                     href={deleted ? undefined : page.path === '/' ? '/admin' : `/admin/pages/${page.id}`}
                     toggleLabel={`Дочерние страницы ${page.title}`}
                     onToggle={hasChildren ? () => toggle(setCollapsed, node.path) : undefined}

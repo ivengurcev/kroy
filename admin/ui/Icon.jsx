@@ -33,6 +33,7 @@ import MenuIcon from './icons/menu.svg';
 import styles from './Icon.module.css';
 import FolderIcon from './icons/folder.svg';
 import FileIcon from './icons/file.svg';
+import DocumentIcon from './icons/document.svg';
 import ListBulletIcon from './icons/list-bullet.svg';
 import ListOrderedIcon from './icons/list-ordered.svg';
 
@@ -41,6 +42,7 @@ const icons = {
     listOrdered: ListOrderedIcon,
     folder: FolderIcon,
     file: FileIcon,
+    document: DocumentIcon,
     add: AddIcon,
     edit: EditIcon,
     delete: DeleteIcon,

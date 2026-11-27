@@ -23,7 +23,7 @@ export function TreeEmpty({ children }) {
 }
 
 export function TreeItem({ label, title, href, onClick, folder = false, expanded = true, onToggle, toggleLabel,
-    controlsId, count, actions, children, selected = false, muted = false, icon = folder ? 'folder' : 'file' }) {
+    controlsId, count, actions, children, selected = false, muted = false, icon = folder ? 'folder' : 'file', description, descriptionId }) {
     const Summary = href ? 'a' : onClick ? 'button' : 'span';
     return <li className={styles.listItem} data-parent={folder || undefined}>
         <div className={styles.itemHeader} data-selected={selected || undefined}>
@@ -32,8 +32,11 @@ export function TreeItem({ label, title, href, onClick, folder = false, expanded
                 <Icon name="chevronRight" size={16} className={expanded ? styles.expanded : ''} />
             </Button>}
             <Summary className={`${styles.summary} ${muted ? styles.muted : ''}`} href={href}
-                type={onClick && !href ? 'button' : undefined} onClick={onClick} title={title}>
-                <Icon name={icon} size={16} className={styles.nodeIcon} />
+                type={onClick && !href ? 'button' : undefined} onClick={onClick} title={title}
+                aria-describedby={description ? descriptionId : undefined}>
+                {description ? <span title={description} className={styles.nodeIcon}><Icon name={icon} size={16} /></span>
+                    : <Icon name={icon} size={16} className={styles.nodeIcon} />}
+                {description && <span id={descriptionId} className={styles.description}>{description}</span>}
                 <span className={styles.nodeName}>{label}</span>
                 {count !== undefined && <small aria-label={`Вложенных элементов: ${count}`}>{count}</small>}
             </Summary>

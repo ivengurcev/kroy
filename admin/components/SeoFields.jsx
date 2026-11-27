@@ -1,4 +1,5 @@
-import { Checkbox, Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import { Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import Switch from '../ui/Switch.jsx';
 import ImageField from '../editor/ImageField.jsx';
 import Button from '../ui/Button.jsx';
 import { DEFAULT_TITLE_TEMPLATE, resolvePageMeta, isSeoDomain } from '../../shared/seo.mjs';
@@ -33,7 +34,7 @@ export default function SeoFields({ value, onChange, siteData, page }) {
                 </Select>
                 <small>Canonical и OG используют HTTPS на этом домене. DNS и TLS настраиваются отдельно.</small>
             </label>
-            <label className={styles.checkbox}><Checkbox name="indexable" type="checkbox" checked={value.indexable !== false} onChange={(event) => update('indexable', event.target.checked)} />Разрешить индексацию</label>
+            <Switch name="indexable" label="Разрешить индексацию" checked={value.indexable !== false} onChange={(event) => update('indexable', event.target.checked)} />
         </> : <label className={styles.field}><span>Индексация</span>
             <Select name={fieldName('indexing')} value={value.indexing ?? 'inherit'} onChange={(event) => update('indexing', event.target.value)}>
                 <option value="inherit">Наследовать ({siteData?.seo?.indexable === false ? 'запрещена' : 'разрешена'})</option>

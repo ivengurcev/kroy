@@ -1,5 +1,6 @@
 import FormError from '../ui/FormError.jsx';
-import { Checkbox, Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import { Input, Select, Textarea } from '../ui/NativeControls.jsx';
+import Switch from '../ui/Switch.jsx';
 import { useEffect, useState } from 'react';
 import Modal from '../ui/Modal.jsx';
 import Button from '../ui/Button.jsx';
@@ -263,10 +264,8 @@ export default function CatalogEditor() {
                             {categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
                         </Select>
                     </label>
-                    <label className={`${fieldStyles.field} ${styles.checkboxField}`}>
-                        <Checkbox checked={dialogDraft.status === 'published'} onChange={(event) => setDialogDraft((current) => ({ ...current, status: event.target.checked ? 'published' : 'hidden' }))} />
-                        <span>Опубликован</span>
-                    </label>
+                    <Switch label="Опубликован" checked={dialogDraft.status === 'published'}
+                        onChange={(event) => setDialogDraft((current) => ({ ...current, status: event.target.checked ? 'published' : 'hidden' }))} />
                     <label className={`${fieldStyles.field} ${styles.fullField}`}>
                         <span>Описание</span>
                         <Textarea rows="5" value={dialogDraft.description} onChange={(event) => setDialogDraft((current) => ({ ...current, description: event.target.value }))} />
