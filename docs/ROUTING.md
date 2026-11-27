@@ -58,9 +58,9 @@ admin/api/public/static/uploads. Это не полный список инфр�
 
 | Метод и путь | Контракт |
 |---|---|
-| `GET /pages` | Список без content с массивом действующих `redirects`; `?deleted=all` — включая удалённые, `?deleted=1` — только удалённые |
-| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с `content`, `appearance`, `templateMode`, `templateId` и `effectiveTemplateId` |
-| `POST /pages` | Создать пустую страницу; title/path, type/dataSource для списка |
+| `GET /pages` | Список без content с `isLegalDocument` и массивом действующих `redirects`; `?deleted=all` — включая удалённые, `?deleted=1` — только удалённые |
+| `GET /pages?path=/`, `GET /pages/:pageId` | Страница с `content`, `appearance`, `templateMode`, `templateId`, `effectiveTemplateId`, `isLegalDocument` и `legalVersion` |
+| `POST /pages` | Создать пустую страницу; title/path, type/dataSource для списка; правовой документ — по контракту ниже |
 | `PATCH /pages/:pageId` | title/path/seo/appearance; у detail — routeParam вместо произвольного path, без seo; appearance заменяется целиком, отсутствие поля сохраняет прежнее оформление; при передаче appearance ответ включает готовую theme для редактора |
 | `PUT /pages/:pageId` | `{ content }` заменяет только блоки страницы. Можно передать выбор шаблона, правки его `props` и/или `footerChanges` в той же транзакции. |
 | `DELETE /pages/:pageId`, `POST /pages/:pageId/restore` | Мягкое удаление / восстановление |
@@ -91,6 +91,23 @@ admin/api/public/static/uploads. Это не полный список инфр�
 При `footerChanges: { props, expectedVersion }` и успешной записи ответ
 содержит `footer: { props, version }`. При конфликте любой версии возвращается
 `409` и транзакция целиком откатывается. См. [FOOTER.md](FOOTER.md).
+
+Правовая страница создаётся запросом `POST /pages` с
+`{ title, path, isLegalDocument: true, content }`. `content` запроса — Lexical
+JSON, сервер сохраняет его в единственном блоке `@kroy/document` страницы `standard`.
+Модальное редактирование использует `PATCH /pages/:pageId` с
+`{ title, path, content, expectedLegalVersion }`: все три поля записываются вместе.
+При явном преобразовании существующей `standard`-страницы добавляется
+`isLegalDocument: true`; прежнее содержимое уже должно состоять из одного корректного
+блока `@kroy/document`. Настройки оформления, SEO и назначения шаблона сохраняются.
+
+Для изменения правовой страницы через `PATCH`, а также для записи её блоков или
+назначения шаблона через `PUT`, передаётся `expectedLegalVersion` из последнего
+чтения или успешной записи этой страницы. Это непрозрачная ревизия строки.
+Устаревший запрос возвращает `409 legal_document_conflict`. В `PUT` по-прежнему
+передаётся массив блоков; удаление или замена обязательного блока отклоняются.
+Ошибки полей `POST` и `PATCH` возвращаются через `fields`. Ревизии шаблона и футера
+проверяются в общей транзакции только при соответствующих правках.
 
 Приватный API платёжных настроек — в [prodamus.md](prodamus.md).
 Точный состав полей ответов определяется обработчиками в `server/api/`;

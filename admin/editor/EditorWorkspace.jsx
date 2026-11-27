@@ -97,6 +97,7 @@ export default function EditorWorkspace({
     onViewPropChange,
     onFooterChange,
     onSharedPropChange,
+    legalDocumentActions,
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
@@ -183,6 +184,7 @@ export default function EditorWorkspace({
     function renderBlock(item, index, kind) {
         if (item.slot) return <Card key={item.id}>Содержимое страницы</Card>;
         const own = kind === 'own';
+        const structureEditable = own && !page?.isLegalDocument;
         const isFooter = kind === 'footer';
         const notice = isFooter ? 'Общий элемент сайта. Изменения затронут все страницы сайта'
             : own ? undefined : `Общий элемент шаблона. Изменения затронут все страницы, использующие шаблон „${templateName}“`;
@@ -208,8 +210,8 @@ export default function EditorWorkspace({
                                 isEditing={item.id === editingPartId}
                                 onEdit={canEdit ? editPart : undefined}
                                 onClose={closePartEditor}
-                                onMove={own ? onMovePart : undefined}
-                                onRemove={own ? removePart : undefined}
+                                onMove={structureEditable ? onMovePart : undefined}
+                                onRemove={structureEditable ? removePart : undefined}
                                 notice={notice}
                             />
                         </StickyPartHeader>
@@ -225,6 +227,7 @@ export default function EditorWorkspace({
                                         pages={linkPages}
                                         propsOnly={!own}
                                         onPropsChange={isFooter ? onFooterChange : undefined}
+                                        legalDocumentActions={isFooter ? legalDocumentActions : undefined}
                                         partContract={metadata[item.part]?.contract}
                                         view={item.view}
                                         widgetMetadata={widgetMetadata}
@@ -253,10 +256,10 @@ export default function EditorWorkspace({
                 {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
                 {sharedBefore.map((item, index) => renderBlock(item, index, 'shared'))}
                 {content.flatMap((item, index) => [
-                    insertionPoint(index, `insertion-${item.id}`),
+                    !page?.isLegalDocument && insertionPoint(index, `insertion-${item.id}`),
                     renderBlock(item, index, 'own'),
                 ])}
-                {insertionPoint(content.length, 'insertion-last')}
+                {!page?.isLegalDocument && insertionPoint(content.length, 'insertion-last')}
                 {sharedAfter.map((item, index) => renderBlock(item, index, 'shared'))}
                 {footer && renderBlock(footer, 0, 'footer')}
             </section>

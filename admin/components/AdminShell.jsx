@@ -19,6 +19,7 @@ export default function AdminShell({
     loadStatus,
     saveStatus,
     isDirty,
+    legalDocumentDirty,
     theme,
     contacts,
     footer,
@@ -62,7 +63,7 @@ export default function AdminShell({
         title="Настройки страницы"
         onClick={() => setDetailsOpen(true)}
     ><Icon name="settings" /><span> Настройки страницы</span></Button>, [loadStatus, page.id]);
-    useAdminHeader({ mode: 'editor', title, page, loadStatus, saveStatus, isDirty: isDirty || detailsDirty, onSave, onPageDetailsChange });
+    useAdminHeader({ mode: 'editor', title, page, loadStatus, saveStatus, isDirty: isDirty || detailsDirty || legalDocumentDirty, onSave, onPageDetailsChange });
 
     async function deletePage() {
         if (!page.id || page.path === '/' || deleting || !window.confirm(`Удалить страницу «${page.title}»?`)) return;

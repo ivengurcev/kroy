@@ -164,7 +164,8 @@ export default function PageDetailsForm({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(isNew
                     ? { title, path: generatedPath, type, dataSource: type === 'list' ? dataSource : null, materialSectionId: type === 'list' && dataSource === 'materials' ? materialSectionId : null }
-                    : isDetail ? { title, routeParam, appearance } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }), seo, appearance }),
+                    : isDetail ? { title, routeParam, appearance } : { ...(page.type === 'list' ? { title, path, dataSource, materialSectionId: dataSource === 'materials' ? materialSectionId : null } : isMainPage ? { title } : { title, path }),
+                        ...(page.isLegalDocument ? { expectedLegalVersion: page.legalVersion } : {}), seo, appearance }),
             });
 
             if (!response.ok) {
@@ -175,7 +176,7 @@ export default function PageDetailsForm({
                     setTab(names[0].startsWith('appearance') ? 2 : names[0].startsWith('seo.') ? 1 : 0);
                     requestAnimationFrame(() => form.querySelector('[aria-invalid="true"]')?.focus());
                 }
-                setFormError(await formResponseError(response, form, errorMessage(response.status)));
+                setFormError(await formResponseError(response, form, result.code === 'legal_document_conflict' ? result.error : errorMessage(response.status)));
                 return;
             }
 
@@ -197,7 +198,7 @@ export default function PageDetailsForm({
             <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
                 <span>Тип страницы</span>
                 <Select name="type" value={type} disabled={!isNew || isSubmitting} onChange={(event) => setType(event.target.value)}>
-                    <option value="standard">Обычная</option>
+                    <option value="standard">{page.isLegalDocument ? 'Правовой документ' : 'Обычная'}</option>
                     <option value="list">Список</option>
                     <option value="detail" disabled>Детальный шаблон</option>
                 </Select>

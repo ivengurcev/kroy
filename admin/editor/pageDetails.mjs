@@ -6,6 +6,7 @@ export function toEditorPage(page) {
         ...(page.appearance ? { appearance: page.appearance } : {}),
         path: page.path,
         type: page.type ?? 'standard',
+        ...(page.isLegalDocument ? { isLegalDocument: true, legalVersion: page.legalVersion } : {}),
         dataSource: page.dataSource ?? null,
         materialSectionId: page.materialSectionId ?? null,
         routeParam: page.routeParam ?? null,

@@ -167,9 +167,9 @@ Defaults простых значений задаются в необязате�
 Field использует широкий `admin/ui/RichTextEditor.jsx`, без обёртки contenteditable
 в HTML label. Материалы используют тот же редактор через MaterialEditor.
 У редактора два режима панели: `variant="compact"` (по умолчанию) и
-`variant="full"`. Field всегда использует сокращённый режим: выделения, списки,
+`variant="full"`. Field по умолчанию использует сокращённый режим: выделения, списки,
 ссылка, горизонтальная линия (HR) и Undo/Redo, без выбора типа абзаца.
-MaterialEditor явно включает полный
+MaterialEditor и `@kroy/document` явно включают полный
 режим с кнопками «Абзац», H2 и H3. Режим не меняет формат хранения и не удаляет
 ранее сохранённые заголовки; HeadingNode остаётся зарегистрирован в обоих режимах.
 
@@ -196,6 +196,11 @@ JSON хранится прямо в props, без HTML, Markdown и миграц
 Richtext включён для `@kroy/text.props.text`, `@kroy/callout.props.text`,
 `@kroy/comparison.props.rows[].description/note/examples` и
 `@kroy/hero.props.lead/description/features[].text`. Заголовки остаются обычными полями.
+
+У `@kroy/document` единственное поле `props.content` принимает Lexical JSON.
+Виджет `@kroy/document` отображает текст в области шириной до 70 символов по
+типографической метрике `ch`, использует общий `RichTextContent` и токены темы.
+Название страницы берётся из записи `pages` и отдельно блоком не выводится.
 
 Для загружаемых иконок используется `widget=image format=media maxWidth=512`
 без фиксированного кадрирования. В этом режиме ImageField сохраняет

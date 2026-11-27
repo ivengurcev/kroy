@@ -5,6 +5,7 @@ import { spacingFields } from '../../shared/widgetDisplay.js';
 import Field from './Field.jsx';
 import styles from './PartEditor.module.css';
 import FooterSettings, { PageNavigationField } from '../components/FooterSettings.jsx';
+import { LEGAL_DOCUMENT_PART } from '../../shared/legalDocuments.mjs';
 
 export default function PartEditor({
     title,
@@ -23,6 +24,7 @@ export default function PartEditor({
     pages = [],
     propsOnly = false,
     onPropsChange,
+    legalDocumentActions,
 }) {
     const compatibleWidgets = Object.entries(widgetMetadata)
         .filter(([, metadata]) => partContract && metadata.contract === partContract);
@@ -55,7 +57,7 @@ export default function PartEditor({
             />}
 
             <div className={styles.section} hidden={widgetTab}>
-                {part === '@kroy/footer' ? <FooterSettings pages={pages} value={props} onChange={onPropsChange} /> : Object.entries(fields).map(([name, schema]) => (
+                {part === '@kroy/footer' ? <FooterSettings pages={pages} value={props} onChange={onPropsChange} legalDocumentActions={legalDocumentActions} /> : Object.entries(fields).map(([name, schema]) => (
                     part === '@kroy/header' && name === 'navigation'
                         ? <PageNavigationField key={name} pages={pages} value={props[name]} onChange={(value) => onPropChange(name, value)} />
                         :
@@ -67,6 +69,7 @@ export default function PartEditor({
                         catalog={catalog}
                         reviews={reviews}
                         materialSections={materialSections}
+                        richTextVariant={part === LEGAL_DOCUMENT_PART ? 'full' : 'compact'}
                         onChange={(value) => onPropChange(name, value)}
                     />
                 ))}

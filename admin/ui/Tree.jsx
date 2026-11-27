@@ -23,7 +23,7 @@ export function TreeEmpty({ children }) {
 }
 
 export function TreeItem({ label, title, href, onClick, folder = false, expanded = true, onToggle, toggleLabel,
-    controlsId, count, actions, children, selected = false, muted = false }) {
+    controlsId, count, actions, children, selected = false, muted = false, icon = folder ? 'folder' : 'file' }) {
     const Summary = href ? 'a' : onClick ? 'button' : 'span';
     return <li className={styles.listItem} data-parent={folder || undefined}>
         <div className={styles.itemHeader} data-selected={selected || undefined}>
@@ -33,7 +33,7 @@ export function TreeItem({ label, title, href, onClick, folder = false, expanded
             </Button>}
             <Summary className={`${styles.summary} ${muted ? styles.muted : ''}`} href={href}
                 type={onClick && !href ? 'button' : undefined} onClick={onClick} title={title}>
-                <Icon name={folder ? 'folder' : 'file'} size={16} className={styles.nodeIcon} />
+                <Icon name={icon} size={16} className={styles.nodeIcon} />
                 <span className={styles.nodeName}>{label}</span>
                 {count !== undefined && <small aria-label={`Вложенных элементов: ${count}`}>{count}</small>}
             </Summary>

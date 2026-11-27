@@ -2,3 +2,8 @@
 .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .path { display: block; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: 400; }
 .badge { flex-shrink: 0; color: var(--color-text-muted); font-size: var(--font-size-sm); font-weight: 400; }
+.legalBadge { display: none; }
+
+@media (min-width: 768px) {
+    .legalBadge { display: inline; }
+}

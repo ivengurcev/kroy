@@ -17,12 +17,12 @@ function CatalogCategoryField({ value, onChange, catalog }) {
     return <label className={styles.field}>Категория<Select value={value ?? ''} onChange={(event) => onChange(event.target.value)}><option value="">Выбрать...</option><option value="__all__">Все товары</option><option value="__uncategorized__">Без категории</option>{catalog?.categories?.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</Select></label>;
 }
 
-export default function Field({ name, schema, value, onChange, catalog, reviews, materialSections }) {
+export default function Field({ name, schema, value, onChange, catalog, reviews, materialSections, richTextVariant = 'compact' }) {
     const label = schema.label ?? name;
     const maxLength = schema.validators?.maxLength;
 
     if (schema.type === 'richtext') return <div className={`${styles.field} ${compactStyles.field} ${compactStyles.long}`}>
-        <RichTextEditor value={value} onChange={onChange} label={label} variant="compact" />
+        <RichTextEditor value={value} onChange={onChange} label={label} variant={richTextVariant} />
     </div>;
     if (schema.type === 'switch') return <Switch label={label} checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />;
 

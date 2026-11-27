@@ -1,6 +1,6 @@
 import { Input, Select } from '../ui/NativeControls.jsx';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import ApplicationContext from '@vyaz/core/Context.js';
 
 import { parts } from '../../dist/kroy/parts.mjs';
@@ -19,6 +19,9 @@ import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPrevie
 import { apiRequest, readApiError } from './apiRequest.mjs';
 import { FOOTER_PART } from '../../shared/pageTemplates.mjs';
 import { footerBlock, prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { LEGAL_DOCUMENT_PART } from '../../shared/legalDocuments.mjs';
+import { toLexicalDocument } from '../ui/richTextState.mjs';
+import { reconcileLegalDocumentDraft } from './legalDocumentDraft.mjs';
 
 const addEditorIds = (content) => content.map(({ part, props, view }) => createPart(part, metadata[part], widgetMetadata, props, view));
 const slot = { id: 'page-content-slot', slot: true };
@@ -51,6 +54,7 @@ export default function Editor() {
     const [footer, setFooter] = useState();
     const [site, setSite] = useState();
     const [linkPages, setLinkPages] = useState([]);
+    const [legalDocumentDirty, setLegalDocumentDirty] = useState(false);
     const [layoutList, setLayoutList] = useState();
     const [selection, setSelection] = useState({ mode: 'inherit', id: null });
     const [layout, setLayout] = useState(null);
@@ -61,6 +65,8 @@ export default function Editor() {
     const [materialSections, setMaterialSections] = useState([]);
     const [preview, setPreview] = useState({ status: 'idle', record: null });
     const saved = useRef({});
+    const legalDraftVersion = useRef();
+    const referenceRequest = useRef(null);
     const switchingRequest = useRef(null);
     const templateId = pathname?.match(/^\/admin\/templates\/([^/]+)$/)?.[1];
     const isTemplate = Boolean(templateId);
@@ -103,7 +109,9 @@ export default function Editor() {
                 saved.current = {
                     content: loadedContent, footer: settings.footer, selection: selected,
                     selectedLayout: initialLayout, layout: initialLayout, name: page.name, version: page.version,
+                    legalVersion: page.legalVersion,
                 };
+                legalDraftVersion.current = page.legalVersion;
                 if (page.path === '/' && pathname !== '/admin') {
                     navigate?.('/admin', { replace: true, skipGuard: true });
                 }
@@ -120,6 +128,7 @@ export default function Editor() {
 
         return () => {
             controller.abort();
+            referenceRequest.current?.abort();
             switchingRequest.current?.abort();
         };
     }, [pathname, navigate, isTemplate, templateId]);
@@ -207,6 +216,7 @@ export default function Editor() {
 
     function cancel() {
         const base = saved.current;
+        legalDraftVersion.current = base.legalVersion;
         setContent(base.content);
         setName(base.name ?? '');
         setFooter(base.footer.props);
@@ -233,6 +243,14 @@ export default function Editor() {
                 const settings = await read('/api/site/settings');
                 saved.current.footer = settings.footer;
                 setFooter(settings.footer.props);
+            } else if (code === 'legal_document_conflict') {
+                const next = await read(`/api/pages/${page.id}`);
+                const nextContent = addEditorIds(next.content);
+                saved.current.content = nextContent;
+                saved.current.legalVersion = next.legalVersion;
+                legalDraftVersion.current = next.legalVersion;
+                setContent(nextContent);
+                updatePageDetails(next);
             } else if (isTemplate) {
                 const next = await read(`/api/templates/${templateId}`);
                 const nextContent = readTemplateDocument(next);
@@ -271,6 +289,9 @@ export default function Editor() {
             payload.content = pageContent;
             if (isTemplate) Object.assign(payload, { name, slotIndex: content.indexOf(slot), expectedVersion: base.version });
         }
+        if (page.isLegalDocument && (documentDirty || selectionDirty)) {
+            payload.expectedLegalVersion = legalDraftVersion.current;
+        }
         if (footerDirty) payload.footerChanges = { props: footer, expectedVersion: base.footer.version };
         if (selectionDirty) payload.templateSelection = selection;
         if (templateDirty) {
@@ -303,6 +324,11 @@ export default function Editor() {
             const result = await response.json();
             base.content = content;
             base.selection = selection;
+            if (page.isLegalDocument && (documentDirty || selectionDirty)) {
+                base.legalVersion = result.legalVersion;
+                legalDraftVersion.current = result.legalVersion;
+                setPage((current) => ({ ...current, legalVersion: result.legalVersion }));
+            }
             if (isTemplate) {
                 base.version = result.version;
                 base.name = result.name;
@@ -327,7 +353,9 @@ export default function Editor() {
     }
 
     function addPart(part, position) {
-        const newPart = createPart(part, metadata[part], widgetMetadata);
+        if (page.isLegalDocument) return;
+        const props = part === LEGAL_DOCUMENT_PART ? { content: toLexicalDocument() } : undefined;
+        const newPart = createPart(part, metadata[part], widgetMetadata, props);
 
         markDirty();
         setContent((previous) => {
@@ -342,7 +370,7 @@ export default function Editor() {
     }
 
     function removePart(id) {
-        if (!content.some((item) => !item.slot && item.id === id)) return;
+        if (page.isLegalDocument || !content.some((item) => !item.slot && item.id === id)) return;
 
         const nextContent = content.filter((item) => item.id !== id);
 
@@ -351,6 +379,7 @@ export default function Editor() {
     }
 
     function movePart(id, direction) {
+        if (page.isLegalDocument) return;
         const index = content.findIndex((item) => item.id === id);
         const target = index + direction;
 
@@ -409,13 +438,51 @@ export default function Editor() {
     }
 
     function updatePageDetails(updatedPage) {
-        if (updatedPage.theme) setPageThemes((current) => {
+        if (updatedPage.theme || updatedPage.path !== page.path) setPageThemes((current) => {
             const next = { ...current };
             delete next[page.path];
-            if (Object.keys(updatedPage.appearance ?? {}).length) next[updatedPage.path] = updatedPage.theme;
+            const updatedTheme = updatedPage.theme ?? current[page.path];
+            if (updatedTheme && Object.keys(updatedPage.appearance ?? {}).length) next[updatedPage.path] = updatedTheme;
             return next;
         });
         setPage(toEditorPage(updatedPage));
+        updatePageReference(updatedPage);
+        if (updatedPage.isLegalDocument && legalDraftVersion.current === saved.current.legalVersion) {
+            legalDraftVersion.current = updatedPage.legalVersion;
+        }
+        if (updatedPage.isLegalDocument) saved.current.legalVersion = updatedPage.legalVersion;
+    }
+
+    function updatePageReference({ id, title, path, type, isLegalDocument }) {
+        referenceRequest.current?.abort();
+        setLinkPages((current) => {
+            const previous = current.find((page) => page.id === id);
+            return [...current.filter((page) => page.id !== id), { ...previous, id, title, path, type, isLegalDocument }]
+                .sort((a, b) => a.path.localeCompare(b.path));
+        });
+    }
+
+    const refreshLinkPages = useCallback(() => {
+        referenceRequest.current?.abort();
+        const controller = new AbortController();
+        referenceRequest.current = controller;
+        read('/api/pages', controller.signal).then((pages) => {
+            if (!controller.signal.aborted) setLinkPages(pages);
+        }).catch(() => {});
+    }, []);
+
+    function legalDocumentSaved(updated) {
+        if (updated.id !== page.id || isTemplate) {
+            updatePageReference(updated);
+            return;
+        }
+        const next = addEditorIds(updated.content);
+        const draft = reconcileLegalDocumentDraft(content, saved.current.content, legalDraftVersion.current, next, updated.legalVersion);
+        saved.current.content = next;
+        saved.current.legalVersion = updated.legalVersion;
+        legalDraftVersion.current = draft.version;
+        setContent(draft.content);
+        updatePageDetails(updated);
     }
 
     return (
@@ -435,6 +502,7 @@ export default function Editor() {
             loadStatus={loadStatus}
             saveStatus={saveStatus}
             isDirty={isDirty}
+            legalDocumentDirty={legalDocumentDirty}
             theme={appearancePreview || pageThemes[page.path] ? { ...theme, ...(appearancePreview ?? pageThemes[page.path]) } : theme}
             contacts={contacts}
             footer={footer && { id: FOOTER_PART, ...footerBlock(footer) }}
@@ -468,6 +536,7 @@ export default function Editor() {
                 sharedBefore: layout?.content.slice(0, layout.slotIndex),
                 sharedAfter: layout?.content.slice(layout.slotIndex),
                 templateName: layout?.name, linkPages, siteName: site?.name,
+                legalDocumentActions: { refresh: refreshLinkPages, onSaved: legalDocumentSaved, setDirty: setLegalDocumentDirty },
                 onFooterChange: (props) => { setFooter(props); markDirty(); },
                 onSharedPropChange: (id, name, value) => {
                     setLayout((current) => ({ ...current, content: current.content.map((block) =>

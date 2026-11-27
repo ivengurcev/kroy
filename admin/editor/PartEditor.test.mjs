@@ -18,8 +18,8 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
             setup(build) {
                 build.onResolve({ filter: /^\.\/Field\.jsx$/ }, () => ({ path: 'field', namespace: 'unit' }));
                 build.onLoad({ filter: /.*/, namespace: 'unit' }, () => ({
-                    contents: `import {createElement} from 'react'; export default function Field({name, value, onChange}) {
-                        return createElement('input', {'data-field':name, defaultValue:value, onChange:e=>onChange(e.target.value)});
+                     contents: `import {createElement} from 'react'; export default function Field({name, value, onChange, richTextVariant}) {
+                         return createElement('input', {'data-field':name, 'data-rich-text-variant':richTextVariant, defaultValue:value, onChange:e=>onChange(e.target.value)});
                     }`,
                     resolveDir: new URL('../../', import.meta.url).pathname,
                 }));
@@ -49,6 +49,7 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
         const tabs = () => [...document.querySelectorAll('nav button')];
         assert.deepEqual(tabs().map((button) => button.textContent), ['Данные', 'Виджет']);
         const input = document.querySelector('[data-field="title"]');
+        assert.equal(input.dataset.richTextVariant, 'compact');
         input.value = 'Unsaved draft';
         await act(() => tabs()[1].click());
         assert.equal(input.closest('[hidden]') !== null, true);
@@ -69,6 +70,15 @@ test('part tabs keep field instances and drafts, do not save, and reset for anot
             select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
         });
         assert.deepEqual(calls, [['editorial']]);
+
+        const documentPart = '@kroy/document';
+        await act(() => root.render(createElement(PartEditor, {
+            ...props, key: 'document', part: documentPart, partContract: 'document',
+            props: { content: '' }, fields: { content: { type: 'richtext' } },
+            view: { name: documentPart, props: {} },
+            widgetMetadata: { [documentPart]: { contract: 'document', title: 'Документ', fields: {} } },
+        })));
+        assert.equal(document.querySelector('[data-field="content"]').dataset.richTextVariant, 'full');
     } finally {
         if (root) await act(() => root.unmount());
         dom.window.close();
