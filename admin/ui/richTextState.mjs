@@ -4,8 +4,8 @@ import { normalizeLexicalDocument } from '../../shared/lexicalEditor.mjs';
 
 export const EXTERNAL_RICHTEXT_TAG = 'kroy-external-richtext';
 
-export function toLexicalDocument(value) {
-    if (isLexicalDocument(value) && value.root.children.length) return normalizeLexicalDocument(value);
+export function toLexicalDocument(value, variant = 'full') {
+    if (isLexicalDocument(value) && value.root.children.length) return normalizeLexicalDocument(value, variant);
     const editor = createEditor({ namespace: 'KroyTextConversion', onError: (error) => { throw error; } });
     editor.update(() => {
         const root = $getRoot();

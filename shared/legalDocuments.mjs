@@ -1,6 +1,10 @@
 import { isValidPagePath } from './pageFields.mjs';
 import { isSupportedLexicalDocument } from './richText.mjs';
-export { isSupportedLexicalDocument as isDocumentText } from './richText.mjs';
+
+// Legal documents use the full editor schema, including native table nodes.
+export function isDocumentText(value) {
+    return isSupportedLexicalDocument(value, 'full');
+}
 
 export const LEGAL_DOCUMENT_PART = '@kroy/document';
 export const LEGAL_CONTENT_ERROR = 'Добавьте хотя бы один блок «Правовой документ» с корректным форматированным текстом.';
@@ -16,7 +20,7 @@ export function legalDocumentBlock(content, viewProps = {}) {
 export function isLegalDocumentContent(content) {
     const documents = Array.isArray(content) ? content.filter((item) => item?.part === LEGAL_DOCUMENT_PART) : [];
     return documents.length > 0 && documents.every((item) =>
-        item.view?.name === LEGAL_DOCUMENT_PART && isSupportedLexicalDocument(item.props?.content));
+        item.view?.name === LEGAL_DOCUMENT_PART && isDocumentText(item.props?.content));
 }
 
 export function firstDocumentBlock(content) {

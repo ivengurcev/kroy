@@ -16,7 +16,7 @@ import { pool } from '../../db/client.mjs';
 import { createMainPageTemplate } from '../../db/pageTemplates.mjs';
 import { getSiteFingerprint } from '../../db/siteFingerprint.mjs';
 import { ensureNginxConfig } from '../../build/nginx/generateNginxConfig.mjs';
-import { RICH_TEXT_HTML, RICH_TEXT_NODES } from '../../shared/lexicalEditor.mjs';
+import { RICH_TEXT_HTML, FULL_RICH_TEXT_NODES, registerFullTableTransforms } from '../../shared/lexicalEditor.mjs';
 import { isDocumentText, legalDocumentBlock } from '../../shared/legalDocuments.mjs';
 import { toLexicalDocument } from '../../admin/ui/richTextState.mjs';
 import regression from '../../admin/ui/fixtures/nested-rich-text.mjs';
@@ -60,11 +60,13 @@ test('Word import → edit → page save → reopen → isolated static publicat
     await exec(nginx, ['-c', config]);
     nginxStarted = true;
 
-    const html = await readFile(new URL('../../admin/ui/fixtures/word-paste.html', import.meta.url), 'utf8');
+    const html = await readFile(new URL('../../admin/ui/fixtures/word-paste.html', import.meta.url), 'utf8')
+        + await readFile(new URL('../../admin/ui/fixtures/word-table.html', import.meta.url), 'utf8');
     const dom = new JSDOM(html);
     t.after(() => dom.window.close());
-    const editor = createEditor({ nodes: RICH_TEXT_NODES, html: RICH_TEXT_HTML, onError: (error) => { throw error; } });
+    const editor = createEditor({ nodes: FULL_RICH_TEXT_NODES, html: RICH_TEXT_HTML, onError: (error) => { throw error; } });
     t.after(registerNodeStructure(editor));
+    t.after(registerFullTableTransforms(editor));
     editor.update(() => {
         $getRoot().append(...$generateNodesFromDOM(editor, dom.window.document));
         $getRoot().getLastDescendant().selectEnd();
@@ -157,6 +159,14 @@ test('Word import → edit → page save → reopen → isolated static publicat
     assert.match(published, /<ol start="3">/);
     assert.match(published, /href="\/contacts"/);
     assert.match(published, /href="\/terms">Договор из Word<\/a>/);
+    const publishedDom = new JSDOM(published);
+    t.after(() => publishedDom.window.close());
+    assert.equal(publishedDom.window.document.querySelectorAll('table').length, 1);
+    assert.equal(publishedDom.window.document.querySelectorAll('table tr').length, 6);
+    assert.equal(publishedDom.window.document.querySelectorAll('table th').length, 2);
+    assert.equal(publishedDom.window.document.querySelector('table tbody tr td').textContent, 'Исполнитель');
+    assert.match(published, /href="mailto:tealyona@yandex.ru"/);
+    assert.match(published, /<u>290121439010<\/u>/);
     const legacy = await readPublic('/recovered/');
     assert.equal(legacy.status, 200);
     assert.match(legacy.text, /<h2><u><em><strong>Условия договора/);

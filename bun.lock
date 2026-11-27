@@ -12,6 +12,7 @@
         "@lexical/react": "^0.53.0",
         "@lexical/rich-text": "^0.53.0",
         "@lexical/selection": "^0.53.0",
+        "@lexical/table": "^0.53.0",
         "@vyaz/core": "workspace:*",
         "dompurify": "^3.5.0",
         "jsdom": "^31.0.1",

@@ -97,6 +97,30 @@ function segments(node, depth = 0) {
                 children: listItems(children) }];
         case 'listitem':
             return [{ kind: 'item', tag: 'li', children: wrapOrphanItems(children) }];
+        case 'table': {
+            const rows = children.map((child) => child.kind === 'row' ? child
+                : { kind: 'row', tag: 'tr', children: [{ kind: 'cell', tag: 'td', children: [child] }] });
+            let headerRows = 0;
+            while (headerRows < rows.length && rows[headerRows].children.length
+                && rows[headerRows].children.every((cell) => cell.header & 1)) headerRows++;
+            const groups = [];
+            if (headerRows) groups.push({ tag: 'thead', children: rows.slice(0, headerRows) });
+            if (headerRows < rows.length) groups.push({ tag: 'tbody', children: rows.slice(headerRows) });
+            return [{ kind: 'block', tag: 'div', props: { 'data-richtext-table': true, tabIndex: 0, role: 'region', 'aria-label': 'Таблица' },
+                children: [{ tag: 'table', children: groups }] }];
+        }
+        case 'tablerow':
+            return [{ kind: 'row', tag: 'tr', children: children.map((child) => child.kind === 'cell' ? child
+                : { kind: 'cell', tag: 'td', children: [child] }) }];
+        case 'tablecell': {
+            const header = Number.isInteger(node.headerState) ? node.headerState & 3 : 0;
+            return [{ kind: 'cell', tag: header ? 'th' : 'td', header,
+                props: {
+                    ...(header ? { scope: header & 1 ? 'col' : 'row' } : {}),
+                    ...(Number.isInteger(node.colSpan) && node.colSpan > 1 && node.colSpan <= 1000 ? { colSpan: node.colSpan } : {}),
+                    ...(Number.isInteger(node.rowSpan) && node.rowSpan > 1 && node.rowSpan <= 10000 ? { rowSpan: node.rowSpan } : {}),
+                }, children: wrapRuns(wrapOrphanItems(children), 'p') }];
+        }
         case 'link':
         case 'autolink':
             if (!isSafeLink(node.url)) return children;

@@ -10,6 +10,7 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontalRuleNode';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
+import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
 import {
     $createParagraphNode,
     $getSelection,
@@ -29,7 +30,8 @@ import {
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
 import { registerNodeStructure } from '@lexical/extension';
-import { RICH_TEXT_HTML, RICH_TEXT_NODES } from '../../shared/lexicalEditor.mjs';
+import { getRichTextHtml, getRichTextNodes } from '../../shared/lexicalEditor.mjs';
+import { InsertTableButton, TableActions } from './RichTextTableTools.jsx';
 import Button from './Button.jsx';
 import Icon from './Icon.jsx';
 import styles from './RichTextEditor.module.css';
@@ -49,6 +51,11 @@ const EDITOR_THEME = {
     link: styles.link,
     hr: styles.separator,
     hrSelected: styles.separatorSelected,
+    table: styles.table,
+    tableCell: styles.tableCell,
+    tableCellHeader: styles.tableCellHeader,
+    tableScrollableWrapper: styles.tableScrollable,
+    tableCellSelected: styles.tableCellSelected,
     text: {
         bold: styles.bold,
         italic: styles.italic,
@@ -110,6 +117,7 @@ export function RichTextToolbar({ variant = 'compact' }) {
                 <ToolbarButton label="Абзац" onClick={() => setBlock('paragraph')}>¶</ToolbarButton>
                 <ToolbarButton label="Заголовок H2" onClick={() => setBlock('h2')}>H2</ToolbarButton>
                 <ToolbarButton label="Заголовок H3" onClick={() => setBlock('h3')}>H3</ToolbarButton>
+                <InsertTableButton />
             </div>}
             <div className={styles.toolbarGroup}>
                 <ToolbarButton label="Жирный" onClick={() => editor?.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}><strong>B</strong></ToolbarButton>
@@ -155,24 +163,24 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
     const [mounted, setMounted] = useState(false);
     const labelId = useId();
     const prepared = useMemo(() => {
-        try { return { value: toLexicalDocument(value) }; }
+        try { return { value: toLexicalDocument(value, variant) }; }
         catch { return { error: 'Не удалось безопасно восстановить структуру текста. Исходные данные сохранены: скопируйте их перед дальнейшими действиями.' }; }
-    }, [value]);
+    }, [value, variant]);
     const tracker = useRef({ incoming: richTextValueKey(value), emitted: null, document: richTextValueKey(prepared.value) });
 
     useEffect(() => setMounted(true), []);
 
     // Keep Composer stable while typing; ValuePlugin handles external replacements.
     const initialConfig = useMemo(() => ({
-        namespace: 'KroyRichTextEditor',
+        namespace: `KroyRichTextEditor-${variant}`,
         theme: EDITOR_THEME,
-        nodes: RICH_TEXT_NODES,
-        html: RICH_TEXT_HTML,
+        nodes: getRichTextNodes(variant),
+        html: getRichTextHtml(variant),
         onError(error) {
             console.error('Rich text editor error', error);
         },
         editorState: prepared.value ? JSON.stringify(prepared.value) : undefined,
-    }), []);
+    }), [variant]);
 
     if (prepared.error) return <div className={styles.field}>
         <span>{label}</span>
@@ -191,11 +199,12 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
         <div className={styles.field} style={{ '--richtext-min-height': minHeight }}>
             <span id={labelId}>{label}</span>
         <div className={`${styles.editor} ${disabled ? styles.disabled : ''}`} inert={disabled || undefined}>
-            <LexicalComposer initialConfig={initialConfig}>
+            <LexicalComposer key={variant} initialConfig={initialConfig}>
                 <EditablePlugin disabled={disabled} />
                 <StructurePlugin />
                 <ValuePlugin value={value} prepared={prepared.value} tracker={tracker} onChange={onChange} />
                 <RichTextToolbar variant={variant} />
+                {variant === 'full' && <TableActions />}
                 <div className={styles.editableArea}>
                     <RichTextPlugin
                         contentEditable={<ContentEditable name={name} className={styles.contentEditable} aria-labelledby={labelId} />}
@@ -205,6 +214,7 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
                 </div>
                 <HistoryPlugin />
                 <ListPlugin />
+                {variant === 'full' && <TablePlugin hasCellMerge={false} hasCellBackgroundColor={false} hasHorizontalScroll />}
                 <LinkPlugin />
                 <HorizontalRulePlugin />
                 <OnChangePlugin

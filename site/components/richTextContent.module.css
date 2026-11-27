@@ -47,3 +47,10 @@
 }
 :where(.content) > :first-child { margin-top: 0; }
 :where(.content) > :last-child { margin-bottom: 0; }
+
+:where(.content) [data-richtext-table] { max-inline-size: 100%; overflow-x: auto; }
+:where(.content) [data-richtext-table]:focus-visible { outline: var(--site-line-width-2) solid var(--site-color-accent); outline-offset: var(--site-space-1); }
+:where(.content) table { width: 100%; border-collapse: collapse; text-align: left; }
+:where(.content) :is(th, td) { min-inline-size: 6rem; padding: var(--site-space-3) var(--site-space-4); border: var(--site-line-width) solid var(--site-color-border); vertical-align: top; text-align: left; }
+:where(.content) th { font-weight: 700; background: var(--site-color-surface-soft); }
+:where(.content) :is(th, td) > * + * { margin-top: var(--site-space-3); }
