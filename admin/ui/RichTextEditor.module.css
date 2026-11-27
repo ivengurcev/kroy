@@ -2,17 +2,20 @@
 .source { max-height: 20rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .editor {
+    position: relative;
     min-width: 0;
+    overflow: visible;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-surface);
 }
 
 .disabled { opacity: .7; pointer-events: none; }
+.stickySentinel { position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none; }
 
 .toolbar {
     position: sticky;
-    top: var(--richtext-toolbar-top, calc(var(--admin-header-offset, 0px) + var(--admin-part-header-height, 0px)));
+    top: var(--richtext-sticky-offset, var(--admin-header-offset, 0px));
     z-index: 4;
     display: flex;
     flex-wrap: nowrap;
@@ -24,6 +27,14 @@
     background: var(--color-canvas);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     scrollbar-width: thin;
+}
+.toolbar[data-stuck] {
+    margin-inline: -1px;
+    padding-inline: calc(var(--space-1) + 1px);
+    border-top: 0;
+    border-inline: 0;
+    border-radius: 0;
+    background: var(--color-surface);
 }
 
 .toolbarGroup {

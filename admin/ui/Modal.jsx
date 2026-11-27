@@ -14,7 +14,7 @@ export default function Modal({ title, children, actions, onClose, busy = false,
         onCancel={(event) => { if (event.target !== event.currentTarget) return; event.preventDefault(); if (!busy) onClose(); }}>
         <div className={styles.layout}>
             <header className={styles.header}><h2 id={titleId}>{title}</h2></header>
-            <div className={styles.body}>{children}</div>
+            <div className={styles.body}><div className={styles.bodyContent}>{children}</div></div>
             {actions && <footer className={styles.actions}>{actions}</footer>}
         </div>
     </dialog>;

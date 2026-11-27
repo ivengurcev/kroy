@@ -64,6 +64,43 @@ export function RichTextToolbar({ variant = 'compact' }) {
     const [active, setActive] = useState({ block: 'paragraph', list: null, table: null });
     const selection = useRef(null);
     const toolbar = useRef(null);
+    const stickySentinel = useRef(null);
+
+    useEffect(() => {
+        const element = toolbar.current;
+        const sentinel = stickySentinel.current;
+        if (!element || !sentinel || typeof IntersectionObserver === 'undefined') return undefined;
+        const ancestors = [];
+        let root = null;
+        for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+            ancestors.push(parent);
+            if (!root && /(auto|scroll|hidden|overlay)/.test(getComputedStyle(parent).overflowY)) root = parent;
+        }
+        let observer;
+        const update = () => {
+            const offset = (parseFloat(getComputedStyle(element).top) || 0)
+                + (root ? parseFloat(getComputedStyle(root).paddingTop) || 0 : 0);
+            observer?.disconnect();
+            observer = new IntersectionObserver(([entry]) => {
+                // Unlike !isIntersecting, this does not mark a toolbar below
+                // the viewport as stuck. The root belongs to this scroller.
+                element.toggleAttribute('data-stuck', entry.boundingClientRect.top < (entry.rootBounds?.top ?? offset));
+            }, { root, rootMargin: `-${offset}px 0px 0px 0px`, threshold: [0, 1] });
+            observer.observe(sentinel);
+        };
+        const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+        resizeObserver?.observe(element);
+        // Ancestor resizing also covers measured admin/part-header offsets.
+        ancestors.forEach((ancestor) => resizeObserver?.observe(ancestor));
+        window.addEventListener('resize', update);
+        update();
+        return () => {
+            observer?.disconnect();
+            resizeObserver?.disconnect();
+            window.removeEventListener('resize', update);
+            element.removeAttribute('data-stuck');
+        };
+    }, []);
 
     useEffect(() => {
         if (!editor) return undefined;
@@ -104,6 +141,8 @@ export function RichTextToolbar({ variant = 'compact' }) {
     }
 
     return (
+        <>
+        <span ref={stickySentinel} className={styles.stickySentinel} aria-hidden="true" />
         <div ref={toolbar} className={styles.toolbar} role="toolbar" aria-label="Форматирование текста" onKeyDown={(event) => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || event.target.closest('[popover]')) return;
             const buttons = [...event.currentTarget.querySelectorAll('button:not(:disabled)')];
@@ -138,6 +177,7 @@ export function RichTextToolbar({ variant = 'compact' }) {
                 <ToolbarButton label="Повторить" icon="forward" disabled={!canRedo} onClick={() => editor?.dispatchCommand(REDO_COMMAND, undefined)} />
             </div>
         </div>
+        </>
     );
 }
 
