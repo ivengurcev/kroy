@@ -12,28 +12,22 @@ import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontal
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
 import {
-    $createParagraphNode,
     $getSelection,
-    $isRangeSelection,
+    $setSelection,
     CAN_REDO_COMMAND,
     CAN_UNDO_COMMAND,
     COMMAND_PRIORITY_EDITOR,
     FORMAT_TEXT_COMMAND,
     REDO_COMMAND,
+    SELECTION_CHANGE_COMMAND,
     UNDO_COMMAND,
 } from 'lexical';
-import { $createHeadingNode } from '@lexical/rich-text';
-import {
-    INSERT_ORDERED_LIST_COMMAND,
-    INSERT_UNORDERED_LIST_COMMAND,
-} from '@lexical/list';
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
-import { $setBlocksType } from '@lexical/selection';
 import { registerNodeStructure } from '@lexical/extension';
 import { getRichTextHtml, getRichTextNodes } from '../../shared/lexicalEditor.mjs';
-import { InsertTableButton, TableActions } from './RichTextTableTools.jsx';
-import Button from './Button.jsx';
-import Icon from './Icon.jsx';
+import { TableToolsButton } from './RichTextTableTools.jsx';
+import ToolbarButton from './RichTextToolbarButton.jsx';
+import { $readToolbarState, $toggleBlock, $toggleList } from './richTextToolbar.mjs';
 import styles from './RichTextEditor.module.css';
 import { EXTERNAL_RICHTEXT_TAG, repairRichTextValue, richTextValueKey, syncRichTextValue, toLexicalDocument } from './richTextState.mjs';
 
@@ -63,44 +57,42 @@ const EDITOR_THEME = {
     },
 };
 
-function ToolbarButton({ label, onClick, disabled = false, children }) {
-    return (
-        <Button
-            className={styles.toolbarButton}
-            variant="compact"
-            type="button"
-            title={label}
-            aria-label={label}
-            disabled={disabled}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={onClick}
-        >
-            {children || label}
-        </Button>
-    );
-}
-
 export function RichTextToolbar({ variant = 'compact' }) {
     const [editor] = useLexicalComposerContext();
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
+    const [active, setActive] = useState({ block: 'paragraph', list: null, table: null });
+    const selection = useRef(null);
+    const toolbar = useRef(null);
 
     useEffect(() => {
         if (!editor) return undefined;
-        const unregisterUndo = editor.registerCommand(CAN_UNDO_COMMAND, setCanUndo, COMMAND_PRIORITY_EDITOR);
-        const unregisterRedo = editor.registerCommand(CAN_REDO_COMMAND, setCanRedo, COMMAND_PRIORITY_EDITOR);
+        function read(external = false) {
+            const current = $getSelection();
+            if (!external && !current && toolbar.current?.contains(toolbar.current.ownerDocument.activeElement)) return;
+            selection.current = current?.clone() ?? null;
+            const next = $readToolbarState();
+            setActive((previous) => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+        }
+        editor.getEditorState().read(read);
+        const unregisterUpdate = editor.registerUpdateListener(({ editorState, tags }) => editorState.read(() => read(tags.has(EXTERNAL_RICHTEXT_TAG))));
+        const unregisterSelection = editor.registerCommand(SELECTION_CHANGE_COMMAND, () => { read(); return false; }, COMMAND_PRIORITY_EDITOR);
+        const unregisterUndo = editor.registerCommand(CAN_UNDO_COMMAND, (value) => { setCanUndo(value); return false; }, COMMAND_PRIORITY_EDITOR);
+        const unregisterRedo = editor.registerCommand(CAN_REDO_COMMAND, (value) => { setCanRedo(value); return false; }, COMMAND_PRIORITY_EDITOR);
         return () => {
+            unregisterUpdate();
+            unregisterSelection();
             unregisterUndo();
             unregisterRedo();
         };
     }, [editor, setCanRedo, setCanUndo]);
 
-    function setBlock(type) {
+    function run(action) {
         editor?.update(() => {
-            const selection = $getSelection();
-            if (!$isRangeSelection(selection)) return;
-            $setBlocksType(selection, () => type === 'paragraph' ? $createParagraphNode() : $createHeadingNode(type));
+            if (selection.current) $setSelection(selection.current.clone());
+            action();
         });
+        editor?.focus();
     }
 
     function toggleLink() {
@@ -108,29 +100,42 @@ export function RichTextToolbar({ variant = 'compact' }) {
         const url = window.prompt('Адрес ссылки', 'https://');
         if (url === null) return;
         const value = url.trim();
-        editor.dispatchCommand(TOGGLE_LINK_COMMAND, value || null);
+        run(() => editor.dispatchCommand(TOGGLE_LINK_COMMAND, value || null));
     }
 
     return (
-        <div className={styles.toolbar} role="toolbar" aria-label="Форматирование текста">
+        <div ref={toolbar} className={styles.toolbar} role="toolbar" aria-label="Форматирование текста" onKeyDown={(event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || event.target.closest('[popover]')) return;
+            const buttons = [...event.currentTarget.querySelectorAll('button:not(:disabled)')];
+            const index = buttons.indexOf(event.target);
+            if (index < 0) return;
+            event.preventDefault();
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+                : (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+            buttons[next]?.focus();
+        }}>
             {variant === 'full' && <div className={styles.toolbarGroup}>
-                <ToolbarButton label="Абзац" onClick={() => setBlock('paragraph')}>¶</ToolbarButton>
-                <ToolbarButton label="Заголовок H2" onClick={() => setBlock('h2')}>H2</ToolbarButton>
-                <ToolbarButton label="Заголовок H3" onClick={() => setBlock('h3')}>H3</ToolbarButton>
-                <InsertTableButton />
+                <ToolbarButton label="Абзац" icon="paragraph" pressed={active.block === 'paragraph' && !active.list} onClick={() => run(() => $toggleBlock('paragraph'))} />
+                <ToolbarButton label="Заголовок H2" icon="heading2" pressed={active.block === 'h2'} onClick={() => run(() => $toggleBlock('h2'))} />
+                <ToolbarButton label="Заголовок H3" icon="heading3" pressed={active.block === 'h3'} onClick={() => run(() => $toggleBlock('h3'))} />
             </div>}
             <div className={styles.toolbarGroup}>
-                <ToolbarButton label="Жирный" onClick={() => editor?.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}><strong>B</strong></ToolbarButton>
-                <ToolbarButton label="Курсив" onClick={() => editor?.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}><em>I</em></ToolbarButton>
-                <ToolbarButton label="Подчёркнутый" onClick={() => editor?.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')}><u>U</u></ToolbarButton>
-                <ToolbarButton label="Маркированный список" onClick={() => editor?.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}><Icon name="listBullet" size={20} /></ToolbarButton>
-                <ToolbarButton label="Нумерованный список" onClick={() => editor?.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}><Icon name="listOrdered" size={20} /></ToolbarButton>
-                <ToolbarButton label="Горизонтальная линия (HR)" onClick={() => editor?.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined)}>HR</ToolbarButton>
-                <ToolbarButton label="Ссылка" onClick={toggleLink}><Icon name="globe" size={16} /></ToolbarButton>
+                <ToolbarButton label="Жирный" icon="bold" pressed={Boolean(active.bold)} onClick={() => run(() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold'))} />
+                <ToolbarButton label="Курсив" icon="italic" pressed={Boolean(active.italic)} onClick={() => run(() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic'))} />
+                <ToolbarButton label="Подчёркнутый" icon="underline" pressed={Boolean(active.underline)} onClick={() => run(() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline'))} />
             </div>
             <div className={styles.toolbarGroup}>
-                <ToolbarButton label="Отменить" disabled={!canUndo} onClick={() => editor?.dispatchCommand(UNDO_COMMAND, undefined)}><Icon name="back" size={16} /></ToolbarButton>
-                <ToolbarButton label="Повторить" disabled={!canRedo} onClick={() => editor?.dispatchCommand(REDO_COMMAND, undefined)}><Icon name="forward" size={16} /></ToolbarButton>
+                <ToolbarButton label="Маркированный список" icon="listBullet" pressed={active.list === 'bullet'} onClick={() => run(() => $toggleList(editor, 'bullet'))} />
+                <ToolbarButton label="Нумерованный список" icon="listOrdered" pressed={active.list === 'number'} onClick={() => run(() => $toggleList(editor, 'number'))} />
+            </div>
+            <div className={styles.toolbarGroup}>
+                <ToolbarButton label="Ссылка" icon="link" pressed={Boolean(active.link)} onClick={toggleLink} />
+                <ToolbarButton label="Горизонтальная линия (HR)" icon="horizontalRule" onClick={() => run(() => editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined))} />
+            </div>
+            {variant === 'full' && <div className={styles.toolbarGroup}><TableToolsButton selection={selection} active={active.table} /></div>}
+            <div className={styles.toolbarGroup}>
+                <ToolbarButton label="Отменить" icon="back" disabled={!canUndo} onClick={() => editor?.dispatchCommand(UNDO_COMMAND, undefined)} />
+                <ToolbarButton label="Повторить" icon="forward" disabled={!canRedo} onClick={() => editor?.dispatchCommand(REDO_COMMAND, undefined)} />
             </div>
         </div>
     );
@@ -204,7 +209,6 @@ export default function RichTextEditor({ value, onChange, disabled = false, labe
                 <StructurePlugin />
                 <ValuePlugin value={value} prepared={prepared.value} tracker={tracker} onChange={onChange} />
                 <RichTextToolbar variant={variant} />
-                {variant === 'full' && <TableActions />}
                 <div className={styles.editableArea}>
                     <RichTextPlugin
                         contentEditable={<ContentEditable name={name} className={styles.contentEditable} aria-labelledby={labelId} />}

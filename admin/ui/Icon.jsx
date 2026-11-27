@@ -36,8 +36,26 @@ import FileIcon from './icons/file.svg';
 import DocumentIcon from './icons/document.svg';
 import ListBulletIcon from './icons/list-bullet.svg';
 import ListOrderedIcon from './icons/list-ordered.svg';
+import ParagraphIcon from './icons/paragraph.svg';
+import Heading2Icon from './icons/heading-2.svg';
+import Heading3Icon from './icons/heading-3.svg';
+import BoldIcon from './icons/bold.svg';
+import ItalicIcon from './icons/italic.svg';
+import UnderlineIcon from './icons/underline.svg';
+import LinkIcon from './icons/link.svg';
+import HorizontalRuleIcon from './icons/horizontal-rule.svg';
+import TableIcon from './icons/table.svg';
 
 const icons = {
+    paragraph: ParagraphIcon,
+    heading2: Heading2Icon,
+    heading3: Heading3Icon,
+    bold: BoldIcon,
+    italic: ItalicIcon,
+    underline: UnderlineIcon,
+    link: LinkIcon,
+    horizontalRule: HorizontalRuleIcon,
+    table: TableIcon,
     listBullet: ListBulletIcon,
     listOrdered: ListOrderedIcon,
     folder: FolderIcon,

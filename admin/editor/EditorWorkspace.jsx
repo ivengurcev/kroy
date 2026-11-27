@@ -26,6 +26,7 @@ function StickyPartHeader({ children }) {
 
         let observer;
         const update = () => {
+            panel.style.setProperty('--admin-part-header-height', `${header.getBoundingClientRect().height}px`);
             const panelLeft = panel.getBoundingClientRect().left + panel.clientLeft;
             const mainLeft = main.getBoundingClientRect().left;
             header.style.setProperty('--admin-sticky-breakout-left', `${Math.max(0, panelLeft - mainLeft)}px`);
@@ -50,6 +51,7 @@ function StickyPartHeader({ children }) {
             observer?.disconnect();
             resizeObserver?.disconnect();
             window.removeEventListener('resize', update);
+            panel.style.removeProperty('--admin-part-header-height');
         };
     }, []);
 
