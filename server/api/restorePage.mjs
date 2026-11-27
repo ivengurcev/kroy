@@ -39,7 +39,8 @@ export default async function restorePage(c) {
       `UPDATE pages SET deleted_at = NULL WHERE id = $1
        RETURNING id, site_id, path, title, content, page_type AS type,
                  data_source AS "dataSource", material_section_id AS "materialSectionId",
-                 detail_parent_id AS "detailParentId", route_param AS "routeParam"`, [pageId]);
+                  detail_parent_id AS "detailParentId", route_param AS "routeParam",
+                  is_legal_document AS "isLegalDocument", xmin::text AS "legalVersion"`, [pageId]);
     await client.query("COMMIT");
     return rows[0];
   } catch (error) {

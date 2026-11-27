@@ -71,9 +71,27 @@ export function normalizeFooterSettings(value) {
 export function footerPageIds(settings) {
     return [...new Set([
         ...settings.navigation.map(({ pageId }) => pageId),
-        ...Object.keys(FOOTER_DOCUMENTS).map((name) => settings.documents[name]),
-        ...settings.documents.additional.map(({ pageId }) => pageId),
+        ...legacyFooterDocuments(settings.documents).map(({ pageId }) => pageId),
     ].filter(Boolean))];
+}
+
+export function legacyFooterDocuments(documents = {}) {
+    const reference = (key, value, label) => typeof value === 'string' && value
+        ? [{ key, label, pageId: value.toLowerCase() }] : [];
+    return [
+        ...Object.entries(FOOTER_DOCUMENTS).flatMap(([key, label]) => reference(key, documents[key], label)),
+        ...(Array.isArray(documents.additional) ? documents.additional : []).flatMap((item, index) =>
+            reference(index, item?.pageId)),
+    ];
+}
+
+export function omitLegacyFooterDocument(documents, key) {
+    if (typeof key === 'number') {
+        return { ...documents, additional: documents.additional.filter((_, index) => index !== key) };
+    }
+    const next = { ...documents };
+    delete next[key];
+    return next;
 }
 
 export function availableFooterPages(pages, siteId) {
@@ -100,16 +118,25 @@ export function prepareSiteFooter(site, value, pages, year = new Date().getFullY
         const page = byId.get(id);
         return page ? { label: label ?? page.title, href: page.path } : null;
     }
+    const documents = [
+        ...[...byId.values()].filter(({ isLegalDocument }) => isLegalDocument).map(({ id }) => link(id)),
+        ...Object.entries(FOOTER_DOCUMENTS).map(([key, label]) => link(settings.documents[key], label)),
+        ...settings.documents.additional.map(({ pageId, label, url }) => pageId
+            ? link(pageId) : isSiteFooterUrl(url, site.domains) ? null : { label, href: url }),
+    ];
+    const destinations = new Set();
     return {
         siteName: site.name,
         year,
         description: settings.description,
         navigation: settings.navigation.map(({ pageId }) => link(pageId)).filter(Boolean),
-        documents: [
-            ...Object.entries(FOOTER_DOCUMENTS).map(([name, label]) => link(settings.documents[name], label)),
-            ...settings.documents.additional.map(({ pageId, label, url }) => pageId
-                ? link(pageId) : isSiteFooterUrl(url, site.domains) ? null : { label, href: url }),
-        ].filter(Boolean),
+        documents: documents.filter((document) => {
+            if (!document) return false;
+            const destination = document.href.startsWith('/') ? document.href : new URL(document.href).href;
+            if (destinations.has(destination)) return false;
+            destinations.add(destination);
+            return true;
+        }),
         legal: settings.legal,
     };
 }

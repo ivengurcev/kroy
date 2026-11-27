@@ -1,0 +1,6 @@
+.document {
+    box-sizing: content-box;
+    max-inline-size: 70ch;
+    margin-inline: auto;
+    padding-inline: var(--site-space-4);
+}

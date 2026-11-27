@@ -23,7 +23,7 @@ export default async function putPage(c) {
   }
 
   if (isPlainObject(body)) {
-    const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId'];
+    const fields = ['content', 'templateSelection', 'templateChanges', 'footerChanges', 'expectedSelection', 'expectedDefaultTemplateId', 'expectedLegalVersion'];
     if (Object.keys(body).some((key) => !fields.includes(key))) {
       return c.json({ error: 'Неизвестные поля запроса' }, 400);
     }
@@ -49,7 +49,7 @@ export default async function putPage(c) {
     client = await pool.connect();
     await client.query('BEGIN');
     const { rows: [page] } = await client.query(
-      `SELECT p.site_id, p.page_type, p.data_source
+      `SELECT p.site_id, p.page_type, p.data_source, p.is_legal_document
        FROM pages p
        JOIN domains d ON d.site_id = p.site_id
        WHERE p.id = $1 AND p.deleted_at IS NULL AND d.hostname = $2
@@ -59,6 +59,10 @@ export default async function putPage(c) {
     if (!page) {
       await client.query('ROLLBACK');
       return c.json({ error: 'Page not found', details: [] }, 404);
+    }
+    if (page.is_legal_document) {
+      await client.query('ROLLBACK');
+      return c.json({ error: 'Загрузите актуальную версию документа.', code: 'legal_document_conflict' }, 409);
     }
 
     for (const [index, block] of body.content.entries()) {

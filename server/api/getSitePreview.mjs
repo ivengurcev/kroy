@@ -20,7 +20,7 @@ export default async function getSitePreview(c) {
         await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
         const { rows } = await client.query(
             `SELECT s.id AS site_id, s.name AS site_name, s.default_template_id, s.footer_settings,
-                    p.id, p.path, p.title, p.content, p.appearance,
+                    p.id, p.path, p.title, p.content, p.appearance, p.is_legal_document AS "isLegalDocument",
                     p.template_mode AS "templateMode", p.template_id AS "templateId",
                     p.page_type AS type, p.data_source AS "dataSource", p.material_section_id AS "materialSectionId"
              FROM sites s

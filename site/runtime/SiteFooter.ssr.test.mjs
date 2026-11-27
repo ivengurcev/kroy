@@ -8,6 +8,8 @@ import { randomUUID } from 'node:crypto';
 import { writeFile, rm, readFile } from 'node:fs/promises';
 import { JSDOM } from 'jsdom';
 import { prepareSiteFooter } from '../../shared/footerSettings.mjs';
+import { legalDocumentBlock } from '../../shared/legalDocuments.mjs';
+import { toLexicalDocument } from '../../admin/ui/richTextState.mjs';
 import { getPageTheme } from '../themes/themeRegistry.mjs';
 
 const outputs = [];
@@ -22,8 +24,10 @@ before(async () => {
                 export { default as SiteApp } from './site/runtime/SiteApp.jsx';
                 export { default as Footer } from './site/widgets/footer/Footer.jsx';
                 export { default as Header } from './site/widgets/header/Header.jsx';
+                export { default as Document } from './site/widgets/document/Document.jsx';
                 export { default as prepareFooter } from './site/parts/footer/prepareFooter.mjs';
                 export { default as prepareHeader } from './site/parts/header/prepareHeader.mjs';
+                export { default as prepareDocument } from './site/parts/document/prepareDocument.mjs';
             `, resolveDir: process.cwd() },
             outfile: outfile.pathname, bundle: true, write: false, packages: 'external',
             platform, format: 'esm', jsx: 'automatic', loader: { '.module.css': 'local-css', '.ttf': 'dataurl' },
@@ -105,6 +109,39 @@ test('static SSR and hydration consume the same release-owned footer snapshot, w
         assert.match(source, /footer=\{footer\}/);
         assert.doesNotMatch(source, /fetch\(/);
     }
+});
+
+test('legal document uses the same formatted, safe markup in SSR and client runtime', () => {
+    const path = '/legal/terms';
+    const text = toLexicalDocument('Условия\n\nУслуги\n\nОплата\n\nНедопустимая ссылка');
+    const [heading, paragraph, list, unsafe] = text.root.children;
+    Object.assign(heading, { type: 'heading', tag: 'h2' });
+    const [service] = paragraph.children;
+    paragraph.children = [{ type: 'link', version: 1, url: '/services', children: [{ ...service, format: 1 }] }];
+    text.root.children[2] = { type: 'list', listType: 'number', tag: 'ol', start: 1, version: 1,
+        children: [{ type: 'listitem', value: 1, version: 1, children: list.children }] };
+    unsafe.children = [{ type: 'link', version: 1, url: 'javascript:alert(1)', children: unsafe.children }];
+    const page = { id: 'terms', site_id: 'site', isLegalDocument: true, path, title: 'Договор', content: [legalDocumentBlock(text)], templateIndex: 0 };
+    const header = { part: '@kroy/header', props: { title: 'Шапка' }, view: { name: '@kroy/header', props: {} } };
+    const props = {
+        pages: { [path]: page }, path, templates: [{ before: [header], after: [] }],
+        footer: prepareSiteFooter({ id: 'site', name: 'Сайт' }, {}, [page], 2026),
+    };
+    const render = (entry, data) => renderToString(createElement(entry.SiteApp, {
+        ...data,
+        parts: { '@kroy/document': entry.prepareDocument, '@kroy/header': entry.prepareHeader, '@kroy/footer': entry.prepareFooter },
+        widgets: { '@kroy/document': entry.Document, '@kroy/header': entry.Header, '@kroy/footer': entry.Footer },
+    }));
+    const html = render(server, props);
+    assert.equal(render(client, JSON.parse(JSON.stringify(props))), html);
+    assert.match(html, /<h2>Условия<\/h2>/);
+    assert.match(html, /<a href="\/services"><strong>Услуги<\/strong><\/a>/);
+    assert.match(html, /<ol><li>Оплата<\/li><\/ol>/);
+    assert.match(html, /Недопустимая ссылка/);
+    assert.doesNotMatch(html, /javascript:/);
+    assert.match(html, /<footer[\s\S]*<a href="\/legal\/terms">Договор<\/a>/);
+    assert.ok(html.indexOf('<header') < html.indexOf('<h2>Условия'));
+    assert.ok(html.indexOf('<h2>Условия') < html.indexOf('<footer'));
 });
 
 test('hydrated site switches layouts without remounting its footer or branding', async () => {

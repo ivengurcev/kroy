@@ -35,9 +35,9 @@ test('creation at a free or redirected URL inserts a fresh page in the locked tr
             if (sql.includes('FOR UPDATE OF s')) return { rows: [{ id }] };
             if (sql.startsWith('SELECT from_path')) return { rows: [{ from_path: '/old' }, { from_path: '/other' }] };
             if (sql.includes('INSERT INTO pages')) {
-                assert.ok(sql.includes("'[]'::jsonb"));
+                assert.ok(sql.includes('$7::jsonb'));
                 assert.doesNotMatch(sql, /UPDATE|deleted_at|detail_parent_id|seo/);
-                assert.deepEqual(values, [id, 'New', '/old', 'standard', null, null]);
+                assert.deepEqual(values, [id, 'New', '/old', 'standard', null, null, '[]', false]);
                 return { rows: [{ id: 'new-uuid', path: '/old', title: 'New', content: [] }] };
             }
             return { rows: [] };
@@ -63,9 +63,10 @@ test('creation reuses the deleted UUID, resets every page field and removes old 
         if (sql.startsWith('SELECT id, deleted_at')) return { rows: [{ id, deleted_at: 'now' }] };
         if (sql.includes('WITH RECURSIVE')) return { rows: [{ id: childId, deleted_at: 'now' }] };
         if (sql.startsWith('UPDATE pages')) {
-            for (const field of ["content = '[]'::jsonb", "seo = '{}'::jsonb", 'deleted_at = NULL', 'page_type = $4',
-                'data_source = $5', 'material_section_id = $6', 'detail_parent_id = NULL', 'route_param = NULL']) assert.ok(sql.includes(field), field);
-            assert.deepEqual(values, [id, 'New', '/old', 'standard', null, null, id]);
+            for (const field of ['content = $7::jsonb', "seo = '{}'::jsonb", 'deleted_at = NULL', 'page_type = $4',
+                'data_source = $5', 'material_section_id = $6', 'detail_parent_id = NULL', 'route_param = NULL',
+                'is_legal_document = $8']) assert.ok(sql.includes(field), field);
+            assert.deepEqual(values, [id, 'New', '/old', 'standard', null, null, '[]', false, id]);
             return { rows: [{ id, title: 'New', path: '/old', content: [] }] };
         }
         assert.ok(!sql.includes('INSERT INTO pages'));

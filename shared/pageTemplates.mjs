@@ -1,5 +1,6 @@
 import { validateContent } from './pageContent.mjs';
 import { availableFooterPages, projectHeader } from './footerSettings.mjs';
+import { LEGAL_CONTENT_ERROR, LEGAL_DOCUMENT_PART, isDocumentText, isLegalDocumentContent } from './legalDocuments.mjs';
 
 export const FOOTER_PART = '@kroy/footer';
 
@@ -56,6 +57,9 @@ export function validateDocumentContent(content, parts, widgets, options) {
     const errors = validateContent(content, parts, widgets, options);
     if (!Array.isArray(content)) return errors;
 
+    if (options?.isLegalDocument && !isLegalDocumentContent(content)) {
+        errors.push({ path: 'content', code: 'invalid_legal_document', message: LEGAL_CONTENT_ERROR });
+    }
     for (const [index, block] of content.entries()) {
         if (block?.part === FOOTER_PART) {
             errors.push({
@@ -63,6 +67,10 @@ export function validateDocumentContent(content, parts, widgets, options) {
                 code: 'global_footer',
                 message: 'Глобальный футер нельзя добавлять в содержимое страницы или шаблона.',
             });
+        }
+        if (block?.part === LEGAL_DOCUMENT_PART
+            && (Object.keys(block.props ?? {}).some((key) => key !== 'content') || !isDocumentText(block.props?.content))) {
+            errors.push({ path: `content[${index}].props.content`, code: 'invalid_lexical', message: 'Проверьте формат текста документа.' });
         }
     }
     return errors;

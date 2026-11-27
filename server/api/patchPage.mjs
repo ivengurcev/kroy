@@ -15,6 +15,7 @@ import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import { normalizeSeo } from '../../shared/seo.mjs';
 import { seoReferenceErrors } from './seoValidation.mjs';
 import { normalizePageAppearance, getPageTheme } from '../../site/themes/themeRegistry.mjs';
+import { isDocumentText, isLegalDocumentContent, isLegalPagePath, legalDocumentBlock, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
 
 export default async function patchPage(c) {
   const pageId = c.req.param("pageId");
@@ -38,18 +39,23 @@ export default async function patchPage(c) {
   const hasRouteParam = Object.hasOwn(body ?? {}, "routeParam");
   const hasDataSource = Object.hasOwn(body ?? {}, "dataSource");
   const hasMaterialSectionId = Object.hasOwn(body ?? {}, "materialSectionId");
+  const hasContent = keys.includes('content');
+  const promoteDocument = body?.isLegalDocument === true;
   const title = hasTitle ? normalizePageTitle(body.title) : null;
 
   if (
-    keys.length === 0
-    || keys.length > 7
-    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo", "appearance"].includes(key))
+    !keys.some((key) => key !== 'expectedLegalVersion')
+    || keys.some((key) => !["title", "path", "routeParam", "dataSource", "materialSectionId", "seo", "appearance", "content", "isLegalDocument", "expectedLegalVersion"].includes(key))
+    || (keys.includes('isLegalDocument') && !promoteDocument)
     || (hasTitle && !title)
     || (hasRouteParam && !isValidRouteParameter(body.routeParam))
     || (hasDataSource && !isPageDataSource(body.dataSource))
     || (hasMaterialSectionId && body.materialSectionId !== null && !isUuid(body.materialSectionId))
   ) {
     return c.json({ error: "Проверьте поля страницы", fields: pageFieldErrors(body) }, 400);
+  }
+  if (hasContent && !isDocumentText(body.content)) {
+    return c.json({ error: 'Проверьте содержимое документа', fields: { content: LEGAL_CONTENT_ERROR } }, 400);
   }
 
   const hostname = getHostname(c);
@@ -76,7 +82,7 @@ export default async function patchPage(c) {
     const siteId = sites[0].id;
     const { rows: pages } = await client.query(
       `SELECT id, site_id, path, title, content, seo, appearance, page_type, data_source, material_section_id,
-              detail_parent_id, route_param
+              detail_parent_id, route_param, is_legal_document, xmin::text AS "legalVersion"
        FROM pages
        WHERE id = $1 AND site_id = $2 AND deleted_at IS NULL
        FOR UPDATE`,
@@ -86,6 +92,17 @@ export default async function patchPage(c) {
     if (!page) {
       await client.query("ROLLBACK");
       return c.json({ error: "Page not found" }, 404);
+    }
+
+    if ((page.is_legal_document || promoteDocument || keys.includes('expectedLegalVersion'))
+        && body.expectedLegalVersion !== page.legalVersion) {
+      await client.query("ROLLBACK");
+      return c.json({ error: 'Страница изменилась. Откройте актуальную версию и перенесите правки.', code: 'legal_document_conflict' }, 409);
+    }
+    if ((hasContent && !page.is_legal_document && !promoteDocument)
+        || ((hasContent || promoteDocument) && (page.page_type !== 'standard' || !isLegalDocumentContent(page.content)))) {
+      await client.query("ROLLBACK");
+      return c.json({ error: 'Проверьте содержимое документа', fields: { content: LEGAL_CONTENT_ERROR } }, 400);
     }
 
     if (
@@ -163,7 +180,11 @@ export default async function patchPage(c) {
 
     if (page.path === "/" && pathChanged) {
       await client.query("ROLLBACK");
-      return c.json({ error: "Main page path cannot be changed" }, 400);
+      return c.json({ error: "Main page path cannot be changed", fields: { path: 'Путь главной страницы нельзя изменить.' } }, 400);
+    }
+    if ((page.is_legal_document || promoteDocument) && !isLegalPagePath(nextPath)) {
+      await client.query("ROLLBACK");
+      return c.json({ error: 'Проверьте путь страницы', fields: { path: 'Этот адрес недоступен для правового документа.' } }, 400);
     }
 
     if (page.page_type === "list" && pathChanged) {
@@ -230,15 +251,19 @@ export default async function patchPage(c) {
     const { rows } = await client.query(
       `UPDATE pages
        SET title = $2, path = $3, route_param = $4,
-             data_source = $5, material_section_id = $6, seo = $7::jsonb, appearance = $8::jsonb
+             data_source = $5, material_section_id = $6, seo = $7::jsonb, appearance = $8::jsonb,
+             content = CASE WHEN $9::boolean THEN $10::jsonb ELSE content END,
+             is_legal_document = is_legal_document OR $11::boolean
        WHERE id = $1
          RETURNING id, site_id, path, title, content, seo, appearance, page_type AS type,
                  data_source AS "dataSource", material_section_id AS "materialSectionId",
-                 detail_parent_id AS "detailParentId", route_param AS "routeParam"`,
+                 detail_parent_id AS "detailParentId", route_param AS "routeParam",
+                 is_legal_document AS "isLegalDocument", xmin::text AS "legalVersion"`,
       [pageId, nextTitle, nextPath, page.page_type === "detail" ? nextRouteParam : null,
         page.page_type === "list" ? nextDataSource : null,
         page.page_type === "list" ? nextMaterialSectionId : null,
-        JSON.stringify(hasSeo ? seoInput.seo : page.seo), JSON.stringify(nextAppearance)],
+        JSON.stringify(hasSeo ? seoInput.seo : page.seo), JSON.stringify(nextAppearance), hasContent,
+        hasContent ? JSON.stringify([legalDocumentBlock(body.content, page.content[0].view.props)]) : null, promoteDocument],
     );
 
     if (detailTemplate && nextDetailPath !== detailTemplate.path) {
@@ -275,7 +300,7 @@ export default async function patchPage(c) {
     return rows[0];
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
-    if (error.code === "23505" || error.code === 'PAGE_PATH_CONFLICT') return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists" }, 409);
+    if (error.code === "23505" || error.code === 'PAGE_PATH_CONFLICT') return c.json({ error: error.constraint === "pages_one_active_material_list_per_section" ? "A material list already exists for this section" : "Page already exists", fields: pageConflictFields(error) }, 409);
     console.error("Failed to update page details", error);
     return c.json({ error: "Internal server error" }, 500);
   } finally {

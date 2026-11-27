@@ -189,7 +189,8 @@ try {
         seoContext = getSiteSeoContext(site, domainsResult.rows.map(({ hostname }) => hostname), process.env);
 
         const pagesResult = await client.query(
-            `SELECT id, site_id, path, title, content, seo, appearance, page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId",
+            `SELECT id, site_id, path, title, content, seo, appearance, is_legal_document AS "isLegalDocument",
+                    page_type AS type, route_param, data_source AS "dataSource", material_section_id AS "materialSectionId",
                     template_mode AS "templateMode", template_id AS "templateId"
              FROM pages
              WHERE site_id = $1

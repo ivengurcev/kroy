@@ -4,7 +4,7 @@ import { pool } from '../../db/client.mjs';
 import { listPageTemplates, templateColumns } from '../../db/pageTemplates.mjs';
 import { isPlainObject } from '../../shared/pageContent.mjs';
 import { resolvePageTemplate, validateDocumentContent, validateTemplateContent } from '../../shared/pageTemplates.mjs';
-import { availableFooterPages, footerPageIds, isSiteFooterUrl, normalizeFooterSettings } from '../../shared/footerSettings.mjs';
+import { availableFooterPages, footerPageIds, isSiteFooterUrl, legacyFooterDocuments, normalizeFooterSettings } from '../../shared/footerSettings.mjs';
 import getHostname from './getHostname.mjs';
 import getCurrentSite from './siteContext.mjs';
 import isUuid from './isUuid.mjs';
@@ -114,6 +114,11 @@ async function saveFooter(client, site, change) {
     const { settings, fields: errors } = normalizeFooterSettings(change.props);
     if (Object.keys(errors).length) reject(400, 'Проверьте настройки футера', { fields: errors });
     const old = normalizeFooterSettings(site.footer_settings).settings;
+    const legacy = legacyFooterDocuments(old.documents);
+    if (legacyFooterDocuments(settings.documents).some(({ key, pageId }) => !legacy.some((entry) =>
+        entry.pageId === pageId && (typeof key === 'number' ? typeof entry.key === 'number' : entry.key === key)))) {
+        reject(400, 'Добавляйте внутренние документы как правовые страницы сайта.');
+    }
     const oldUrls = old.documents.additional.flatMap(({ url }) => url ? [url] : []);
     const urls = settings.documents.additional.flatMap(({ url }) => url && !oldUrls.includes(url) ? [url] : []);
     if (urls.length) {
@@ -244,6 +249,7 @@ export function putPageLayout(c, pageId, body) {
     return write(c, async (client, site) => {
         const { rows: [page] } = await client.query(
             `SELECT id, site_id, path, title, content, seo, appearance, page_type, data_source,
+                    is_legal_document AS "isLegalDocument", xmin::text AS "legalVersion",
                     template_mode AS "templateMode", template_id AS "templateId"
              FROM pages WHERE site_id = $1 AND id = $2 AND deleted_at IS NULL FOR UPDATE`, [site.id, pageId],
         );
@@ -253,6 +259,10 @@ export function putPageLayout(c, pageId, body) {
         const hasTemplate = Object.hasOwn(body, 'templateChanges');
         const hasFooter = Object.hasOwn(body, 'footerChanges');
         if (!hasContent && !hasSelection && !hasTemplate && !hasFooter) reject(400, 'Нет изменений для сохранения');
+        if ((hasContent || hasSelection) && (page.isLegalDocument || Object.hasOwn(body, 'expectedLegalVersion'))
+            && body.expectedLegalVersion !== page.legalVersion) {
+            reject(409, 'Правовой документ изменился. Загрузите актуальную версию.', { code: 'legal_document_conflict' });
+        }
         const selection = hasSelection ? body.templateSelection : { mode: page.templateMode, id: page.templateId };
         if (!validSelection(selection)) reject(400, 'Некорректный выбор шаблона');
         if (hasSelection || hasTemplate) {
@@ -284,7 +294,7 @@ export function putPageLayout(c, pageId, body) {
         }
         const footer = hasFooter ? await saveFooter(client, site, body.footerChanges) : undefined;
         if (hasContent) {
-            const details = validateDocumentContent(body.content, partCatalog, widgetCatalog);
+            const details = validateDocumentContent(body.content, partCatalog, widgetCatalog, { isLegalDocument: page.isLegalDocument });
             if (details.length) reject(400, 'Проверьте содержимое страницы', { details });
             await validateBlockReferences(client, site.id, body.content, page.content, page);
             await client.query('UPDATE pages SET content = $3::jsonb WHERE site_id = $1 AND id = $2',
@@ -301,6 +311,12 @@ export function putPageLayout(c, pageId, body) {
             const { propsByIndex } = body.templateChanges;
             const content = template.content.map((block, index) => Object.hasOwn(propsByIndex, index) ? { ...block, props: propsByIndex[index] } : block);
             template = await updateTemplate(client, site.id, template, { ...template, content });
+        }
+        if (page.isLegalDocument && (hasContent || hasSelection)) {
+            const { rows: [revision] } = await client.query(
+                'SELECT xmin::text AS "legalVersion" FROM pages WHERE site_id = $1 AND id = $2', [site.id, pageId],
+            );
+            page.legalVersion = revision.legalVersion;
         }
         return { value: { ...page, template, footer } };
     });

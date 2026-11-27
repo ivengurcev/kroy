@@ -81,3 +81,18 @@ test('absolute same-site URLs are not used as stale internal page references', (
     }, pages, 2026);
     assert.deepEqual(footer.documents, [{ label: 'External', href: 'https://legal.example.org/document' }]);
 });
+
+test('automatic legal links use current page labels and deduplicate against legacy and external links', () => {
+    const settings = { documents: { privacyPageId: first, additional: [
+        { pageId: first }, { label: 'External', url: 'https://EXAMPLE.org' },
+        { label: 'Duplicate', url: 'https://example.org/' },
+    ] } };
+    const document = { ...pages[0], isLegalDocument: true, title: 'Правила', path: '/rules' };
+    const extraPages = [
+        { ...pages[1], isLegalDocument: true, site_id: 'other' },
+        { ...document, id: 'deleted', path: '/gone', deleted_at: 'now' },
+    ];
+    assert.deepEqual(prepareSiteFooter(site, settings, [document, ...extraPages]).documents, [
+        { label: 'Правила', href: '/rules' }, { label: 'External', href: 'https://EXAMPLE.org' },
+    ]);
+});

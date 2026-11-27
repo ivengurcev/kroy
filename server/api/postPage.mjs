@@ -10,6 +10,8 @@ import { isPageDataSource } from "../../shared/pageDataSources.mjs";
 import isUuid from "./isUuid.mjs";
 import { pageFieldErrors, pageConflictFields } from './formErrors.mjs';
 import reusePagePath from './reusePagePath.mjs';
+import { isDocumentText, isLegalPagePath, legalDocumentBlock, LEGAL_CONTENT_ERROR } from '../../shared/legalDocuments.mjs';
+import { legacyFooterDocuments, omitLegacyFooterDocument } from '../../shared/footerSettings.mjs';
 
 export default async function postPage(c) {
   let body;
@@ -25,18 +27,29 @@ export default async function postPage(c) {
   const type = body?.type ?? "standard";
   const dataSource = body?.dataSource ?? null;
   const materialSectionId = body?.materialSectionId ?? null;
+  const isLegalDocument = body?.isLegalDocument === true;
 
   if (
-    keys.some((key) => !["title", "path", "type", "dataSource", "materialSectionId"].includes(key))
+    keys.some((key) => !["title", "path", "type", "dataSource", "materialSectionId", "isLegalDocument", "content"].includes(key))
     || !keys.includes("title")
     || !keys.includes("path")
     || !title
     || !isValidPagePath(body.path)
     || !["standard", "list"].includes(type)
+    || (keys.includes("isLegalDocument") && typeof body.isLegalDocument !== "boolean")
+    || (!isLegalDocument && keys.includes("content"))
+    || (isLegalDocument && type !== "standard")
     || (type === "list" ? !isPageDataSource(dataSource) || (dataSource === "materials" ? !isUuid(materialSectionId) : materialSectionId !== null) : dataSource !== null || materialSectionId !== null)
   ) {
     return c.json({ error: "Проверьте поля страницы", fields: pageFieldErrors(body) }, 400);
   }
+  if (isLegalDocument) {
+    const fields = {};
+    if (!isLegalPagePath(body.path)) fields.path = 'Этот адрес недоступен для правового документа.';
+    if (!isDocumentText(body.content)) fields.content = LEGAL_CONTENT_ERROR;
+    if (Object.keys(fields).length) return c.json({ error: 'Проверьте поля документа', fields }, 400);
+  }
+  const content = isLegalDocument ? [legalDocumentBlock(body.content)] : [];
 
   const hostname = getHostname(c);
 
@@ -49,7 +62,7 @@ export default async function postPage(c) {
     await client.query("BEGIN");
 
     const { rows: sites } = await client.query(
-      `SELECT s.id
+      `SELECT s.id, s.footer_settings
        FROM sites s
        JOIN domains d ON d.site_id = s.id
        WHERE d.hostname = $1
@@ -76,17 +89,30 @@ export default async function postPage(c) {
 
     await releasePageRedirects(client, siteId, body.path);
     const reusedId = await reusePagePath(client, siteId, body.path, { keepRecord: true });
+    // A new ordinary page must not inherit legal links through a reused UUID.
+    const oldFooter = sites[0].footer_settings;
+    if (reusedId && !isLegalDocument && oldFooter?.documents) {
+      const keys = legacyFooterDocuments(oldFooter.documents)
+        .filter(({ pageId }) => pageId === reusedId).map(({ key }) => key).reverse();
+      if (keys.length) {
+        const documents = keys.reduce(omitLegacyFooterDocument, oldFooter.documents);
+        await client.query('UPDATE sites SET footer_settings = $2::jsonb, footer_version = footer_version + 1 WHERE id = $1',
+          [siteId, JSON.stringify({ ...oldFooter, documents })]);
+      }
+    }
     const { rows } = await client.query(
       reusedId
-        ? `UPDATE pages SET title = $2, path = $3, content = '[]'::jsonb, seo = '{}'::jsonb, appearance = '{}'::jsonb,
+        ? `UPDATE pages SET title = $2, path = $3, content = $7::jsonb, seo = '{}'::jsonb, appearance = '{}'::jsonb,
              deleted_at = NULL, page_type = $4, data_source = $5, material_section_id = $6,
-             detail_parent_id = NULL, route_param = NULL, template_mode = 'inherit', template_id = NULL
-           WHERE id = $7 AND site_id = $1
-           RETURNING id, site_id, path, title, content, appearance, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`
-        : `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id)
-       VALUES ($1, $2, $3, '[]'::jsonb, $4, $5, $6)
-       RETURNING id, site_id, path, title, content, appearance, page_type AS type, data_source AS "dataSource", material_section_id AS "materialSectionId"`,
-      [siteId, title, body.path, type, dataSource, materialSectionId, ...(reusedId ? [reusedId] : [])],
+             detail_parent_id = NULL, route_param = NULL, template_mode = 'inherit', template_id = NULL, is_legal_document = $8
+           WHERE id = $9 AND site_id = $1
+           RETURNING id, site_id, path, title, content, appearance, page_type AS type, data_source AS "dataSource",
+                     material_section_id AS "materialSectionId", is_legal_document AS "isLegalDocument", xmin::text AS "legalVersion"`
+        : `INSERT INTO pages (site_id, title, path, content, page_type, data_source, material_section_id, is_legal_document)
+       VALUES ($1, $2, $3, $7::jsonb, $4, $5, $6, $8)
+       RETURNING id, site_id, path, title, content, appearance, page_type AS type, data_source AS "dataSource",
+                 material_section_id AS "materialSectionId", is_legal_document AS "isLegalDocument", xmin::text AS "legalVersion"`,
+      [siteId, title, body.path, type, dataSource, materialSectionId, JSON.stringify(content), isLegalDocument, ...(reusedId ? [reusedId] : [])],
     );
 
     await client.query("COMMIT");

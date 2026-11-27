@@ -2,6 +2,7 @@ import { pool } from './client.mjs';
 
 // Read saved data, including deletions, in one SQL snapshot. No mutable dirty flag.
 // Only a digest is stored with the release; private settings never enter artifacts.
+// The full pages record includes is_legal_document, so promotion also changes the digest.
 export async function getSiteFingerprint(siteId, client = pool) {
     const tables = ['pages', 'page_templates', 'redirects', 'domains', 'material_sections', 'materials', 'product_categories', 'products', 'reviews'];
     const collections = tables.map((table) => `

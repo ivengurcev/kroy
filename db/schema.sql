@@ -202,8 +202,10 @@ CREATE TABLE public.pages (
     appearance jsonb DEFAULT '{}'::jsonb NOT NULL,
     template_mode text DEFAULT 'inherit'::text NOT NULL,
     template_id uuid,
+    is_legal_document boolean DEFAULT false NOT NULL,
     CONSTRAINT pages_appearance_check CHECK ((jsonb_typeof(appearance) = 'object'::text)),
     CONSTRAINT pages_content_check CHECK ((jsonb_typeof(content) = 'array'::text)),
+    CONSTRAINT pages_legal_document_type_check CHECK (((NOT is_legal_document) OR (page_type = 'standard'::text))),
     CONSTRAINT pages_page_type_check CHECK ((page_type = ANY (ARRAY['standard'::text, 'list'::text, 'detail'::text]))),
     CONSTRAINT pages_seo_check CHECK ((jsonb_typeof(seo) = 'object'::text)),
     CONSTRAINT pages_template_mode_check CHECK ((((template_mode = ANY (ARRAY['inherit'::text, 'none'::text])) AND (template_id IS NULL)) OR ((template_mode = 'template'::text) AND (template_id IS NOT NULL)))),
@@ -1017,4 +1019,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('202611220002'),
     ('202611240001'),
     ('202611260001'),
-    ('202611270001');
+    ('202611270001'),
+    ('202611270002');
