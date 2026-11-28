@@ -42,6 +42,7 @@ export default function Footer({ data }) {
                     {legal.inn && <p>ИНН {legal.inn}</p>}
                     {legal.registrationNumber && <p>ОГРН/ОГРНИП {legal.registrationNumber}</p>}
                 </div>
+                <a className={styles.branding} href="https://oysite.ru">Создано на Oysite</a>
             </div>
         </div>
     </footer>;

@@ -151,7 +151,7 @@ export default function SiteApp({
         {footer && <SiteTheme tokens={tokens} theme={theme}>
             <Page content={[footerBlock(footer)]} parts={parts} widgets={widgets} contacts={contacts} />
         </SiteTheme>}
-        <OysiteBranding />
+        {!footer && <OysiteBranding />}
         </>
     );
 }

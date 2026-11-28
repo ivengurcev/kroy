@@ -101,6 +101,11 @@
     font-size: var(--site-font-size-small);
 }
 
+.footer .branding {
+    color: var(--site-color-text-secondary);
+    font-size: var(--site-font-size-small);
+}
+
 @container (min-width: 768px) {
     .section {
         display: grid;
