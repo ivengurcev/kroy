@@ -4,7 +4,7 @@ import { rm, writeFile } from 'node:fs/promises';
 import test from 'node:test';
 import { build } from 'esbuild';
 import { JSDOM } from 'jsdom';
-import { act, Children, createElement } from 'react';
+import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 
 test('page and template editors save and cancel the shared footer in their document transaction', async (t) => {
@@ -72,14 +72,15 @@ test('page and template editors save and cancel the shared footer in their docum
             assert.equal(shell().isDirty, false);
             await act(() => shell().workspaceSettings.onFooterChange({ description: 'New footer' }));
             if (!isTemplate) {
-                const select = () => shell().editorSettings.props.children.props;
-                assert.deepEqual(Children.map(select().children, ({ props }) => props.value), ['inherit', 'layout', 'none']);
-                await act(() => select().onChange({ target: { value: 'none' } }));
-                assert.equal(select().value, 'none');
+                const settings = () => shell().pageContentSettings;
+                assert.equal(shell().editorSettings, undefined);
+                assert.deepEqual(settings().layoutList.templates.map(({ id }) => id), ['layout']);
+                await act(() => settings().onTemplateChange('none'));
+                assert.equal(settings().template, 'none');
                 assert.equal(shell().workspaceSettings.sharedBefore, undefined);
                 assert.equal(shell().footer.props.description, 'New footer');
-                await act(() => select().onChange({ target: { value: 'inherit' } }));
-                assert.equal(select().value, 'inherit');
+                await act(() => settings().onTemplateChange('inherit'));
+                assert.equal(settings().template, 'inherit');
             }
             if (isTemplate) {
                 const block = shell().content[0];

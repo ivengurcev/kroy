@@ -6,6 +6,10 @@ import Field from './Field.jsx';
 import styles from './PartEditor.module.css';
 import FooterSettings, { PageNavigationField } from '../components/FooterSettings.jsx';
 import { LEGAL_DOCUMENT_PART } from '../../shared/legalDocuments.mjs';
+import Switch from '../ui/Switch.jsx';
+import MenuItemsField from './MenuItemsField.jsx';
+import { MENU_PART, PAGE_MENU_ANCHOR, supportsPageMenuAnchor } from '../../shared/pageMenu.mjs';
+import { changePageMenuAnchor } from '../../shared/partModel.js';
 
 export default function PartEditor({
     title,
@@ -28,7 +32,8 @@ export default function PartEditor({
 }) {
     const compatibleWidgets = Object.entries(widgetMetadata)
         .filter(([, metadata]) => partContract && metadata.contract === partContract);
-    const hasData = Object.keys(fields).length > 0;
+    const canAnchor = supportsPageMenuAnchor(part);
+    const hasData = canAnchor || Object.keys(fields).length > 0;
     const [activeTab, setActiveTab] = useState(0);
     const widgetTab = !propsOnly && (!hasData || activeTab === 1);
     const widgetFields = widgetMetadata[view.name]?.fields ?? {};
@@ -57,7 +62,12 @@ export default function PartEditor({
             />}
 
             <div className={styles.section} hidden={widgetTab}>
+                {canAnchor && <Switch label="Показывать в меню страницы" checked={props[PAGE_MENU_ANCHOR]?.enabled === true}
+                    onChange={(event) => onPropChange(PAGE_MENU_ANCHOR, changePageMenuAnchor(props[PAGE_MENU_ANCHOR], event.target.checked))} />}
                 {part === '@kroy/footer' ? <FooterSettings pages={pages} value={props} onChange={onPropsChange} legalDocumentActions={legalDocumentActions} /> : Object.entries(fields).map(([name, schema]) => (
+                    part === MENU_PART && name === 'items'
+                        ? <MenuItemsField key={name} pages={pages} value={props[name]} onChange={(value) => onPropChange(name, value)} />
+                        :
                     part === '@kroy/header' && name === 'navigation'
                         ? <PageNavigationField key={name} pages={pages} value={props[name]} onChange={(value) => onPropChange(name, value)} />
                         :

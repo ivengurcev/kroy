@@ -3,6 +3,7 @@ import { Input, Select } from '../ui/NativeControls.jsx';
 import { useEffect, useRef, useState } from 'react';
 import Button from '../ui/Button.jsx';
 import Icon from '../ui/Icon.jsx';
+import Switch from '../ui/Switch.jsx';
 import styles from './PageDetailsForm.module.css';
 import compactStyles from '../ui/CompactForm.module.css';
 import ValidatedForm from '../ui/ValidatedForm.jsx';
@@ -25,6 +26,7 @@ function errorMessage(status) {
 
 export default function PageDetailsForm({
     page,
+    pageContentSettings,
     onSaved,
     onCancel,
     onDirtyChange,
@@ -52,6 +54,8 @@ export default function PageDetailsForm({
     const [sections, setSections] = useState([]);
     const [seo, setSeo] = useState(page.seo ?? {});
     const [appearance, setAppearance] = useState(page.appearance ?? {});
+    const [template, setTemplate] = useState(pageContentSettings?.template);
+    const [isLegalDocument, setIsLegalDocument] = useState(Boolean(pageContentSettings?.isLegalDocument));
     const [siteData, setSiteData] = useState(null);
     const [tab, setTab] = useState(0);
     const [status, setStatus] = useState('idle');
@@ -61,10 +65,15 @@ export default function PageDetailsForm({
     const titleInputRef = useRef(null);
     const isMainPage = !isNew && page.path === '/';
     const isDetail = page.type === 'detail';
-    const isDirty = (isNew && Boolean(title || path || type !== 'standard')) || title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
+    const detailsChanged = (isNew && Boolean(title || path || type !== 'standard')) || title !== page.title || (isDetail ? routeParam !== (page.routeParam || 'slug') : path !== page.path)
         || (page.type === 'list' && (dataSource !== (page.dataSource || 'materials') || materialSectionId !== (page.materialSectionId || '')))
         || JSON.stringify(seo) !== JSON.stringify(page.seo ?? {})
         || JSON.stringify(appearance) !== JSON.stringify(page.appearance ?? {});
+    const layoutList = pageContentSettings?.layoutList;
+    const templateChanged = Boolean(layoutList) && template !== pageContentSettings.template;
+    const legalFlagChanged = Boolean(pageContentSettings) && type === 'standard'
+        && isLegalDocument !== pageContentSettings.isLegalDocument;
+    const isDirty = detailsChanged || templateChanged || legalFlagChanged;
     const isSubmitting = status === 'submitting';
     const saveButton = (
         <Button type="submit" variant="primary" title="Сохранить изменения страницы" disabled={!isDirty || isSubmitting}>
@@ -136,6 +145,8 @@ export default function PageDetailsForm({
         setMaterialSectionId(page.materialSectionId || '');
         setSeo(page.seo ?? {});
         setAppearance(page.appearance ?? {});
+        setTemplate(pageContentSettings?.template);
+        setIsLegalDocument(Boolean(pageContentSettings?.isLegalDocument));
         setStatus('idle');
         setFormError('');
         onCancel?.();
@@ -154,6 +165,17 @@ export default function PageDetailsForm({
         const form = event.currentTarget;
 
         if (!isDirty || isSubmitting) return;
+
+        function applyContentSettings() {
+            if (templateChanged) pageContentSettings.onTemplateChange(template);
+            if (legalFlagChanged) pageContentSettings.onLegalDocumentChange(isLegalDocument);
+        }
+
+        if (!detailsChanged) {
+            applyContentSettings();
+            onSaved();
+            return;
+        }
 
         setStatus('submitting');
         setFormError('');
@@ -180,7 +202,9 @@ export default function PageDetailsForm({
                 return;
             }
 
-            onSaved(await response.json());
+            const updatedPage = await response.json();
+            applyContentSettings();
+            onSaved(updatedPage);
             setStatus('success');
         } catch {
             setStatus('error');
@@ -243,6 +267,17 @@ export default function PageDetailsForm({
                     onChange={(event) => setTitle(event.target.value)}
                 />
             </label>
+            {layoutList && <label className={joinClasses(styles.field, compactStyles.field, compactStyles.compact)}>
+                <span>Шаблон</span>
+                <Select value={template} onChange={(event) => setTemplate(event.target.value)}>
+                    <option value="inherit">Наследовать шаблон сайта ({layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})</option>
+                    {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+                    <option value="none">Без шаблона</option>
+                </Select>
+            </label>}
+            {pageContentSettings && type === 'standard' && <Switch label="Правовой документ" checked={isLegalDocument}
+                onChange={(event) => setIsLegalDocument(event.target.checked)} />}
+            {(templateChanged || legalFlagChanged) && <small>Чтобы записать эти изменения, сохраните страницу в редакторе.</small>}
             </div>
             {!isDetail && <div hidden={tab !== 1}><SeoFields value={seo} onChange={setSeo} siteData={siteData} page={{ ...page, title }} /></div>}
             {!isNew && <div hidden={tab !== 2}><PageAppearanceFields value={appearance} onPreviewChange={onAppearancePreview} onChange={(next) => { setAppearance(next); setStatus('idle'); setFormError(''); }} /></div>}

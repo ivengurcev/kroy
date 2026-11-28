@@ -40,6 +40,7 @@ export default async function generateSiteParts(pages, siteSlug, { layouts = [],
     )];
     const imports = [];
     const partEntries = [];
+    const partTitles = {};
     const widgetEntries = [];
 
     for (const [index, name] of names.entries()) {
@@ -61,6 +62,7 @@ export default async function generateSiteParts(pages, siteSlug, { layouts = [],
 
         imports.push(`import ${variable} from ${JSON.stringify(importPath)};`);
         partEntries.push(`    ${JSON.stringify(name)}: ${variable},`);
+        partTitles[name] = part.title;
     }
 
     for (const [index, name] of widgetNames.entries()) {
@@ -89,6 +91,8 @@ export default async function generateSiteParts(pages, siteSlug, { layouts = [],
         'export const widgets = {',
         ...widgetEntries,
         '};',
+        '',
+        `export const partTitles = ${JSON.stringify(partTitles)};`,
         '',
     ].join('\n');
 

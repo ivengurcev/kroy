@@ -1,5 +1,6 @@
 .preview {
     min-height: 100vh;
+    --site-menu-sticky-offset: 2.75rem;
 }
 
 .badge {

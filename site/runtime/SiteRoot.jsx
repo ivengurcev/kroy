@@ -8,7 +8,7 @@ function getPaletteStyle(theme, palette) {
     return { ...theme[palette], colorScheme: palette };
 }
 
-export function SiteTheme({ children, tokens, theme }) {
+export function SiteTheme({ children, tokens, theme, className, ...attributes }) {
     const [systemPalette, setSystemPalette] = useState('light');
     const mode = theme?.mode;
     const palette = mode === 'system' ? systemPalette : mode;
@@ -24,9 +24,9 @@ export function SiteTheme({ children, tokens, theme }) {
     }, [mode]);
 
     const separator = theme?.separatorUrl ? { src: theme.separatorUrl, mimeType: theme.separatorMimeType } : null;
-    return <SeparatorContext.Provider value={separator}><div className={styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}>{children}</div></SeparatorContext.Provider>;
+    return <SeparatorContext.Provider value={separator}><div {...attributes} className={className ? `${styles.theme} ${className}` : styles.theme} style={tokens ?? getPaletteStyle(theme, palette)}>{children}</div></SeparatorContext.Provider>;
 }
 
-export default function SiteRoot({ children, tokens, theme }) {
-    return <SiteTheme tokens={tokens} theme={theme}><PaymentResult />{children}</SiteTheme>;
+export default function SiteRoot({ children, ...props }) {
+    return <SiteTheme {...props}><PaymentResult />{children}</SiteTheme>;
 }

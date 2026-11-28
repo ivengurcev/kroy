@@ -1,0 +1,79 @@
+.menu {
+    position: relative;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    padding: var(--site-space-2) var(--site-page-gutter);
+    background: var(--site-color-surface);
+    color: var(--site-color-text);
+    font: 400 var(--site-font-size-body)/var(--site-line-height) var(--site-font-body);
+}
+
+.toggle {
+    box-sizing: border-box;
+    inline-size: fit-content;
+    min-block-size: 44px;
+    padding: var(--site-space-3);
+    color: var(--site-color-accent);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.menu ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.menu li { min-inline-size: 0; }
+
+.menu a {
+    display: block;
+    box-sizing: border-box;
+    min-block-size: 44px;
+    padding: var(--site-space-3);
+    border-radius: var(--site-radius-base);
+    color: inherit;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+}
+
+.menu a:hover,
+.menu a[aria-current] {
+    background: var(--site-color-surface-soft);
+    color: var(--site-color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.menu:has(details[open]) { z-index: 1; }
+
+.menu :is(a, summary):focus-visible {
+    outline: var(--site-line-width-2) solid var(--site-color-accent);
+    outline-offset: calc(-1 * var(--site-line-width-2));
+}
+
+.menu .mobileLinks {
+    position: absolute;
+    z-index: 1;
+    inset: 100% var(--site-page-gutter) auto;
+    max-block-size: min(50dvh, 24rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--site-space-1);
+    border: var(--site-line-width) solid var(--site-color-border);
+    border-radius: var(--site-radius-base);
+    background: var(--site-color-surface);
+}
+
+.menu .desktopLinks { display: none; }
+
+@container (min-width: 768px) {
+    .mobile { display: none; }
+    .menu .desktopLinks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--site-space-1) var(--site-space-3);
+        max-inline-size: var(--site-container-max);
+        margin-inline: auto;
+    }
+}

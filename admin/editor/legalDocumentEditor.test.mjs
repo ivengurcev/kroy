@@ -83,7 +83,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
         const tree = nodes(Editor());
         for (const effect of effects) effect();
         const shell = tree.find(({ type }) => type === 'AdminShell').props;
-        return { ...shell, toggle: nodes(shell.editorSettings).find(({ type }) => type === 'input')?.props.onChange };
+        return { ...shell, toggle: shell.pageContentSettings.onLegalDocumentChange };
     }
     render();
     await new Promise(setImmediate);
@@ -92,7 +92,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     editor.onAddPart('@kroy/text', 0);
     editor = render();
     const ordinary = editor.content[0];
-    editor.toggle({ target: { checked: true } });
+    editor.toggle(true);
     editor = render();
     const first = editor.content[1];
     assert.equal(editor.workspaceSettings.isLegalDocument, true);
@@ -117,10 +117,10 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     editor.onRemovePart(ordinary.id);
     assert.equal(render().content.length, 1);
     editor = render();
-    editor.toggle({ target: { checked: false } });
+    editor.toggle(false);
     editor = render();
     const disabledContent = editor.content;
-    editor.toggle({ target: { checked: true } });
+    editor.toggle(true);
     editor = render();
     assert.equal(editor.content, disabledContent);
     editor.onCancel();
@@ -128,7 +128,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     assert.equal(editor.workspaceSettings.isLegalDocument, false);
     assert.deepEqual(editor.content, []);
     assert.equal(editor.isDirty, false);
-    editor.toggle({ target: { checked: true } });
+    editor.toggle(true);
     editor = render();
     await editor.onSave();
     assert.equal(request.isLegalDocument, true);
@@ -136,7 +136,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     assert.equal(stored.content[0].part, '@kroy/document');
     editor = render();
     assert.equal(editor.isDirty, false);
-    editor.toggle({ target: { checked: false } });
+    editor.toggle(false);
     editor = render();
     await editor.onSave();
     assert.equal(stored.isLegalDocument, false);
@@ -152,7 +152,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     editor = render();
     const formerFirst = editor.content[0];
     const formerSecond = editor.content[1];
-    editor.toggle({ target: { checked: true } });
+    editor.toggle(true);
     editor = render();
     assert.equal(editor.content.length, 2);
     editor.onMovePart(formerFirst.id, 1);
@@ -166,7 +166,7 @@ test('page editor toggles legal purpose in its draft without locking ordinary bl
     await editor.onSave();
     editor = render();
     const beforeModal = stored.legalVersion;
-    editor.toggle({ target: { checked: false } });
+    editor.toggle(false);
     editor = render();
     const footerDraft = { description: 'Unsaved footer' };
     editor.workspaceSettings.onFooterChange(footerDraft);

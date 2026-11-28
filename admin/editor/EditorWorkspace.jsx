@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Page from '../../site/runtime/Page.jsx';
 import { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
-import { availableFooterPages, projectHeader } from '../../shared/footerSettings.mjs';
+import { availableFooterPages } from '../../shared/footerSettings.mjs';
+import { projectPageBlock } from '../../shared/pageTemplates.mjs';
+import { isStickyMenu, MENU_PART, menuPages, pageMenuContext, supportsPageMenuAnchor } from '../../shared/pageMenu.mjs';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
@@ -70,6 +72,19 @@ function partTitle(identifier, metadata) {
         || identifier.split('/').at(-1).replaceAll('-', ' ');
 }
 
+function menuRegions(rows) {
+    const result = [];
+    let region;
+    for (const row of rows) {
+        if (row.props['data-editor-sticky-menu']) {
+            region = [];
+            result.push(<div key={`menu-region-${row.key}`} className={styles.menuRegion}>{region}</div>);
+        }
+        (region ?? result).push(row);
+    }
+    return result;
+}
+
 export default function EditorWorkspace({
     page,
     isLegalDocument = page?.isLegalDocument,
@@ -105,6 +120,7 @@ export default function EditorWorkspace({
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
+    const [selectedAnchor, setSelectedAnchor] = useState(null);
     const editingPartRef = useRef(null);
     useEffect(() => {
         if (!editingPartId) return undefined;
@@ -117,7 +133,6 @@ export default function EditorWorkspace({
         return () => cancelAnimationFrame(frame);
     }, [editingPartId]);
     const record = page?.type === 'detail' ? preview?.record : null;
-    const context = { siteName, params: record && page.routeParam ? { [page.routeParam]: record.slug } : {} };
     const previewMessage = page?.type === 'detail' && {
         loading: 'Загрузка материала для предпросмотра…',
         empty: 'Нет опубликованных материалов для предпросмотра. Опубликуйте материал в настройках сайта.',
@@ -185,6 +200,31 @@ export default function EditorWorkspace({
     }
 
     const eligible = availableFooterPages(linkPages);
+    const pagesById = new Map(menuPages(linkPages).map((candidate) => [candidate.id, candidate]));
+    const { anchors, targets } = pageMenuContext(
+        [...sharedBefore, ...content, ...sharedAfter],
+        (part) => Object.hasOwn(parts, part) ? metadata[part]?.title : undefined,
+    );
+    const context = {
+        siteName,
+        params: record && page.routeParam ? { [page.routeParam]: record.slug } : {},
+        pageMenu: {
+            anchors,
+            path: page?.path,
+            hash: selectedAnchor?.pageId === page?.id ? selectedAnchor?.hash : undefined,
+            pageHref: (path) => `/admin/preview?path=${encodeURIComponent(path)}`,
+            onAnchorNavigate(hash) {
+                const target = document.getElementById(hash.slice(1));
+                if (!target) return;
+                setSelectedAnchor({ pageId: page?.id, hash });
+                target.focus({ preventScroll: true });
+                const stickyMenu = target.closest(`.${styles.menuRegion}`)?.firstElementChild;
+                if (stickyMenu) target.style.setProperty('--editor-menu-height', `${stickyMenu.offsetHeight}px`);
+                target.scrollIntoView({ block: 'start' });
+                target.style.removeProperty('--editor-menu-height');
+            },
+        },
+    };
     function renderBlock(item, index, kind) {
         if (item.slot) return (
             <div key={item.id} className={styles.pageContentSlot}>
@@ -199,11 +239,18 @@ export default function EditorWorkspace({
         const notice = isFooter ? 'Общий элемент сайта. Изменения затронут все страницы сайта'
             : own ? undefined : `Общий элемент шаблона. Изменения затронут все страницы, использующие шаблон „${templateName}“`;
         const fields = metadata[item.part]?.fields ?? {};
-        const displayed = isFooter ? { ...item, props: footerPreview } : projectHeader(item, eligible);
-        const canEdit = metadata[item.part] && (own || isFooter || Object.keys(fields).length);
+        const displayed = isFooter ? { ...item, props: footerPreview } : projectPageBlock(item, eligible, pagesById);
+        const canEdit = metadata[item.part] && (own || isFooter || supportsPageMenuAnchor(item.part) || Object.keys(fields).length);
+        const isEditing = item.id === editingPartId;
+        const isMenu = item.part === MENU_PART;
+        const anchor = targets.get(item);
+        const sticky = !isEditing && Object.hasOwn(parts, item.part) && isStickyMenu(displayed, anchors);
         return <AdminPanel
-                        ref={item.id === editingPartId ? editingPartRef : undefined}
-                        className={styles.previewPart}
+                        ref={isEditing ? editingPartRef : undefined}
+                        className={sticky ? `${styles.previewPart} ${styles.stickyMenuPart}` : styles.previewPart}
+                        id={anchor}
+                        tabIndex={anchor ? -1 : undefined}
+                        data-editor-sticky-menu={sticky || undefined}
                         noPadding
                         key={item.id}
                     >
@@ -225,7 +272,7 @@ export default function EditorWorkspace({
                                 notice={notice}
                             />
                         </StickyPartHeader>
-                        {item.id === editingPartId && metadata[item.part] ? (
+                        {isEditing && metadata[item.part] && (
                             <div className={styles.inlineEditor}>
                                 <div className={styles.inlineEditorBody}>
                                     <PartEditor
@@ -243,15 +290,16 @@ export default function EditorWorkspace({
                                         widgetMetadata={widgetMetadata}
                                         catalog={catalog}
                                         reviews={reviews}
-                    materialSections={materialSections}
+                                        materialSections={materialSections}
                                         onPropChange={(name, value) => (own ? onPropChange : onSharedPropChange)(item.id, name, value)}
                                         onViewChange={(name) => onViewChange(item.id, name)}
                                         onViewPropChange={(name, value) => onViewPropChange(item.id, name, value)}
                                     />
                                 </div>
                             </div>
-                        ) : (
-                            <div className={styles.partContent} inert={false}>
+                        )}
+                        {(!isEditing || isMenu) && (
+                             <div className={isMenu ? `${styles.partContent} ${styles.menuPartContent}` : styles.partContent} inert={false}>
                                  <SiteTheme theme={own ? theme : globalTheme}>
                                      <Page content={[displayed]} parts={parts} widgets={widgets} contacts={contacts} catalog={catalog} reviews={reviews} materials={preview?.materials} materialSectionId={page?.materialSectionId} record={record} context={context} />
                                  </SiteTheme>
@@ -260,18 +308,22 @@ export default function EditorWorkspace({
                     </AdminPanel>;
     }
 
+    const rows = [
+        ...sharedBefore.map((item, index) => renderBlock(item, index, 'shared')),
+        ...content.flatMap((item, index) => [
+            insertionPoint(index, `insertion-${item.id}`),
+            renderBlock(item, index, 'own'),
+        ]),
+        insertionPoint(content.length, 'insertion-last'),
+        ...sharedAfter.map((item, index) => renderBlock(item, index, 'shared')),
+        ...(footer ? [renderBlock(footer, 0, 'footer')] : []),
+    ];
+
     return (
         <div className={styles.workspace}>
             <section className={styles.pageCanvas} aria-label="Предпросмотр страницы">
                 {previewMessage && <Card className={styles.workspaceMessage} role={preview.status === 'error' ? 'alert' : 'status'}>{previewMessage}</Card>}
-                {sharedBefore.map((item, index) => renderBlock(item, index, 'shared'))}
-                {content.flatMap((item, index) => [
-                    insertionPoint(index, `insertion-${item.id}`),
-                    renderBlock(item, index, 'own'),
-                ])}
-                {insertionPoint(content.length, 'insertion-last')}
-                {sharedAfter.map((item, index) => renderBlock(item, index, 'shared'))}
-                {footer && renderBlock(footer, 0, 'footer')}
+                {menuRegions(rows)}
             </section>
 
             {picker && (

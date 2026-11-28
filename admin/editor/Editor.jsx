@@ -11,8 +11,6 @@ import widgetMetadata from '../../dist/kroy/widgets.json';
 import AdminShell from '../components/AdminShell.jsx';
 import FormField from '../ui/FormField.jsx';
 import fieldStyles from '../components/PageDetailsForm.module.css';
-import shellStyles from '../components/AdminShell.module.css';
-import Switch from '../ui/Switch.jsx';
 import { createPart, changePartView } from '../../shared/partModel.js';
 import { toEditorPage } from './pageDetails.mjs';
 import { loadMaterialPreview, shouldLoadMaterialPreview } from './materialPreview.mjs';
@@ -543,18 +541,14 @@ export default function Editor() {
             isTemplate={isTemplate}
             editorSettings={isTemplate ? <FormField label="Название шаблона" className={fieldStyles.field}>
                 <Input value={name} maxLength={100} onChange={(event) => { setName(event.target.value); markDirty(); }} />
-            </FormField> : <>
-            {layoutList && <FormField label="Шаблон" className={`${fieldStyles.field} ${shellStyles.templateField}`}>
-                <Select value={selection.id ?? selection.mode} disabled={switching || saveStatus === 'saving'}
-                    onChange={(event) => selectTemplate(event.target.value)}>
-                    <option value="inherit">Наследовать шаблон сайта ({layoutList.templates.find(({ id }) => id === layoutList.defaultTemplateId)?.name})</option>
-                    {layoutList.templates.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-                    <option value="none">Без шаблона</option>
-                </Select>
-            </FormField>}
-            {page.type === 'standard' && <Switch label="Правовой документ" className={shellStyles.documentSwitch}
-                checked={isLegalDocument} onChange={(event) => toggleLegalDocument(event.target.checked)} />}
-            </>}
+            </FormField> : undefined}
+            pageContentSettings={!isTemplate && {
+                layoutList,
+                template: selection.id ?? selection.mode,
+                isLegalDocument,
+                onTemplateChange: selectTemplate,
+                onLegalDocumentChange: toggleLegalDocument,
+            }}
             workspaceSettings={{
                 isLegalDocument,
                 footerPreview: footer && site ? prepareSiteFooter(site, footer, linkPages.map((page) => ({ ...page, site_id: site.id }))) : undefined,

@@ -1,6 +1,7 @@
 import { isPlainObject, validateContent } from './pageContent.mjs';
 import { availableFooterPages, projectHeader } from './footerSettings.mjs';
 import { LEGAL_CONTENT_ERROR, LEGAL_DOCUMENT_PART, isDocumentText } from './legalDocuments.mjs';
+import { isPageMenuAnchor, MENU_PART, menuPages, PAGE_MENU_ANCHOR, projectMenu, supportsPageMenuAnchor, validMenuItems } from './pageMenu.mjs';
 
 export const FOOTER_PART = '@kroy/footer';
 
@@ -33,9 +34,18 @@ export function splitTemplateContent({ content, slotIndex }) {
     return { before: content.slice(0, slotIndex), after: content.slice(slotIndex) };
 }
 
+export function projectPageBlock(block, headerPages, menuPagesById) {
+    const projected = projectHeader(block, headerPages);
+    const anchor = block.props?.[PAGE_MENU_ANCHOR];
+    return projectMenu(projected !== block && anchor
+        ? { ...projected, props: { ...projected.props, [PAGE_MENU_ANCHOR]: anchor } }
+        : projected, menuPagesById);
+}
+
 export function projectPageLayouts(pages, defaultId, templates, linkPages) {
     const eligible = availableFooterPages(linkPages);
-    const project = (content) => content.map((block) => projectHeader(block, eligible));
+    const pagesById = new Map(menuPages(linkPages).map((page) => [page.id, page]));
+    const project = (content) => content.map((block) => projectPageBlock(block, eligible, pagesById));
     const layouts = [];
     const indexes = new Map();
     const rendered = pages.map(({ templateMode, templateId, ...page }) => {
@@ -68,8 +78,16 @@ export function validateDocumentContent(content, parts, widgets, options) {
                 message: 'Глобальный футер нельзя добавлять в содержимое страницы или шаблона.',
             });
         }
-        if (block?.part === LEGAL_DOCUMENT_PART && isPlainObject(block.props)
-            && (Object.keys(block.props ?? {}).some((key) => key !== 'content') || !isDocumentText(block.props?.content))) {
+        if (!isPlainObject(block?.props)) continue;
+        if (Object.hasOwn(block.props, PAGE_MENU_ANCHOR)
+            && (!supportsPageMenuAnchor(block.part) || !isPageMenuAnchor(block.props[PAGE_MENU_ANCHOR]))) {
+            errors.push({ path: `content[${index}].props.${PAGE_MENU_ANCHOR}`, code: 'invalid_format', message: 'Некорректные настройки якоря меню страницы.' });
+        }
+        if (block.part === MENU_PART && !validMenuItems(block.props.items)) {
+            errors.push({ path: `content[${index}].props.items`, code: 'invalid_format', message: 'Проверьте ссылки и оставьте один пункт «Меню страницы».' });
+        }
+        if (block.part === LEGAL_DOCUMENT_PART
+            && (Object.keys(block.props).some((key) => key !== 'content' && key !== PAGE_MENU_ANCHOR) || !isDocumentText(block.props.content))) {
             errors.push({ path: `content[${index}].props.content`, code: 'invalid_lexical', message: 'Проверьте формат текста документа.' });
         }
     }

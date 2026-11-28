@@ -2,7 +2,8 @@
     padding-block: calc(var(--site-section-gap) / 2);
 }
 
-.section:first-child {
+.section:first-child:not(:where([data-page-menu-anchor] > *, [data-menu-continuation] > *)),
+:where([data-page-menu-anchor]:first-child:not([data-menu-continuation] > *)) > .section:first-child {
     padding-top: 0;
 }
 
@@ -15,6 +16,7 @@
     padding-bottom: calc(var(--site-section-gap) / 2);
 }
 
-.section.fullBleed:last-child {
+.section.fullBleed:last-child:not(:where([data-page-menu-anchor] > *, [data-menu-continues] > *)),
+:where([data-page-menu-anchor]:last-child:not([data-menu-continues] > *)) > .section.fullBleed:last-child {
     padding-bottom: 0;
 }

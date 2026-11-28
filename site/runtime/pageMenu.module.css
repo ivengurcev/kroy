@@ -1,0 +1,13 @@
+.stickyRegion {
+    --site-menu-height: 4rem;
+}
+
+.stickyMenu {
+    position: sticky;
+    z-index: 2;
+    inset-block-start: var(--site-menu-sticky-offset, 0px);
+}
+
+.anchor {
+    scroll-margin-block-start: calc(var(--site-menu-sticky-offset, 0px) + var(--site-menu-height, 0px) + var(--site-space-2));
+}

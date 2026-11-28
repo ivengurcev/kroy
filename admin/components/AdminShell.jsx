@@ -39,6 +39,7 @@ export default function AdminShell({
     onPageAppearancePreview,
     isTemplate,
     editorSettings,
+    pageContentSettings,
     workspaceSettings,
     onCancel,
     saveBlocked,
@@ -118,7 +119,10 @@ export default function AdminShell({
                     onViewChange={onViewChange}
                     onViewPropChange={onViewPropChange}
                 />
-                {detailsOpen && <PageDetailsDialog page={page} onDirtyChange={setDetailsDirty} onAppearancePreview={onPageAppearancePreview} onSaved={(updatedPage) => { onPageDetailsChange(updatedPage); closePageDetails(); }} onCancel={closePageDetails} />}
+                {detailsOpen && <PageDetailsDialog page={page} pageContentSettings={pageContentSettings}
+                    onDirtyChange={setDetailsDirty} onAppearancePreview={onPageAppearancePreview}
+                    onSaved={(updatedPage) => { if (updatedPage) onPageDetailsChange(updatedPage); closePageDetails(); }}
+                    onCancel={closePageDetails} />}
                 {deleteError && <p role="alert">{deleteError}</p>}
                 {loadStatus === 'success' && <ActionFooter isDirty={isDirty} saveStatus={saveStatus}>
                     {saveBlocked && onReloadConflict && <Button disabled={conflictLoading} onClick={onReloadConflict}>Загрузить актуальные данные</Button>}

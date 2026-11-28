@@ -10,7 +10,7 @@ import { listItemSummary, mergeListItem, moveListItem, updateListDraft } from '.
 import theme from '../styles/AdminTheme.module.css';
 import Tree, { TreeGroup, TreeItem, TreeChildren, TreeEmpty } from '../ui/Tree.jsx';
 
-export default function ListField({ label, itemLabel = 'Элемент', fields = {}, value, onChange, FieldComponent, createItem, renderItem, itemSummary, depth = 0 }) {
+export default function ListField({ label, itemLabel = 'Элемент', fields = {}, value, onChange, FieldComponent, createItem, renderItem, itemSummary, isFixedItem, normalizeItem, depth = 0 }) {
     const items = Array.isArray(value) ? value : [];
     const listId = useId();
     const formId = `${listId}-form`;
@@ -92,10 +92,14 @@ export default function ListField({ label, itemLabel = 'Элемент', fields 
         event.stopPropagation();
         if (dialog.mode === 'add') {
             itemKeysRef.current = [...itemKeysRef.current, createItemKey()];
-            emitChange([...items, dialog.draft]);
+            emitChange([...items, normalizeItem ? normalizeItem(dialog.draft) : dialog.draft]);
         } else {
             const index = itemKeysRef.current.indexOf(dialog.key);
-            if (index >= 0) emitChange(items.map((item, i) => i === index ? mergeListItem(item, dialog.draft, fields) : item));
+            if (index >= 0) emitChange(items.map((item, i) => {
+                if (i !== index) return item;
+                const draft = mergeListItem(item, dialog.draft, fields);
+                return normalizeItem ? normalizeItem(draft) : draft;
+            }));
         }
         setDialog(null);
     }
@@ -131,19 +135,22 @@ export default function ListField({ label, itemLabel = 'Элемент', fields 
                 {items.map((item, index) => {
                     const key = itemKeysRef.current[index];
                     const title = summary(item, index);
+                    const fixed = isFixedItem?.(item);
                     const expanded = !collapsed.has(key);
                     const childCount = nestedFields.reduce((count, [name]) => count + (Array.isArray(item?.[name]) ? item[name].length : 0), 0);
                     return (
                         <TreeItem key={key} label={title} title={typeof title === 'string' ? title : undefined}
                             folder={nestedFields.length > 0} expanded={expanded} selected={dialog?.key === key}
                             controlsId={`${key}-children`} count={nestedFields.length > 0 ? childCount : undefined}
-                            onClick={() => editItem(index)} onToggle={nestedFields.length > 0 ? () => toggle(key) : undefined}
+                            onClick={fixed ? undefined : () => editItem(index)} onToggle={nestedFields.length > 0 ? () => toggle(key) : undefined}
                             toggleLabel={expanded ? 'Свернуть вложенные списки' : 'Раскрыть вложенные списки'}
                             actions={<>
                                 <Button variant="listIcon" title="Переместить вверх" aria-label={`Переместить ${itemLabel.toLowerCase()} вверх`} disabled={index === 0} onClick={() => moveItem(index, -1)}><Icon name="up" size={16} /></Button>
                                 <Button variant="listIcon" title="Переместить вниз" aria-label={`Переместить ${itemLabel.toLowerCase()} вниз`} disabled={index === items.length - 1} onClick={() => moveItem(index, 1)}><Icon name="down" size={16} /></Button>
-                                <Button variant="listIcon" title="Редактировать" aria-label={`Редактировать ${itemLabel.toLowerCase()}`} onClick={() => editItem(index)}><Icon name="edit" size={16} /></Button>
-                                <Button variant="listIcon" title="Удалить" aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => requestRemove(index)}><Icon name="delete" size={16} /></Button>
+                                {!fixed && <>
+                                    <Button variant="listIcon" title="Редактировать" aria-label={`Редактировать ${itemLabel.toLowerCase()}`} onClick={() => editItem(index)}><Icon name="edit" size={16} /></Button>
+                                    <Button variant="listIcon" title="Удалить" aria-label={`Удалить ${itemLabel.toLowerCase()}`} onClick={() => requestRemove(index)}><Icon name="delete" size={16} /></Button>
+                                </>}
                             </>}>
                             {nestedFields.length > 0 && (
                                 <TreeChildren id={`${key}-children`} expanded={expanded}>

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { parts } from '../../dist/kroy/parts.mjs';
 import { widgets } from '../../dist/kroy/widgets.mjs';
+import partMetadata from '../../dist/kroy/parts.json' with { type: 'json' };
 import SiteApp, { normalizePathname } from '../../site/runtime/SiteApp.jsx';
 import adminTheme from '../styles/AdminTheme.module.css';
 import '../../site/styles/site.css';
 import styles from './PreviewPage.module.css';
 import { isDetailTemplatePath } from './previewPaths.mjs';
+
+const partTitles = Object.fromEntries(Object.entries(partMetadata).map(([name, { title }]) => [name, title]));
 
 function normalizePreviewPath(value) {
     if (typeof value !== 'string' || !value.startsWith('/') || value.includes('?') || value.includes('#')) {
@@ -69,6 +72,7 @@ export default function PreviewPage() {
             pages={snapshot.pages}
             path={path}
             parts={parts}
+            partTitles={partTitles}
             widgets={widgets}
             theme={snapshot.theme}
             contacts={snapshot.contacts}
