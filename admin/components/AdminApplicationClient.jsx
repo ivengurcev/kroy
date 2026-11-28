@@ -31,6 +31,8 @@ export default function AdminApplication({ children }) {
     const workspace = useMemo(() => ({ registerHeader }), [registerHeader]);
 
     const confirmNavigation = useCallback(({ from, to } = {}) => {
+        // Fragment history stays within the same editor draft.
+        if (from && to && from.pathname === to.pathname && from.search === to.search) return true;
         if (isPreservedSiteSettingsNavigation(from, to)) return true;
         const current = headerRef.current;
         return !current.isDirty || window.confirm('Есть несохранённые изменения. Перейти без сохранения?');

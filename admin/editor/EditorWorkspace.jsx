@@ -3,7 +3,7 @@ import Page from '../../site/runtime/Page.jsx';
 import { SiteTheme } from '../../site/runtime/SiteRoot.jsx';
 import { availableFooterPages } from '../../shared/footerSettings.mjs';
 import { projectPageBlock } from '../../shared/pageTemplates.mjs';
-import { isStickyMenu, MENU_PART, menuPages, pageMenuContext, supportsPageMenuAnchor } from '../../shared/pageMenu.mjs';
+import { isStickyMenu, MENU_PART, menuPages, pageMenuContext, PAGE_MENU_ANCHOR_PREFIX, supportsPageMenuAnchor } from '../../shared/pageMenu.mjs';
 import PartEditor from './PartEditor.jsx';
 import styles from './EditorWorkspace.module.css';
 import Card from '../ui/Card.jsx';
@@ -23,12 +23,14 @@ function StickyPartHeader({ children }) {
         const header = headerRef.current;
         const panel = header?.parentElement;
         const main = header?.closest('main');
+        const menuRegion = panel?.hasAttribute('data-editor-sticky-menu') ? panel.parentElement : null;
 
         if (!sentinel || !header || !panel || !main) return undefined;
 
         let observer;
         const update = () => {
             panel.style.setProperty('--admin-part-header-height', `${header.getBoundingClientRect().height}px`);
+            menuRegion?.style.setProperty('--editor-menu-height', `${panel.offsetHeight}px`);
             const panelLeft = panel.getBoundingClientRect().left + panel.clientLeft;
             const mainLeft = main.getBoundingClientRect().left;
             header.style.setProperty('--admin-sticky-breakout-left', `${Math.max(0, panelLeft - mainLeft)}px`);
@@ -54,6 +56,7 @@ function StickyPartHeader({ children }) {
             resizeObserver?.disconnect();
             window.removeEventListener('resize', update);
             panel.style.removeProperty('--admin-part-header-height');
+            menuRegion?.style.removeProperty('--editor-menu-height');
         };
     }, []);
 
@@ -120,8 +123,23 @@ export default function EditorWorkspace({
 }) {
     const [picker, setPicker] = useState(null);
     const [editingPartId, setEditingPartId] = useState(null);
-    const [selectedAnchor, setSelectedAnchor] = useState(null);
+    const [menuHash, setMenuHash] = useState('');
     const editingPartRef = useRef(null);
+    useEffect(() => {
+        const syncHash = () => setMenuHash(window.location.hash);
+        syncHash();
+        window.addEventListener('hashchange', syncHash);
+        return () => window.removeEventListener('hashchange', syncHash);
+    }, []);
+
+    useEffect(() => {
+        if (loadStatus !== 'success') return;
+        const hash = window.location.hash;
+        if (hash.startsWith(`#${PAGE_MENU_ANCHOR_PREFIX}`)) {
+            document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        }
+    }, [loadStatus, page?.id]);
+
     useEffect(() => {
         if (!editingPartId) return undefined;
         const frame = requestAnimationFrame(() => {
@@ -203,7 +221,8 @@ export default function EditorWorkspace({
     const pagesById = new Map(menuPages(linkPages).map((candidate) => [candidate.id, candidate]));
     const { anchors, targets } = pageMenuContext(
         [...sharedBefore, ...content, ...sharedAfter],
-        (part) => Object.hasOwn(parts, part) ? metadata[part]?.title : undefined,
+        parts,
+        (part) => metadata[part]?.title,
     );
     const context = {
         siteName,
@@ -211,18 +230,8 @@ export default function EditorWorkspace({
         pageMenu: {
             anchors,
             path: page?.path,
-            hash: selectedAnchor?.pageId === page?.id ? selectedAnchor?.hash : undefined,
+            hash: menuHash,
             pageHref: (path) => `/admin/preview?path=${encodeURIComponent(path)}`,
-            onAnchorNavigate(hash) {
-                const target = document.getElementById(hash.slice(1));
-                if (!target) return;
-                setSelectedAnchor({ pageId: page?.id, hash });
-                target.focus({ preventScroll: true });
-                const stickyMenu = target.closest(`.${styles.menuRegion}`)?.firstElementChild;
-                if (stickyMenu) target.style.setProperty('--editor-menu-height', `${stickyMenu.offsetHeight}px`);
-                target.scrollIntoView({ block: 'start' });
-                target.style.removeProperty('--editor-menu-height');
-            },
         },
     };
     function renderBlock(item, index, kind) {
@@ -249,6 +258,7 @@ export default function EditorWorkspace({
                         ref={isEditing ? editingPartRef : undefined}
                         className={sticky ? `${styles.previewPart} ${styles.stickyMenuPart}` : styles.previewPart}
                         id={anchor}
+                        data-page-menu-anchor={anchor ? '' : undefined}
                         tabIndex={anchor ? -1 : undefined}
                         data-editor-sticky-menu={sticky || undefined}
                         noPadding

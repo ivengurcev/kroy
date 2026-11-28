@@ -3,7 +3,7 @@ import Page from './Page.jsx';
 import SiteRoot, { SiteTheme } from './SiteRoot.jsx';
 import OysiteBranding from './OysiteBranding.jsx';
 import { footerBlock } from '../../shared/footerSettings.mjs';
-import { isStickyMenu, pageMenuContext } from '../../shared/pageMenu.mjs';
+import { isStickyMenu, pageMenuContext, PAGE_MENU_ANCHOR_PREFIX } from '../../shared/pageMenu.mjs';
 import updatePageMeta from './updatePageMeta.mjs';
 import menuStyles from './pageMenu.module.css';
 
@@ -103,8 +103,9 @@ export default function SiteApp({
 
     useEffect(() => {
         const hash = window.location.hash;
-        if (hash.startsWith('#oysite-section-')) {
-            document.getElementById(hash.slice(1))?.scrollIntoView();
+        if (hash.startsWith(`#${PAGE_MENU_ANCHOR_PREFIX}`)) {
+            // The target can arrive after the browser handled the fragment (preview or SPA history).
+            document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start', behavior: 'instant' });
         }
     }, [currentPath]);
 
@@ -188,7 +189,8 @@ export default function SiteApp({
     const template = templates[page?.templateIndex];
     const { anchors, targets } = pageMenuContext(
         [...(template?.before ?? []), ...(page?.content ?? []), ...(template?.after ?? [])],
-        (part) => Object.hasOwn(parts, part) ? partTitles[part] : undefined,
+        parts,
+        (part) => partTitles[part],
     );
     const pageMenu = { anchors, path: currentPath, hash: menuHash, pageHref: urlForPath };
     const sources = { parts, widgets, contacts, catalog, reviews, materials: page?.materials,

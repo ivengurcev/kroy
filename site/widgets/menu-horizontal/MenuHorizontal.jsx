@@ -69,16 +69,11 @@ export default function MenuHorizontal({ data, options = {}, context }) {
                         aria-current={current}
                         data-native-navigation={type === 'external' || undefined}
                         data-site-menu-page={isPage || undefined}
-                        onClick={(event) => {
-                            if (isMobile) {
-                                if (mobile.current.contains(document.activeElement)) toggle.current.focus({ preventScroll: true });
-                                mobile.current.open = false;
-                            }
-                            if (isAnchor && menu?.onAnchorNavigate && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
-                                event.preventDefault();
-                                menu.onAnchorNavigate(href);
-                            }
-                        }}>{label}</a>
+                        onClick={isMobile ? (event) => {
+                            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                            if (mobile.current.contains(document.activeElement)) toggle.current.focus({ preventScroll: true });
+                            mobile.current.open = false;
+                        } : undefined}>{label}</a>
                 </li>;
             })}
         </ul>;

@@ -5,6 +5,7 @@ export const MENU_PART = '@kroy/menu';
 export const MENU_HORIZONTAL_WIDGET = '@kroy/menu-horizontal';
 export const PAGE_MENU_ITEM = Object.freeze({ type: 'anchors' });
 export const PAGE_MENU_ANCHOR = 'pageMenuAnchor';
+export const PAGE_MENU_ANCHOR_PREFIX = 'oysite-section-';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -66,16 +67,16 @@ export function projectMenu(block, pagesById) {
     return { ...block, props: { ...block.props, resolvedItems } };
 }
 
-export function pageMenuContext(content, titleForPart) {
+export function pageMenuContext(content, parts, titleForPart) {
     const anchors = [];
     const targets = new Map();
     const ids = new Set();
     for (const block of content) {
         const setting = block.props?.[PAGE_MENU_ANCHOR];
-        if (!supportsPageMenuAnchor(block.part) || !isPageMenuAnchor(setting) || !setting.enabled) continue;
-        const label = titleForPart(block.part);
-        if (!label) continue;
-        const id = `oysite-section-${setting.id.toLowerCase()}`;
+        if (!supportsPageMenuAnchor(block.part) || !isPageMenuAnchor(setting) || !setting.enabled
+            || !Object.hasOwn(parts, block.part)) continue;
+        const label = titleForPart(block.part) || block.part.split('/').at(-1).replaceAll('-', ' ');
+        const id = `${PAGE_MENU_ANCHOR_PREFIX}${setting.id.toLowerCase()}`;
         if (ids.has(id)) continue;
         ids.add(id);
         targets.set(block, id);
