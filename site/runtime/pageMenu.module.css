@@ -1,5 +1,5 @@
 .stickyRegion {
-    --site-menu-height: 4rem;
+    --site-menu-height: 3.75rem;
 }
 
 .stickyMenu {
@@ -9,7 +9,7 @@
 }
 
 .anchor {
-    scroll-margin-block-start: calc(var(--site-menu-sticky-offset, 0px) + var(--site-menu-height, 0px) + var(--site-space-2));
+    scroll-margin-block-start: calc(var(--site-menu-sticky-offset, 0px) + var(--site-menu-height, 0px) + var(--site-menu-anchor-gap, var(--site-space-2)));
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -36,7 +36,6 @@ export default function PreviewPage() {
     const [snapshot, setSnapshot] = useState(null);
     const [status, setStatus] = useState('loading');
     const path = useMemo(getInitialPath, []);
-
     useEffect(() => {
         const controller = new AbortController();
         fetch('/api/site/preview', { signal: controller.signal })
@@ -58,8 +57,8 @@ export default function PreviewPage() {
     }, [path]);
 
     return <div className={styles.preview}>
-        <div className={`${adminTheme.theme} ${styles.badge}`} role="status">
-            Предпросмотр · сохранённая версия
+        <div className={`${adminTheme.theme} ${styles.previewBar}`}>
+            <div className={styles.badge} role="status">Предпросмотр · сохранённая версия</div>
         </div>
         {status === 'loading' && <p className={styles.message}>Загрузка предпросмотра…</p>}
         {status === 'error' && <p className={styles.message} role="alert">Не удалось загрузить предпросмотр.</p>}

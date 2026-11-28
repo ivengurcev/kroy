@@ -37,7 +37,7 @@ function defaultUrlForPath(path, url) {
     return url ?? path;
 }
 
-function renderPageFlow(groups, sources, anchorTargets, notFound, path) {
+function renderPageFlow(groups, sources, anchorTargets, notFound, path, footer) {
     const flow = [];
     let region;
     for (const { name, content, theme, tokens } of groups) {
@@ -45,14 +45,17 @@ function renderPageFlow(groups, sources, anchorTargets, notFound, path) {
             const key = `${name}-${start}${sticky ? '-sticky' : ''}`;
             const Theme = name === 'page' && start === 0 && !sticky ? SiteRoot : SiteTheme;
             const blocks = content?.slice(start, end);
-            (region ?? flow).push(
+            const chunk = (
                 <Theme key={key} tokens={tokens} theme={theme}
-                    className={sticky ? menuStyles.stickyMenu : undefined}
                     data-menu-continuation={start > 0 || undefined}
                     data-menu-continues={end < content?.length || undefined}>
                     {blocks ? <Page key={path} content={blocks} anchorTargets={anchorTargets} {...sources} /> : notFound}
                 </Theme>
             );
+            // Keep the sticky box in the full page flow, outside the theme's inline-size container.
+            (region ?? flow).push(sticky
+                ? <div key={key} className={menuStyles.stickyMenu} data-page-menu-sticky>{chunk}</div>
+                : chunk);
         };
         let start = 0;
         content?.forEach((block, index) => {
@@ -66,6 +69,7 @@ function renderPageFlow(groups, sources, anchorTargets, notFound, path) {
         });
         if (start < content?.length || (name === 'page' && start === 0)) writeChunk(start, content?.length);
     }
+    (region ?? flow).push(footer);
     return flow;
 }
 
@@ -201,13 +205,10 @@ export default function SiteApp({
         { name: 'after', content: template?.after, theme, tokens },
     ];
 
-    return (
-        <>
-        {renderPageFlow(groups, sources, targets, notFound, currentPath)}
-        {footer && <SiteTheme tokens={tokens} theme={theme}>
+    const footerContent = footer
+        ? <SiteTheme key="footer" tokens={tokens} theme={theme}>
             <Page content={[footerBlock(footer)]} parts={parts} widgets={widgets} contacts={contacts} />
-        </SiteTheme>}
-        {!footer && <OysiteBranding />}
-        </>
-    );
+        </SiteTheme>
+        : <OysiteBranding key="branding" />;
+    return renderPageFlow(groups, sources, targets, notFound, currentPath, footerContent);
 }
